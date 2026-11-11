@@ -134,6 +134,16 @@ L1); see the README there.
   no OCSP response), since `hanko-certvalidator` does not fetch during
   validation; pyHanko's validator records what it fetched.
 
+## Service switch (final step, through the lead)
+
+Not yet at parity. What the Sigis service would call instead of
+`underskrift`: `SimpleSigner::from_pkcs12` (or `SimpleSigner::load` /
+`from_pkcs8_der`), `PdfSigner::new(PdfSignatureMetadata::new(field), signer)`
+(PAdES by default) with `.with_timestamper(..)` for B-T and
+`validation_context` + `embed_validation_info` / `use_pades_lta` for
+B-LT / B-LTA. A network timestamper (`hanko-fetch::HttpTimeStamper`, lane A)
+is required first.
+
 ## Requests to the lead
 
 1. **Interface (hanko-sign, applied on the lane branch, needs approval):**
