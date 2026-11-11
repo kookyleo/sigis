@@ -33,6 +33,17 @@ Notes for lanes C, D, E:
   `set_document_id` for reproducible output.
 - Streams parsed from a file carry `Stream::start_position` (data offset);
   compare streams by `dict` and `content`, not with `==` on `Stream`.
+- Lane C request C1 is served by new items (no §4 change):
+  `PdfFile::{xref_section, last_change, introducing_revision, resolves_in,
+  strict}` and `hanko_pdf::XrefSectionInfo` (same fields as
+  `hanko_diff::XrefSectionInfo`). `trailer_in_revision(rev)` now returns the
+  section's own trailer, as lane C asked; the merged view is
+  `effective_trailer_in_revision`.
+- Lane E request R-E6 is served by new methods instead of new fields on §4
+  structs: `PdfFile::xref_location(rev)` (`declared_startxref`, `start`,
+  `end` = pyHanko `end_location`) and `PdfFile::signature_field_ref(sig_object)`.
+  If the lead prefers fields on `RevisionInfo` / `EmbeddedSignature`, lane B
+  can add them.
 - `RevisionInfo::end_offset` is the end of the `%%EOF` line that follows
   the `startxref` pointing at the revision's xref section (linearized
   originals: both sections end at the first `%%EOF` after the main xref).

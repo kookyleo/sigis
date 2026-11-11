@@ -77,3 +77,31 @@ fn incremental_writer_interface() {
     assert_eq!(w.base().bytes(), base.bytes());
 }
 
+
+#[test]
+fn lane_c_and_e_requests() {
+    let data = pdf("minimal-signed-twice-both-created.pdf");
+    let f = PdfFile::parse(&data).unwrap();
+    for s in f.embedded_signatures().unwrap() {
+        let rev = s.signed_revision;
+        assert_eq!(f.last_change(s.sig_object).unwrap(), Some(rev));
+        assert_eq!(f.introducing_revision(s.sig_object).unwrap(), Some(rev));
+        assert!(f.resolves_in(s.sig_object, rev).unwrap());
+        assert!(!f.resolves_in(s.sig_object, 0).unwrap());
+        let x = f.xref_section(rev).unwrap();
+        assert!(x.explicit_refs.contains(&s.sig_object));
+        assert!(x.stream_ref.is_some());
+        let loc = f.xref_location(rev).unwrap();
+        assert!(loc.start <= loc.end && loc.end <= data.len() as u64);
+        let field = f.signature_field_ref(s.sig_object).unwrap().expect("field");
+        let Object::Dictionary(fd) = f.get_object(field).unwrap() else { panic!() };
+        assert_eq!(fd.get(b"V").unwrap(), &Object::Reference(s.sig_object));
+    }
+    // own trailer vs effective trailer
+    let r = PdfFile::parse(&pdf("minimal-with-field.pdf")).unwrap();
+    let own = r.trailer_in_revision(1).unwrap();
+    assert!(own.has(b"Prev"));
+    let eff = r.effective_trailer_in_revision(1).unwrap();
+    assert!(eff.has(b"Root"));
+    assert!(r.trailer_in_revision(2).is_err());
+}

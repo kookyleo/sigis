@@ -722,6 +722,13 @@ impl TrailerDictionary {
         revs.iter().find_map(|d| d.get(key).ok().cloned())
     }
 
+    /// The trailer of `revision` as written in that section (chronological
+    /// index; hybrid xref streams contribute no trailer of their own).
+    pub fn raw_revision(&self, revision: usize) -> Option<&Dictionary> {
+        let ix = self.revisions.len().checked_sub(1 + revision)?;
+        self.revisions.get(ix)
+    }
+
     /// Set a pending value.
     pub fn set(&mut self, key: &[u8], value: Object) {
         self.new_changes.set(key.to_vec(), value);

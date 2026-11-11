@@ -150,9 +150,10 @@ impl PdfFile {
             .collect())
     }
 
-    /// The object `id` as it existed in `revision`
-    /// (`get_historical_resolver(revision).get_object(id)`), or `None` if
-    /// the object is not defined (or freed) as of that revision.
+    /// The object `id` as it existed in `revision`: what
+    /// `HistoricalResolver(revision).get_object(id)` returns, or `None` when
+    /// the reference does not resolve as of that revision (freed or never
+    /// defined).
     pub fn object_in_revision(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
         if revision >= self.total_revisions() {
             return Err(PdfError::value(format!("No revision {revision}")).into());
@@ -172,14 +173,116 @@ impl PdfFile {
         Ok(self.xrefs().explicit_refs_in_revision(revision).into_iter().collect())
     }
 
-    /// The effective trailer dictionary as of `revision` (all trailers up
-    /// to that revision merged, `TrailerDictionary.flatten(revision)`).
+    /// The trailer dictionary written in `revision` itself (for xref
+    /// streams: the stream dictionary). Older trailers are not merged; see
+    /// [`PdfFile::effective_trailer_in_revision`].
     pub fn trailer_in_revision(&self, revision: usize) -> Result<Dictionary> {
+        self.trailer()
+            .raw_revision(revision)
+            .cloned()
+            .ok_or_else(|| PdfError::value(format!("No revision {revision}")).into())
+    }
+
+    /// The effective trailer as of `revision`: all trailers up to that
+    /// revision merged, minus stream/xref keys (`TrailerDictionary.flatten`).
+    pub fn effective_trailer_in_revision(&self, revision: usize) -> Result<Dictionary> {
         if revision >= self.total_revisions() {
             return Err(PdfError::value(format!("No revision {revision}")).into());
         }
         Ok(self.trailer().flatten(Some(revision)))
     }
+
+    /// Cross-reference details of `revision` (`XRefSectionData` +
+    /// `XRefSectionMetaInfo`; requested by lane C as C1).
+    pub fn xref_section(&self, revision: usize) -> Result<XrefSectionInfo> {
+        let xr = self.xrefs();
+        let meta = xr.get_xref_container_info(revision)?;
+        let data = xr.get_xref_data(revision)?;
+        Ok(XrefSectionInfo {
+            size: u32::try_from(meta.size.max(0)).unwrap_or(u32::MAX),
+            stream_ref: match meta.xref_section_type {
+                xref::XRefSectionType::Stream => meta.stream_ref,
+                _ => None,
+            },
+            hybrid_stream_ref: match meta.xref_section_type {
+                xref::XRefSectionType::HybridMain => meta.stream_ref,
+                _ => None,
+            },
+            explicit_refs: xr.explicit_refs_in_revision(revision),
+            freed: xr.refs_freed_in_revision(revision),
+            object_streams_used: data.obj_streams_used.clone(),
+        })
+    }
+
+    /// Where the xref data of `revision` lies (`XRefSectionMetaInfo`;
+    /// requested by lane E as R-E6).
+    pub fn xref_location(&self, revision: usize) -> Result<XrefLocation> {
+        let meta = self.xrefs().get_xref_container_info(revision)?;
+        Ok(XrefLocation {
+            declared_startxref: u64::try_from(meta.declared_startxref).unwrap_or(0),
+            start: meta.start_location as u64,
+            end: meta.end_location as u64,
+        })
+    }
+
+    /// The last revision that wrote `id` (`get_last_change`).
+    pub fn last_change(&self, id: ObjectId) -> Result<Option<usize>> {
+        Ok(self.xrefs().get_last_change(id))
+    }
+
+    /// The first revision that defines `id` (`get_introducing_revision`).
+    pub fn introducing_revision(&self, id: ObjectId) -> Result<Option<usize>> {
+        Ok(self.xrefs().get_introducing_revision(id))
+    }
+
+    /// `true` if `id` resolves to an object as of `revision`
+    /// (`get_historical_ref(id, revision) is not None`).
+    pub fn resolves_in(&self, id: ObjectId, revision: usize) -> Result<bool> {
+        if revision >= self.total_revisions() {
+            return Err(PdfError::value(format!("No revision {revision}")).into());
+        }
+        Ok(self.xrefs().get_historical_ref(id, revision).is_some())
+    }
+
+    /// The signature field holding the signature dictionary `sig_object`
+    /// (requested by lane E as R-E6).
+    pub fn signature_field_ref(&self, sig_object: ObjectId) -> Result<Option<ObjectId>> {
+        let fields = signatures::enumerate_sig_fields(self, Some(true), None)?;
+        Ok(fields
+            .into_iter()
+            .find(|f| f.value == Some(Object::Reference(sig_object)))
+            .map(|f| f.field_ref))
+    }
+}
+
+/// Cross-reference details of one revision (see [`PdfFile::xref_section`]).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct XrefSectionInfo {
+    /// `/Size` of the section.
+    pub size: u32,
+    /// The xref stream of the section, if it is an xref stream section.
+    pub stream_ref: Option<ObjectId>,
+    /// The `/XRefStm` stream of a hybrid section.
+    pub hybrid_stream_ref: Option<ObjectId>,
+    /// References written in the section, including hybrid entries and freed
+    /// objects as `(n, next_gen - 1)` (`explicit_refs_in_revision`).
+    pub explicit_refs: std::collections::BTreeSet<ObjectId>,
+    /// References freed in the section (`refs_freed_in_revision`).
+    pub freed: std::collections::BTreeSet<ObjectId>,
+    /// Object streams used by the section (`obj_streams_used`).
+    pub object_streams_used: std::collections::BTreeSet<u32>,
+}
+
+/// Location of a revision's xref data (see [`PdfFile::xref_location`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct XrefLocation {
+    /// Offset pointed to by `startxref` / `/Prev`.
+    pub declared_startxref: u64,
+    /// Actual start of the xref table or stream.
+    pub start: u64,
+    /// End of the xref table (before the trailer) or of the xref stream
+    /// object (`end_location`).
+    pub end: u64,
 }
 
 #[cfg(test)]

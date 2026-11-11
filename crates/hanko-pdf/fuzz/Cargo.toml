@@ -1,0 +1,58 @@
+[package]
+name = "hanko-pdf-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+license = "Apache-2.0 AND MIT"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+hanko-pdf = { path = ".." }
+
+# Not part of the main workspace: built with `cargo fuzz` (nightly).
+[workspace]
+
+[[bin]]
+name = "parse_pdf"
+path = "fuzz_targets/parse_pdf.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_object"
+path = "fuzz_targets/parse_object.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "xref_stream"
+path = "fuzz_targets/xref_stream.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "object_stream"
+path = "fuzz_targets/object_stream.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "incremental_roundtrip"
+path = "fuzz_targets/incremental_roundtrip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "xmp"
+path = "fuzz_targets/xmp.rs"
+test = false
+doc = false
+bench = false
