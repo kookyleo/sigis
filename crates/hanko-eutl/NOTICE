@@ -15,3 +15,5 @@ Derived files:
   (LOTL signer certificates published by the European Commission).
 - tests/trusted_list.rs, tests/common/mod.rs: pyHanko
   `pkgs/pyhanko/tests/test_trusted_list.py`.
+- oracle/export_pki.py, oracle/tl_verdicts.py, tests/differential.rs:
+  original (call pyHanko's test utilities and parser).

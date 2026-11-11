@@ -22,6 +22,9 @@ pyhanko-certvalidator 0.33.0, certomancer 0.16.0, signxml 5.2.0 and
 xsdata 26.10 (Python 3.14). Once L1 lands, the tests can switch to
 `data/pyhanko-pki/`.
 
+Differential test (TL): `crates/hanko-eutl/tests/differential.rs`, 18
+inputs incl. tampered lists, 18/18 agree with pyHanko.
+
 AdES oracle fixtures: `crates/hanko-ades/oracle/record_plugin.py` runs
 pyHanko's own `test_ades_validation*.py` (tag v0.38.1) and records, per
 test case and per `ades.*_validation` call, the validated object (CMS or

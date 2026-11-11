@@ -58,6 +58,15 @@ validation path root → interm-qualified → leaf directly instead of running
 The ignored test `path_validation_of_qualified_pki` checks that part and is
 to be enabled once R-E5 is fixed.
 
+Differential test: `tests/differential.rs` runs `oracle/tl_verdicts.py`
+(pyHanko) and this crate on 18 inputs — every trusted list and LOTL
+fixture with its signer certificates, an expired-signer time, wrong
+signers, and three tampered lists — and compares signature verdicts,
+service definition counts, parsing errors and registry sizes. Any case
+where pyHanko rejects and the port accepts fails as "FAIL-OPEN". Last run:
+18/18 agree. It skips when the oracle cannot import pyHanko (run with
+`HANKO_ORACLE=<python>` and, if needed, `PYTHONPATH` for pyHanko).
+
 Time pinning: upstream tests that validate signatures at the current time
 (`test_validate_tl_wrong_signature`, `test_validate_and_parse_lotl_default_certs`,
 `test_parse_services_from_real_tl_via_*lotl`) pass an explicit validation
