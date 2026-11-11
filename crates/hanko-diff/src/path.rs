@@ -79,7 +79,9 @@ impl RawPdfPath {
 
     /// Whether the path contains the key `key` (without slash).
     pub(crate) fn contains_key(&self, key: &[u8]) -> bool {
-        self.0.iter().any(|n| matches!(n, PathNode::Key(k) if k == key))
+        self.0
+            .iter()
+            .any(|n| matches!(n, PathNode::Key(k) if k == key))
     }
 }
 

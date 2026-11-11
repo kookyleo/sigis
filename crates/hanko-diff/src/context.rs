@@ -65,8 +65,14 @@ impl std::fmt::Display for Context {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Context::Absolute(p) => write!(f, "{p}"),
-            Context::Relative { anchor: Anchor::Trailer, path } => write!(f, "trailer{path}"),
-            Context::Relative { anchor: Anchor::Ref(id), path } => {
+            Context::Relative {
+                anchor: Anchor::Trailer,
+                path,
+            } => write!(f, "trailer{path}"),
+            Context::Relative {
+                anchor: Anchor::Ref(id),
+                path,
+            } => {
                 write!(f, "{} {} R{path}", id.0, id.1)
             }
         }
@@ -97,12 +103,18 @@ pub struct ReferenceUpdate {
 impl ReferenceUpdate {
     /// An update without context (blanket approval).
     pub fn new(updated_ref: ObjectId) -> Self {
-        Self { updated_ref, context_checked: None }
+        Self {
+            updated_ref,
+            context_checked: None,
+        }
     }
 
     /// An update checked in `context`.
     pub fn with_context(updated_ref: ObjectId, context: Context) -> Self {
-        Self { updated_ref, context_checked: Some(context) }
+        Self {
+            updated_ref,
+            context_checked: Some(context),
+        }
     }
 
     /// `approval_type`.
@@ -132,7 +144,12 @@ impl FormUpdate {
     /// A form update with pyHanko's defaults (`valid_when_locked = False`,
     /// `valid_when_certifying = True`).
     pub fn new(update: ReferenceUpdate, field_name: Option<String>) -> Self {
-        Self { update, field_name, valid_when_locked: false, valid_when_certifying: true }
+        Self {
+            update,
+            field_name,
+            valid_when_locked: false,
+            valid_when_certifying: true,
+        }
     }
 
     /// Set `valid_when_locked`.

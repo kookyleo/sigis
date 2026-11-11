@@ -52,7 +52,7 @@ pub use error::{DiffError, DiffResultT};
 pub use form::{FieldComparisonContext, FieldComparisonSpec, FieldMdpRule, FormUpdatingRule};
 pub use history::{Anchor, Revision, RevisionSource, XrefSectionInfo, MAX_USAGE_PATHS};
 pub use path::{PathNode, RawPdfPath};
-pub use pdf_source::PdfFileSource;
+pub use pdf_source::{DerivedSource, PdfFileSource, PdfRevisions};
 pub use policy::ConfigurableDiffPolicy;
 
 /// How far a document was modified after a revision (`ModificationLevel`).

@@ -18,8 +18,7 @@ pub use dss::DssCompareRule;
 pub use file_structure::{CatalogModificationRule, ObjectStreamRule, XrefStreamRule};
 pub use form_fields::{
     is_annot_visible, is_field_visible, walk_page_tree_annots_unchecked, BaseFieldModificationRule,
-    GenericFieldModificationRule,
-    SigFieldCreationRule, SigFieldModificationRule,
+    GenericFieldModificationRule, SigFieldCreationRule, SigFieldModificationRule,
 };
 pub use metadata::{DocInfoRule, MetadataUpdateRule};
 
@@ -65,6 +64,11 @@ impl<R: WhitelistRule> QualifiedWhitelistRule for Qualified<R> {
         old: &Revision<'_>,
         new: &Revision<'_>,
     ) -> DiffResultT<Vec<(ModificationLevel, ReferenceUpdate)>> {
-        Ok(self.rule.apply(old, new)?.into_iter().map(|u| (self.level, u)).collect())
+        Ok(self
+            .rule
+            .apply(old, new)?
+            .into_iter()
+            .map(|u| (self.level, u))
+            .collect())
     }
 }

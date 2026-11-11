@@ -16,9 +16,7 @@ use crate::error::{read_error, suspicious, DiffError, DiffResultT};
 use crate::history::Revision;
 use crate::object::{as_dict, decode_text, py_eq, truthy};
 use crate::path::{PathNode, RawPdfPath};
-use crate::rules::{
-    GenericFieldModificationRule, SigFieldCreationRule, SigFieldModificationRule,
-};
+use crate::rules::{GenericFieldModificationRule, SigFieldCreationRule, SigFieldModificationRule};
 use crate::ModificationLevel;
 
 /// A form field in both revisions (`FieldComparisonSpec`).
@@ -215,7 +213,11 @@ impl FormUpdatingRule {
         let (refs, (old_af, new_af)) = compare_key_refs(b"AcroForm", old, new, old_rd, new_rd)?;
         push_ctx(&mut out, lta, refs, &acroform_path);
 
-        let ignored: Vec<&[u8]> = self.ignored_acroform_keys.iter().map(Vec::as_slice).collect();
+        let ignored: Vec<&[u8]> = self
+            .ignored_acroform_keys
+            .iter()
+            .map(Vec::as_slice)
+            .collect();
         compare_dicts(old_af.as_deref(), new_af.as_deref(), &ignored, true)?;
         let (Some(old_af), Some(new_af)) = (old_af, new_af) else {
             return read_error("/AcroForm missing");
@@ -253,7 +255,11 @@ impl FormUpdatingRule {
             0,
             &mut field_specs,
         )?;
-        let context = FieldComparisonContext { field_specs, old, new };
+        let context = FieldComparisonContext {
+            field_specs,
+            old,
+            new,
+        };
         for rule in &self.field_rules {
             out.extend(rule.apply(&context)?);
         }
@@ -270,7 +276,10 @@ fn push_ctx(
     for r in refs {
         out.push((
             level,
-            FormUpdate::new(ReferenceUpdate::with_context(r, Context::absolute(path.clone())), None),
+            FormUpdate::new(
+                ReferenceUpdate::with_context(r, Context::absolute(path.clone())),
+                None,
+            ),
         ));
     }
 }
@@ -311,7 +320,9 @@ fn make_list(
         let name = match name_obj {
             // undecodable names are byte strings in pyHanko, where the
             // period check then fails with a TypeError; reject them
-            Object::String(b, _) => decode_text(b).ok_or_else(|| exc("Names must be strings".into()))?,
+            Object::String(b, _) => {
+                decode_text(b).ok_or_else(|| exc("Names must be strings".into()))?
+            }
             _ => return Err(exc("Names must be strings".into())),
         };
         if names_seen.contains(&name) {
@@ -320,7 +331,11 @@ fn make_list(
             return Err(exc("Partial names must not contain periods".into()));
         }
         names_seen.insert(name.clone());
-        let fq_name = if parent_name.is_empty() { name } else { format!("{parent_name}.{name}") };
+        let fq_name = if parent_name.is_empty() {
+            name
+        } else {
+            format!("{parent_name}.{name}")
+        };
         let field_type = match fd.get(b"FT") {
             Ok(ft) => Some(ft.clone()),
             Err(_) => inherited_ft.cloned(),
@@ -334,7 +349,15 @@ fn make_list(
                 "Field type of terminal field '{fq_name}' could not be determined"
             )));
         }
-        out.insert(fq_name, Listed { field_type, field_ref: *field_ref, kids, index: ix });
+        out.insert(
+            fq_name,
+            Listed {
+                field_type,
+                field_ref: *field_ref,
+                kids,
+                index: ix,
+            },
+        );
     }
     Ok(out)
 }
@@ -365,8 +388,11 @@ fn list_fields(
     }
     let mut old_by_name = make_list(old, old_fields, true, parent_name, inherited_ft)?;
     let mut new_by_name = make_list(new, new_fields, false, parent_name, inherited_ft)?;
-    let names: std::collections::BTreeSet<String> =
-        old_by_name.keys().chain(new_by_name.keys()).cloned().collect();
+    let names: std::collections::BTreeSet<String> = old_by_name
+        .keys()
+        .chain(new_by_name.keys())
+        .cloned()
+        .collect();
     for name in names {
         let o = old_by_name.remove(&name);
         let n = new_by_name.remove(&name);
@@ -384,7 +410,10 @@ fn list_fields(
             _ => None,
         };
         let empty = Rc::new(Object::Array(Vec::new()));
-        let old_kids = o.as_ref().map(|l| l.kids.clone()).unwrap_or_else(|| empty.clone());
+        let old_kids = o
+            .as_ref()
+            .map(|l| l.kids.clone())
+            .unwrap_or_else(|| empty.clone());
         let new_kids = n.as_ref().map(|l| l.kids.clone()).unwrap_or(empty);
         out.push((
             name.clone(),

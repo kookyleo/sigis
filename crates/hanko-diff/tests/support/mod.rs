@@ -26,7 +26,7 @@ use hanko_diff::rules::{
 };
 use hanko_diff::{
     Anchor, ConfigurableDiffPolicy, Context, DiffOutcome, DiffResultT, FieldMdpAction,
-    FieldMdpRule, FormUpdatingRule, MdpPerm, ModificationLevel, PathNode, RawPdfPath,
+    FieldMdpRule, FormUpdatingRule, MdpPerm, ModificationLevel, PathNode, PdfRevisions, RawPdfPath,
     ReferenceUpdate, Revision, RevisionSource, XrefSectionInfo,
 };
 use lopdf::{Dictionary, Document, Object, ObjectId, StringFormat};
@@ -71,6 +71,7 @@ struct Section {
     trailer: Dictionary,
     eof_end: usize,
     startxref: usize,
+    is_stream: bool,
 }
 
 fn as_u32(v: &Value) -> u32 {
@@ -79,7 +80,10 @@ fn as_u32(v: &Value) -> u32 {
 
 fn ref_of(v: &Value) -> Option<ObjectId> {
     let a = v.as_array()?;
-    Some((as_u32(&a[0]), u16::try_from(a[1].as_u64().unwrap()).unwrap()))
+    Some((
+        as_u32(&a[0]),
+        u16::try_from(a[1].as_u64().unwrap()).unwrap(),
+    ))
 }
 
 fn parse_data(v: &Value) -> SecData {
@@ -89,11 +93,15 @@ fn parse_data(v: &Value) -> SecData {
     }
     for (k, x) in v["standard"].as_object().unwrap() {
         let a = x.as_array().unwrap();
-        d.standard.insert(k.parse().unwrap(), (a[0].as_i64().unwrap(), a[1].as_u64().unwrap()));
+        d.standard.insert(
+            k.parse().unwrap(),
+            (a[0].as_i64().unwrap(), a[1].as_u64().unwrap()),
+        );
     }
     for (k, x) in v["objstm"].as_object().unwrap() {
         let a = x.as_array().unwrap();
-        d.objstm.insert(k.parse().unwrap(), (as_u32(&a[0]), as_u32(&a[1])));
+        d.objstm
+            .insert(k.parse().unwrap(), (as_u32(&a[0]), as_u32(&a[1])));
     }
     for x in v["explicit"].as_array().unwrap() {
         let a = x.as_array().unwrap();
@@ -133,7 +141,10 @@ fn dec_dict(v: &Value) -> Dictionary {
 }
 
 fn hex(s: &str) -> Vec<u8> {
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
 }
 
 /// A recorded input file with pyHanko's cross-reference model.
@@ -155,9 +166,17 @@ impl OracleFile {
         }
         let dir = lane_dir();
         let bytes = std::fs::read(dir.join("pdf").join(format!("{sha}.pdf"))).unwrap();
-        let model: Value =
-            serde_json::from_slice(&std::fs::read(dir.join("model").join(format!("{sha}.json"))).unwrap())
-                .unwrap();
+        let model: Value = serde_json::from_slice(
+            &std::fs::read(dir.join("model").join(format!("{sha}.json"))).unwrap(),
+        )
+        .unwrap();
+        let f = Rc::new(OracleFile::from_parts(sha, bytes, &model));
+        FILES.with(|m| m.borrow_mut().insert(sha.to_string(), f.clone()));
+        f
+    }
+
+    /// Build from file bytes and pyHanko's model of them.
+    pub fn from_parts(id: &str, bytes: Vec<u8>, model: &Value) -> OracleFile {
         let sections = model["revisions"]
             .as_array()
             .unwrap()
@@ -169,25 +188,33 @@ impl OracleFile {
                 hybrid: if r["hybrid"].is_null() {
                     None
                 } else {
-                    Some((ref_of(&r["hybrid"]["meta"]["stream_ref"]), parse_data(&r["hybrid"]["data"])))
+                    Some((
+                        ref_of(&r["hybrid"]["meta"]["stream_ref"]),
+                        parse_data(&r["hybrid"]["data"]),
+                    ))
                 },
                 trailer: match dec(&r["trailer"]) {
                     Object::Dictionary(d) => d,
                     other => panic!("trailer {other:?}"),
                 },
                 eof_end: usize::try_from(r["eof_end"].as_u64().unwrap()).unwrap(),
-                startxref: usize::try_from(r["meta"]["declared_startxref"].as_u64().unwrap()).unwrap(),
+                startxref: usize::try_from(r["meta"]["declared_startxref"].as_u64().unwrap())
+                    .unwrap(),
+                is_stream: r["meta"]["type"] == "STREAM",
             })
             .collect();
-        let f = Rc::new(OracleFile {
-            sha: sha.to_string(),
+        OracleFile {
+            sha: id.to_string(),
             bytes,
             encrypted: model["encrypted"].as_bool().unwrap(),
             sections,
             docs: RefCell::new(HashMap::new()),
-        });
-        FILES.with(|m| m.borrow_mut().insert(sha.to_string(), f.clone()));
-        f
+        }
+    }
+
+    /// Whether some revision has a hybrid-reference section.
+    pub fn has_hybrid(&self) -> bool {
+        self.sections.iter().any(|s| s.hybrid.is_some())
     }
 
     /// The document as of revision `rev`, parsed by lopdf: the file up to
@@ -198,7 +225,12 @@ impl OracleFile {
         if let Some(d) = self.docs.borrow().get(&rev) {
             return d.clone();
         }
-        let end = self.sections[..=rev].iter().map(|s| s.eof_end).max().unwrap().min(self.bytes.len());
+        let end = self.sections[..=rev]
+            .iter()
+            .map(|s| s.eof_end)
+            .max()
+            .unwrap()
+            .min(self.bytes.len());
         let mut buf = self.bytes[..end].to_vec();
         buf.extend(format!("\nstartxref\n{}\n%%EOF\n", self.sections[rev].startxref).bytes());
         let doc = if self.encrypted {
@@ -213,12 +245,20 @@ impl OracleFile {
     }
 
     /// `XRefSectionData.try_resolve`: `Err` = KeyError, `Ok(None)` = freed.
-    fn try_resolve(data: &SecData, hybrid: Option<&SecData>, id: ObjectId) -> std::result::Result<Option<Loc>, ()> {
+    fn try_resolve(
+        data: &SecData,
+        hybrid: Option<&SecData>,
+        id: ObjectId,
+    ) -> std::result::Result<Option<Loc>, ()> {
         if id.1 == 0 && data.objstm.contains_key(&id.0) {
             return Ok(Some(Loc::InStream));
         }
         if let Some((g, _)) = data.standard.get(&id.0) {
-            return if *g == i64::from(id.1) { Ok(Some(Loc::Offset)) } else { Err(()) };
+            return if *g == i64::from(id.1) {
+                Ok(Some(Loc::Offset))
+            } else {
+                Err(())
+            };
         }
         if let Some(next) = data.freed.get(&id.0) {
             if i64::from(id.1) == next - 1 {
@@ -246,6 +286,35 @@ impl OracleFile {
         None
     }
 
+    /// `HistoricalResolver(revision).get_object(id)`; `None` when the
+    /// reference does not resolve.
+    pub fn object(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
+        let f = self;
+        let marker = match f.last_change_ix(id) {
+            Some(last) if last <= revision => f.historical(id, f.sections.len() - 1),
+            _ => f.historical(id, revision),
+        };
+        let Some((ix, Some(_loc))) = marker else {
+            return Ok(None);
+        };
+        let doc = f.doc(ix);
+        match doc.objects.get(&id) {
+            Some(o) => Ok(Some(o.clone())),
+            // lopdf drops the encryption dictionary after decrypting; the
+            // rules only walk through it (it holds no references)
+            None if f.encrypted
+                && f.sections[revision].trailer.get(b"Encrypt").ok()
+                    == Some(&Object::Reference(id)) =>
+            {
+                Ok(Some(Object::Dictionary(Dictionary::new())))
+            }
+            None => Err(HankoError::Malformed(format!(
+                "lopdf has no object {} {} in revision {ix} of {}",
+                id.0, id.1, f.sha
+            ))),
+        }
+    }
+
     fn last_change_ix(&self, id: ObjectId) -> Option<usize> {
         let mut last = None;
         for (ix, s) in self.sections.iter().enumerate() {
@@ -253,11 +322,62 @@ impl OracleFile {
             if let Some((_, h)) = &s.hybrid {
                 cands.extend(h.explicit.iter().copied());
             }
-            if cands.iter().any(|(n, g)| *n == id.0 && *g == i64::from(id.1)) && self.resolve_in(ix, id).is_ok() {
+            if cands
+                .iter()
+                .any(|(n, g)| *n == id.0 && *g == i64::from(id.1))
+                && self.resolve_in(ix, id).is_ok()
+            {
                 last = Some(ix);
             }
         }
         last
+    }
+}
+
+/// `PdfFile`-like primitives of an [`OracleFile`], for testing
+/// [`hanko_diff::DerivedSource`] (the production path over `hanko-pdf`).
+impl PdfRevisions for OracleFile {
+    fn xref_stream_flags(&self) -> Result<Vec<bool>> {
+        Ok(self.sections.iter().map(|s| s.is_stream).collect())
+    }
+    fn objects_written_in(&self, revision: usize) -> Result<Vec<ObjectId>> {
+        let s = &self.sections[revision];
+        let mut out: BTreeSet<ObjectId> =
+            s.data.explicit.iter().copied().map(explicit_id).collect();
+        if let Some((_, h)) = &s.hybrid {
+            out.extend(h.explicit.iter().copied().map(explicit_id));
+        }
+        Ok(out.into_iter().collect())
+    }
+    fn object_in_revision(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
+        self.object(id, revision)
+    }
+    fn trailer_in_revision(&self, revision: usize) -> Result<Dictionary> {
+        Ok(self.sections[revision].trailer.clone())
+    }
+}
+
+/// [`PdfRevisions`] of an [`OracleFile`] in a given reading mode.
+pub struct OraclePrimitives<'a> {
+    pub file: &'a OracleFile,
+    pub strict: bool,
+}
+
+impl PdfRevisions for OraclePrimitives<'_> {
+    fn xref_stream_flags(&self) -> Result<Vec<bool>> {
+        self.file.xref_stream_flags()
+    }
+    fn objects_written_in(&self, revision: usize) -> Result<Vec<ObjectId>> {
+        self.file.objects_written_in(revision)
+    }
+    fn object_in_revision(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
+        self.file.object(id, revision)
+    }
+    fn trailer_in_revision(&self, revision: usize) -> Result<Dictionary> {
+        self.file.trailer_in_revision(revision)
+    }
+    fn strict(&self) -> bool {
+        self.strict
     }
 }
 
@@ -279,7 +399,8 @@ impl RevisionSource for OracleSource {
 
     fn section(&self, revision: usize) -> Result<XrefSectionInfo> {
         let s = &self.file.sections[revision];
-        let mut explicit: BTreeSet<ObjectId> = s.data.explicit.iter().copied().map(explicit_id).collect();
+        let mut explicit: BTreeSet<ObjectId> =
+            s.data.explicit.iter().copied().map(explicit_id).collect();
         if let Some((_, h)) = &s.hybrid {
             explicit.extend(h.explicit.iter().copied().map(explicit_id));
         }
@@ -300,27 +421,7 @@ impl RevisionSource for OracleSource {
     }
 
     fn object(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
-        let f = &self.file;
-        let marker = match f.last_change_ix(id) {
-            Some(last) if last <= revision => f.historical(id, f.sections.len() - 1),
-            _ => f.historical(id, revision),
-        };
-        let Some((ix, Some(_loc))) = marker else { return Ok(None) };
-        let doc = f.doc(ix);
-        match doc.objects.get(&id) {
-            Some(o) => Ok(Some(o.clone())),
-            // lopdf drops the encryption dictionary after decrypting; the
-            // rules only walk through it (it holds no references)
-            None if f.encrypted
-                && f.sections[revision].trailer.get(b"Encrypt").ok() == Some(&Object::Reference(id)) =>
-            {
-                Ok(Some(Object::Dictionary(Dictionary::new())))
-            }
-            None => Err(HankoError::Malformed(format!(
-                "lopdf has no object {} {} in revision {ix} of {}",
-                id.0, id.1, f.sha
-            ))),
-        }
+        self.file.object(id, revision)
     }
 
     fn trailer(&self, revision: usize) -> Result<Dictionary> {
@@ -341,7 +442,10 @@ impl RevisionSource for OracleSource {
     }
 
     fn resolves_in(&self, id: ObjectId, revision: usize) -> Result<bool> {
-        Ok(matches!(self.file.historical(id, revision), Some((_, Some(_)))))
+        Ok(matches!(
+            self.file.historical(id, revision),
+            Some((_, Some(_)))
+        ))
     }
 
     fn strict(&self) -> bool {
@@ -360,7 +464,11 @@ fn level(v: &Value) -> ModificationLevel {
 }
 
 fn keys(v: &Value) -> Vec<Vec<u8>> {
-    v.as_array().unwrap().iter().map(|k| k.as_str().unwrap().as_bytes()[1..].to_vec()).collect()
+    v.as_array()
+        .unwrap()
+        .iter()
+        .map(|k| k.as_str().unwrap().as_bytes()[1..].to_vec())
+        .collect()
 }
 
 fn path_of(v: &Value) -> RawPdfPath {
@@ -390,7 +498,11 @@ impl QualifiedWhitelistRule for FixedRule {
         _old: &Revision<'_>,
         new: &Revision<'_>,
     ) -> DiffResultT<Vec<(ModificationLevel, ReferenceUpdate)>> {
-        Ok(self.outputs.get(&new.revision()).cloned().unwrap_or_default())
+        Ok(self
+            .outputs
+            .get(&new.revision())
+            .cloned()
+            .unwrap_or_default())
     }
 }
 
@@ -410,7 +522,9 @@ pub fn build_policy(v: &Value) -> ConfigurableDiffPolicy {
     let mut rules: Vec<Arc<dyn QualifiedWhitelistRule>> = Vec::new();
     for r in v["global_rules"].as_array().unwrap() {
         match r["kind"].as_str().unwrap() {
-            "catalog" => rules.push(Arc::new(CatalogModificationRule { ignored_keys: keys(&r["ignored_keys"]) })),
+            "catalog" => rules.push(Arc::new(CatalogModificationRule {
+                ignored_keys: keys(&r["ignored_keys"]),
+            })),
             "qualified" => {
                 let l = level(&r["level"]);
                 let inner = &r["rule"];
@@ -450,11 +564,17 @@ pub fn build_policy(v: &Value) -> ConfigurableDiffPolicy {
                                     Some(r) => Anchor::Ref(r),
                                     None => Anchor::Trailer,
                                 };
-                                Some(Context::Relative { anchor, path: path_of(&rel["path"]) })
+                                Some(Context::Relative {
+                                    anchor,
+                                    path: path_of(&rel["path"]),
+                                })
                             };
                             (
                                 level(&u["level"]),
-                                ReferenceUpdate { updated_ref: ref_of(&u["ref"]).unwrap(), context_checked: context },
+                                ReferenceUpdate {
+                                    updated_ref: ref_of(&u["ref"]).unwrap(),
+                                    context_checked: context,
+                                },
                             )
                         })
                         .collect();
@@ -481,7 +601,9 @@ pub fn build_policy(v: &Value) -> ConfigurableDiffPolicy {
                             .as_bool()
                             .unwrap(),
                     }),
-                    "sig_field_modification" => Arc::new(SigFieldModificationRule { base: base_rule(r) }),
+                    "sig_field_modification" => {
+                        Arc::new(SigFieldModificationRule { base: base_rule(r) })
+                    }
                     "generic_field_modification" => {
                         Arc::new(GenericFieldModificationRule { base: base_rule(r) })
                     }
@@ -489,7 +611,10 @@ pub fn build_policy(v: &Value) -> ConfigurableDiffPolicy {
                 }
             })
             .collect();
-        Some(FormUpdatingRule { field_rules, ignored_acroform_keys: keys(&fr["ignored_acroform_keys"]) })
+        Some(FormUpdatingRule {
+            field_rules,
+            ignored_acroform_keys: keys(&fr["ignored_acroform_keys"]),
+        })
     };
     ConfigurableDiffPolicy {
         global_rules: rules,
@@ -504,8 +629,12 @@ fn field_mdp(v: &Value) -> Option<FieldMdpAction> {
     if v.is_null() {
         return None;
     }
-    let fields: Vec<String> =
-        v["fields"].as_array().unwrap().iter().map(|f| f.as_str().unwrap().to_string()).collect();
+    let fields: Vec<String> = v["fields"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f.as_str().unwrap().to_string())
+        .collect();
     Some(match v["action"].as_str().unwrap() {
         "all" => FieldMdpAction::All,
         "include" => FieldMdpAction::Include(fields),
@@ -547,14 +676,13 @@ impl Replay {
         let e = &self.expected;
         match &self.actual {
             Ok(DiffOutcome::Reviewed(r)) => {
-                e.get("level").is_some_and(|l| level(l) == r.modification_level)
-                    && e["changed_form_fields"]
-                        .as_array()
-                        .is_some_and(|f| {
-                            let exp: BTreeSet<String> =
-                                f.iter().map(|x| x.as_str().unwrap().to_string()).collect();
-                            exp == r.changed_form_fields
-                        })
+                e.get("level")
+                    .is_some_and(|l| level(l) == r.modification_level)
+                    && e["changed_form_fields"].as_array().is_some_and(|f| {
+                        let exp: BTreeSet<String> =
+                            f.iter().map(|x| x.as_str().unwrap().to_string()).collect();
+                        exp == r.changed_form_fields
+                    })
             }
             Ok(DiffOutcome::Suspicious(_)) => e.get("suspicious").is_some(),
             Err(_) => e.get("error").is_some(),
@@ -591,12 +719,20 @@ pub fn replay_node(test_id: &str) -> Vec<Replay> {
             continue;
         }
         let file = OracleFile::load(ev["pdf"].as_str().unwrap());
-        let src = OracleSource { file, strict: ev["strict"].as_bool().unwrap() };
+        let src = OracleSource {
+            file,
+            strict: ev["strict"].as_bool().unwrap(),
+        };
         let policy = build_policy(&ev["policy"]);
         let base = usize::try_from(ev["base_revision"].as_u64().unwrap()).unwrap();
         let fm = field_mdp(&ev["field_mdp"]);
         let actual = policy.review_source(&src, base, fm.as_ref(), doc_mdp(&ev["doc_mdp"]));
-        out.push(Replay { test_id: test_id.to_string(), index, expected: ev["result"].clone(), actual });
+        out.push(Replay {
+            test_id: test_id.to_string(),
+            index,
+            expected: ev["result"].clone(),
+            actual,
+        });
     }
     out
 }
@@ -612,29 +748,43 @@ pub fn check_usages(test_id: &str) -> Vec<String> {
             continue;
         }
         let file = OracleFile::load(ev["pdf"].as_str().unwrap());
-        let src = OracleSource { file, strict: ev["strict"].as_bool().unwrap() };
+        let src = OracleSource {
+            file,
+            strict: ev["strict"].as_bool().unwrap(),
+        };
         let rev = usize::try_from(ev["revision"].as_u64().unwrap()).unwrap();
         let revision = Revision::new(&src, rev);
-        let ours = revision.as_ref().map_err(|e| e.to_string()).and_then(|r| {
-            r.usages().cloned().map_err(|e| e.to_string())
-        });
+        let ours = revision
+            .as_ref()
+            .map_err(|e| e.to_string())
+            .and_then(|r| r.usages().cloned().map_err(|e| e.to_string()));
         match (ev.get("paths"), ours) {
             (Some(paths), Ok(ours)) => {
                 let mut theirs: BTreeMap<ObjectId, BTreeSet<RawPdfPath>> = BTreeMap::new();
                 for (k, ps) in paths.as_object().unwrap() {
                     let mut it = k.split(' ');
-                    let id = (it.next().unwrap().parse().unwrap(), it.next().unwrap().parse().unwrap());
+                    let id = (
+                        it.next().unwrap().parse().unwrap(),
+                        it.next().unwrap().parse().unwrap(),
+                    );
                     theirs.insert(id, ps.as_array().unwrap().iter().map(path_of).collect());
                 }
-                let ours: BTreeMap<ObjectId, BTreeSet<RawPdfPath>> =
-                    ours.into_iter().map(|(k, v)| (k, v.into_iter().collect())).collect();
+                let ours: BTreeMap<ObjectId, BTreeSet<RawPdfPath>> = ours
+                    .into_iter()
+                    .map(|(k, v)| (k, v.into_iter().collect()))
+                    .collect();
                 // Known divergence: in encrypted files pyHanko's nested direct
                 // containers are decryption proxies, which its path walk does
                 // not enter. The port walks them, so its paths must be a
                 // superset of pyHanko's (more paths to clear = stricter).
                 if src.file.encrypted {
-                    let covered = theirs.iter().all(|(k, ps)| ours.get(k).is_some_and(|o| o.is_superset(ps)));
-                    assert!(ours != theirs, "{test_id} rev {rev}: encrypted-file divergence no longer occurs");
+                    let covered = theirs
+                        .iter()
+                        .all(|(k, ps)| ours.get(k).is_some_and(|o| o.is_superset(ps)));
+                    assert!(
+                        ours != theirs,
+                        "{test_id} rev {rev}: encrypted-file divergence no longer occurs"
+                    );
                     if !covered {
                         bad.push(format!("{test_id} rev {rev}: encrypted file, paths not a superset of pyHanko's"));
                     }
@@ -648,13 +798,17 @@ pub fn check_usages(test_id: &str) -> Vec<String> {
                         .into_iter()
                         .filter(|k| ours.get(k) != theirs.get(k))
                         .take(5)
-                        .map(|k| format!("{k:?}: ours {:?} theirs {:?}", ours.get(k), theirs.get(k)))
+                        .map(|k| {
+                            format!("{k:?}: ours {:?} theirs {:?}", ours.get(k), theirs.get(k))
+                        })
                         .collect();
                     bad.push(format!("{test_id} rev {rev}: {}", diff.join("; ")));
                 }
             }
             (None, Err(_)) => {}
-            (Some(_), Err(e)) => bad.push(format!("{test_id} rev {rev}: we fail ({e}), pyHanko succeeds")),
+            (Some(_), Err(e)) => bad.push(format!(
+                "{test_id} rev {rev}: we fail ({e}), pyHanko succeeds"
+            )),
             (None, Ok(_)) => bad.push(format!(
                 "{test_id} rev {rev}: pyHanko fails ({}), we succeed",
                 ev["message"]
@@ -719,7 +873,9 @@ pub struct LopdfSource {
 impl LopdfSource {
     pub fn minimal() -> LopdfSource {
         let bytes = std::fs::read(hanko_testdata::pyhanko(&["pdf", "minimal.pdf"])).unwrap();
-        LopdfSource { doc: Document::load_mem(&bytes).unwrap() }
+        LopdfSource {
+            doc: Document::load_mem(&bytes).unwrap(),
+        }
     }
 }
 
@@ -761,9 +917,22 @@ pub fn our_usages(test_id: &str) -> Vec<BTreeMap<ObjectId, BTreeSet<RawPdfPath>>
             continue;
         }
         let file = OracleFile::load(ev["pdf"].as_str().unwrap());
-        let src = OracleSource { file, strict: ev["strict"].as_bool().unwrap() };
-        let rev = Revision::new(&src, usize::try_from(ev["revision"].as_u64().unwrap()).unwrap()).unwrap();
-        out.push(rev.usages().unwrap().iter().map(|(k, v)| (*k, v.iter().cloned().collect())).collect());
+        let src = OracleSource {
+            file,
+            strict: ev["strict"].as_bool().unwrap(),
+        };
+        let rev = Revision::new(
+            &src,
+            usize::try_from(ev["revision"].as_u64().unwrap()).unwrap(),
+        )
+        .unwrap();
+        out.push(
+            rev.usages()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| (*k, v.iter().cloned().collect()))
+                .collect(),
+        );
     }
     out
 }
@@ -780,7 +949,10 @@ pub fn last_review_source(test_id: &str) -> (OracleSource, usize) {
         .unwrap();
     let file = OracleFile::load(ev["pdf"].as_str().unwrap());
     (
-        OracleSource { file, strict: ev["strict"].as_bool().unwrap() },
+        OracleSource {
+            file,
+            strict: ev["strict"].as_bool().unwrap(),
+        },
         usize::try_from(ev["base_revision"].as_u64().unwrap()).unwrap(),
     )
 }

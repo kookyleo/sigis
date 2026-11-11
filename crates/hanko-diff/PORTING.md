@@ -25,7 +25,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_diff_analysis.py` | `tests/test_diff_analysis.rs` (+ `tests/sweep.rs`, unit tests) | 94 | 87 | 6 | 1 |
+| `test_diff_analysis.py` | `tests/test_diff_analysis.rs` (+ `tests/sweep.rs`, `tests/mutations.rs`, unit tests) | 94 | 87 | 6 | 1 |
 
 pyHanko's tests build their inputs with pyHanko's signer and writer.
 `oracle/capture.sh` ran the upstream test module (183 cases, all passing)
@@ -35,8 +35,14 @@ replays the recorded reviews and requires pyHanko's verdict (level and
 changed fields, or rejection). It also compares the reverse
 cross-reference cache with pyHanko's. `tests/sweep.rs` additionally replays
 pyHanko's default policy on every recorded file for every base revision,
-strict and lenient (982 reviews), and re-runs pyHanko on a sample when the
-oracle is installed.
+strict and lenient (982 reviews), and re-runs pyHanko on all of them when
+the oracle is installed. `tests/mutations.rs` replays a seeded mutation
+corpus (`oracle/mutate.py`: one random incremental update per input, 436
+updates, each reviewed plain, under DocMDP P=2 and with all fields locked:
+1,308 verdicts). Larger local runs (`HANKO_DIFF_MUTATIONS`, seeds 2–5, 8
+updates per file, about 10,400 verdicts) agree as well. Both the sweep and
+the mutations also run through `DerivedSource`, the derivation that
+`PdfFileSource` uses on `hanko_pdf::PdfFile`.
 
 Skipped (no difference analysis runs in these tests):
 
@@ -85,7 +91,13 @@ All divergences are stricter than pyHanko (fail closed) unless noted.
 8. **`PdfFileSource`** (until request C1): the cross-reference stream,
    object streams and freed references of a revision are derived from the
    objects it writes; hybrid-reference streams are not cleared (pyHanko only
-   accepts hybrid files in lenient mode).
+   accepts hybrid files in lenient mode); the mode is strict. Deriving freed
+   references reads every object a revision writes, including objects
+   pyHanko never reads: on the deliberately broken hybrid file of
+   `test_sign_with_hybrid_sneaky_edit` this gives read errors where pyHanko
+   reports a suspicious modification or (for later updates) accepts. On all
+   other inputs the derivation agrees with pyHanko's exact model.
 
-No verdict differences on the recorded cases: all 165 recorded reviews and
-all 982 sweep reviews agree with pyHanko, including the kind of rejection.
+No verdict differences otherwise: all 165 recorded reviews, all 982 sweep
+reviews and all 1,308 mutation verdicts agree with pyHanko, including the
+kind of rejection.

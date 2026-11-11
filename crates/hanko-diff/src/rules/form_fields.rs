@@ -29,8 +29,12 @@ const MAX_PAGE_TREE_DEPTH: usize = 512;
 
 /// `is_annot_visible`: whether the annotation's `/Rect` has a non-zero area.
 pub fn is_annot_visible(rev: &Revision<'_>, annot: &Object) -> DiffResultT<bool> {
-    let Some(d) = as_dict(annot) else { return Ok(false) };
-    let Ok(rect_raw) = d.get(b"Rect") else { return Ok(false) };
+    let Some(d) = as_dict(annot) else {
+        return Ok(false);
+    };
+    let Ok(rect_raw) = d.get(b"Rect") else {
+        return Ok(false);
+    };
     let rect = rev.deref(rect_raw)?;
     let coords: Option<Vec<f64>> = match &*rect {
         Object::Array(a) if a.len() == 4 => a.iter().map(as_number).collect(),
@@ -50,7 +54,9 @@ pub fn is_annot_visible(rev: &Revision<'_>, annot: &Object) -> DiffResultT<bool>
 /// `is_field_visible`: whether the field or one of its `/Kids` is a visible
 /// annotation.
 pub fn is_field_visible(rev: &Revision<'_>, field: &Object) -> DiffResultT<bool> {
-    let Some(d) = as_dict(field) else { return Ok(false) };
+    let Some(d) = as_dict(field) else {
+        return Ok(false);
+    };
     let Ok(kids_raw) = d.get(b"Kids") else {
         return is_annot_visible(rev, field);
     };
@@ -95,7 +101,10 @@ pub struct SigFieldCreationRule {
 
 impl Default for SigFieldCreationRule {
     fn default() -> Self {
-        Self { approve_widget_bindings: true, allow_new_visible_after_certify: false }
+        Self {
+            approve_widget_bindings: true,
+            allow_new_visible_after_certify: false,
+        }
     }
 }
 
@@ -115,7 +124,10 @@ impl FieldMdpRule for SigFieldCreationRule {
             .map(|(n, _)| n.clone())
             .collect();
         if !deleted.is_empty() {
-            return suspicious(format!("Fields {} were deleted after signing.", set_str(&deleted)));
+            return suspicious(format!(
+                "Fields {} were deleted after signing.",
+                set_str(&deleted)
+            ));
         }
         let all_new_refs: Vec<(String, ObjectId)> = context
             .field_specs
@@ -182,8 +194,11 @@ impl FieldMdpRule for SigFieldCreationRule {
                         if old.is_ref_unassignable(*kids_ref) {
                             out.push((
                                 mod_level,
-                                FormUpdate::new(ReferenceUpdate::new(*kids_ref), Some(fq_name.clone()))
-                                    .locked_ok(!visible),
+                                FormUpdate::new(
+                                    ReferenceUpdate::new(*kids_ref),
+                                    Some(fq_name.clone()),
+                                )
+                                .locked_ok(!visible),
                             ));
                         }
                     }
@@ -191,15 +206,21 @@ impl FieldMdpRule for SigFieldCreationRule {
                     for kid in arr_to_refs(&kids, false)? {
                         let kid_obj = new.get(kid)?;
                         let Some(kid_d) = as_dict(&kid_obj) else {
-                            return suspicious(format!("Widget {} is not a dictionary", ref_str(kid)));
+                            return suspicious(format!(
+                                "Widget {} is not a dictionary",
+                                ref_str(kid)
+                            ));
                         };
                         if !kid_d.has(b"T") {
                             field_ref_reverse.insert(kid, fq_name.clone());
                             if old.is_ref_unassignable(kid) {
                                 out.push((
                                     mod_level,
-                                    FormUpdate::new(ReferenceUpdate::new(kid), Some(fq_name.clone()))
-                                        .locked_ok(!visible),
+                                    FormUpdate::new(
+                                        ReferenceUpdate::new(kid),
+                                        Some(fq_name.clone()),
+                                    )
+                                    .locked_ok(!visible),
                                 ));
                             }
                             handle_deps(kid_d, b"AP", &mut out)?;
@@ -228,7 +249,11 @@ impl FieldMdpRule for SigFieldCreationRule {
             0,
             &mut annots,
         )?;
-        out.extend(annots.into_iter().map(|u| (ModificationLevel::LtaUpdates, u)));
+        out.extend(
+            annots
+                .into_iter()
+                .map(|u| (ModificationLevel::LtaUpdates, u)),
+        );
         Ok(out)
     }
 }
@@ -250,7 +275,9 @@ fn arr_to_refs(arr: &Object, read_err: bool) -> DiffResultT<Vec<ObjectId>> {
             DiffError::Suspicious(m.into())
         }
     };
-    let Object::Array(items) = arr else { return Err(exc("Not an array object")) };
+    let Object::Array(items) = arr else {
+        return Err(exc("Not an array object"));
+    };
     items
         .iter()
         .map(|i| match i {
@@ -268,9 +295,15 @@ fn extract_annots(
 ) -> DiffResultT<Option<(BTreeSet<ObjectId>, Option<ObjectId>)>> {
     let Some(d) = as_dict(page) else {
         let m = "Page objects should be dictionaries".to_string();
-        return Err(if read_err { DiffError::Read(m) } else { DiffError::Suspicious(m) });
+        return Err(if read_err {
+            DiffError::Read(m)
+        } else {
+            DiffError::Suspicious(m)
+        });
     };
-    let Ok(annots_value) = d.get(b"Annots") else { return Ok(None) };
+    let Ok(annots_value) = d.get(b"Annots") else {
+        return Ok(None);
+    };
     let annots_ref = match annots_value {
         Object::Reference(r) => Some(*r),
         _ => None,
@@ -303,18 +336,21 @@ fn walk_page_tree_annots(
     if depth > MAX_PAGE_TREE_DEPTH {
         return read_error("Page tree too deep during annotation analysis");
     }
-    let get_kids = |rev: &Revision<'_>, root: &Object, read_err: bool| -> DiffResultT<Vec<ObjectId>> {
-        let exc = |m: &str| {
-            if read_err {
-                DiffError::Read(m.into())
-            } else {
-                DiffError::Suspicious(m.into())
-            }
+    let get_kids =
+        |rev: &Revision<'_>, root: &Object, read_err: bool| -> DiffResultT<Vec<ObjectId>> {
+            let exc = |m: &str| {
+                if read_err {
+                    DiffError::Read(m.into())
+                } else {
+                    DiffError::Suspicious(m.into())
+                }
+            };
+            let d = as_dict(root).ok_or_else(|| exc("No /Kids in /Pages entry"))?;
+            let kids_raw = d
+                .get(b"Kids")
+                .map_err(|_| exc("No /Kids in /Pages entry"))?;
+            arr_to_refs(&*rev.deref(kids_raw)?, read_err)
         };
-        let d = as_dict(root).ok_or_else(|| exc("No /Kids in /Pages entry"))?;
-        let kids_raw = d.get(b"Kids").map_err(|_| exc("No /Kids in /Pages entry"))?;
-        arr_to_refs(&*rev.deref(kids_raw)?, read_err)
-    };
     let old_kids = get_kids(old, old_page_root, true)?;
     let new_kids = get_kids(new, new_page_root, false)?;
     if old_kids != new_kids {
@@ -347,7 +383,8 @@ fn walk_page_tree_annots(
                 )?;
             }
             Object::Name(n) if n == b"Page" => {
-                let Some((new_annots, new_annots_ref)) = extract_annots(new, &new_kid, false)? else {
+                let Some((new_annots, new_annots_ref)) = extract_annots(new, &new_kid, false)?
+                else {
                     continue;
                 };
                 let (old_annots, old_annots_ref) =
@@ -355,13 +392,18 @@ fn walk_page_tree_annots(
                 if old_annots == new_annots {
                     continue;
                 }
-                let deleted: BTreeSet<ObjectId> = old_annots.difference(&new_annots).copied().collect();
+                let deleted: BTreeSet<ObjectId> =
+                    old_annots.difference(&new_annots).copied().collect();
                 if !deleted.is_empty() {
                     return suspicious(format!("Annotations {} were deleted.", refs_str(&deleted)));
                 }
-                let added: BTreeSet<ObjectId> = new_annots.difference(&old_annots).copied().collect();
-                let unknown: BTreeSet<ObjectId> =
-                    added.iter().filter(|a| !field_name_dict.contains_key(a)).copied().collect();
+                let added: BTreeSet<ObjectId> =
+                    new_annots.difference(&old_annots).copied().collect();
+                let unknown: BTreeSet<ObjectId> = added
+                    .iter()
+                    .filter(|a| !field_name_dict.contains_key(a))
+                    .copied()
+                    .collect();
                 if !unknown.is_empty() {
                     return suspicious(format!(
                         "The newly added annotations {} were not recognised.",
@@ -369,7 +411,10 @@ fn walk_page_tree_annots(
                     ));
                 }
                 let field_name = if added.len() == 1 {
-                    added.iter().next().and_then(|a| field_name_dict.get(a).cloned())
+                    added
+                        .iter()
+                        .next()
+                        .and_then(|a| field_name_dict.get(a).cloned())
                 } else {
                     None
                 };
@@ -422,7 +467,10 @@ impl Default for BaseFieldModificationRule {
     fn default() -> Self {
         Self {
             allow_in_place_appearance_stream_changes: true,
-            always_modifiable: FORMFIELD_ALWAYS_MODIFIABLE.iter().map(|k| k.to_vec()).collect(),
+            always_modifiable: FORMFIELD_ALWAYS_MODIFIABLE
+                .iter()
+                .map(|k| k.to_vec())
+                .collect(),
             value_update_keys: VALUE_UPDATE_KEYS.iter().map(|k| k.to_vec()).collect(),
         }
     }
@@ -440,7 +488,12 @@ impl BaseFieldModificationRule {
         let old_field = spec.old_field(old)?;
         let new_field = spec.new_field(new)?;
         let value_keys: Vec<&[u8]> = self.value_update_keys.iter().map(Vec::as_slice).collect();
-        compare_dicts(old_field.as_deref(), new_field.as_deref(), &value_keys, true)?;
+        compare_dicts(
+            old_field.as_deref(),
+            new_field.as_deref(),
+            &value_keys,
+            true,
+        )?;
         let (Some(of), Some(nf)) = (old_field.as_deref(), new_field.as_deref()) else {
             return read_error("field missing");
         };
@@ -451,7 +504,9 @@ impl BaseFieldModificationRule {
             match had_type {
                 None => {
                     if !matches!(type_val, Object::Name(n) if n == b"Annot") {
-                        return suspicious("/Type of form field set to something other than /Annot");
+                        return suspicious(
+                            "/Type of form field set to something other than /Annot",
+                        );
                     }
                 }
                 Some(old_type) => {
@@ -482,8 +537,11 @@ fn field_ref_updates(
     for ctx in spec.expected_contexts(old)? {
         out.push((
             level,
-            FormUpdate::new(ReferenceUpdate::with_context(new_ref, ctx), Some(fq_name.to_string()))
-                .locked_ok(valid_when_locked),
+            FormUpdate::new(
+                ReferenceUpdate::with_context(new_ref, ctx),
+                Some(fq_name.to_string()),
+            )
+            .locked_ok(valid_when_locked),
         ));
     }
     Ok(())
@@ -518,7 +576,9 @@ impl SigFieldModificationRule {
         out: &mut Updates,
     ) -> DiffResultT<()> {
         let (old, new) = (context.old, context.new);
-        let Some(new_ref) = spec.new_field_ref else { return Ok(()) };
+        let Some(new_ref) = spec.new_field_ref else {
+            return Ok(());
+        };
         if !spec.is_sig() {
             return Ok(());
         }
@@ -602,7 +662,9 @@ impl SigFieldModificationRule {
         }
         let sig_obj = new.get(current_value_ref)?;
         let Some(sig_d) = as_dict(&sig_obj) else {
-            return suspicious(format!("Value of signature field {fq_name} is not a dictionary"));
+            return suspicious(format!(
+                "Value of signature field {fq_name} is not a dictionary"
+            ));
         };
         let visible = is_field_visible(new, &new_field)?;
         let is_dts = matches!(sig_d.get(b"Type"), Ok(Object::Name(n)) if n == b"DocTimeStamp");
@@ -691,7 +753,9 @@ impl FieldMdpRule for GenericFieldModificationRule {
                     out.push((ModificationLevel::FormFilling, u));
                 }
             }
-            let Ok(new_value) = dict_of(&new_field)?.get(b"V") else { continue };
+            let Ok(new_value) = dict_of(&new_field)?.get(b"V") else {
+                continue;
+            };
             let changed = match dict_of(&old_field)?.get(b"V") {
                 Ok(old_value) => !py_eq(new_value, old_value),
                 Err(_) => true,
@@ -782,7 +846,9 @@ fn allow_in_place_appearance_update(
         return Ok(out);
     };
     let old_ap = old.deref(old_ap_raw)?;
-    let Some(old_ap_d) = as_dict(&old_ap) else { return Ok(out) };
+    let Some(old_ap_d) = as_dict(&old_ap) else {
+        return Ok(out);
+    };
     let new_ap = new.deref(new_ap_raw)?;
     let Some(new_ap_d) = as_dict(&new_ap) else {
         return read_error("/AP is not a dictionary");
@@ -814,7 +880,10 @@ fn allow_in_place_appearance_update(
                 Context::relative(Anchor::Ref(fref), RawPdfPath::of(["/AP", key_s.as_str()]))
             }
         };
-        out.push(FormUpdate::new(ReferenceUpdate::with_context(old_stm, context), fq.clone()));
+        out.push(FormUpdate::new(
+            ReferenceUpdate::with_context(old_stm, context),
+            fq.clone(),
+        ));
         let stm_obj = new.get(old_stm)?;
         for r in new.collect_dependencies(&stm_obj, Some(old.revision() + 1))? {
             out.push(FormUpdate::new(ReferenceUpdate::new(r), fq.clone()));

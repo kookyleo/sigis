@@ -25,7 +25,11 @@ fn check(name: &str) -> Vec<Replay> {
     let known: Vec<Divergence> = KNOWN_DIVERGENCES
         .iter()
         .filter(|d| d.node == name || d.node.starts_with(&format!("{name}[")))
-        .map(|d| Divergence { node: d.node, index: d.index, reason: d.reason })
+        .map(|d| Divergence {
+            node: d.node,
+            index: d.index,
+            reason: d.reason,
+        })
         .collect();
     check_function(name, &known)
 }
@@ -34,7 +38,9 @@ fn check(name: &str) -> Vec<Replay> {
 /// message).
 fn assert_message(replays: &[Replay], needle: &str) {
     assert!(
-        replays.iter().any(|r| r.port_rejects() && r.message().contains(needle)),
+        replays
+            .iter()
+            .any(|r| r.port_rejects() && r.message().contains(needle)),
         "no rejection mentions {needle:?}: {:?}",
         replays.iter().map(Replay::message).collect::<Vec<_>>()
     );
@@ -315,7 +321,10 @@ fn test_skip_diff_scenario_2() {
 #[test]
 fn test_diff_analysis_circular_structure_tree() {
     let replays = check("test_diff_analysis_circular_structure_tree");
-    assert_message(&replays, "Circular reference in structure tree in mapping stage");
+    assert_message(
+        &replays,
+        "Circular reference in structure tree in mapping stage",
+    );
 }
 
 #[test]
@@ -369,7 +378,10 @@ fn test_diff_analysis_remove_type_entry() {
 #[test]
 fn test_diff_analysis_add_invalid_type_entry() {
     let replays = check("test_diff_analysis_add_invalid_type_entry");
-    assert_message(&replays, "/Type of form field set to something other than /Annot");
+    assert_message(
+        &replays,
+        "/Type of form field set to something other than /Annot",
+    );
 }
 
 #[test]
@@ -466,7 +478,10 @@ fn check_page_tree_paths(name: &str) {
         assert!(!caches.is_empty());
         for cache in caches {
             let want: BTreeSet<RawPdfPath> = [contents_path()].into_iter().collect();
-            assert!(cache.values().any(|p| *p == want), "no content stream with canonical path only");
+            assert!(
+                cache.values().any(|p| *p == want),
+                "no content stream with canonical path only"
+            );
             assert!(cache.values().map(BTreeSet::len).sum::<usize>() < 1000);
         }
     }
@@ -504,7 +519,8 @@ fn test_form_field_manipulate_names() {
         let err = node.rsplit_once('-').unwrap().1.trim_end_matches(']');
         let mine: Vec<&Replay> = replays.iter().filter(|r| r.test_id == node).collect();
         assert!(
-            mine.iter().any(|r| r.port_rejects() && r.message().contains(err)),
+            mine.iter()
+                .any(|r| r.port_rejects() && r.message().contains(err)),
             "{node}: {:?}",
             mine.iter().map(|r| r.message()).collect::<Vec<_>>()
         );
@@ -520,7 +536,11 @@ fn test_diff_analysis_circular_page_tree() {
     let old = Revision::new(&src, 1).unwrap();
     let new = Revision::new(&src, 2).unwrap();
     let err = hanko_diff::rules::walk_page_tree_annots_unchecked(&old, &new).unwrap_err();
-    assert!(err.to_string().contains("Circular reference in page tree during annotation"), "{err}");
+    assert!(
+        err.to_string()
+            .contains("Circular reference in page tree during annotation"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -538,7 +558,13 @@ fn test_check_relative_context_set() {
     let rev = Revision::new(&src, 0).unwrap();
     let root_rel = Context::relative(Anchor::Trailer, RawPdfPath::of(["/Root"]));
     let info_rel = Context::relative(Anchor::Trailer, RawPdfPath::of(["/Info"]));
-    assert_eq!([root_rel.clone(), info_rel].into_iter().collect::<BTreeSet<_>>().len(), 2);
+    assert_eq!(
+        [root_rel.clone(), info_rel]
+            .into_iter()
+            .collect::<BTreeSet<_>>()
+            .len(),
+        2
+    );
 
     let p = |nodes: &[PathNode]| RawPdfPath(nodes.to_vec());
     let a = root_rel
@@ -548,13 +574,23 @@ fn test_check_relative_context_set() {
         .unwrap()
         .descend(&rev, &p(&[0usize.into()]))
         .unwrap();
-    let b = root_rel.descend(&rev, &p(&["/Pages".into(), "/Kids".into(), 0usize.into()])).unwrap();
+    let b = root_rel
+        .descend(&rev, &p(&["/Pages".into(), "/Kids".into(), 0usize.into()]))
+        .unwrap();
     let root = rev.root().unwrap();
-    let Ok(Object::Reference(pages)) = root.as_dict().unwrap().get(b"Pages") else { panic!() };
-    let (anchor, path) = rev.relative_to(Anchor::Ref(*pages), &p(&["/Kids".into(), 0usize.into()])).unwrap();
+    let Ok(Object::Reference(pages)) = root.as_dict().unwrap().get(b"Pages") else {
+        panic!()
+    };
+    let (anchor, path) = rev
+        .relative_to(Anchor::Ref(*pages), &p(&["/Kids".into(), 0usize.into()]))
+        .unwrap();
     let c = Context::relative(anchor, path);
-    let (anchor, path) = rev.relative_to(Anchor::Ref(*pages), &p(&["/Kids".into()])).unwrap();
-    let d = Context::relative(anchor, path).descend(&rev, &p(&[0usize.into()])).unwrap();
+    let (anchor, path) = rev
+        .relative_to(Anchor::Ref(*pages), &p(&["/Kids".into()]))
+        .unwrap();
+    let d = Context::relative(anchor, path)
+        .descend(&rev, &p(&[0usize.into()]))
+        .unwrap();
     let all: BTreeSet<Context> = [a, b, c, d].into_iter().collect();
     assert_eq!(all.len(), 1, "{all:?}");
 }
@@ -563,8 +599,17 @@ fn test_check_relative_context_set() {
 fn test_cant_descend_into_non_container() {
     let mut src = LopdfSource::minimal();
     let foo = src.doc.add_object(Object::Name(b"Bar".to_vec()));
-    let root_id = src.doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
-    src.doc.get_dictionary_mut(root_id).unwrap().set("Foo", Object::Reference(foo));
+    let root_id = src
+        .doc
+        .trailer
+        .get(b"Root")
+        .unwrap()
+        .as_reference()
+        .unwrap();
+    src.doc
+        .get_dictionary_mut(root_id)
+        .unwrap()
+        .set("Foo", Object::Reference(foo));
     let rev = Revision::new(&src, 0).unwrap();
     let ctx = Context::relative(Anchor::Ref(foo), RawPdfPath::new());
     let err = ctx.descend(&rev, &RawPdfPath::of(["/Blah"])).unwrap_err();
@@ -578,7 +623,10 @@ fn test_is_field_visible() {
     let rev = Revision::new(&src, 0).unwrap();
     let rect = |r: [i64; 4]| {
         let mut d = Dictionary::new();
-        d.set("Rect", Object::Array(r.iter().map(|x| Object::Integer(*x)).collect()));
+        d.set(
+            "Rect",
+            Object::Array(r.iter().map(|x| Object::Integer(*x)).collect()),
+        );
         Object::Dictionary(d)
     };
     let with_kids = |kids: Vec<Object>| {
@@ -596,7 +644,11 @@ fn test_is_field_visible() {
     d.set("Rect", Object::Null);
     assert!(!is_annot_visible(&rev, &Object::Dictionary(d)).unwrap());
     assert!(is_field_visible(&rev, &with_kids(vec![rect([1, 2, 3, 4])])).unwrap());
-    assert!(is_field_visible(&rev, &with_kids(vec![rect([0, 0, 0, 0]), rect([1, 2, 3, 4])])).unwrap());
+    assert!(is_field_visible(
+        &rev,
+        &with_kids(vec![rect([0, 0, 0, 0]), rect([1, 2, 3, 4])])
+    )
+    .unwrap());
     assert!(!is_field_visible(&rev, &with_kids(vec![rect([0, 0, 0, 0])])).unwrap());
 }
 
@@ -635,12 +687,32 @@ fn test_duplicate_xref_table_entry_rejected() {
     let base = std::fs::read(hanko_testdata::pyhanko(&["pdf", "minimal.pdf"])).unwrap();
     let doc = lopdf::Document::load_mem(&base).unwrap();
     let page = doc.page_iter().next().unwrap();
-    let contents = doc.get_dictionary(page).unwrap().get(b"Contents").unwrap().as_reference().unwrap();
-    let original = doc.get_object(contents).unwrap().as_stream().unwrap().content.clone();
+    let contents = doc
+        .get_dictionary(page)
+        .unwrap()
+        .get(b"Contents")
+        .unwrap()
+        .as_reference()
+        .unwrap();
+    let original = doc
+        .get_object(contents)
+        .unwrap()
+        .as_stream()
+        .unwrap()
+        .content
+        .clone();
     let prev = {
         let tail = &base[base.len().saturating_sub(64)..];
         let s = String::from_utf8_lossy(tail);
-        let n: String = s.rsplit("startxref").next().unwrap().trim().lines().next().unwrap().to_string();
+        let n: String = s
+            .rsplit("startxref")
+            .next()
+            .unwrap()
+            .trim()
+            .lines()
+            .next()
+            .unwrap()
+            .to_string();
         n.parse::<usize>().unwrap()
     };
     let size = doc.trailer.get(b"Size").unwrap().as_i64().unwrap();
@@ -648,9 +720,20 @@ fn test_duplicate_xref_table_entry_rejected() {
     for changed_first in [true, false] {
         let mut data = base.clone();
         let mut offsets = Vec::new();
-        for content in [b"BT /F1 24 Tf 50 700 Td (Hi!) Tj ET".to_vec(), original.clone()] {
+        for content in [
+            b"BT /F1 24 Tf 50 700 Td (Hi!) Tj ET".to_vec(),
+            original.clone(),
+        ] {
             offsets.push(data.len());
-            data.extend(format!("{} {} obj\n<< /Length {} >>\nstream\n", contents.0, contents.1, content.len()).bytes());
+            data.extend(
+                format!(
+                    "{} {} obj\n<< /Length {} >>\nstream\n",
+                    contents.0,
+                    contents.1,
+                    content.len()
+                )
+                .bytes(),
+            );
             data.extend(&content);
             data.extend(b"\nendstream\nendobj\n");
         }
@@ -662,8 +745,17 @@ fn test_duplicate_xref_table_entry_rejected() {
         for o in &offsets {
             data.extend(format!("{} 1\n{o:010} {:05} n \n", contents.0, contents.1).bytes());
         }
-        data.extend(format!("trailer\n<< /Size {size} /Root {} 0 R /Prev {prev} >>\n", root.0).bytes());
+        data.extend(
+            format!(
+                "trailer\n<< /Size {size} /Root {} 0 R /Prev {prev} >>\n",
+                root.0
+            )
+            .bytes(),
+        );
         data.extend(format!("startxref\n{xref_start}\n%%EOF\n").bytes());
-        assert!(hanko_pdf::PdfFile::parse(&data).is_err(), "duplicate xref entry accepted");
+        assert!(
+            hanko_pdf::PdfFile::parse(&data).is_err(),
+            "duplicate xref entry accepted"
+        );
     }
 }

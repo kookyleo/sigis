@@ -141,7 +141,9 @@ pub struct Revision<'a> {
 
 impl std::fmt::Debug for Revision<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Revision").field("revision", &self.revision).finish()
+        f.debug_struct("Revision")
+            .field("revision", &self.revision)
+            .finish()
     }
 }
 
@@ -295,7 +297,10 @@ impl<'a> Revision<'a> {
                 continue;
             }
             let o = self.get_raw(id)?;
-            if matches!(&*o, Object::Dictionary(_) | Object::Stream(_) | Object::Array(_)) {
+            if matches!(
+                &*o,
+                Object::Dictionary(_) | Object::Stream(_) | Object::Array(_)
+            ) {
                 push_refs_children(&o, &mut stack);
             }
         }
@@ -372,8 +377,8 @@ impl<'a> Revision<'a> {
         let mut stack: Vec<(Rc<Object>, RawPdfPath)> =
             vec![(Rc::new(pages_obj.clone()), path.clone())];
         while let Some((node, node_path)) = stack.pop() {
-            let dict = as_dict(&node)
-                .ok_or_else(|| DiffError::Read("Invalid page tree node".into()))?;
+            let dict =
+                as_dict(&node).ok_or_else(|| DiffError::Read("Invalid page tree node".into()))?;
             let kids_raw = dict
                 .get(b"Kids")
                 .map_err(|_| DiffError::Read("No /Kids in page tree node".into()))?;
@@ -425,7 +430,9 @@ impl<'a> Revision<'a> {
                     _ => None,
                 };
                 let child_obj = self.deref(&child)?;
-                let Some(cd) = as_dict(&child_obj) else { continue };
+                let Some(cd) = as_dict(&child_obj) else {
+                    continue;
+                };
                 if let Ok(t) = cd.get(b"Type") {
                     let t = self.deref(t)?;
                     if !matches!(&*t, Object::Name(n) if n == b"StructElem") {
@@ -434,9 +441,7 @@ impl<'a> Revision<'a> {
                 }
                 if let Some(id) = child_ref {
                     if !out.insert(id) {
-                        return read_error(
-                            "Circular reference in structure tree in mapping stage",
-                        );
+                        return read_error("Circular reference in structure tree in mapping stage");
                     }
                 }
                 next.push(child_obj);
@@ -529,7 +534,10 @@ impl<'a> Revision<'a> {
     ) -> DiffResultT<(Anchor, RawPdfPath)> {
         if let Anchor::Ref(id) = anchor {
             let root = self.get(id)?;
-            if !matches!(&*root, Object::Dictionary(_) | Object::Array(_) | Object::Stream(_)) {
+            if !matches!(
+                &*root,
+                Object::Dictionary(_) | Object::Array(_) | Object::Stream(_)
+            ) {
                 return read_error(format!("Anchor {} is not a container object", ref_str(id)));
             }
         }
@@ -573,7 +581,12 @@ struct UsageWalker<'r, 'a> {
 impl UsageWalker<'_, '_> {
     /// `_compute_paths_to_refs` for an indirect reference.
     fn visit_ref(&mut self, item: PendingRef) -> DiffResultT<()> {
-        let PendingRef { id, path, seen, is_struct_tree } = item;
+        let PendingRef {
+            id,
+            path,
+            seen,
+            is_struct_tree,
+        } = item;
         if seen.contains(&id) {
             return Ok(());
         }

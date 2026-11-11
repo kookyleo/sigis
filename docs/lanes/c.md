@@ -43,10 +43,15 @@ Skipped (no difference analysis runs; reasons in PORTING.md):
 lane D). Pending: `test_duplicate_xref_table_entry_rejected` (reader, needs
 lane B; test written and ignored).
 
-Differential coverage: 165 recorded reviews from the 183 upstream test cases
-and a sweep of 982 reviews (every recorded file × base revision × strict /
-lenient) agree with pyHanko, including the kind of rejection. Every
-pyHanko rejection is asserted to be a rejection in the port.
+Differential coverage: 165 recorded reviews from the 183 upstream test cases,
+a sweep of 982 reviews (every recorded file × base revision × strict /
+lenient) and 1,308 verdicts on a seeded mutation corpus (436 random
+incremental updates; plain, DocMDP P=2, all fields locked) agree with
+pyHanko, including the kind of rejection. Local runs with four more seeds
+(about 10,400 verdicts) agree too. Every pyHanko rejection is asserted to be
+a rejection in the port. The sweep and the mutations also run through the
+`PdfFile` derivation (`DerivedSource`): no fail-open case; stricter only on
+one deliberately broken hybrid file.
 
 ## Known divergences
 

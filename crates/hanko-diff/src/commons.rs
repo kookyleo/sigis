@@ -23,12 +23,21 @@ pub const ACROFORM_EXEMPT_STRICT_COMPARISON: &[&[u8]] =
     &[b"Fields", b"DR", b"DA", b"Q", b"NeedAppearances"];
 
 /// `ROOT_EXEMPT_STRICT_COMPARISON`.
-pub const ROOT_EXEMPT_STRICT_COMPARISON: &[&[u8]] =
-    &[b"AcroForm", b"DSS", b"Extensions", b"Metadata", b"MarkInfo", b"Version"];
+pub const ROOT_EXEMPT_STRICT_COMPARISON: &[&[u8]] = &[
+    b"AcroForm",
+    b"DSS",
+    b"Extensions",
+    b"Metadata",
+    b"MarkInfo",
+    b"Version",
+];
 
 /// `VRI_KEY_PATTERN` (`/[A-Z0-9]{40}`, matched as a prefix like `re.match`).
 pub(crate) fn is_vri_key(key: &[u8]) -> bool {
-    key.len() >= 40 && key[..40].iter().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
+    key.len() >= 40
+        && key[..40]
+            .iter()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
 }
 
 /// `assert_not_stream`.
@@ -100,7 +109,10 @@ pub(crate) fn compare_key_refs(
 }
 
 fn key_set<'d>(d: &'d Dictionary, ignored: &[&[u8]]) -> BTreeSet<&'d [u8]> {
-    d.iter().map(|(k, _)| k.as_slice()).filter(|k| !ignored.contains(k)).collect()
+    d.iter()
+        .map(|(k, _)| k.as_slice())
+        .filter(|k| !ignored.contains(k))
+        .collect()
 }
 
 fn fmt_keys(keys: &BTreeSet<&[u8]>) -> String {

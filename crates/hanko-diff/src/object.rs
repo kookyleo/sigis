@@ -137,14 +137,20 @@ pub(crate) fn decode_text(b: &[u8]) -> Option<String> {
         if rest.len() % 2 != 0 {
             return None;
         }
-        let units: Vec<u16> = rest.chunks(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+        let units: Vec<u16> = rest
+            .chunks(2)
+            .map(|c| u16::from_be_bytes([c[0], c[1]]))
+            .collect();
         return String::from_utf16(&units).ok();
     }
     if let Some(rest) = b.strip_prefix(&[0xff, 0xfe]) {
         if rest.len() % 2 != 0 {
             return None;
         }
-        let units: Vec<u16> = rest.chunks(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let units: Vec<u16> = rest
+            .chunks(2)
+            .map(|c| u16::from_le_bytes([c[0], c[1]]))
+            .collect();
         return String::from_utf16(&units).ok();
     }
     if let Some(rest) = b.strip_prefix(&[0xef, 0xbb, 0xbf]) {

@@ -66,7 +66,10 @@ pub struct MetadataUpdateRule {
 
 impl Default for MetadataUpdateRule {
     fn default() -> Self {
-        Self { check_xml_syntax: true, always_refuse_stream_override: false }
+        Self {
+            check_xml_syntax: true,
+            always_refuse_stream_override: false,
+        }
     }
 }
 
@@ -93,7 +96,8 @@ impl MetadataUpdateRule {
         let Some(d) = as_dict(root) else {
             return read_error("Document catalog is not a dictionary");
         };
-        value_as_reference(d, b"Metadata").or_else(|_| suspicious("/Metadata should be an indirect reference"))
+        value_as_reference(d, b"Metadata")
+            .or_else(|_| suspicious("/Metadata should be an indirect reference"))
     }
 }
 

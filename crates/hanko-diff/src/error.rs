@@ -43,7 +43,9 @@ impl From<HankoError> for DiffError {
 impl From<DiffError> for HankoError {
     fn from(e: DiffError) -> Self {
         match e {
-            DiffError::Suspicious(m) => HankoError::Malformed(format!("suspicious modification: {m}")),
+            DiffError::Suspicious(m) => {
+                HankoError::Malformed(format!("suspicious modification: {m}"))
+            }
             DiffError::Read(m) => HankoError::Malformed(m),
             DiffError::Source(e) => e,
         }

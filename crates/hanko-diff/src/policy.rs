@@ -139,7 +139,10 @@ impl ConfigurableDiffPolicy {
 
         if self.ignore_orphaned_objects {
             for r in find_orphans(new)? {
-                explained.entry(ModificationLevel::LtaUpdates).or_default().insert(r);
+                explained
+                    .entry(ModificationLevel::LtaUpdates)
+                    .or_default()
+                    .insert(r);
             }
         }
 
@@ -225,8 +228,10 @@ impl ConfigurableDiffPolicy {
         }
 
         let level_set = |l: ModificationLevel| explained.get(&l).cloned().unwrap_or_default();
-        let mut unexplained_lta: BTreeSet<ObjectId> =
-            new_xrefs.difference(&level_set(ModificationLevel::LtaUpdates)).copied().collect();
+        let mut unexplained_lta: BTreeSet<ObjectId> = new_xrefs
+            .difference(&level_set(ModificationLevel::LtaUpdates))
+            .copied()
+            .collect();
         let mut unexplained_formfill: BTreeSet<ObjectId> = unexplained_lta
             .difference(&level_set(ModificationLevel::FormFilling))
             .copied()
@@ -257,7 +262,11 @@ impl ConfigurableDiffPolicy {
             let mut msg = format!(
                 "There are unexplained xrefs in revision {}: {}.",
                 new.revision(),
-                unexplained_annot.iter().map(|r| ref_str(*r)).collect::<Vec<_>>().join(", ")
+                unexplained_annot
+                    .iter()
+                    .map(|r| ref_str(*r))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
             let overrides: Vec<String> = old_usages
                 .iter()
@@ -288,7 +297,10 @@ impl ConfigurableDiffPolicy {
         } else {
             ModificationLevel::LtaUpdates
         };
-        Ok(DiffResult { modification_level: level, changed_form_fields })
+        Ok(DiffResult {
+            modification_level: level,
+            changed_form_fields,
+        })
     }
 
     /// `review_file`: review every revision after `base_revision`
@@ -321,7 +333,10 @@ impl ConfigurableDiffPolicy {
         let mut current_max = ModificationLevel::None;
         let mut changed = BTreeSet::new();
         if base_revision + 1 >= count {
-            return Ok(DiffResult { modification_level: current_max, changed_form_fields: changed });
+            return Ok(DiffResult {
+                modification_level: current_max,
+                changed_form_fields: changed,
+            });
         }
         let base = Revision::new(src, base_revision)?;
         for revision in base_revision + 1..count {
@@ -330,6 +345,9 @@ impl ConfigurableDiffPolicy {
             current_max = current_max.max(r.modification_level);
             changed.extend(r.changed_form_fields);
         }
-        Ok(DiffResult { modification_level: current_max, changed_form_fields: changed })
+        Ok(DiffResult {
+            modification_level: current_max,
+            changed_form_fields: changed,
+        })
     }
 }

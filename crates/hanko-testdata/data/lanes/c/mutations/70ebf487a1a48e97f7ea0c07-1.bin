@@ -1,0 +1,50 @@
+8 0 obj
+<<
+/FT /Sig
+/T (Sig2)
+/Subtype /Widget
+/F 4
+/P 3 0 R
+/Rect [ 10 74 290 134 ]
+/Type /Foo
+/AP <<
+/N 19 0 R
+>>
+/V 17 0 R
+>>
+endobj
+13 0 obj
+<<
+/ModDate (D\07220261111225140\05308\04700\047)
+/Producer (pyHanko 0\0560\0560\056dev1\073 pyHanko 0\05638\0561)
+>>
+endobj
+19 0 obj
+<<
+/BBox [ 0 0 10 10 ]
+/Length 3
+>>
+stream
+q Q
+endstream
+endobj
+xref
+0 1
+0000000000 65535 f 
+8 1
+0000029542 00000 n 
+13 1
+0000029678 00000 n 
+19 1
+0000029812 00000 n 
+trailer
+<<
+/Root 1 0 R
+/Size 20
+/ID [ <67cd4bc07e140aa5c4c7ec6241db25e1> <f351bfae5dba895f1adb9706b2dbb31e> ]
+/Prev 29239
+/Info 13 0 R
+>>
+startxref
+29885
+%%EOF

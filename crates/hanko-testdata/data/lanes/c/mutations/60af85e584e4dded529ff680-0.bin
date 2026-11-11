@@ -1,0 +1,65 @@
+6 0 obj
+<<
+/Fields [ 7 0 R 15 0 R 18 0 R ]
+/SigFlags 3
+>>
+endobj
+12 0 obj
+<<
+/ModDate (D\07220261111225139\05308\04700\047)
+/Producer (pyHanko 0\0560\0560\056dev1\073 pyHanko 0\05638\0561)
+>>
+endobj
+14 0 obj
+[ 7 0 R 15 0 R 18 0 R ]
+endobj
+18 0 obj
+<<
+/FT /Sig
+/T (MutSig169)
+/Type /Annot
+/Subtype /Widget
+/F 132
+/Rect [ 10 10 60 40 ]
+/P 3 0 R
+/AP <<
+/N 19 0 R
+>>
+>>
+endobj
+19 0 obj
+<<
+/BBox [ 0 30 50 0 ]
+/Resources <<
+>>
+/Type /XObject
+/Subtype /Form
+/Length 0
+>>
+stream
+
+endstream
+endobj
+xref
+0 1
+0000000000 65535 f 
+6 1
+0000028007 00000 n 
+12 1
+0000028072 00000 n 
+14 1
+0000028206 00000 n 
+18 2
+0000028246 00000 n 
+0000028380 00000 n 
+trailer
+<<
+/Root 1 0 R
+/Size 20
+/ID [ <c12a3ef8fd6a02b7877a4943611b1c7e> <0bb9d5097b28770f145e14b089b73768> ]
+/Prev 27680
+/Info 12 0 R
+>>
+startxref
+28497
+%%EOF

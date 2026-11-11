@@ -77,7 +77,9 @@ fn validate_dss_substructure(
 ) -> DiffResultT<()> {
     for der in der_stream_keys {
         let ctx = Context::absolute(context.child(PathNode::Key(der.to_vec())));
-        let Ok(value) = new_dict.get(der) else { continue };
+        let Ok(value) = new_dict.get(der) else {
+            continue;
+        };
         assert_stream_refs(new, der, value, false, is_vri)?;
         if let Object::Reference(new_ref) = value {
             if let Ok(old_value) = old_dict.get(der) {
@@ -123,7 +125,9 @@ impl WhitelistRule for DssCompareRule {
             refs.into_iter()
                 .map(|r| ReferenceUpdate::with_context(r, Context::absolute(dss_path.clone()))),
         );
-        let Some(new_dss) = new_dss else { return Ok(out) };
+        let Some(new_dss) = new_dss else {
+            return Ok(out);
+        };
         let empty = Dictionary::new();
         let old_dss_dict = match old_dss.as_deref() {
             None => &empty,
@@ -138,10 +142,15 @@ impl WhitelistRule for DssCompareRule {
         let unexpected: BTreeSet<Vec<u8>> = new_dss_dict
             .iter()
             .map(|(k, _)| k.clone())
-            .filter(|k| !DSS_DER_KEYS.contains(&k.as_slice()) && !DSS_OTHER_KEYS.contains(&k.as_slice()))
+            .filter(|k| {
+                !DSS_DER_KEYS.contains(&k.as_slice()) && !DSS_OTHER_KEYS.contains(&k.as_slice())
+            })
             .collect();
         if !unexpected.is_empty() {
-            return suspicious(format!("Unexpected keys in DSS: {}.", key_list(&unexpected)));
+            return suspicious(format!(
+                "Unexpected keys in DSS: {}.",
+                key_list(&unexpected)
+            ));
         }
         validate_dss_substructure(
             old,
@@ -155,7 +164,8 @@ impl WhitelistRule for DssCompareRule {
         )?;
 
         let vri_path = dss_path.child("/VRI");
-        let (refs, (old_vri, new_vri)) = compare_key_refs(b"VRI", old, new, old_dss_dict, new_dss_dict)?;
+        let (refs, (old_vri, new_vri)) =
+            compare_key_refs(b"VRI", old, new, old_dss_dict, new_dss_dict)?;
         out.extend(
             refs.into_iter()
                 .map(|r| ReferenceUpdate::with_context(r, Context::absolute(vri_path.clone()))),
@@ -187,9 +197,14 @@ fn check_vri(
     out: &mut Vec<ReferenceUpdate>,
 ) -> DiffResultT<()> {
     for (key, old_value) in old_vri.iter() {
-        let unchanged = new_vri.get(key).is_ok_and(|v| crate::object::py_eq(v, old_value));
+        let unchanged = new_vri
+            .get(key)
+            .is_ok_and(|v| crate::object::py_eq(v, old_value));
         if !unchanged {
-            return suspicious(format!("VRI key {} was modified or deleted.", name_str(key)));
+            return suspicious(format!(
+                "VRI key {} was modified or deleted.",
+                name_str(key)
+            ));
         }
     }
     for (key, raw) in new_vri.iter() {
@@ -197,7 +212,10 @@ fn check_vri(
             continue;
         }
         if !is_vri_key(key) {
-            return suspicious(format!("VRI key {} is not formatted correctly.", name_str(key)));
+            return suspicious(format!(
+                "VRI key {} is not formatted correctly.",
+                name_str(key)
+            ));
         }
         let entry = match raw {
             Object::Reference(id) if old.is_ref_unassignable(*id) => {
@@ -213,7 +231,9 @@ fn check_vri(
         let unexpected: BTreeSet<Vec<u8>> = entry_dict
             .iter()
             .map(|(k, _)| k.clone())
-            .filter(|k| !VRI_DER_KEYS.contains(&k.as_slice()) && !VRI_OTHER_KEYS.contains(&k.as_slice()))
+            .filter(|k| {
+                !VRI_DER_KEYS.contains(&k.as_slice()) && !VRI_OTHER_KEYS.contains(&k.as_slice())
+            })
             .collect();
         if !unexpected.is_empty() {
             return suspicious(format!(

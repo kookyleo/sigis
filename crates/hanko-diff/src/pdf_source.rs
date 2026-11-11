@@ -19,27 +19,70 @@ use lopdf::{Dictionary, Object, ObjectId};
 use crate::history::{RevisionSource, XrefSectionInfo};
 
 /// Trailer keys that are not inherited (`TrailerDictionary.non_trailer_keys`).
-pub(crate) const NON_TRAILER_KEYS: &[&[u8]] =
-    &[b"Length", b"Filter", b"DecodeParms", b"W", b"Type", b"Index", b"XRefStm"];
+pub(crate) const NON_TRAILER_KEYS: &[&[u8]] = &[
+    b"Length",
+    b"Filter",
+    b"DecodeParms",
+    b"W",
+    b"Type",
+    b"Index",
+    b"XRefStm",
+];
+
+/// The revision primitives of [`PdfFile`] that [`DerivedSource`] builds on.
+pub trait PdfRevisions {
+    /// For each revision, oldest first: whether it uses a cross-reference
+    /// stream (`PdfFile::revisions`).
+    fn xref_stream_flags(&self) -> Result<Vec<bool>>;
+    /// `PdfFile::objects_written_in`.
+    fn objects_written_in(&self, revision: usize) -> Result<Vec<ObjectId>>;
+    /// `PdfFile::object_in_revision`.
+    fn object_in_revision(&self, id: ObjectId, revision: usize) -> Result<Option<Object>>;
+    /// `PdfFile::trailer_in_revision`.
+    fn trailer_in_revision(&self, revision: usize) -> Result<Dictionary>;
+    /// Strict reading mode (unresolvable references are errors). `PdfFile`
+    /// does not expose its mode yet (request C1), so the default is strict.
+    fn strict(&self) -> bool {
+        true
+    }
+}
+
+impl PdfRevisions for PdfFile {
+    fn xref_stream_flags(&self) -> Result<Vec<bool>> {
+        Ok(self.revisions()?.iter().map(|r| r.xref_stream).collect())
+    }
+    fn objects_written_in(&self, revision: usize) -> Result<Vec<ObjectId>> {
+        PdfFile::objects_written_in(self, revision)
+    }
+    fn object_in_revision(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
+        PdfFile::object_in_revision(self, id, revision)
+    }
+    fn trailer_in_revision(&self, revision: usize) -> Result<Dictionary> {
+        PdfFile::trailer_in_revision(self, revision)
+    }
+}
 
 /// Adapter from [`PdfFile`] to [`RevisionSource`].
+pub type PdfFileSource<'f> = DerivedSource<'f, PdfFile>;
+
+/// A [`RevisionSource`] derived from [`PdfRevisions`] primitives.
 #[derive(Debug)]
-pub struct PdfFileSource<'f> {
-    file: &'f PdfFile,
+pub struct DerivedSource<'f, P: ?Sized> {
+    file: &'f P,
     count: usize,
     xref_stream: Vec<bool>,
     written: RefCell<HashMap<usize, BTreeSet<ObjectId>>>,
     sections: RefCell<HashMap<usize, XrefSectionInfo>>,
 }
 
-impl<'f> PdfFileSource<'f> {
+impl<'f, P: PdfRevisions + ?Sized> DerivedSource<'f, P> {
     /// Wrap `file`.
-    pub fn new(file: &'f PdfFile) -> Result<Self> {
-        let revisions = file.revisions()?;
+    pub fn new(file: &'f P) -> Result<Self> {
+        let xref_stream = file.xref_stream_flags()?;
         Ok(Self {
             file,
-            count: revisions.len(),
-            xref_stream: revisions.iter().map(|r| r.xref_stream).collect(),
+            count: xref_stream.len(),
+            xref_stream,
             written: RefCell::new(HashMap::new()),
             sections: RefCell::new(HashMap::new()),
         })
@@ -49,7 +92,11 @@ impl<'f> PdfFileSource<'f> {
         if let Some(w) = self.written.borrow().get(&revision) {
             return Ok(w.clone());
         }
-        let w: BTreeSet<ObjectId> = self.file.objects_written_in(revision)?.into_iter().collect();
+        let w: BTreeSet<ObjectId> = self
+            .file
+            .objects_written_in(revision)?
+            .into_iter()
+            .collect();
         self.written.borrow_mut().insert(revision, w.clone());
         Ok(w)
     }
@@ -70,7 +117,7 @@ impl<'f> PdfFileSource<'f> {
     }
 }
 
-impl RevisionSource for PdfFileSource<'_> {
+impl<P: PdfRevisions + ?Sized> RevisionSource for DerivedSource<'_, P> {
     fn revision_count(&self) -> Result<usize> {
         Ok(self.count)
     }
@@ -157,5 +204,9 @@ impl RevisionSource for PdfFileSource<'_> {
 
     fn resolves_in(&self, id: ObjectId, revision: usize) -> Result<bool> {
         Ok(self.file.object_in_revision(id, revision)?.is_some())
+    }
+
+    fn strict(&self) -> bool {
+        self.file.strict()
     }
 }

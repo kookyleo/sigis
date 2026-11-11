@@ -28,7 +28,12 @@ pub struct CatalogModificationRule {
 
 impl Default for CatalogModificationRule {
     fn default() -> Self {
-        Self { ignored_keys: ROOT_EXEMPT_STRICT_COMPARISON.iter().map(|k| k.to_vec()).collect() }
+        Self {
+            ignored_keys: ROOT_EXEMPT_STRICT_COMPARISON
+                .iter()
+                .map(|k| k.to_vec())
+                .collect(),
+        }
     }
 }
 
@@ -60,7 +65,10 @@ impl QualifiedWhitelistRule for CatalogModificationRule {
             }
         }
         // blanket approval of the catalog itself: compare_dicts checked it
-        out.push((ModificationLevel::LtaUpdates, ReferenceUpdate::new(new.root_ref()?)));
+        out.push((
+            ModificationLevel::LtaUpdates,
+            ReferenceUpdate::new(new.root_ref()?),
+        ));
         Ok(out)
     }
 }
