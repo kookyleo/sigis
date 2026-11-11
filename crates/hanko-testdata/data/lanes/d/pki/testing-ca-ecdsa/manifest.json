@@ -1,0 +1,155 @@
+{
+ "arch": "testing-ca-ecdsa",
+ "certs": {
+  "interm": {
+   "file": "interm.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "interm"
+  },
+  "interm-ocsp": {
+   "file": "interm-ocsp.crt",
+   "issuer": "interm",
+   "revocation": null,
+   "subject_key": "interm-ocsp"
+  },
+  "root": {
+   "file": "root.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "root"
+  },
+  "signer1": {
+   "file": "signer1.crt",
+   "issuer": "interm",
+   "revocation": null,
+   "subject_key": "signer1"
+  },
+  "signer1-long": {
+   "file": "signer1-long.crt",
+   "issuer": "interm",
+   "revocation": null,
+   "subject_key": "signer1"
+  },
+  "signer1-sha512": {
+   "file": "signer1-sha512.crt",
+   "issuer": "interm",
+   "revocation": null,
+   "subject_key": "signer1"
+  },
+  "signer2": {
+   "file": "signer2.crt",
+   "issuer": "interm",
+   "revocation": {
+    "reason": "key_compromise",
+    "revoked_since": "2020-12-01T00:00:00+00:00"
+   },
+   "subject_key": "signer2"
+  },
+  "tsa": {
+   "file": "tsa.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "tsa"
+  },
+  "tsa-rsa": {
+   "file": "tsa-rsa.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "tsa-rsa"
+  },
+  "tsa2": {
+   "file": "tsa2.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "tsa2"
+  }
+ },
+ "crl_repos": {
+  "interm": {
+   "for_issuer": "interm",
+   "signing_key": "interm",
+   "simulated_update_schedule_days": 30
+  },
+  "root": {
+   "for_issuer": "root",
+   "signing_key": "root",
+   "simulated_update_schedule_days": 90
+  }
+ },
+ "keys": {
+  "decrypter-x25519": {
+   "password": null,
+   "path": "keys-ecdsa/decrypter-x25519.key.pem"
+  },
+  "decrypter-x448": {
+   "password": null,
+   "path": "keys-ecdsa/decrypter-x448.key.pem"
+  },
+  "decrypter1": {
+   "password": null,
+   "path": "keys-ecdsa/decrypter1.key.pem"
+  },
+  "decrypter2": {
+   "password": null,
+   "path": "keys-ecdsa/decrypter2.key.pem"
+  },
+  "decrypter3": {
+   "password": null,
+   "path": "keys-ecdsa/decrypter3.key.pem"
+  },
+  "interm": {
+   "password": null,
+   "path": "keys-ecdsa/intermediate_ca.key.pem"
+  },
+  "interm-ocsp": {
+   "password": null,
+   "path": "keys-ecdsa/ocsp.key.pem"
+  },
+  "root": {
+   "password": null,
+   "path": "keys-ecdsa/root_ca.key.pem"
+  },
+  "signer1": {
+   "password": null,
+   "path": "keys-ecdsa/signer.key.pem"
+  },
+  "signer2": {
+   "password": null,
+   "path": "keys-ecdsa/signer2.key.pem"
+  },
+  "tsa": {
+   "password": null,
+   "path": "keys-ecdsa/tsa.key.pem"
+  },
+  "tsa-rsa": {
+   "password": "secret",
+   "path": "keys-ecdsa/tsa_rsa.key.pem"
+  },
+  "tsa2": {
+   "password": null,
+   "path": "keys-ecdsa/tsa2.key.pem"
+  }
+ },
+ "ocsp": {
+  "interm": {
+   "for_issuer": "interm",
+   "responder_cert": "interm-ocsp",
+   "signing_key": "interm-ocsp"
+  }
+ },
+ "tsa": {
+  "tsa": {
+   "signing_cert": "tsa",
+   "signing_key": "tsa"
+  },
+  "tsa-rsa": {
+   "signing_cert": "tsa-rsa",
+   "signing_key": "tsa-rsa"
+  },
+  "tsa2": {
+   "signing_cert": "tsa2",
+   "signing_key": "tsa2"
+  }
+ }
+}

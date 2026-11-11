@@ -1,5 +1,5 @@
 [package]
-name = "sigis-pades-sign"
+name = "hanko-sign"
 description = "PDF and CMS signing, PAdES B-B to B-LTA (port of pyHanko signers)"
 version.workspace = true
 edition.workspace = true
@@ -9,10 +9,39 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
-sigis-pki-core = { workspace = true }
-sigis-pki-certvalidator = { workspace = true }
-sigis-pdf = { workspace = true }
+hanko-core = { workspace = true }
+hanko-certvalidator = { workspace = true }
+hanko-pdf = { workspace = true }
 spki = { workspace = true }
+der = { workspace = true }
+const-oid = { workspace = true }
+x509-cert = { workspace = true }
+cms = { workspace = true }
+x509-tsp = { workspace = true }
+x509-ocsp = { workspace = true }
+rsa = { workspace = true, features = ["getrandom"] }
+ecdsa = { workspace = true, features = ["algorithm"] }
+p256 = { workspace = true }
+p384 = { workspace = true }
+p521 = { workspace = true }
+ed25519-dalek = { workspace = true }
+signature = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }
+base64ct = { workspace = true }
+lopdf = { workspace = true }
+# Key containers: PKCS#8 (incl. PBES2), legacy OpenSSL PEM, PKCS#12.
+pkcs8 = { version = "0.11", features = ["alloc", "encryption", "3des", "des-insecure", "sha1-insecure"] }
+aes = "0.9"
+cbc = { version = "0.2", features = ["alloc"] }
+des = "0.8"
+rc2 = "0.8"
+cbc-legacy = { package = "cbc", version = "0.1", features = ["alloc"] }
+md-5 = "0.11"
+hmac = "0.13"
+getrandom = "0.3"
+flate2 = "1"
 
 [dev-dependencies]
-sigis-testdata = { workspace = true }
+hanko-testdata = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,41 @@
+{
+ "arch": "unrelated-tsa",
+ "certs": {
+  "root": {
+   "file": "root.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "root"
+  },
+  "tsa": {
+   "file": "tsa.crt",
+   "issuer": "root",
+   "revocation": null,
+   "subject_key": "tsa"
+  }
+ },
+ "crl_repos": {
+  "root": {
+   "for_issuer": "root",
+   "signing_key": "root",
+   "simulated_update_schedule_days": 90
+  }
+ },
+ "keys": {
+  "root": {
+   "password": null,
+   "path": "keys-rsa/indep_tsa_root.key.pem"
+  },
+  "tsa": {
+   "password": null,
+   "path": "keys-rsa/indep_tsa.key.pem"
+  }
+ },
+ "ocsp": {},
+ "tsa": {
+  "tsa": {
+   "signing_cert": "tsa",
+   "signing_key": "tsa"
+  }
+ }
+}

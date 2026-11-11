@@ -6,3 +6,12 @@ Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
 also names its source in its header.
 
 Derived files:
+- src/lib.rs: pyhanko/sign/signers/__init__.py, pdf_signer.py (interfaces)
+- src/keys.rs: pyhanko/keys/pemder.py, keys/internal.py
+- src/pkcs12.rs: replaces cryptography's pkcs12 loader used by sign/signers/pdf_cms.py
+- src/signer.rs: pyhanko/sign/signers/pdf_cms.py (Signer, SimpleSigner, ExternalSigner), sign/general.py
+- src/cms.rs: pyhanko/sign/signers/pdf_cms.py (CMS assembly, attribute provider specs)
+- src/attributes.rs: pyhanko/sign/attributes.py, sign/ades/api.py, sign/ades/cades_asn1.py, sign/general.py
+- src/timestamps.rs: pyhanko/sign/timestamps/dummy_client.py, common_utils.py, api.py
+- oracle/*.py: test-support scripts that call pyHanko 0.38.1
+- tests/*.rs: ported from pkgs/pyhanko/tests/ (each file names its upstream module)

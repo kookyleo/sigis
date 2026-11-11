@@ -14,52 +14,23 @@
     warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod attributes;
+pub mod cms;
+pub mod keys;
+pub mod pkcs12;
+pub mod signer;
+pub mod timestamps;
+
 use std::sync::Arc;
 
-use sigis_pdf::MdpPerm;
-use sigis_pki_certvalidator::ValidationContext;
-use sigis_pki_core::algorithms::DigestAlgorithm;
-use sigis_pki_core::cert::Cert;
-use sigis_pki_core::errors::{not_implemented, Result};
-use sigis_pki_core::sign::{KeySigner, TimeStamper};
-use spki::AlgorithmIdentifierOwned;
+use hanko_certvalidator::ValidationContext;
+use hanko_core::algorithms::DigestAlgorithm;
+use hanko_core::errors::{not_implemented, Result};
+use hanko_core::sign::{KeySigner, TimeStamper};
+use hanko_pdf::MdpPerm;
 
-/// A software key held in memory (`SimpleSigner`).
-#[derive(Debug)]
-pub struct SimpleSigner {
-    cert: Cert,
-    chain: Vec<Cert>,
-}
-
-impl SimpleSigner {
-    /// Load from a PKCS#8 private key (DER) and its certificate chain.
-    pub fn from_pkcs8_der(_key_der: &[u8], _cert: Cert, _chain: Vec<Cert>) -> Result<Self> {
-        not_implemented("sigis_pades_sign::SimpleSigner::from_pkcs8_der")
-    }
-
-    /// Load from a PKCS#12 file.
-    pub fn from_pkcs12(_data: &[u8], _passphrase: Option<&[u8]>) -> Result<Self> {
-        not_implemented("sigis_pades_sign::SimpleSigner::from_pkcs12")
-    }
-}
-
-impl KeySigner for SimpleSigner {
-    fn signing_cert(&self) -> &Cert {
-        &self.cert
-    }
-
-    fn cert_chain(&self) -> &[Cert] {
-        &self.chain
-    }
-
-    fn signature_algorithm(&self, _digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
-        not_implemented("sigis_pades_sign::SimpleSigner::signature_algorithm")
-    }
-
-    fn sign_raw(&self, _data: &[u8], _digest: DigestAlgorithm) -> Result<Vec<u8>> {
-        not_implemented("sigis_pades_sign::SimpleSigner::sign_raw")
-    }
-}
+pub use crate::signer::{ExternalSigner, SimpleSigner};
+pub use crate::timestamps::DummyTimeStamper;
 
 /// `/SubFilter` of a PDF signature.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -131,19 +102,19 @@ pub struct PdfSigner {
 impl PdfSigner {
     /// Sign `pdf` and return the signed file (`sign_pdf`).
     pub fn sign_pdf(&self, _pdf: &[u8]) -> Result<Vec<u8>> {
-        not_implemented("sigis_pades_sign::PdfSigner::sign_pdf")
+        not_implemented("hanko_sign::PdfSigner::sign_pdf")
     }
 }
 
 /// Produce a CMS `SignedData` over `data` (`Signer.sign_general_data`).
 pub fn sign_general_data(
-    _data: &[u8],
-    _signer: &dyn KeySigner,
-    _digest: DigestAlgorithm,
-    _detached: bool,
-    _timestamper: Option<&dyn TimeStamper>,
+    data: &[u8],
+    signer: &dyn KeySigner,
+    digest: DigestAlgorithm,
+    detached: bool,
+    timestamper: Option<&dyn TimeStamper>,
 ) -> Result<Vec<u8>> {
-    not_implemented("sigis_pades_sign::sign_general_data")
+    crate::cms::sign_general_data(data, signer, digest, detached, timestamper)
 }
 
 /// Append a document timestamp (`PdfTimeStamper.timestamp_pdf`).
@@ -152,7 +123,7 @@ pub fn add_document_timestamp(
     _timestamper: &dyn TimeStamper,
     _field_name: &str,
 ) -> Result<Vec<u8>> {
-    not_implemented("sigis_pades_sign::add_document_timestamp")
+    not_implemented("hanko_sign::add_document_timestamp")
 }
 
 /// Add validation information for existing signatures to the DSS and
@@ -163,12 +134,12 @@ pub fn add_validation_info(
     _ctx: &ValidationContext,
     _timestamper: Option<&dyn TimeStamper>,
 ) -> Result<Vec<u8>> {
-    not_implemented("sigis_pades_sign::add_validation_info")
+    not_implemented("hanko_sign::add_validation_info")
 }
 
 /// PKCS#11 key access via `cryptoki` (`pyhanko.sign.pkcs11`).
 pub mod pkcs11 {
-    use sigis_pki_core::errors::{not_implemented, Result};
+    use hanko_core::errors::{not_implemented, Result};
 
     /// How to find a key on a token.
     #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -183,11 +154,11 @@ pub mod pkcs11 {
         pub key_id: Option<Vec<u8>>,
     }
 
-    /// Open a PKCS#11 signer; returns a [`sigis_pki_core::sign::KeySigner`].
+    /// Open a PKCS#11 signer; returns a [`hanko_core::sign::KeySigner`].
     pub fn open(
         _config: &Pkcs11Config,
         _pin: Option<&str>,
-    ) -> Result<std::sync::Arc<dyn sigis_pki_core::sign::KeySigner>> {
-        not_implemented("sigis_pades_sign::pkcs11::open")
+    ) -> Result<std::sync::Arc<dyn hanko_core::sign::KeySigner>> {
+        not_implemented("hanko_sign::pkcs11::open")
     }
 }
