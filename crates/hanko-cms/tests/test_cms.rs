@@ -44,12 +44,6 @@ const KNOWN: &[(&str, usize, &str)] = &[
     // R1: Ed448 / SHAKE256 need `ed448-goldilocks` and `sha3`.
     ("test_ed448_no_length", 1, "R1: Ed448"),
     ("test_ed448_invalid_hash_algo_validation", 1, "R1: Ed448"),
-    // Attribute certificate validation is not ported yet.
-    ("test_parse_ac_with_malformed_attribute", 0, "AC validation pending"),
-    ("test_embed_ac[alice-role-with-rev]", 2, "AC validation pending"),
-    ("test_embed_ac[alice-role-norev]", 2, "AC validation pending"),
-    ("test_embed_ac[alice-role-with-rev-crl-only]", 2, "AC validation pending"),
-    ("test_ac_detached", 0, "AC validation pending"),
 ];
 
 fn run(test: &str) -> Vec<Replayed> {
@@ -517,14 +511,35 @@ fn test_two_signer_infos() {
     assert!(e.to_string().contains("exactly one"));
 }
 
+fn role_from_ac_attrs(s: &hanko_cms::StandardCmsSignatureStatus) -> String {
+    use hanko_cms::attributes::RoleSyntax;
+    let role = s
+        .ac_attrs
+        .as_ref()
+        .and_then(|a| a.get("role"))
+        .expect("role attribute");
+    let value = RoleSyntax::from_der(&role.attr_values[0]).expect("RoleSyntax");
+    match value.role_name {
+        x509_cert::ext::pkix::name::GeneralName::Rfc822Name(n) => n.to_string(),
+        other => format!("{other:?}"),
+    }
+}
+
 #[test]
 fn test_embed_ac() {
-    run("test_embed_ac"); // pending: AC validation (and live revocation fetching)
+    // The embedded AC certifies a role (live fetching in pyHanko; the
+    // replayed contexts carry no fetchers, which only matters for the
+    // revocation checks that soft-fail).
+    for s in pdf_statuses("test_embed_ac") {
+        assert!(s.signature.trusted());
+        assert_eq!(role_from_ac_attrs(&s), "bigboss@example.com");
+    }
 }
 
 #[test]
 fn test_embed_ac_revinfo_adobe_style() {
-    // Recorded: the integrity checks made by ades_lta_validation.
+    // Pending: the assertions are on `ades_lta_validation` (lane E). The
+    // recorded calls are the integrity checks it makes.
     for r in run("test_embed_ac_revinfo_adobe_style") {
         if let Replayed::Integrity(i, v) = r {
             assert!(i && v);
@@ -534,7 +549,11 @@ fn test_embed_ac_revinfo_adobe_style() {
 
 #[test]
 fn test_ac_detached() {
-    run("test_ac_detached"); // pending: AC validation
+    let s = run("test_ac_detached").remove(0);
+    let s = s.standard();
+    assert!(s.bottom_line());
+    assert_eq!(s.ac_attrs.as_ref().expect("ac attrs").len(), 1);
+    assert_eq!(role_from_ac_attrs(s), "bigboss@example.com");
 }
 
 #[test]
@@ -612,7 +631,15 @@ fn test_validate_with_malformed_claimed_attrs() {
 
 #[test]
 fn test_parse_ac_with_malformed_attribute() {
-    run("test_parse_ac_with_malformed_attribute"); // pending: AC validation
+    let s = run("test_parse_ac_with_malformed_attribute").remove(0);
+    let s = s.standard();
+    // The malformed attribute is dropped; the other one is certified.
+    let certified = s
+        .cades_signer_attrs
+        .as_ref()
+        .and_then(|c| c.certified_attrs.as_ref())
+        .expect("certified attrs");
+    assert_eq!(certified.len(), 1);
 }
 
 #[test]

@@ -30,6 +30,8 @@ Nothing is wired into the Sigis service yet.
 | `policy_graph.py`, `name_trees.py` | — (`certval`) | Replaced by certval (RFC 5280, RFC 9618 policy graph) |
 | `fetchers/` | `hanko-fetch` | Ported there; used through `hanko_core::fetch` traits |
 | asn1crypto name handling (`Name.human_friendly`, string preparation) | `src/names.rs`, `src/stringprep_tables.rs` | Ported: names failing RFC 4518 preparation make validation fail as in pyHanko |
+| `validate.py` (`async_validate_ac`, `check_ac_holder_match`, `_candidate_ac_issuers`, `validate_aa_usage`, `_check_ac_signature`, `_validate_ac_targeting`, `_check_aa_controls`), `path.py` (`aa_attr_in_scope`), `asn1_types.py` (`AAControls`) | `src/ac.rs` | Ported: RFC 5755 AC parsing (both tagging styles of `baseCertificateID`), holder matching, AA search by name / issuer-serial / AKI, AA usage, AA path with aaControls and AA path length, signature, validity, targeting, revocation of the AC through the CRL/OCSP code (`revinfo::Target`) |
+| `validate.py` (`SUPPORTED_EXTENSIONS`) | `src/validate.rs` | Ported: critical extensions outside pyHanko's list fail; inside it, certval treats them as processed |
 | `ltv/poe.py` | `src/ltv/poe.rs` | Ported (`POEManager` with the "now" default of `__getitem__`, by-digest registration, merge) |
 | `ltv/time_slide.py` (+ `collect_relevant_crls_with_paths`, `collect_relevant_responses_with_paths`) | `src/ltv/time_slide.rs` | Ported; the algorithm policy can be switched off (`algo_usage_policy=None`) with `TimeSlideOptions` |
 | `ltv/ades_past.py` | `src/ltv/mod.rs` (`past_validate`) | Ported, including the validity-intersection pre-check |
@@ -54,7 +56,7 @@ PKITS cases).
 | `test_ades_time_slide.py` (13) | `tests/ades_time_slide.rs` | Ported 13/13 |
 | `test_policy_proc.py` (13) | — | Pending (lane A: trust anchor qualifiers) |
 | `test_registry.py` (9) | — | Pending (lane A: registry, AIA disambiguation) |
-| `test_ac_validate.py` (27) | — | Pending (lane A: attribute certificate validation) |
+| `test_ac_validate.py` (27) | `tests/ac_validate.rs` | Ported 27/27 |
 | `test_common_utils.py` (15), `test_fetch_limits.py` (11), `test_fetcher_lifecycle.py` (16) | — | Pending (lane A: `hanko-fetch`, tested against a local fake server) |
 | `test_name_trees.py` (6) | — | Proposed skip: pyHanko-internal name constraint trees; certval implements name constraints (PKITS 4.13 passes). Lane A to confirm or port as behaviour tests |
 | `test_policy_graph.py` (33) | — | Proposed skip: pyHanko-internal policy graph; certval implements RFC 9618 (PKITS 4.8–4.12 pass). Lane A to confirm or port as behaviour tests |

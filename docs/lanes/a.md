@@ -45,7 +45,7 @@ validation, registry and trust anchor qualifiers (`test_registry.py`,
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_ac_validate.py` | 27 | 0 | 0 | 27 |
+| `test_ac_validate.py` | 27 | 27 | 0 | 0 |
 | `test_ades_time_slide.py` | 13 | 13 | 0 | 0 |
 | `test_certificate_validator.py` | 2 | 2 | 0 | 0 |
 | `test_common_utils.py` | 15 | 15 | 0 | 0 |
@@ -58,11 +58,11 @@ validation, registry and trust anchor qualifiers (`test_registry.py`,
 | `test_registry.py` | 9 | 0 | 0 | 9 |
 | `test_sig_validate.py` | 3 | 3 | 0 | 0 |
 | `test_validate.py` | 21 | 21 | 0 | 0 |
-| `test_cms.py` | 78 | 55 | 2 | 21 |
+| `test_cms.py` | 78 | 60 | 2 | 16 |
 | `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 8 | 2 | 0 |
 | `test_tsa_fetcher_requests.py` | 4 | 4 | 0 | 0 |
-| **Total** | **271** | **142** | **20** | **109** |
+| **Total** | **271** | **174** | **20** | **77** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
 `crates/hanko-cms/PORTING.md`.
@@ -74,9 +74,9 @@ accepts); the tests assert this.
 
 - NIST PKITS: 3 cases (DSA, UTCTime 1950), see
   `crates/hanko-certvalidator/PORTING.md`.
-- `test_cms.py` recorded calls: 18 of 161 differ, all listed in
+- `test_cms.py` recorded calls: 17 of 161 differ, all listed in
   `crates/hanko-cms/tests/test_cms.rs` (`KNOWN`): MD5, SHA-3, DSA, Ed448
-  (request R1) and attribute certificates (in progress).
+  (request R1).
 - Without a validation context, nothing is trusted (pyHanko uses the OS
   trust store).
 

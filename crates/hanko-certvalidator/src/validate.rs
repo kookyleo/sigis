@@ -388,6 +388,27 @@ pub fn validate_path(
     validate_path_at_depth(ctx, path, params, &[])
 }
 
+/// `SUPPORTED_EXTENSIONS` of pyhanko-certvalidator `validate.py`.
+const SUPPORTED_EXTENSIONS: [const_oid::ObjectIdentifier; 17] = [
+    hanko_core::asn1::oids::PE_AUTHORITY_INFO_ACCESS,
+    hanko_core::asn1::oids::CE_AUTHORITY_KEY_IDENTIFIER,
+    hanko_core::asn1::oids::CE_BASIC_CONSTRAINTS,
+    hanko_core::asn1::oids::CE_CRL_DISTRIBUTION_POINTS,
+    hanko_core::asn1::oids::CE_EXT_KEY_USAGE,
+    hanko_core::asn1::oids::CE_FRESHEST_CRL,
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.14"),
+    hanko_core::asn1::oids::CE_KEY_USAGE,
+    hanko_core::asn1::oids::OCSP_NOCHECK,
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.32"),
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.33"),
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.36"),
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.54"),
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.30"),
+    const_oid::ObjectIdentifier::new_unwrap("2.5.29.17"),
+    const_oid::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.6"),
+    const_oid::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.3"),
+];
+
 /// Maximum nesting of CRL signer path validations.
 pub(crate) const MAX_REVINFO_DEPTH: u8 = 3;
 
@@ -658,8 +679,34 @@ fn validate_path_in_stack(
     let Some(target) = chain.pop() else {
         return Ok(Vec::new());
     };
+    // pyhanko-certvalidator's `SUPPORTED_EXTENSIONS`: a critical extension
+    // outside this list fails validation; inside it, certval must not
+    // reject it either.
+    for (index, (cert, _)) in issued.iter().enumerate() {
+        let mut unsupported: Vec<String> = cert
+            .decoded()
+            .tbs_certificate()
+            .extensions()
+            .map(|exts| {
+                exts.iter()
+                    .filter(|e| e.critical && !SUPPORTED_EXTENSIONS.contains(&e.extn_id))
+                    .map(|e| e.extn_id.to_string())
+                    .collect()
+            })
+            .unwrap_or_default();
+        if !unsupported.is_empty() {
+            unsupported.sort();
+            return Err(fail(ValidationError::PathValidation(format!(
+                "The path could not be validated because {} contains the following unsupported critical extension{}: {}",
+                path.describe(index, total),
+                if unsupported.len() == 1 { "" } else { "s" },
+                unsupported.join(", ")
+            ))));
+        }
+    }
     let cv_path = CertificationPath::new(ta, chain, target);
     let mut results = CertificationPathResults::new();
+    results.set_processed_extensions(SUPPORTED_EXTENSIONS.iter().copied().collect());
     match validate_path_rfc5280(&pe, &cps, &cv_path, &mut results) {
         Ok(()) => {}
         Err(certval::Error::PathValidation(status)) => return Err(fail(map_status(status))),

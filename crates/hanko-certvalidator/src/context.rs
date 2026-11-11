@@ -35,6 +35,7 @@ pub struct ValidationContext {
     pub(crate) freshness_judge: Arc<dyn FreshnessJudge>,
     pub(crate) assertions: Vec<NonRevokedStatusAssertion>,
     pub(crate) fetchers: Fetchers,
+    pub(crate) acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
 }
 
 impl ValidationContext {
@@ -144,9 +145,17 @@ pub struct ValidationContextBuilder {
     freshness_judge: Option<Arc<dyn FreshnessJudge>>,
     assertions: Vec<NonRevokedStatusAssertion>,
     fetchers: Fetchers,
+    acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
 }
 
 impl ValidationContextBuilder {
+    /// Targets this validator accepts for targeted attribute certificates
+    /// (`acceptable_ac_targets`).
+    pub fn acceptable_ac_targets(mut self, targets: crate::ac::AcTargetDescription) -> Self {
+        self.acceptable_ac_targets = Some(targets);
+        self
+    }
+
     /// Add a trust root (validity period not enforced).
     pub fn trust_root(mut self, cert: Cert) -> Self {
         self.trust_anchors.push(TrustAnchor::new(cert));
@@ -285,6 +294,7 @@ impl ValidationContextBuilder {
                 .unwrap_or_else(|| Arc::new(DefaultFreshnessJudge)),
             assertions: self.assertions,
             fetchers: self.fetchers,
+            acceptable_ac_targets: self.acceptable_ac_targets,
         })
     }
 }

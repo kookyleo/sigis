@@ -33,6 +33,7 @@ use super::context::ValidationContext;
 use super::path::ValidationPath;
 use super::policy::RevocationCheckingRule;
 use hanko_core::errors::ValidationError;
+use hanko_core::algorithms::DigestAlgorithm;
 use hanko_core::time::Moment;
 
 /// A parsed CRL with the exact bytes of its signed part.
@@ -280,9 +281,57 @@ pub(crate) enum CheckOutcome {
     FetchFailed(String),
 }
 
+/// The object whose revocation status is checked: a public-key certificate
+/// or an attribute certificate (`x509.Certificate | cms.AttributeCertificateV2`).
+#[derive(Clone, Debug)]
+pub(crate) struct Target {
+    /// DER encoding.
+    pub(crate) der: Vec<u8>,
+    /// Serial number contents octets.
+    pub(crate) serial: Vec<u8>,
+    /// Issuer name (for an AC: its issuer's directory name).
+    pub(crate) issuer: x509_cert::name::Name,
+    /// CRL distribution points.
+    pub(crate) dps: Vec<x509_cert::ext::pkix::crl::dp::DistributionPoint>,
+    /// `basicConstraints` CA flag.
+    pub(crate) is_ca: bool,
+    /// The object is an attribute certificate.
+    pub(crate) is_ac: bool,
+    /// The AIA extension names an OCSP responder.
+    pub(crate) declares_ocsp: bool,
+    /// A CRL distribution points extension is present.
+    pub(crate) declares_crl: bool,
+    /// The public-key certificate, if this is one.
+    pub(crate) x509: Option<Cert>,
+    /// Subject for messages (`human_friendly`, or "" for ACs).
+    pub(crate) display_name: String,
+}
+
+impl Target {
+    pub(crate) fn from_cert(cert: &Cert) -> Self {
+        Self {
+            der: cert.der().to_vec(),
+            serial: cert.serial_bytes().to_vec(),
+            issuer: cert.issuer().clone(),
+            dps: cert.crl_distribution_points().map(|d| d.0).unwrap_or_default(),
+            is_ca: cert.is_ca(),
+            is_ac: false,
+            declares_ocsp: cert.declares_ocsp(),
+            declares_crl: cert.declares_crl(),
+            x509: Some(cert.clone()),
+            display_name: certval::name_to_string(cert.subject()),
+        }
+    }
+
+    /// `true` if this is `cert`.
+    pub(crate) fn is(&self, cert: &Cert) -> bool {
+        self.der == cert.der()
+    }
+}
+
 /// Everything the CRL and OCSP checks need about the certificate being checked.
 pub(crate) struct Subject<'a> {
-    pub(crate) cert: &'a Cert,
+    pub(crate) cert: &'a Target,
     pub(crate) issuer: &'a Cert,
     /// The path being validated (the certificate's issuer is in it).
     pub(crate) path: &'a ValidationPath,
@@ -361,8 +410,9 @@ pub(crate) fn check_path_revocation_detailed(
     let total = issued.len();
     for (index, (cert, issuer)) in issued.into_iter().enumerate() {
         let is_ee = index + 1 == total && path.leaf().is_some();
+        let target = Target::from_cert(cert);
         let subject = Subject {
-            cert,
+            cert: &target,
             issuer,
             path,
             description: path.describe(index, total),
@@ -392,7 +442,7 @@ pub(crate) fn check_path_revocation_detailed(
 }
 
 /// Port of `_check_revocation` in pyhanko-certvalidator `validate.py`.
-fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<(), ValidationError> {
+pub(crate) fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<(), ValidationError> {
     let policy = &ctx.revinfo_policy.revocation_checking_policy;
     let rule = if subject.is_ee {
         policy.ee_certificate_rule
@@ -404,7 +454,10 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
     }
 
     // A caller-supplied assertion settles the status.
-    let digest = subject.cert.sha256();
+    let digest: [u8; 32] = DigestAlgorithm::Sha256
+        .digest(&subject.cert.der)
+        .try_into()
+        .unwrap_or([0u8; 32]);
     let validation_time = ctx.timing.validation_time;
     if ctx
         .assertions
@@ -415,8 +468,8 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
     }
 
     let desc = &subject.description;
-    let cert_has_crl = subject.cert.declares_crl();
-    let cert_has_ocsp = subject.cert.declares_ocsp();
+    let cert_has_crl = subject.cert.declares_crl;
+    let cert_has_ocsp = subject.cert.declares_ocsp;
     let revinfo_declared = cert_has_crl || cert_has_ocsp;
 
     let mut failures: Vec<String> = Vec::new();
@@ -537,7 +590,7 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
     if !matched && expected_revinfo {
         return Err(ValidationError::InsufficientRevinfo(format!(
             "The path could not be validated because no revocation information could be found for {desc} {}",
-            certval::name_to_string(subject.cert.subject())
+            subject.cert.display_name
         )));
     }
     Ok(())

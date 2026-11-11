@@ -263,9 +263,9 @@ pub(crate) fn candidate_crl_paths(
     };
     let mut paths: Vec<(Cert, ValidationPath)> = Vec::new();
     for cand in candidates {
-        let direct = certval::compare_names(cand.subject(), subject.cert.issuer());
+        let direct = certval::compare_names(cand.subject(), &subject.cert.issuer);
         let indirect_issuer =
-            certval::compare_names(cand.issuer(), subject.cert.issuer()) && &cand != subject.cert;
+            certval::compare_names(cand.issuer(), &subject.cert.issuer) && !subject.cert.is(&cand);
         if !direct && !indirect_issuer && !indirect {
             counts.skipped += 1;
             continue;
@@ -358,10 +358,7 @@ pub(crate) fn crl_scope(
     errs: &mut CrlErrs,
 ) -> Result<Option<u16>, ValidationError> {
     let cert = subject.cert;
-    let cert_dps = cert
-        .crl_distribution_points()
-        .map(|d| d.0)
-        .unwrap_or_default();
+    let cert_dps = cert.dps.clone();
     let issuer_gn = GeneralName::DirectoryName(crl_issuer.subject().clone());
     let mut has_dp_crl_issuer = false;
     let mut dp_match = false;
@@ -373,16 +370,31 @@ pub(crate) fn crl_scope(
             }
         }
     }
-    let same_issuer = certval::compare_names(crl_issuer.subject(), cert.issuer());
+    let same_issuer = certval::compare_names(crl_issuer.subject(), &cert.issuer);
     let indirect_match = has_dp_crl_issuer && dp_match && indirect;
     let missing_idp = has_dp_crl_issuer && (!dp_match || !indirect);
-    let indirect_crl_issuer = certval::compare_names(crl_issuer.issuer(), cert.issuer());
+    let indirect_crl_issuer = certval::compare_names(crl_issuer.issuer(), &cert.issuer);
     if (!same_issuer && !indirect_match && !indirect_crl_issuer) || missing_idp {
         errs.issuer_failures += 1;
         return Ok(None);
     }
     let idp = parse_idp(crl)?;
-    if let Some(idp) = &idp {
+    if let Some(idp) = idp.as_ref().filter(|_| cert.is_ac) {
+        // `_handle_attr_cert_crl_idp_ext_constraints`.
+        if !match_dps_idp_names(idp, &cert_dps, crl_issuer, crl_issuer.subject()) {
+            errs.failures.push(
+                "The CRL issuing distribution point extension does not share any names with the attribute certificate's CRL distribution point extension",
+            );
+            errs.issuer_failures += 1;
+            return Ok(None);
+        }
+        if idp.only_contains_user_certs || idp.only_contains_ca_certs {
+            errs.failures.push(
+                "CRL only contains public-key certificates, but certificate is an attribute certificate",
+            );
+            return Ok(None);
+        }
+    } else if let Some(idp) = &idp {
         if !match_dps_idp_names(idp, &cert_dps, crl_issuer, crl_issuer.subject()) {
             errs.failures.push(
                 "The CRL issuing distribution point extension does not share any names with the certificate CRL distribution point extension",
@@ -390,7 +402,7 @@ pub(crate) fn crl_scope(
             errs.issuer_failures += 1;
             return Ok(None);
         }
-        let is_ca = cert.is_ca();
+        let is_ca = cert.is_ca;
         if idp.only_contains_user_certs && is_ca {
             errs.failures.push(
                 "CRL only contains end-entity certificates and certificate is a CA certificate",
@@ -436,7 +448,7 @@ fn find_cert_in_list(
     let Some(entries) = crl.crl.tbs_cert_list.revoked_certificates.as_ref() else {
         return Ok(None);
     };
-    let serial = subject.cert.serial_bytes();
+    let serial = subject.cert.serial.as_slice();
     let mut last_issuer: Option<Name> = None;
     for entry in entries {
         let exts = entry.crl_entry_extensions.as_ref();
@@ -453,7 +465,7 @@ fn find_cert_in_list(
             continue;
         }
         let issuer = last_issuer.as_ref().unwrap_or(crl_authority_name);
-        if !certval::compare_names(issuer, subject.cert.issuer()) {
+        if !certval::compare_names(issuer, &subject.cert.issuer) {
             continue;
         }
         if has_unknown_critical(exts, &KNOWN_ENTRY_EXTENSIONS) {
@@ -637,10 +649,10 @@ pub(crate) fn verify_crl(
     let Some(outcome) = completeness(checked, total, &mut errs) else {
         return Ok(CheckOutcome::Good);
     };
-    let Some(fetcher) = ctx.fetchers.crl.as_ref() else {
+    let (Some(fetcher), Some(x509)) = (ctx.fetchers.crl.as_ref(), subject.cert.x509.as_ref()) else {
         return Ok(outcome);
     };
-    let fetched = match fetcher.fetch_crls(subject.cert) {
+    let fetched = match fetcher.fetch_crls(x509) {
         Ok(f) => f,
         Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
     };

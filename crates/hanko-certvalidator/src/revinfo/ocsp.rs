@@ -38,11 +38,11 @@ pub(crate) fn match_cert_id(
     let Some(digest) = DigestAlgorithm::from_oid(&cert_id.hash_algorithm.oid) else {
         return Ok(CertIdMatch::Unrelated);
     };
-    let name_hash = digest.digest(&subject.cert.issuer().to_der()?);
+    let name_hash = digest.digest(&subject.cert.issuer.to_der()?);
     let key_hash = digest.digest(subject.issuer.public_key().subject_public_key.raw_bytes());
     let name_mismatch = cert_id.issuer_name_hash.as_bytes() != name_hash.as_slice();
     let key_mismatch = cert_id.issuer_key_hash.as_bytes() != key_hash.as_slice();
-    let serial_mismatch = cert_id.serial_number.as_bytes() != subject.cert.serial_bytes();
+    let serial_mismatch = cert_id.serial_number.as_bytes() != subject.cert.serial.as_slice();
     Ok(if (name_mismatch || serial_mismatch) && key_mismatch {
         CertIdMatch::Unrelated
     } else if name_mismatch {
@@ -254,8 +254,11 @@ pub(crate) fn verify_ocsp(
     // responder come from the fetcher (`async_retrieve_ocsps`).
     let fetched;
     let mut responses: Vec<&OcspContainer> = match ctx.fetchers.ocsp.as_ref() {
-        Some(fetcher) if subject.cert.declares_ocsp() => {
-            match fetcher.fetch_ocsp(subject.cert, subject.issuer) {
+        Some(fetcher) if subject.cert.declares_ocsp && subject.cert.x509.is_some() => {
+            let Some(x509) = subject.cert.x509.as_ref() else {
+                return Ok(CheckOutcome::NoMatches);
+            };
+            match fetcher.fetch_ocsp(x509, subject.issuer) {
                 Ok(der) => {
                     fetched = OcspContainer::load(&der).unwrap_or_default();
                     fetched.iter().collect()

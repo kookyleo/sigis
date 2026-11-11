@@ -17,7 +17,7 @@ use crate::context::ValidationContext;
 use crate::policy::ValidationTimingParams;
 use crate::revinfo::crl::{self, CrlErrs};
 use crate::revinfo::ocsp::{self as ocsp_mod, CertIdMatch};
-use crate::revinfo::{CrlContainer, OcspContainer, Subject};
+use crate::revinfo::{CrlContainer, OcspContainer, Subject, Target};
 use crate::ValidationPath;
 use hanko_core::asn1::oids;
 
@@ -36,7 +36,7 @@ struct OcspOfInterest<'a> {
     prov_path: ValidationPath,
 }
 
-fn subject<'a>(cert: &'a Cert, issuer: &'a Cert, path: &'a ValidationPath) -> Subject<'a> {
+fn subject<'a>(cert: &'a Target, issuer: &'a Cert, path: &'a ValidationPath) -> Subject<'a> {
     Subject {
         cert,
         issuer,
@@ -61,7 +61,8 @@ fn collect_crls<'a>(
     let usable = |c: &&CrlContainer| c.this_update() <= control_time && poe.poe_time(c.der()) <= control_time;
     let (complete, deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
         ctx.crls.iter().filter(usable).partition(|c| !crl::is_delta(c));
-    let subj = subject(cert, issuer, path);
+    let target = Target::from_cert(cert);
+    let subj = subject(&target, issuer, path);
     let mut out = Vec::new();
     for c in complete {
         let indirect = crl::is_indirect(c)?;
@@ -94,7 +95,8 @@ fn collect_ocsps<'a>(
     control_time: Moment,
     poe: &PoeManager,
 ) -> std::result::Result<Vec<OcspOfInterest<'a>>, ValidationError> {
-    let subj = subject(cert, issuer, path);
+    let target = Target::from_cert(cert);
+    let subj = subject(&target, issuer, path);
     let mut out = Vec::new();
     for r in &ctx.ocsps {
         let Some(issued) = r.this_update() else {
@@ -297,7 +299,8 @@ fn slide(
             }
         };
 
-        let subj = subject(&cert, &issuer, &current);
+        let target = Target::from_cert(&cert);
+        let subj = subject(&target, &issuer, &current);
         for coi in &crls {
             let issued = coi.crl.this_update();
             if issued > control_time || poe.poe_time(coi.crl.der()) > control_time {

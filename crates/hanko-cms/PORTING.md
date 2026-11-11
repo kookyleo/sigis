@@ -8,7 +8,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | pyHanko module | Rust file | Status |
 | --- | --- | --- |
 | `sign/validation/generic_cms.py` | `src/validate.rs`, `src/lib.rs` | Ported: `validate_sig_integrity`, `validate_algorithm_protection` (RFC 6211), signing-certificate attribute check (v1 and v2), `extract_certs_for_validation`, `cms_basic_validation`, `validate_cert_usage` + `handle_certvalidator_errors` (AdES sub-indications), `async_validate_cms_signature`, `extract_self_reported_ts`, timestamp token validation (`validate_tst_signed_data`, signature and content timestamps, `collect_timing_info`), `async_validate_detached_cms` (generalized over the content digest source, see `ContentDigester`) |
-| `sign/validation/generic_cms.py` (`collect_signer_attr_status`, `process_certified_attrs`) | `src/attributes.rs` | Ported; attribute certificate validation itself is pending in `hanko-certvalidator::ac` (fails closed: no attribute is certified) |
+| `sign/validation/generic_cms.py` (`collect_signer_attr_status`, `process_certified_attrs`) | `src/attributes.rs` | Ported, on `hanko-certvalidator::ac` |
 | `sign/validation/status.py` (CMS part) | `src/status.rs` | Ported: `SignatureStatus`, `TimestampSignatureStatus`, `StandardCMSSignatureStatus`, `RevocationDetails`, claimed/certified attribute maps, `CAdESSignerAttributeAssertions`, `summary()`, `pretty_print_details()` (without qualification sections, lane E) |
 | `sign/validation/settings.py` (`KeyUsageConstraints`) | `src/key_usage.rs` | Ported (configuration parsing is CLI-side, lane L) |
 | `sign/validation/utils.py` | `src/policy.rs` | Ported: `CMSAlgorithmUsagePolicy`, `lift_policy`, default policy, `_ensure_digest_match` (including asn1crypto's NULL-parameter comparison quirk) |
@@ -21,7 +21,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_cms.py` | `tests/test_cms.rs` | 78 | 55 | 2 | 21 |
+| `test_cms.py` | `tests/test_cms.rs` | 78 | 60 | 2 | 16 |
 | `test_key_usage_constraints.py` | `tests/test_key_usage_constraints.rs` | 4 | 4 | 0 | 0 |
 
 How `test_cms.py` is ported: the upstream tests sign with pyHanko, then
@@ -32,7 +32,7 @@ Rust test replays the calls of its upstream function, asserts the upstream
 assertions on the hanko-cms result, and compares the outcome with pyHanko's
 field by field (`tests/common/mod.rs`). Unlisted differences fail the test,
 listed ones (`KNOWN`) must still differ, and every difference must fail
-closed. 143 of 161 recorded calls agree; the rest are listed below.
+closed. 144 of 161 recorded calls agree; the rest wait on request R1.
 
 Skipped (signing side, lane D):
 
@@ -51,12 +51,9 @@ Pending:
   Ed448 / SHAKE256 (`test_ed448_no_length`,
   `test_ed448_invalid_hash_algo_validation`). They are replayed and fail
   closed today (signature reported invalid or "Unknown hash function").
-- 6 functions on attribute certificates (`test_embed_ac`,
-  `test_embed_ac_revinfo_adobe_style`, `test_ac_detached`,
-  `test_ac_attr_validation_fail`, `test_ac_attr_validation_holder_mismatch`,
-  `test_parse_ac_with_malformed_attribute`): AC validation is next in
-  `hanko-certvalidator`. The two "validation fail" tests already pass, but
-  only because nothing is certified yet, so they are not counted.
+- `test_embed_ac_revinfo_adobe_style`: its assertions are on
+  `ades_lta_validation` (lane E); the integrity checks it makes are
+  replayed and agree.
 
 ## Divergences
 
