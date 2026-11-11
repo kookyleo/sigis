@@ -1,6 +1,7 @@
 # pyHanko oracle environment (union of the lane venvs, 2026-11-12).
 # Baseline: pyHanko 0.38.1, pyhanko-certvalidator 0.33.0. Python 3.14.
--e git+https://github.com/MatthiasValvekens/pyHanko@580f49498f76a00bda11d5a3fd86f7af3f0da75e#egg=common_test_utils&subdirectory=internal/common-test-utils
+# pyHanko's test utilities (internal/common-test-utils at tag v0.38.1) are
+# installed by setup.sh from the source checkout.
 Jinja2==3.1.6
 MarkupSafe==3.0.4
 PyYAML==6.0.3

@@ -248,7 +248,11 @@ implementation lands, and switches to the real implementation afterwards.
   `tools/pyhanko-oracle/requirements.txt` (pyHanko 0.38.1,
   pyhanko-certvalidator 0.33.0, certomancer 0.16.0, pyHanko's test utilities
   at tag v0.38.1, signxml, xsdata, pytest; the union of the lane venvs). It
-  also checks out the source tags under `/tmp/pyhanko-oracle/src`.
+  also checks out the source tags (default under `/tmp/pyhanko-oracle/src`;
+  `PYHANKO_SRC` reuses an existing clone, e.g. `/tmp/pyhanko-src`) and
+  installs pyHanko's test utilities from the `v0.38.1` checkout. Built and
+  verified on 2026-11-12: lane C's sweep and lane E's trusted-list
+  differential tests pass against it.
   `hanko_testdata::oracle` uses it by default; `$HANKO_ORACLE` overrides
   the interpreter. Lane-local venvs (`/tmp/lane-a`, `/tmp/c-diff-oracle`,
   ...) are no longer needed; add missing packages to `requirements.txt`
