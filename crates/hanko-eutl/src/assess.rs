@@ -65,7 +65,11 @@ impl Default for QualificationRequirements {
     fn default() -> Self {
         Self {
             permit_key_mgmt_types: None,
-            permit_cert_types: Some([QcCertType::QcEsign, QcCertType::QcEseal].into_iter().collect()),
+            permit_cert_types: Some(
+                [QcCertType::QcEsign, QcCertType::QcEseal]
+                    .into_iter()
+                    .collect(),
+            ),
             require_service_type: None,
         }
     }
@@ -103,7 +107,8 @@ pub fn path_qualified_policies(path: &ValidationPath) -> Option<BTreeSet<String>
             restrictive = true;
         }
     }
-    let policies = |c: &Cert| -> Option<BTreeSet<String>> { crate::util::certificate_policy_oids(c) };
+    let policies =
+        |c: &Cert| -> Option<BTreeSet<String>> { crate::util::certificate_policy_oids(c) };
     let mut result = policies(leaf)?;
     result.remove(ANY_POLICY);
     for c in &certs[..certs.len() - 1] {
@@ -142,7 +147,9 @@ impl<'a> QualificationAssessor<'a> {
             } else if st.statement_id == qc_statements::QC_TYPE {
                 let types = qc_statements::qc_types(&st)?;
                 if types.len() != 1 {
-                    return Err(QualificationError::NotSupported("only support exactly 1 qc_type".into()));
+                    return Err(QualificationError::NotSupported(
+                        "only support exactly 1 qc_type".into(),
+                    ));
                 }
                 qc_type = match types[0] {
                     qc_statements::QCT_ESIGN => QcCertType::QcEsign,
@@ -170,7 +177,9 @@ impl<'a> QualificationAssessor<'a> {
     /// `_check_cd_applicable`.
     pub fn check_cd_applicable(sd: &BaseServiceInformation, putative: &QualifiedStatus) -> bool {
         sd.additional_info_certificate_type.is_empty()
-            || sd.additional_info_certificate_type.contains(&putative.qc_type)
+            || sd
+                .additional_info_certificate_type
+                .contains(&putative.qc_type)
     }
 
     /// `_apply_sd_qualifications`.
@@ -190,7 +199,9 @@ impl<'a> QualificationAssessor<'a> {
 
     /// Apply qualifiers to a preliminary status (`_final_status`).
     pub fn final_status(prelim: QualifiedStatus, quals: &BTreeSet<Qualifier>) -> QualifiedStatus {
-        let qualified = if quals.contains(&Qualifier::NotQualified) || quals.contains(&Qualifier::LegalPerson) {
+        let qualified = if quals.contains(&Qualifier::NotQualified)
+            || quals.contains(&Qualifier::LegalPerson)
+        {
             false
         } else if quals.contains(&Qualifier::QcStatement) {
             true
@@ -206,7 +217,10 @@ impl<'a> QualificationAssessor<'a> {
         } else {
             prelim.qc_type
         };
-        let key = if !qualified || quals.contains(&Qualifier::NoSscd) || quals.contains(&Qualifier::NoQscd) {
+        let key = if !qualified
+            || quals.contains(&Qualifier::NoSscd)
+            || quals.contains(&Qualifier::NoQscd)
+        {
             QcPrivateKeyManagementType::Unknown
         } else if quals.contains(&Qualifier::QscdManagedOnBehalf) {
             QcPrivateKeyManagementType::QscdDelegated
@@ -246,7 +260,10 @@ impl<'a> QualificationAssessor<'a> {
             }
         }
         let mut found: Vec<(&QualifiedServiceInformation, QualifiedStatus)> = Vec::new();
-        for sd in self.registry.applicable_tsps_on_path(path, Some(reference_time)) {
+        for sd in self
+            .registry
+            .applicable_tsps_on_path(path, Some(reference_time))
+        {
             let putative = Self::apply_sd_qualifications(cert, prelim, &sd.qualifications);
             if Self::check_cd_applicable(&sd.base_info, &putative) {
                 found.push((sd, putative));

@@ -30,7 +30,9 @@ use hanko_cms::SignedContent;
 use hanko_core::errors::{not_implemented, Result};
 use hanko_pdf::{EmbeddedSignature, PdfFile};
 
-pub use hanko_validate::report::{AdesFailure, AdesIndeterminate, AdesPassed, AdesStatus, AdesSubIndic};
+pub use hanko_validate::report::{
+    AdesFailure, AdesIndeterminate, AdesPassed, AdesStatus, AdesSubIndic,
+};
 
 /// Sub-indication (`AdESSubIndic`, EN 319 102-1 §5.1.3), named as in the
 /// standard, e.g. `"OUT_OF_BOUNDS_NO_POE"`.
@@ -131,7 +133,11 @@ pub mod report {
     /// only. The full report (signature identifier, attributes, validation
     /// objects) is [`crate::etsi_report::generate_report`].
     pub fn to_etsi_xml(result: &AdesValidationResult) -> Result<String> {
-        let sub = result.sub_indication.as_ref().map(|s| s.0.as_str()).unwrap_or("OK");
+        let sub = result
+            .sub_indication
+            .as_ref()
+            .map(|s| s.0.as_str())
+            .unwrap_or("OK");
         let main = super::etsi_report::main_indication_uri(result.status);
         Ok(format!(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<vr:ValidationReport xmlns:vr=\"{}\">\n  <vr:SignatureValidationReport>\n    <vr:SignatureValidationStatus>\n      <vr:MainIndication>{main}</vr:MainIndication>\n      <vr:SubIndication>urn:etsi:019102:subindication:{sub}</vr:SubIndication>\n    </vr:SignatureValidationStatus>\n  </vr:SignatureValidationReport>\n</vr:ValidationReport>\n",
@@ -152,7 +158,9 @@ pub mod report {
             assert!(to_etsi_xml(&ok).unwrap().contains("total-passed"));
             let bad = AdesValidationResult::from_subindic(AdesFailure::HASH_FAILURE.into());
             assert_eq!(bad.sub_indication.as_ref().unwrap().0, "HASH_FAILURE");
-            assert!(to_etsi_xml(&bad).unwrap().contains("subindication:HASH_FAILURE"));
+            assert!(to_etsi_xml(&bad)
+                .unwrap()
+                .contains("subindication:HASH_FAILURE"));
         }
     }
 }

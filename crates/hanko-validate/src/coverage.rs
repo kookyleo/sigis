@@ -136,7 +136,10 @@ pub fn evaluate_signature_coverage(
         Ok(startxref) if startxref == expected.startxref => {}
         _ => return SignatureCoverageLevel::ContiguousBlockFromStart,
     }
-    if xrefs[..=signed_revision].iter().any(|x| x.xref_end > signed_zone_len) {
+    if xrefs[..=signed_revision]
+        .iter()
+        .any(|x| x.xref_end > signed_zone_len)
+    {
         return SignatureCoverageLevel::ContiguousBlockFromStart;
     }
     SignatureCoverageLevel::EntireRevision
@@ -165,7 +168,10 @@ mod tests {
         file.extend_from_slice(b"startxref\n");
         assert_eq!(file.len(), 28);
         let br = [0, 10, 18, 10];
-        assert_eq!(evaluate_signature_coverage(&file, &br, 3, 0, &[]), SignatureCoverageLevel::EntireFile);
+        assert_eq!(
+            evaluate_signature_coverage(&file, &br, 3, 0, &[]),
+            SignatureCoverageLevel::EntireFile
+        );
         assert_eq!(
             evaluate_signature_coverage(&file, &[1, 10, 18, 10], 3, 0, &[]),
             SignatureCoverageLevel::Unclear
@@ -177,7 +183,16 @@ mod tests {
             SignatureCoverageLevel::Unclear
         );
         assert_eq!(
-            evaluate_signature_coverage(&longer, &br, 3, 0, &[XrefMeta { startxref: 5, xref_end: 9 }]),
+            evaluate_signature_coverage(
+                &longer,
+                &br,
+                3,
+                0,
+                &[XrefMeta {
+                    startxref: 5,
+                    xref_end: 9
+                }]
+            ),
             SignatureCoverageLevel::ContiguousBlockFromStart
         );
     }
@@ -192,12 +207,18 @@ mod tests {
         let br = [0u64, 0, 6, rev1.len() as u64];
         let zone = file.len() as u64;
         file.extend_from_slice(b"appended update\n%%EOF\n");
-        let xrefs = [XrefMeta { startxref: 9, xref_end: zone - 10 }];
+        let xrefs = [XrefMeta {
+            startxref: 9,
+            xref_end: zone - 10,
+        }];
         assert_eq!(
             evaluate_signature_coverage(&file, &br, 2, 0, &xrefs),
             SignatureCoverageLevel::EntireRevision
         );
-        let bad = [XrefMeta { startxref: 9, xref_end: zone + 1 }];
+        let bad = [XrefMeta {
+            startxref: 9,
+            xref_end: zone + 1,
+        }];
         assert_eq!(
             evaluate_signature_coverage(&file, &br, 2, 0, &bad),
             SignatureCoverageLevel::ContiguousBlockFromStart

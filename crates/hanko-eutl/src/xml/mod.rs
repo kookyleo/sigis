@@ -17,7 +17,8 @@ pub const TSL_NS: &str = "http://uri.etsi.org/02231/v2#";
 /// ETSI TS 119 612 additional types namespace.
 pub const TSL_ADDTYPES_NS: &str = "http://uri.etsi.org/02231/v2/additionaltypes#";
 /// ETSI TS 119 612 service information extension namespace.
-pub const TSL_SIE_NS: &str = "http://uri.etsi.org/TrstSvc/SvcInfoExt/eSigDir-1999-93-EC-TrustedList/#";
+pub const TSL_SIE_NS: &str =
+    "http://uri.etsi.org/TrstSvc/SvcInfoExt/eSigDir-1999-93-EC-TrustedList/#";
 
 /// Error parsing or interpreting XML.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
@@ -48,7 +49,10 @@ pub fn element_prefix<'a>(node: Node<'a, '_>) -> Option<&'a str> {
 }
 
 /// The prefix of an attribute as written in the source.
-pub fn attribute_prefix<'a>(doc: &'a Document<'_>, attr: &roxmltree::Attribute<'_, '_>) -> Option<&'a str> {
+pub fn attribute_prefix<'a>(
+    doc: &'a Document<'_>,
+    attr: &roxmltree::Attribute<'_, '_>,
+) -> Option<&'a str> {
     let qname = doc.input_text().get(attr.range_qname())?;
     qname.split_once(':').map(|(p, _)| p)
 }
@@ -88,5 +92,8 @@ pub fn text_content(node: Node<'_, '_>) -> String {
 /// Text content with XML Schema whitespace collapsing applied (as for
 /// `xsd:token`, `xsd:anyURI` and `xsd:dateTime` values).
 pub fn collapsed_text(node: Node<'_, '_>) -> String {
-    text_content(node).split_whitespace().collect::<Vec<_>>().join(" ")
+    text_content(node)
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
 }

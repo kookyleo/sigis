@@ -228,7 +228,10 @@ pub struct CriteriaList {
 
 impl CriteriaList {
     /// Build a list, removing duplicate criteria (pyHanko uses a frozenset).
-    pub fn new(combine_as: CriteriaCombination, criteria: impl IntoIterator<Item = Criterion>) -> Self {
+    pub fn new(
+        combine_as: CriteriaCombination,
+        criteria: impl IntoIterator<Item = Criterion>,
+    ) -> Self {
         let mut uniq: Vec<Criterion> = Vec::new();
         for c in criteria {
             if !uniq.contains(&c) {
@@ -301,7 +304,10 @@ impl QualifiedServiceInformation {
     }
 
     /// A QTST service definition.
-    pub fn qtst(base_info: BaseServiceInformation, qualifications: impl IntoIterator<Item = Qualification>) -> Self {
+    pub fn qtst(
+        base_info: BaseServiceInformation,
+        qualifications: impl IntoIterator<Item = Qualification>,
+    ) -> Self {
         Self {
             base_info,
             qualifications: dedup(qualifications),
@@ -484,12 +490,20 @@ impl TspRegistry {
 
     /// Known qualified CAs (`known_certificate_authorities`).
     pub fn known_certificate_authorities(&self) -> Vec<&Authority> {
-        self.ca.iter().filter(|(_, sds)| !sds.is_empty()).map(|(a, _)| a).collect()
+        self.ca
+            .iter()
+            .filter(|(_, sds)| !sds.is_empty())
+            .map(|(a, _)| a)
+            .collect()
     }
 
     /// Known qualified TSAs (`known_timestamp_authorities`).
     pub fn known_timestamp_authorities(&self) -> Vec<&Authority> {
-        self.tst.iter().filter(|(_, sds)| !sds.is_empty()).map(|(a, _)| a).collect()
+        self.tst
+            .iter()
+            .filter(|(_, sds)| !sds.is_empty())
+            .map(|(a, _)| a)
+            .collect()
     }
 
     /// Service definitions of the authorities on `path`
@@ -580,11 +594,16 @@ impl<'a> TspTrustManager<'a> {
     /// The anchor for `authority`, qualified by its most recent service
     /// definition (`as_trust_anchor`).
     pub fn as_trust_anchor(&self, authority: &Authority) -> Option<QualifiedTrustAnchor> {
-        let sd = *self.registry.applicable_service_definitions(authority, None).first()?;
+        let sd = *self
+            .registry
+            .applicable_service_definitions(authority, None)
+            .first()?;
         let cert = self.registry.cert_for(authority)?;
         Some(QualifiedTrustAnchor {
             anchor: TrustAnchor::new(cert.clone()),
-            trusted_service_type: TrustedServiceType::from_service_type_uri(&sd.base_info.service_type),
+            trusted_service_type: TrustedServiceType::from_service_type_uri(
+                &sd.base_info.service_type,
+            ),
             valid_from: sd.base_info.valid_from,
             valid_until: sd.base_info.valid_until,
         })

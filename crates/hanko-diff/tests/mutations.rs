@@ -147,10 +147,7 @@ fn mutations_agree_with_pyhanko() {
 #[test]
 fn mutations_derived_source_never_more_lenient() {
     let t = run(&|file, base, field_mdp, doc_mdp| {
-        let prims = OraclePrimitives {
-            file,
-            strict: true,
-        };
+        let prims = OraclePrimitives { file, strict: true };
         let src = DerivedSource::new(&prims).unwrap();
         StandardDiffPolicy.review_source(&src, base, field_mdp, doc_mdp)
     });

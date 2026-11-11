@@ -14,12 +14,12 @@ use std::time::Duration;
 use common::*;
 use hanko_core::time::Moment;
 use hanko_eutl::fetch::{
-    bootstrap_lotl_signers, lotl_to_registry, FetchOptions, FileSystemTlCache, InMemoryTlCache, PathFetcher,
-    RetryPolicy, TlCache, TlFetchError,
+    bootstrap_lotl_signers, lotl_to_registry, FetchOptions, FileSystemTlCache, InMemoryTlCache,
+    PathFetcher, RetryPolicy, TlCache, TlFetchError,
 };
 use hanko_eutl::parse::{
-    self, interpret_service, interpret_service_info_for_tsps, latest_known_lotl_tlso_certs, ServiceInterpreter,
-    STATUS_GRANTED,
+    self, interpret_service, interpret_service_info_for_tsps, latest_known_lotl_tlso_certs,
+    ServiceInterpreter, STATUS_GRANTED,
 };
 use hanko_eutl::tsp::{Qualifier, CA_QC_URI};
 use hanko_eutl::util::load_certs_from_pemder;
@@ -38,7 +38,10 @@ fn read_qtsts(name: &str) -> Vec<hanko_eutl::tsp::QualifiedServiceInformation> {
 #[test]
 fn test_parse_cas_from_real_tl_smoke_test() {
     let cas = read_cas(TEST_REAL_TL_BE_OLD);
-    let current = cas.iter().filter(|c| c.base_info.valid_until.is_none()).count();
+    let current = cas
+        .iter()
+        .filter(|c| c.base_info.valid_until.is_none())
+        .count();
     assert_eq!(current, 28);
     assert_eq!(cas.len(), 74);
 }
@@ -46,14 +49,18 @@ fn test_parse_cas_from_real_tl_smoke_test() {
 #[test]
 fn test_parse_qtsts_from_real_tl_smoke_test() {
     let q = read_qtsts(TEST_REAL_TL_BE_OLD);
-    let current = q.iter().filter(|c| c.base_info.valid_until.is_none()).count();
+    let current = q
+        .iter()
+        .filter(|c| c.base_info.valid_until.is_none())
+        .count();
     assert_eq!(current, 17);
     assert_eq!(q.len(), 18);
 }
 
 #[test]
 fn test_parse_services_from_real_tl_smoke_test() {
-    let (registry, errors) = parse::trust_list_to_registry_unsafe(&tl_file(TEST_REAL_TL_BE_OLD), None).unwrap();
+    let (registry, errors) =
+        parse::trust_list_to_registry_unsafe(&tl_file(TEST_REAL_TL_BE_OLD), None).unwrap();
     assert!(errors.is_empty());
     assert_eq!(registry.known_timestamp_authorities().len(), 17);
     assert_eq!(registry.known_certificate_authorities().len(), 20);
@@ -63,8 +70,13 @@ fn test_parse_services_from_real_tl_smoke_test() {
 fn test_parse_services_from_real_tl_with_validation_smoke_test() {
     // freeze_time("2025-06-01T00:05:00+00:00")
     let at = moment("2025-06-01T00:05:00Z");
-    let (registry, errors) =
-        parse::trust_list_to_registry(&tl_file(TEST_REAL_TL_BE_OLD), &[be_tlso_cert()], None, Some(at)).unwrap();
+    let (registry, errors) = parse::trust_list_to_registry(
+        &tl_file(TEST_REAL_TL_BE_OLD),
+        &[be_tlso_cert()],
+        None,
+        Some(at),
+    )
+    .unwrap();
     assert!(errors.is_empty());
     assert_eq!(registry.known_timestamp_authorities().len(), 17);
     assert_eq!(registry.known_certificate_authorities().len(), 20);
@@ -74,10 +86,14 @@ fn test_parse_services_from_real_tl_with_validation_smoke_test() {
 fn test_validate_tl_wrong_signature() {
     // Upstream runs at the current time; the outcome does not depend on it.
     let at = moment("2025-06-01T00:05:00Z");
-    let err = parse::trust_list_to_registry(&tl_file(TEST_REAL_TL_EE), &[be_tlso_cert()], None, Some(at)).unwrap_err();
+    let err =
+        parse::trust_list_to_registry(&tl_file(TEST_REAL_TL_EE), &[be_tlso_cert()], None, Some(at))
+            .unwrap_err();
     assert!(matches!(err, parse::EutlError::Signature(_)), "{err:?}");
     // Also at the current time.
-    let err = parse::trust_list_to_registry(&tl_file(TEST_REAL_TL_EE), &[be_tlso_cert()], None, None).unwrap_err();
+    let err =
+        parse::trust_list_to_registry(&tl_file(TEST_REAL_TL_EE), &[be_tlso_cert()], None, None)
+            .unwrap_err();
     assert!(matches!(err, parse::EutlError::Signature(_)), "{err:?}");
 }
 
@@ -94,7 +110,11 @@ const LOTL_PIVOTS: [&str; 4] = [
 ];
 
 fn serve_tl_file(url: &str) -> Result<String, TlFetchError> {
-    let name = PathFetcher::path_of(url).rsplit('/').next().unwrap_or("").to_owned();
+    let name = PathFetcher::path_of(url)
+        .rsplit('/')
+        .next()
+        .unwrap_or("")
+        .to_owned();
     Ok(tl_file(&name))
 }
 
@@ -123,7 +143,8 @@ fn bootstrap_post_reanchor(pass_empty_cache: bool) {
         cache: pass_empty_cache.then_some(&cache as &dyn TlCache),
         retry: fast_retry(),
     };
-    let results = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL), &fetcher, None, opts, 1).unwrap();
+    let results =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL), &fetcher, None, opts, 1).unwrap();
     check_lotl_signers(&results, "latest");
 }
 
@@ -152,7 +173,8 @@ fn bootstrap_old(pass_empty_cache: bool) {
         cache: pass_empty_cache.then_some(&cache as &dyn TlCache),
         retry: fast_retry(),
     };
-    let results = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 1).unwrap();
+    let results =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 1).unwrap();
     check_lotl_signers(&results, "pre-reanchor");
 }
 
@@ -177,7 +199,8 @@ fn test_bootstrap_signers_with_populated_cache() {
         cache: Some(&cache),
         retry: fast_retry(),
     };
-    let results = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 1).unwrap();
+    let results =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 1).unwrap();
     check_lotl_signers(&results, "pre-reanchor");
 }
 
@@ -204,7 +227,8 @@ fn test_bootstrap_signers_request_retry() {
         cache: None,
         retry: fast_retry(),
     };
-    let results = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap();
+    let results =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap();
     check_lotl_signers(&results, "pre-reanchor");
 }
 
@@ -215,7 +239,8 @@ fn test_bootstrap_signers_request_fail() {
         cache: None,
         retry: fast_retry(),
     };
-    let err = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap_err();
+    let err =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap_err();
     assert!(err.0.contains("Failed to process pivot LOTL"), "{err}");
 }
 
@@ -238,7 +263,8 @@ fn test_bootstrap_signers_request_outage() {
         cache: None,
         retry: fast_retry(),
     };
-    let err = bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap_err();
+    let err =
+        bootstrap_lotl_signers(&tl_file(TEST_REAL_LOTL_OLD), &fetcher, None, opts, 0).unwrap_err();
     assert!(err.0.contains("Failed to process pivot LOTL"), "{err}");
     // Three attempts on the first pivot, then the bootstrap gives up.
     assert_eq!(calls.load(Ordering::SeqCst), 3);
@@ -270,8 +296,12 @@ fn test_parse_services_from_real_tl_via_lotl() {
         cache: None,
         retry: fast_retry(),
     };
-    let (registry, errors) = lotl_to_registry(None, &fetcher, None, opts, None, None, Some(lotl_time())).unwrap();
-    let dl = errors.iter().filter(|e| e.0.contains("Failed to download")).count();
+    let (registry, errors) =
+        lotl_to_registry(None, &fetcher, None, opts, None, None, Some(lotl_time())).unwrap();
+    let dl = errors
+        .iter()
+        .filter(|e| e.0.contains("Failed to download"))
+        .count();
     assert_eq!(dl, 30, "{errors:?}");
     assert_eq!(registry.known_timestamp_authorities().len(), 19);
     assert_eq!(registry.known_certificate_authorities().len(), 29);
@@ -285,8 +315,16 @@ fn test_parse_services_from_real_tl_via_selective_lotl() {
         retry: fast_retry(),
     };
     let only: BTreeSet<String> = ["BE".to_owned()].into_iter().collect();
-    let (registry, errors) =
-        lotl_to_registry(None, &fetcher, None, opts, None, Some(&only), Some(lotl_time())).unwrap();
+    let (registry, errors) = lotl_to_registry(
+        None,
+        &fetcher,
+        None,
+        opts,
+        None,
+        Some(&only),
+        Some(lotl_time()),
+    )
+    .unwrap();
     assert!(errors.is_empty(), "{errors:?}");
     assert_eq!(registry.known_timestamp_authorities().len(), 19);
     assert_eq!(registry.known_certificate_authorities().len(), 29);
@@ -315,7 +353,9 @@ const DEFAULT_HEAD: &str = r#"
                 2020-11-01T00:00:00Z
             </StatusStartingTime>"#;
 
-fn interpret_ca(xml_text: &str) -> Result<hanko_eutl::tsp::QualifiedServiceInformation, hanko_eutl::tsp::TspServiceParsingError> {
+fn interpret_ca(
+    xml_text: &str,
+) -> Result<hanko_eutl::tsp::QualifiedServiceInformation, hanko_eutl::tsp::TspServiceParsingError> {
     let doc = xml::parse(xml_text).unwrap();
     interpret_service(doc.root_element(), ServiceInterpreter::Ca)
 }
@@ -394,7 +434,10 @@ fn test_parse_ca_with_extensions() {
             </ServiceInformationExtensions>"#
     ));
     let result = interpret_ca(&x).unwrap();
-    assert_eq!(result.expired_certs_revocation_info(), Some(moment("2016-06-30T21:00:00Z")));
+    assert_eq!(
+        result.expired_certs_revocation_info(),
+        Some(moment("2016-06-30T21:00:00Z"))
+    );
     let q = &result.qualifications[0];
     assert_eq!(q.qualifiers, [Qualifier::WithSscd].into_iter().collect());
     let crit = &q.criteria_list.criteria;
@@ -406,7 +449,9 @@ fn test_parse_ca_with_extensions() {
         key_usage_forbidden: Some(BTreeSet::new()),
         ..KeyUsageConstraints::new()
     })));
-    assert!(crit.contains(&Criterion::KeyUsage(KeyUsageConstraints::with_extd_key_usage(["2.999"]))));
+    assert!(crit.contains(&Criterion::KeyUsage(
+        KeyUsageConstraints::with_extd_key_usage(["2.999"])
+    )));
     assert!(crit.contains(&Criterion::CertSubjectDn(set(&["2.999"]))));
 }
 
@@ -470,7 +515,11 @@ fn test_parse_service_name() {
             <ServiceDigitalIdentity/>
             <StatusStartingTime>2020-11-01T00:00:00Z</StatusStartingTime>"#
         ));
-        assert_eq!(interpret_ca(&x).unwrap().base_info.service_name, "Test", "{names}");
+        assert_eq!(
+            interpret_ca(&x).unwrap().base_info.service_name,
+            "Test",
+            "{names}"
+        );
     }
 }
 
@@ -485,7 +534,10 @@ fn test_parse_service_validity_dates() {
                 {date}
             </StatusStartingTime>"#
         ));
-        assert_eq!(interpret_ca(&x).unwrap().base_info.valid_from, moment("2020-11-01T00:00:00Z"));
+        assert_eq!(
+            interpret_ca(&x).unwrap().base_info.valid_from,
+            moment("2020-11-01T00:00:00Z")
+        );
     }
 }
 
@@ -571,8 +623,11 @@ fn history_xml(second_item: &str) -> String {
 
 fn intervals(x: &str) -> Vec<(Moment, Option<Moment>)> {
     let doc = xml::parse(x).unwrap();
-    let (sds, _) = interpret_service_info_for_tsps([doc.root_element()], CA_QC_URI, ServiceInterpreter::Ca);
-    sds.iter().map(|r| (r.base_info.valid_from, r.base_info.valid_until)).collect()
+    let (sds, _) =
+        interpret_service_info_for_tsps([doc.root_element()], CA_QC_URI, ServiceInterpreter::Ca);
+    sds.iter()
+        .map(|r| (r.base_info.valid_from, r.base_info.valid_until))
+        .collect()
 }
 
 #[test]
@@ -588,8 +643,15 @@ fn test_parse_service_history_intervals() {
                 </StatusStartingTime>
             </ServiceHistoryInstance>"#
     ));
-    let (d1, d2, d3) = (moment("2017-11-01T00:00:00Z"), moment("2019-11-01T00:00:00Z"), moment("2020-11-01T00:00:00Z"));
-    assert_eq!(intervals(&x), vec![(d3, None), (d2, Some(d3)), (d1, Some(d2))]);
+    let (d1, d2, d3) = (
+        moment("2017-11-01T00:00:00Z"),
+        moment("2019-11-01T00:00:00Z"),
+        moment("2020-11-01T00:00:00Z"),
+    );
+    assert_eq!(
+        intervals(&x),
+        vec![(d3, None), (d2, Some(d3)), (d1, Some(d2))]
+    );
 }
 
 #[test]
@@ -605,7 +667,11 @@ fn test_parse_service_history_intervals_skip_not_granted() {
                 </StatusStartingTime>
             </ServiceHistoryInstance>"#
     ));
-    let (d1, d2, d3) = (moment("2017-11-01T00:00:00Z"), moment("2019-11-01T00:00:00Z"), moment("2020-11-01T00:00:00Z"));
+    let (d1, d2, d3) = (
+        moment("2017-11-01T00:00:00Z"),
+        moment("2019-11-01T00:00:00Z"),
+        moment("2020-11-01T00:00:00Z"),
+    );
     assert_eq!(intervals(&x), vec![(d3, None), (d1, Some(d2))]);
 }
 
@@ -660,7 +726,8 @@ const DAY: u64 = 86_400;
 fn test_fs_cache_keep_until_expiry() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+        .unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     *now.lock().unwrap() = moment("2025-08-31T00:00:00Z");
@@ -672,11 +739,14 @@ fn test_fs_cache_keep_until_expiry() {
 fn test_fs_cache_reload_from_disk_before_expiry() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+        .unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     *now.lock().unwrap() = moment("2025-08-31T00:00:00Z");
-    let fs2 = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs2 =
+        FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+            .unwrap();
     assert_eq!(fs2.get("foo").as_deref(), Some("bar"));
     assert_eq!(fs2.get("baz").as_deref(), Some("quux"));
 }
@@ -685,7 +755,8 @@ fn test_fs_cache_reload_from_disk_before_expiry() {
 fn test_fs_cache_expire() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
+    let fs =
+        FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     *now.lock().unwrap() = moment("2025-08-31T00:00:00Z");
@@ -696,11 +767,13 @@ fn test_fs_cache_expire() {
 fn test_fs_cache_expire_after_reload() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
+    let fs =
+        FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     *now.lock().unwrap() = moment("2025-08-31T00:00:00Z");
-    let fs2 = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
+    let fs2 =
+        FileSystemTlCache::with_clock(d.path(), Duration::from_secs(DAY), clock_at(&now)).unwrap();
     assert_eq!(fs2.get("foo"), None);
 }
 
@@ -708,7 +781,8 @@ fn test_fs_cache_expire_after_reload() {
 fn test_fs_cache_io_failure() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+        .unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     std::fs::remove_file(d.path().join(fs.file_name("foo").unwrap())).unwrap();
@@ -719,11 +793,14 @@ fn test_fs_cache_io_failure() {
 fn test_fs_cache_reload_and_reset() {
     let d = tmp();
     let now = Arc::new(Mutex::new(moment("2025-08-28T00:00:00Z")));
-    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+        .unwrap();
     fs.set("foo", "bar");
     fs.set("baz", "quux");
     *now.lock().unwrap() = moment("2025-08-31T00:00:00Z");
-    let fs2 = FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now)).unwrap();
+    let fs2 =
+        FileSystemTlCache::with_clock(d.path(), Duration::from_secs(10 * DAY), clock_at(&now))
+            .unwrap();
     fs2.reset();
     assert_eq!(fs.get("foo"), None);
     assert_eq!(fs.get("baz"), None);
@@ -736,11 +813,16 @@ fn test_fs_cache_reload_and_reset() {
 fn validation_context_from_file(
     name: &str,
     at: Moment,
-) -> (hanko_eutl::tsp::TspRegistry, hanko_certvalidator::ValidationContext) {
+) -> (
+    hanko_eutl::tsp::TspRegistry,
+    hanko_certvalidator::ValidationContext,
+) {
     let (registry, _) = parse::trust_list_to_registry_unsafe(&tl_file(name), None).unwrap();
     let tm = hanko_eutl::tsp::TspTrustManager::new(&registry);
     let mut b = hanko_certvalidator::ValidationContext::builder()
-        .revinfo_policy(hanko_certvalidator::CertRevTrustPolicy::new(hanko_certvalidator::NO_REVOCATION))
+        .revinfo_policy(hanko_certvalidator::CertRevTrustPolicy::new(
+            hanko_certvalidator::NO_REVOCATION,
+        ))
         .moment(at);
     for a in tm.trust_anchors_at(at) {
         b = b.trust_anchor(a);
@@ -761,16 +843,29 @@ fn test_validate_real_qcert_no_revo() {
     let at = moment("2025-08-06T00:00:00Z");
     let cert = crypto_cert("real-qcert.cer");
     let (registry, ctx) = validation_context_from_file(TEST_REAL_TL_BE_OLD, at);
-    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert).validate().unwrap();
+    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert)
+        .validate()
+        .unwrap();
     let result = hanko_eutl::assess::QualificationAssessor::new(&registry)
         .check_entity_cert_qualified(&path, Some(at))
         .unwrap();
-    assert!(path.trust_anchor().cert().subject().to_string().contains("itsme"));
+    assert!(path
+        .trust_anchor()
+        .cert()
+        .subject()
+        .to_string()
+        .contains("itsme"));
     assert_eq!(path.len() - 1, 1);
     assert!(result.status.qualified);
-    assert_eq!(result.service_definition.unwrap().base_info.service_type, CA_QC_URI);
+    assert_eq!(
+        result.service_definition.unwrap().base_info.service_type,
+        CA_QC_URI
+    );
     assert_eq!(result.status.qc_type, QcCertType::QcEsign);
-    assert_eq!(result.status.qc_key_security, QcPrivateKeyManagementType::Qscd);
+    assert_eq!(
+        result.status.qc_key_security,
+        QcPrivateKeyManagementType::Qscd
+    );
 }
 
 #[test]
@@ -780,7 +875,9 @@ fn test_validate_real_qtst_cert_no_revo() {
     let at = moment("2025-08-06T00:00:00Z");
     let cert = crypto_cert("real-qtst-cert.cer");
     let (registry, ctx) = validation_context_from_file(TEST_REAL_TL_BE_OLD, at);
-    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert).validate().unwrap();
+    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert)
+        .validate()
+        .unwrap();
     let result = hanko_eutl::assess::QualificationAssessor::new(&registry)
         .check_entity_cert_qualified(&path, Some(at))
         .unwrap();
@@ -792,9 +889,15 @@ fn test_validate_real_qtst_cert_no_revo() {
         .contains("QTSP: FPS Policy and Support - BOSA"));
     assert_eq!(path.len() - 1, 0);
     assert!(result.status.qualified);
-    assert_eq!(result.service_definition.unwrap().base_info.service_type, QTST_URI);
+    assert_eq!(
+        result.service_definition.unwrap().base_info.service_type,
+        QTST_URI
+    );
     assert_eq!(result.status.qc_type, QcCertType::QcEseal);
-    assert_eq!(result.status.qc_key_security, QcPrivateKeyManagementType::Unknown);
+    assert_eq!(
+        result.status.qc_key_security,
+        QcPrivateKeyManagementType::Unknown
+    );
 }
 
 #[test]
@@ -803,7 +906,9 @@ fn test_conclude_not_qualified_qtst_lacking_qc_statements() {
     let at = moment("2025-08-06T00:00:00Z");
     let cert = crypto_cert("real-misissued-qtst-cert.cer");
     let (registry, ctx) = validation_context_from_file(TEST_REAL_TL_EE, at);
-    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert).validate().unwrap();
+    let path = hanko_certvalidator::CertificateValidator::new(&ctx, cert)
+        .validate()
+        .unwrap();
     let result = hanko_eutl::assess::QualificationAssessor::new(&registry)
         .check_entity_cert_qualified(&path, Some(at))
         .unwrap();
@@ -815,7 +920,10 @@ fn test_conclude_not_qualified_qtst_lacking_qc_statements() {
         .contains("SK TIMESTAMPING UNIT 2025E"));
     assert_eq!(path.len() - 1, 0);
     assert!(!result.status.qualified);
-    assert_eq!(result.service_definition.unwrap().base_info.service_type, QTST_URI);
+    assert_eq!(
+        result.service_definition.unwrap().base_info.service_type,
+        QTST_URI
+    );
 }
 
 #[test]
@@ -830,19 +938,71 @@ fn test_tl_override_processing() {
     };
     // (prelim, qualifiers, expected (qualified?, qc_type?, key?))
     #[allow(clippy::type_complexity)]
-    let cases: Vec<(QualifiedStatus, Vec<Qualifier>, (Option<bool>, Option<T>, Option<K>))> = vec![
-        (st(true, T::QcEsign, K::Qscd), vec![Qualifier::NotQualified], (Some(false), None, Some(K::Unknown))),
-        (st(false, T::QcEsign, K::Qscd), vec![Qualifier::QcStatement], (Some(true), None, Some(K::Qscd))),
-        (st(false, T::QcEsign, K::Qscd), vec![Qualifier::WithQscd], (Some(false), None, Some(K::Unknown))),
-        (st(true, T::QcEsign, K::Unknown), vec![Qualifier::WithQscd], (Some(true), None, Some(K::Qscd))),
-        (st(true, T::QcEsign, K::Unknown), vec![Qualifier::WithSscd], (Some(true), None, Some(K::Qscd))),
-        (st(true, T::QcEsign, K::Unknown), vec![Qualifier::ForEseal], (Some(true), Some(T::QcEseal), None)),
-        (st(true, T::QcEseal, K::Unknown), vec![Qualifier::ForEsig], (Some(true), Some(T::QcEsign), None)),
-        (st(true, T::QcEsign, K::Unknown), vec![Qualifier::ForWsa], (Some(true), Some(T::QcWeb), None)),
-        (st(true, T::QcEseal, K::Qscd), vec![Qualifier::QscdManagedOnBehalf], (None, None, Some(K::QscdDelegated))),
-        (st(true, T::QcEsign, K::Qscd), vec![Qualifier::NoQscd], (Some(true), None, Some(K::Unknown))),
-        (st(true, T::QcEsign, K::Qscd), vec![Qualifier::NoSscd], (Some(true), None, Some(K::Unknown))),
-        (st(true, T::QcEsign, K::Qscd), vec![Qualifier::QscdAsInCert], (Some(true), None, Some(K::Qscd))),
+    let cases: Vec<(
+        QualifiedStatus,
+        Vec<Qualifier>,
+        (Option<bool>, Option<T>, Option<K>),
+    )> = vec![
+        (
+            st(true, T::QcEsign, K::Qscd),
+            vec![Qualifier::NotQualified],
+            (Some(false), None, Some(K::Unknown)),
+        ),
+        (
+            st(false, T::QcEsign, K::Qscd),
+            vec![Qualifier::QcStatement],
+            (Some(true), None, Some(K::Qscd)),
+        ),
+        (
+            st(false, T::QcEsign, K::Qscd),
+            vec![Qualifier::WithQscd],
+            (Some(false), None, Some(K::Unknown)),
+        ),
+        (
+            st(true, T::QcEsign, K::Unknown),
+            vec![Qualifier::WithQscd],
+            (Some(true), None, Some(K::Qscd)),
+        ),
+        (
+            st(true, T::QcEsign, K::Unknown),
+            vec![Qualifier::WithSscd],
+            (Some(true), None, Some(K::Qscd)),
+        ),
+        (
+            st(true, T::QcEsign, K::Unknown),
+            vec![Qualifier::ForEseal],
+            (Some(true), Some(T::QcEseal), None),
+        ),
+        (
+            st(true, T::QcEseal, K::Unknown),
+            vec![Qualifier::ForEsig],
+            (Some(true), Some(T::QcEsign), None),
+        ),
+        (
+            st(true, T::QcEsign, K::Unknown),
+            vec![Qualifier::ForWsa],
+            (Some(true), Some(T::QcWeb), None),
+        ),
+        (
+            st(true, T::QcEseal, K::Qscd),
+            vec![Qualifier::QscdManagedOnBehalf],
+            (None, None, Some(K::QscdDelegated)),
+        ),
+        (
+            st(true, T::QcEsign, K::Qscd),
+            vec![Qualifier::NoQscd],
+            (Some(true), None, Some(K::Unknown)),
+        ),
+        (
+            st(true, T::QcEsign, K::Qscd),
+            vec![Qualifier::NoSscd],
+            (Some(true), None, Some(K::Unknown)),
+        ),
+        (
+            st(true, T::QcEsign, K::Qscd),
+            vec![Qualifier::QscdAsInCert],
+            (Some(true), None, Some(K::Qscd)),
+        ),
     ];
     assert_eq!(cases.len(), 12);
     for (prelim, quals, (q, t, k)) in cases {

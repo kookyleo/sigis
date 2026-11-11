@@ -67,11 +67,12 @@ pub struct QualificationResult {
 /// This is the simple interface; [`parse::trust_list_to_registry`] keeps the
 /// full service definitions.
 pub fn parse_trusted_list(xml: &[u8], signers: &[Cert]) -> Result<TrustedList> {
-    let text = std::str::from_utf8(xml).map_err(|e| HankoError::Malformed(format!("trusted list: {e}")))?;
+    let text = std::str::from_utf8(xml)
+        .map_err(|e| HankoError::Malformed(format!("trusted list: {e}")))?;
     let signed = parse::validate_and_extract_tl_data(text, signers, None)
         .map_err(|e| HankoError::Malformed(e.to_string()))?;
-    let (sds, _errors) =
-        parse::read_qualified_service_definitions(&signed).map_err(|e| HankoError::Malformed(e.to_string()))?;
+    let (sds, _errors) = parse::read_qualified_service_definitions(&signed)
+        .map_err(|e| HankoError::Malformed(e.to_string()))?;
     Ok(TrustedList {
         services: sds
             .into_iter()

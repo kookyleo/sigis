@@ -102,7 +102,11 @@ fn signature_method(uri: &str) -> Result<SigAlg, DsigError> {
             "ecdsa-sha256" => SigAlg::Ecdsa(Sha256),
             "ecdsa-sha384" => SigAlg::Ecdsa(Sha384),
             "ecdsa-sha512" => SigAlg::Ecdsa(Sha512),
-            "ecdsa-sha1" => return Err(invalid("Signature method ECDSA_SHA1 forbidden by configuration")),
+            "ecdsa-sha1" => {
+                return Err(invalid(
+                    "Signature method ECDSA_SHA1 forbidden by configuration",
+                ))
+            }
             _ => return Err(invalid(format!("Unsupported signature method {uri}"))),
         }
     } else if let Some(frag) = uri.strip_prefix(MORE07) {
@@ -112,12 +116,16 @@ fn signature_method(uri: &str) -> Result<SigAlg, DsigError> {
             "sha384-rsa-MGF1" => SigAlg::RsaPss(Sha384),
             "sha512-rsa-MGF1" => SigAlg::RsaPss(Sha512),
             "sha1-rsa-MGF1" => {
-                return Err(invalid("Signature method SHA1_RSA_MGF1 forbidden by configuration"))
+                return Err(invalid(
+                    "Signature method SHA1_RSA_MGF1 forbidden by configuration",
+                ))
             }
             _ => return Err(invalid(format!("Unsupported signature method {uri}"))),
         }
     } else if uri == "http://www.w3.org/2000/09/xmldsig#rsa-sha1" {
-        return Err(invalid("Signature method RSA_SHA1 forbidden by configuration"));
+        return Err(invalid(
+            "Signature method RSA_SHA1 forbidden by configuration",
+        ));
     } else {
         return Err(invalid(format!("Unsupported signature method {uri}")));
     };
@@ -145,7 +153,10 @@ fn any_digest(uri: &str) -> Result<DigestAlgorithm, DsigError> {
 }
 
 fn b64(node: Node<'_, '_>) -> Result<Vec<u8>, DsigError> {
-    let text: String = text_content(node).chars().filter(|c| !c.is_whitespace()).collect();
+    let text: String = text_content(node)
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
     base64::engine::general_purpose::STANDARD
         .decode(text.as_bytes())
         .map_err(|e| invalid(format!("invalid base64 in {}: {e}", node.tag_name().name())))
@@ -191,7 +202,9 @@ fn check_structure(sig: Node<'_, '_>) -> Result<(), DsigError> {
             *n == (Some(DSIG_NS), "Object") || (i == 0 && *n == (Some(DSIG_NS), "KeyInfo"))
         });
     if !ok {
-        return Err(invalid("Signature element does not match the XMLDSig schema"));
+        return Err(invalid(
+            "Signature element does not match the XMLDSig schema",
+        ));
     }
     let si = kids[0];
     let si_names: Vec<_> = element_children(si)
@@ -200,9 +213,13 @@ fn check_structure(sig: Node<'_, '_>) -> Result<(), DsigError> {
     let ok = si_names.len() >= 3
         && si_names[0] == (Some(DSIG_NS), "CanonicalizationMethod")
         && si_names[1] == (Some(DSIG_NS), "SignatureMethod")
-        && si_names[2..].iter().all(|n| *n == (Some(DSIG_NS), "Reference"));
+        && si_names[2..]
+            .iter()
+            .all(|n| *n == (Some(DSIG_NS), "Reference"));
     if !ok {
-        return Err(invalid("SignedInfo element does not match the XMLDSig schema"));
+        return Err(invalid(
+            "SignedInfo element does not match the XMLDSig schema",
+        ));
     }
     for r in children(si, DSIG_NS, "Reference") {
         let rn: Vec<_> = element_children(r)
@@ -210,11 +227,19 @@ fn check_structure(sig: Node<'_, '_>) -> Result<(), DsigError> {
             .collect();
         let ok = matches!(
             rn.as_slice(),
-            [(Some(DSIG_NS), "Transforms"), (Some(DSIG_NS), "DigestMethod"), (Some(DSIG_NS), "DigestValue")]
-                | [(Some(DSIG_NS), "DigestMethod"), (Some(DSIG_NS), "DigestValue")]
+            [
+                (Some(DSIG_NS), "Transforms"),
+                (Some(DSIG_NS), "DigestMethod"),
+                (Some(DSIG_NS), "DigestValue")
+            ] | [
+                (Some(DSIG_NS), "DigestMethod"),
+                (Some(DSIG_NS), "DigestValue")
+            ]
         );
         if !ok {
-            return Err(invalid("Reference element does not match the XMLDSig schema"));
+            return Err(invalid(
+                "Reference element does not match the XMLDSig schema",
+            ));
         }
     }
     Ok(())
@@ -237,9 +262,12 @@ fn ecdsa_raw_to_der(raw: &[u8], key_bits: usize) -> Result<Vec<u8>, DsigError> {
         r: der::asn1::Uint,
         s: der::asn1::Uint,
     }
-    EcSig { r: uint(r)?, s: uint(s)? }
-        .to_der()
-        .map_err(|e| DsigError::InvalidSignature(e.to_string()))
+    EcSig {
+        r: uint(r)?,
+        s: uint(s)?,
+    }
+    .to_der()
+    .map_err(|e| DsigError::InvalidSignature(e.to_string()))
 }
 
 fn ec_key_bits(cert: &Cert) -> Option<usize> {
@@ -263,11 +291,14 @@ fn verify_signature_value(
     raw_sig: &[u8],
 ) -> Result<(), DsigError> {
     let spki = cert.public_key();
-    let is_rsa = spki.algorithm.oid == oids::RSA_ENCRYPTION || spki.algorithm.oid == oids::RSASSA_PSS;
+    let is_rsa =
+        spki.algorithm.oid == oids::RSA_ENCRYPTION || spki.algorithm.oid == oids::RSASSA_PSS;
     let (sig, algorithm) = match alg {
         SigAlg::RsaPkcs1(d) | SigAlg::RsaPss(d) if !is_rsa => {
             let _ = d;
-            return Err(invalid("DER encoded key value does not match specified signature algorithm"));
+            return Err(invalid(
+                "DER encoded key value does not match specified signature algorithm",
+            ));
         }
         SigAlg::RsaPkcs1(d) => {
             let oid = match d {
@@ -277,7 +308,13 @@ fn verify_signature_value(
                 DigestAlgorithm::Sha512 => oids::SHA512_WITH_RSA,
                 DigestAlgorithm::Sha1 => oids::SHA1_WITH_RSA,
             };
-            (raw_sig.to_vec(), AlgorithmIdentifierOwned { oid, parameters: None })
+            (
+                raw_sig.to_vec(),
+                AlgorithmIdentifierOwned {
+                    oid,
+                    parameters: None,
+                },
+            )
         }
         SigAlg::RsaPss(d) => {
             let mgf = AlgorithmIdentifierOwned {
@@ -313,7 +350,13 @@ fn verify_signature_value(
                 DigestAlgorithm::Sha512 => oids::ECDSA_WITH_SHA512,
                 DigestAlgorithm::Sha1 => oids::ECDSA_WITH_SHA1,
             };
-            (ecdsa_raw_to_der(raw_sig, bits)?, AlgorithmIdentifierOwned { oid, parameters: None })
+            (
+                ecdsa_raw_to_der(raw_sig, bits)?,
+                AlgorithmIdentifierOwned {
+                    oid,
+                    parameters: None,
+                },
+            )
         }
     };
     validate_signature(
@@ -340,7 +383,8 @@ fn match_key_value(key_value: Node<'_, '_>, cert: &Cert) -> Result<(), DsigError
     if let Some(rsa) = child(key_value, DSIG_NS, "RSAKeyValue") {
         use rsa::pkcs1::DecodeRsaPublicKey;
         use rsa::traits::PublicKeyParts;
-        let key = rsa::RsaPublicKey::from_pkcs1_der(spki.subject_public_key.raw_bytes()).map_err(|_| mismatch())?;
+        let key = rsa::RsaPublicKey::from_pkcs1_der(spki.subject_public_key.raw_bytes())
+            .map_err(|_| mismatch())?;
         let n = b64(require(rsa, DSIG_NS, "Modulus")?)?;
         let e = b64(require(rsa, DSIG_NS, "Exponent")?)?;
         let strip = |v: Vec<u8>| -> Vec<u8> {
@@ -379,7 +423,9 @@ fn match_der_key_value(node: Node<'_, '_>, cert: &Cert) -> Result<(), DsigError>
     let theirs = spki::SubjectPublicKeyInfoOwned::from_der(&der)
         .map_err(|e| invalid(format!("DEREncodedKeyValue: {e}")))?;
     let ours = cert.public_key();
-    if theirs.subject_public_key == ours.subject_public_key && theirs.algorithm.oid == ours.algorithm.oid {
+    if theirs.subject_public_key == ours.subject_public_key
+        && theirs.algorithm.oid == ours.algorithm.oid
+    {
         Ok(())
     } else {
         Err(invalid(
@@ -416,7 +462,10 @@ fn root_name(data: &[u8]) -> Option<(Option<String>, String)> {
     let s = std::str::from_utf8(data).ok()?;
     let doc = parse(s).ok()?;
     let r = doc.root_element();
-    Some((r.tag_name().namespace().map(str::to_owned), r.tag_name().name().to_owned()))
+    Some((
+        r.tag_name().namespace().map(str::to_owned),
+        r.tag_name().name().to_owned(),
+    ))
 }
 
 fn verify_reference(
@@ -435,7 +484,9 @@ fn verify_reference(
     } else if let Some(id) = uri.strip_prefix('#') {
         resolve_id(doc, id)?
     } else {
-        return Err(invalid(format!("External URI dereferencing is not configured: {uri}")));
+        return Err(invalid(format!(
+            "External URI dereferencing is not configured: {uri}"
+        )));
     };
     let transforms: Vec<Node<'_, '_>> = child(reference, DSIG_NS, "Transforms")
         .map(|t| children(t, DSIG_NS, "Transform").collect())
@@ -494,7 +545,11 @@ fn verify_reference(
 
 /// Verify the XAdES signature on `xml` with the signer certificate `cert`
 /// at time `at`, returning the verified references.
-pub fn verify_xades(xml: &str, cert: &Cert, at: Moment) -> Result<Vec<VerifiedReference>, DsigError> {
+pub fn verify_xades(
+    xml: &str,
+    cert: &Cert,
+    at: Moment,
+) -> Result<Vec<VerifiedReference>, DsigError> {
     let doc = parse(xml).map_err(|e| invalid(e.0))?;
     let root = doc.root_element();
     let signature = if is(root, DSIG_NS, "Signature") {
@@ -558,7 +613,11 @@ pub fn verify_xades(xml: &str, cert: &Cert, at: Moment) -> Result<Vec<VerifiedRe
     Ok(results)
 }
 
-fn verify_cert_digests(signature: Node<'_, '_>, signed_props: &[u8], signer: &Cert) -> Result<(), DsigError> {
+fn verify_cert_digests(
+    signature: Node<'_, '_>,
+    signed_props: &[u8],
+    signer: &Cert,
+) -> Result<(), DsigError> {
     let mut certs: Vec<Vec<u8>> = Vec::new();
     if let Some(ki) = child(signature, DSIG_NS, "KeyInfo") {
         for xd in children(ki, DSIG_NS, "X509Data") {
@@ -592,10 +651,16 @@ fn verify_cert_digests(signature: Node<'_, '_>, signed_props: &[u8], signer: &Ce
     };
     for (idx, c) in children(node, XADES_NS, "Cert").enumerate() {
         let cd = require(c, XADES_NS, "CertDigest")?;
-        let alg = any_digest(require(cd, DSIG_NS, "DigestMethod")?.attribute("Algorithm").unwrap_or(""))?;
+        let alg = any_digest(
+            require(cd, DSIG_NS, "DigestMethod")?
+                .attribute("Algorithm")
+                .unwrap_or(""),
+        )?;
         let value = b64(require(cd, DSIG_NS, "DigestValue")?)?;
         if !certs.iter().any(|der| alg.digest(der) == value) {
-            return Err(DsigError::InvalidDigest("Digest mismatch for certificate digest".into()));
+            return Err(DsigError::InvalidDigest(
+                "Digest mismatch for certificate digest".into(),
+            ));
         }
         if idx == 0 && alg.digest(signer.der()) != value {
             return Err(DsigError::InvalidDigest(

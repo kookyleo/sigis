@@ -8,7 +8,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use base64::Engine as _;
-use hanko_certvalidator::{CertRevTrustPolicy, FreshnessReqType, ValidationContext, REQUIRE_REVINFO};
+use hanko_certvalidator::{
+    CertRevTrustPolicy, FreshnessReqType, ValidationContext, REQUIRE_REVINFO,
+};
 use hanko_core::cert::Cert;
 use hanko_core::errors::{FetchError, FetchErrorKind};
 use hanko_core::fetch::{CertificateFetcher, CrlFetcher, Fetchers, OcspFetcher};
@@ -50,7 +52,12 @@ impl Recording {
         let id = format!("tests/{module}.py::{test}");
         let t = &self.0["tests"][&id];
         assert_eq!(t["outcome"], "passed", "{id} did not pass under pyHanko");
-        t["calls"].as_array().unwrap().iter().map(|c| Call(c.clone())).collect()
+        t["calls"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| Call(c.clone()))
+            .collect()
     }
 }
 
@@ -69,7 +76,10 @@ impl Call {
 
     /// pyHanko's sub-indication (`OK`, `HASH_FAILURE`, ...).
     pub fn expected_subindic(&self) -> String {
-        self.0["result"]["ades_subindic"].as_str().unwrap().to_owned()
+        self.0["result"]["ades_subindic"]
+            .as_str()
+            .unwrap()
+            .to_owned()
     }
 
     /// DER `SignedData` of a CMS input, wrapped in a `ContentInfo`.
@@ -104,7 +114,12 @@ fn der_len(len: usize) -> Vec<u8> {
     if len < 0x80 {
         vec![len as u8]
     } else {
-        let bytes: Vec<u8> = len.to_be_bytes().iter().copied().skip_while(|b| *b == 0).collect();
+        let bytes: Vec<u8> = len
+            .to_be_bytes()
+            .iter()
+            .copied()
+            .skip_while(|b| *b == 0)
+            .collect();
         let mut v = vec![0x80 | bytes.len() as u8];
         v.extend(bytes);
         v
@@ -113,7 +128,9 @@ fn der_len(len: usize) -> Vec<u8> {
 
 /// `ContentInfo { id-signedData, [0] EXPLICIT SignedData }`.
 pub fn wrap_signed_data(sd: &[u8]) -> Vec<u8> {
-    let oid = [0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02];
+    let oid = [
+        0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02,
+    ];
     let mut explicit = vec![0xa0];
     explicit.extend(der_len(sd.len()));
     explicit.extend_from_slice(sd);
@@ -159,7 +176,12 @@ impl Replay {
             .iter()
             .find(|(_, p, _)| p == path)
             .map(|(_, _, b)| b.clone())
-            .ok_or_else(|| FetchError::new(FetchErrorKind::NotFound, format!("no recorded response for {url}")))
+            .ok_or_else(|| {
+                FetchError::new(
+                    FetchErrorKind::NotFound,
+                    format!("no recorded response for {url}"),
+                )
+            })
     }
 }
 
@@ -188,7 +210,10 @@ impl OcspFetcher for Replay {
                 return Ok(b);
             }
         }
-        Err(FetchError::new(FetchErrorKind::NotFound, "no recorded OCSP response"))
+        Err(FetchError::new(
+            FetchErrorKind::NotFound,
+            "no recorded OCSP response",
+        ))
     }
 }
 

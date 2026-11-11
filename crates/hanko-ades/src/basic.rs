@@ -25,7 +25,9 @@ use hanko_validate::report::{AdesFailure, AdesIndeterminate, AdesPassed, AdesSub
 pub fn subindication_for_validation_error(err: &ValidationError, is_ee_cert: bool) -> AdesSubIndic {
     match err {
         ValidationError::StaleRevinfo { .. } => AdesIndeterminate::TRY_LATER.into(),
-        ValidationError::DisallowedAlgorithm(_) => AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into(),
+        ValidationError::DisallowedAlgorithm(_) => {
+            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into()
+        }
         ValidationError::Revoked { .. } => {
             if is_ee_cert {
                 AdesIndeterminate::REVOKED_NO_POE.into()
@@ -44,7 +46,9 @@ pub fn subindication_for_validation_error(err: &ValidationError, is_ee_cert: boo
         ValidationError::NotYetValid { .. }
         | ValidationError::PathValidation(_)
         | ValidationError::InsufficientRevinfo(_)
-        | ValidationError::Malformed(_) => AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE.into(),
+        | ValidationError::Malformed(_) => {
+            AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE.into()
+        }
     }
 }
 
@@ -121,7 +125,10 @@ pub fn basic_result(
         result.api_status = Some(status);
         return result;
     }
-    if let (Some(registry), Some(path)) = (qualification.registry, status.signature.validation_path.as_ref()) {
+    if let (Some(registry), Some(path)) = (
+        qualification.registry,
+        status.signature.validation_path.as_ref(),
+    ) {
         match qualification_analysis(registry, path, poe_time) {
             Ok(qr) => {
                 if let Some(req) = &qualification.requirements {
@@ -166,7 +173,11 @@ pub fn basic_validation(
     qualification: &QualificationSpec<'_>,
 ) -> Result<BasicValidationResult, HankoError> {
     match cms_status(content_info, raw_digest, ctx)? {
-        Ok(status) => Ok(basic_result(status, qualification, Some(ctx.timing().validation_time))),
+        Ok(status) => Ok(basic_result(
+            status,
+            qualification,
+            Some(ctx.timing().validation_time),
+        )),
         Err((sub, msg)) => Ok(BasicValidationResult {
             ades_subindic: sub,
             api_status: None,
@@ -185,8 +196,9 @@ pub(crate) fn cms_status(
 ) -> Result<Result<StandardCmsSignatureStatus, (AdesSubIndic, String)>, HankoError> {
     let content = match raw_digest {
         Some(d) => {
-            let alg = signer_digest_algorithm(content_info)
-                .ok_or_else(|| HankoError::Malformed("cannot read the signer's digest algorithm".into()))?;
+            let alg = signer_digest_algorithm(content_info).ok_or_else(|| {
+                HankoError::Malformed("cannot read the signer's digest algorithm".into())
+            })?;
             SignedContent::Digest(alg, d)
         }
         None => SignedContent::Encapsulated,
@@ -222,7 +234,10 @@ mod tests {
     #[test]
     fn error_mapping() {
         let s = |e: ValidationError, ee| subindication_for_validation_error(&e, ee).standard_name();
-        assert_eq!(s(ValidationError::PathBuilding("x".into()), true), "NO_CERTIFICATE_CHAIN_FOUND");
+        assert_eq!(
+            s(ValidationError::PathBuilding("x".into()), true),
+            "NO_CERTIFICATE_CHAIN_FOUND"
+        );
         assert_eq!(
             s(
                 ValidationError::Revoked {
@@ -245,8 +260,14 @@ mod tests {
             ),
             "REVOKED_CA_NO_POE"
         );
-        assert_eq!(s(ValidationError::Expired { msg: "x".into() }, true), "OUT_OF_BOUNDS_NO_POE");
-        assert_eq!(s(ValidationError::Expired { msg: "x".into() }, false), "CERTIFICATE_CHAIN_GENERAL_FAILURE");
+        assert_eq!(
+            s(ValidationError::Expired { msg: "x".into() }, true),
+            "OUT_OF_BOUNDS_NO_POE"
+        );
+        assert_eq!(
+            s(ValidationError::Expired { msg: "x".into() }, false),
+            "CERTIFICATE_CHAIN_GENERAL_FAILURE"
+        );
         assert_eq!(
             s(
                 ValidationError::StaleRevinfo {
@@ -257,11 +278,22 @@ mod tests {
             ),
             "TRY_LATER"
         );
-        assert_eq!(s(ValidationError::DisallowedAlgorithm("x".into()), true), "CRYPTO_CONSTRAINTS_FAILURE");
-        assert_eq!(s(ValidationError::InsufficientRevinfo("x".into()), true), "CERTIFICATE_CHAIN_GENERAL_FAILURE");
+        assert_eq!(
+            s(ValidationError::DisallowedAlgorithm("x".into()), true),
+            "CRYPTO_CONSTRAINTS_FAILURE"
+        );
+        assert_eq!(
+            s(ValidationError::InsufficientRevinfo("x".into()), true),
+            "CERTIFICATE_CHAIN_GENERAL_FAILURE"
+        );
     }
 
-    fn status(intact: bool, valid: bool, problem: Option<TrustProblem>, path: bool) -> SignatureStatus {
+    fn status(
+        intact: bool,
+        valid: bool,
+        problem: Option<TrustProblem>,
+        path: bool,
+    ) -> SignatureStatus {
         let p = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap())
             .join("../hanko-testdata/data/lanes/e/pki/testing-ca/root.cert.pem");
         let cert = hanko_core::cert::Cert::from_pem_or_der(
@@ -286,9 +318,25 @@ mod tests {
         let n = |s: SignatureStatus| basic_subindication(&s).standard_name();
         assert_eq!(n(status(false, true, None, true)), "HASH_FAILURE");
         assert_eq!(n(status(true, false, None, true)), "SIG_CRYPTO_FAILURE");
-        assert_eq!(n(status(true, true, Some(TrustProblem::KeyUsage("x".into())), false)), "CHAIN_CONSTRAINTS_FAILURE");
-        assert_eq!(n(status(true, true, None, false)), "NO_CERTIFICATE_CHAIN_FOUND");
+        assert_eq!(
+            n(status(
+                true,
+                true,
+                Some(TrustProblem::KeyUsage("x".into())),
+                false
+            )),
+            "CHAIN_CONSTRAINTS_FAILURE"
+        );
+        assert_eq!(
+            n(status(true, true, None, false)),
+            "NO_CERTIFICATE_CHAIN_FOUND"
+        );
         assert_eq!(n(status(true, true, None, true)), "OK");
-        assert_eq!(basic_subindication(&status(false, true, None, true)).status().name(), "FAILED");
+        assert_eq!(
+            basic_subindication(&status(false, true, None, true))
+                .status()
+                .name(),
+            "FAILED"
+        );
     }
 }

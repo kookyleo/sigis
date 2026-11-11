@@ -17,7 +17,11 @@ use hanko_eutl::tsp::{QcCertType, TrustedServiceType, TspTrustManager, QTST_URI}
 
 const MODULE: &str = "test_ades_validation";
 
-fn run_basic(test: &str, qual: &QualificationSpec<'_>, ctx_for: impl Fn(&Recording, &Call) -> hanko_certvalidator::ValidationContext) {
+fn run_basic(
+    test: &str,
+    qual: &QualificationSpec<'_>,
+    ctx_for: impl Fn(&Recording, &Call) -> hanko_certvalidator::ValidationContext,
+) {
     let rec = Recording::load(MODULE);
     let calls = rec.calls(MODULE, test);
     assert!(!calls.is_empty());
@@ -26,32 +30,52 @@ fn run_basic(test: &str, qual: &QualificationSpec<'_>, ctx_for: impl Fn(&Recordi
         let ctx = ctx_for(&rec, &call);
         let ci = call.content_info();
         let result = basic_validation(&ci, call.raw_digest().as_deref(), &ctx, qual).unwrap();
-        assert_eq!(result.ades_subindic.standard_name(), call.expected_subindic(), "{test}");
+        assert_eq!(
+            result.ades_subindic.standard_name(),
+            call.expected_subindic(),
+            "{test}"
+        );
     }
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_pades_basic_happy_path() {
-    run_basic("test_pades_basic_happy_path", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_pades_basic_happy_path",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_happy_path() {
-    run_basic("test_embedded_cades_happy_path", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_embedded_cades_happy_path",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_basic_tampered() {
-    run_basic("test_embedded_cades_basic_tampered", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_embedded_cades_basic_tampered",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_sig_tampered() {
-    run_basic("test_embedded_cades_sig_tampered", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_embedded_cades_sig_tampered",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }
 
 /// The trusted list `_testing_ca_registry` generated in the recorded run.
@@ -62,10 +86,14 @@ fn testing_ca_registry(rec: &Recording, test_id: &str) -> hanko_eutl::tsp::TspRe
         .find(|t| t["nodeid"].as_str().unwrap().ends_with(test_id))
         .unwrap_or_else(|| panic!("no generated TL for {test_id}"));
     let root = rec.cert("testing-ca-qualified", "root");
-    trust_list_to_registry(tl["xml"].as_str().unwrap(), &[root], None, None).unwrap().0
+    trust_list_to_registry(tl["xml"].as_str().unwrap(), &[root], None, None)
+        .unwrap()
+        .0
 }
 
-fn tl_context(registry: &hanko_eutl::tsp::TspRegistry) -> impl Fn(&Recording, &Call) -> hanko_certvalidator::ValidationContext + '_ {
+fn tl_context(
+    registry: &hanko_eutl::tsp::TspRegistry,
+) -> impl Fn(&Recording, &Call) -> hanko_certvalidator::ValidationContext + '_ {
     move |_rec, call| {
         let mut b = hanko_certvalidator::ValidationContext::builder()
             .revinfo_policy(default_revinfo_policy())
@@ -89,8 +117,17 @@ fn with_tl(case: &str, requirements: Option<QualificationRequirements>) {
     };
     for call in rec.calls(MODULE, &id) {
         let ctx = tl_context(&registry)(&rec, &call);
-        let result = basic_validation(&call.content_info(), call.raw_digest().as_deref(), &ctx, &qual).unwrap();
-        assert_eq!(result.ades_subindic.standard_name(), call.expected_subindic());
+        let result = basic_validation(
+            &call.content_info(),
+            call.raw_digest().as_deref(),
+            &ctx,
+            &qual,
+        )
+        .unwrap();
+        assert_eq!(
+            result.ades_subindic.standard_name(),
+            call.expected_subindic()
+        );
         let q = result.qualification.expect("qualification result");
         assert!(q.status.qualified);
         assert!(q.service_definition.is_some());
@@ -128,13 +165,16 @@ fn test_pades_fail_qualification_requirements() {
             ..Default::default()
         },
         QualificationRequirements {
-            require_service_type: Some(RequiredServiceType::Type(TrustedServiceType::TimeStampingAuthority)),
+            require_service_type: Some(RequiredServiceType::Type(
+                TrustedServiceType::TimeStampingAuthority,
+            )),
             ..Default::default()
         },
     ];
     let rec = Recording::load(MODULE);
     for (i, req) in reqs.into_iter().enumerate() {
-        let id = format!("test_pades_fail_qualification_requirements[cert_label{i}-requirements{i}]");
+        let id =
+            format!("test_pades_fail_qualification_requirements[cert_label{i}-requirements{i}]");
         let registry = testing_ca_registry(&rec, &id);
         let qual = QualificationSpec {
             registry: Some(&registry),
@@ -143,8 +183,18 @@ fn test_pades_fail_qualification_requirements() {
         };
         for call in rec.calls(MODULE, &id) {
             let ctx = tl_context(&registry)(&rec, &call);
-            let result = basic_validation(&call.content_info(), call.raw_digest().as_deref(), &ctx, &qual).unwrap();
-            assert_eq!(result.ades_subindic.standard_name(), "SIG_CONSTRAINTS_FAILURE", "{id}");
+            let result = basic_validation(
+                &call.content_info(),
+                call.raw_digest().as_deref(),
+                &ctx,
+                &qual,
+            )
+            .unwrap();
+            assert_eq!(
+                result.ades_subindic.standard_name(),
+                "SIG_CONSTRAINTS_FAILURE",
+                "{id}"
+            );
             assert_eq!(call.expected_subindic(), "SIG_CONSTRAINTS_FAILURE");
         }
     }
@@ -177,9 +227,16 @@ fn run_with_time(test: &str, expect_best_time: Option<&str>) {
             .unwrap(),
             other => panic!("unexpected call {other}"),
         };
-        assert_eq!(result.ades_subindic.standard_name(), call.expected_subindic(), "{test}");
+        assert_eq!(
+            result.ades_subindic.standard_name(),
+            call.expected_subindic(),
+            "{test}"
+        );
         if let Some(t) = expect_best_time {
-            assert_eq!(result.best_signature_time, hanko_eutl::util::parse_xsd_datetime(t));
+            assert_eq!(
+                result.best_signature_time,
+                hanko_eutl::util::parse_xsd_datetime(t)
+            );
         }
     }
 }
@@ -187,7 +244,10 @@ fn run_with_time(test: &str, expect_best_time: Option<&str>) {
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_with_time_happy_path() {
-    run_with_time("test_embedded_cades_with_time_happy_path", Some("2020-11-01T00:00:00Z"));
+    run_with_time(
+        "test_embedded_cades_with_time_happy_path",
+        Some("2020-11-01T00:00:00Z"),
+    );
 }
 
 #[test]
@@ -205,17 +265,28 @@ fn test_embedded_cades_with_time_sig_tampered_timestamp() {
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_pre_revoke_with_poe() {
-    run_with_time("test_embedded_cades_pre_revoke_with_poe", Some("2020-11-01T00:00:00Z"));
+    run_with_time(
+        "test_embedded_cades_pre_revoke_with_poe",
+        Some("2020-11-01T00:00:00Z"),
+    );
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_provably_revoked() {
-    run_basic("test_embedded_cades_provably_revoked", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_embedded_cades_provably_revoked",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }
 
 #[test]
 #[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_revoked_no_poe() {
-    run_basic("test_embedded_cades_revoked_no_poe", &QualificationSpec::default(), default_context);
+    run_basic(
+        "test_embedded_cades_revoked_no_poe",
+        &QualificationSpec::default(),
+        default_context,
+    );
 }

@@ -26,8 +26,8 @@ use crate::tsp::{
 use crate::util::{load_certs_from_pemder, parse_xsd_datetime};
 use crate::xml::dsig::verify_xades;
 use crate::xml::{
-    self, child, children, collapsed_text, element_children, is, text_content, TSL_ADDTYPES_NS, TSL_NS,
-    TSL_SIE_NS, XADES_NS, XML_NS,
+    self, child, children, collapsed_text, element_children, is, text_content, TSL_ADDTYPES_NS,
+    TSL_NS, TSL_SIE_NS, XADES_NS, XML_NS,
 };
 
 /// `Svcstatus/granted`.
@@ -89,7 +89,9 @@ fn attr_bool(node: Node<'_, '_>, name: &str) -> Option<bool> {
 
 /// `_extract_from_intl_string`: the English value, else the first one.
 fn intl_string(names: &[Node<'_, '_>]) -> Result<String, TspServiceParsingError> {
-    let first = names.first().ok_or_else(|| perr("Empty internationalised string"))?;
+    let first = names
+        .first()
+        .ok_or_else(|| perr("Empty internationalised string"))?;
     for n in names {
         if n.attribute((XML_NS, "lang")) == Some(PREFERRED_LANGUAGE) {
             return Ok(text_content(*n));
@@ -107,7 +109,10 @@ fn service_name(info: Node<'_, '_>) -> Result<String, TspServiceParsingError> {
 }
 
 fn b64_cert(node: Node<'_, '_>) -> Result<Cert, TspServiceParsingError> {
-    let b64: String = text_content(node).chars().filter(|c| !c.is_whitespace()).collect();
+    let b64: String = text_content(node)
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
     let der = base64::engine::general_purpose::STANDARD
         .decode(b64.as_bytes())
         .map_err(|e| perr(format!("Invalid base64 certificate: {e}")))?;
@@ -127,7 +132,10 @@ fn as_certs(sdi: Node<'_, '_>) -> Result<Vec<Cert>, TspServiceParsingError> {
 
 /// `_parse_xades_oid`.
 fn xades_oid(node: Node<'_, '_>) -> Result<String, TspServiceParsingError> {
-    Ok(uri_text(required(child(node, XADES_NS, "Identifier"), "Identifier tag in OID")?))
+    Ok(uri_text(required(
+        child(node, XADES_NS, "Identifier"),
+        "Identifier tag in OID",
+    )?))
 }
 
 /// `KeyUsageBitType` names as pyHanko derives them (`bit.name.name.lower()`).
@@ -147,7 +155,9 @@ fn key_usage_bit_name(xml_name: &str) -> Option<&'static str> {
 }
 
 /// `_process_criteria_list`.
-fn process_criteria_list(criteria: Option<Node<'_, '_>>) -> Result<CriteriaList, TspServiceParsingError> {
+fn process_criteria_list(
+    criteria: Option<Node<'_, '_>>,
+) -> Result<CriteriaList, TspServiceParsingError> {
     let entries = process_criteria_list_entries(criteria)?;
     let Some(criteria) = criteria.filter(|_| !entries.is_empty()) else {
         return Err(perr("No criteria"));
@@ -159,7 +169,9 @@ fn process_criteria_list(criteria: Option<Node<'_, '_>>) -> Result<CriteriaList,
 }
 
 /// `_process_criteria_list_entries`.
-fn process_criteria_list_entries(list: Option<Node<'_, '_>>) -> Result<Vec<Criterion>, TspServiceParsingError> {
+fn process_criteria_list_entries(
+    list: Option<Node<'_, '_>>,
+) -> Result<Vec<Criterion>, TspServiceParsingError> {
     let Some(list) = list else {
         return Ok(Vec::new());
     };
@@ -231,7 +243,10 @@ fn get_qualifications(quals: Node<'_, '_>) -> Result<Vec<Qualification>, TspServ
             continue;
         };
         let qualifiers: BTreeSet<Qualifier> = children(qx, TSL_SIE_NS, "Qualifier")
-            .filter_map(|q| q.attribute("uri").and_then(|u| Qualifier::from_uri(u.trim())))
+            .filter_map(|q| {
+                q.attribute("uri")
+                    .and_then(|u| Qualifier::from_uri(u.trim()))
+            })
             .collect();
         let criteria = process_criteria_list(child(qe, TSL_SIE_NS, "CriteriaList"))?;
         if !qualifiers.is_empty() {
@@ -285,14 +300,20 @@ pub fn interpret_service_info(
             for content in element_children(ext) {
                 if is(content, TSL_SIE_NS, "Qualifications") {
                     qualifications = get_qualifications(content)?;
-                } else if interpreter == ServiceInterpreter::Ca && is(content, TSL_NS, "ExpiredCertsRevocationInfo") {
+                } else if interpreter == ServiceInterpreter::Ca
+                    && is(content, TSL_NS, "ExpiredCertsRevocationInfo")
+                {
                     let txt = collapsed_text(content);
-                    expired_revinfo = Some(
-                        parse_xsd_datetime(&txt)
-                            .ok_or_else(|| perr("Date in expired certs revocation info cutoff must be provided"))?,
-                    );
-                } else if interpreter == ServiceInterpreter::Ca && is(content, TSL_NS, "AdditionalServiceInformation") {
-                    let uri = uri_text(required(child(content, TSL_NS, "URI"), "Additional service info URI")?);
+                    expired_revinfo = Some(parse_xsd_datetime(&txt).ok_or_else(|| {
+                        perr("Date in expired certs revocation info cutoff must be provided")
+                    })?);
+                } else if interpreter == ServiceInterpreter::Ca
+                    && is(content, TSL_NS, "AdditionalServiceInformation")
+                {
+                    let uri = uri_text(required(
+                        child(content, TSL_NS, "URI"),
+                        "Additional service info URI",
+                    )?);
                     let textual = child(content, TSL_NS, "InformationValue").map(text_content);
                     match certificate_type_by_uri(&uri) {
                         Some(t) => {
@@ -324,7 +345,10 @@ pub fn interpret_service_info(
             )))
         }
     };
-    let service_type = uri_text(required(child(info, TSL_NS, "ServiceTypeIdentifier"), "Service type identifier")?);
+    let service_type = uri_text(required(
+        child(info, TSL_NS, "ServiceTypeIdentifier"),
+        "Service type identifier",
+    )?);
     let base = BaseServiceInformation {
         service_type,
         service_name: name,
@@ -335,7 +359,9 @@ pub fn interpret_service_info(
         other_additional_info: additional_info,
     };
     Ok(match interpreter {
-        ServiceInterpreter::Ca => QualifiedServiceInformation::ca(base, qualifications, expired_revinfo),
+        ServiceInterpreter::Ca => {
+            QualifiedServiceInformation::ca(base, qualifications, expired_revinfo)
+        }
         ServiceInterpreter::Qtst => QualifiedServiceInformation::qtst(base, qualifications),
     })
 }
@@ -346,7 +372,10 @@ pub fn interpret_service(
     service: Node<'_, '_>,
     interpreter: ServiceInterpreter,
 ) -> Result<QualifiedServiceInformation, TspServiceParsingError> {
-    let info = required(child(service, TSL_NS, "ServiceInformation"), "Service information")?;
+    let info = required(
+        child(service, TSL_NS, "ServiceInformation"),
+        "Service information",
+    )?;
     interpret_service_info(info, None, interpreter)
 }
 
@@ -365,14 +394,21 @@ pub fn interpret_service_info_for_tsps<'a, 'i: 'a>(
     services: impl IntoIterator<Item = Node<'a, 'i>>,
     service_type: &str,
     interpreter: ServiceInterpreter,
-) -> (Vec<QualifiedServiceInformation>, Vec<TspServiceParsingError>) {
+) -> (
+    Vec<QualifiedServiceInformation>,
+    Vec<TspServiceParsingError>,
+) {
     let mut out = Vec::new();
     let mut errors = Vec::new();
     for service in services {
         let Some(info) = child(service, TSL_NS, "ServiceInformation") else {
             continue;
         };
-        if child(info, TSL_NS, "ServiceTypeIdentifier").map(uri_text).as_deref() != Some(service_type) {
+        if child(info, TSL_NS, "ServiceTypeIdentifier")
+            .map(uri_text)
+            .as_deref()
+            != Some(service_type)
+        {
             continue;
         }
         if status_granted(info) {
@@ -390,7 +426,8 @@ pub fn interpret_service_info_for_tsps<'a, 'i: 'a>(
         let Some(history) = child(service, TSL_NS, "ServiceHistory") else {
             continue;
         };
-        let items: Vec<Node<'_, '_>> = children(history, TSL_NS, "ServiceHistoryInstance").collect();
+        let items: Vec<Node<'_, '_>> =
+            children(history, TSL_NS, "ServiceHistoryInstance").collect();
         // Items with a start time, latest first; each ends where the next
         // later one (or the current status) starts.
         let mut dated: Vec<(usize, Moment)> = items
@@ -424,7 +461,13 @@ pub fn interpret_service_info_for_tsps<'a, 'i: 'a>(
 /// validation (`read_qualified_service_definitions`).
 pub fn read_qualified_service_definitions(
     tl_xml: &str,
-) -> Result<(Vec<QualifiedServiceInformation>, Vec<TspServiceParsingError>), EutlError> {
+) -> Result<
+    (
+        Vec<QualifiedServiceInformation>,
+        Vec<TspServiceParsingError>,
+    ),
+    EutlError,
+> {
     let doc = xml::parse(tl_xml)?;
     let root = doc.root_element();
     let tspl = required(child(root, TSL_NS, "TrustServiceProviderList"), "TSP list")?;
@@ -433,10 +476,15 @@ pub fn read_qualified_service_definitions(
     for tsp in children(tspl, TSL_NS, "TrustServiceProvider") {
         let services = required(child(tsp, TSL_NS, "TSPServices"), "TSP services (CA)")?;
         let svc: Vec<_> = children(services, TSL_NS, "TSPService").collect();
-        let (sds, errs) = interpret_service_info_for_tsps(svc.iter().copied(), CA_QC_URI, ServiceInterpreter::Ca);
+        let (sds, errs) =
+            interpret_service_info_for_tsps(svc.iter().copied(), CA_QC_URI, ServiceInterpreter::Ca);
         out.extend(sds);
         errors.extend(errs);
-        let (sds, errs) = interpret_service_info_for_tsps(svc.iter().copied(), QTST_URI, ServiceInterpreter::Qtst);
+        let (sds, errs) = interpret_service_info_for_tsps(
+            svc.iter().copied(),
+            QTST_URI,
+            ServiceInterpreter::Qtst,
+        );
         out.extend(sds);
         errors.extend(errs);
     }
@@ -463,16 +511,22 @@ fn human_friendly(cert: &Cert) -> String {
 
 /// Verify the list signature with one certificate and return the signed
 /// trusted list XML (`_validate_and_extract_tl_data`).
-fn validate_and_extract_one(tl_xml: &str, cert: &Cert, at: Moment) -> Result<String, SignatureValidationError> {
+fn validate_and_extract_one(
+    tl_xml: &str,
+    cert: &Cert,
+    at: Moment,
+) -> Result<String, SignatureValidationError> {
     let refs = verify_xades(tl_xml, cert, at).map_err(|e| {
         SignatureValidationError::with(
-            format!("Invalid XML signature on trusted list: [{}] {e}", e.class_name()),
+            format!(
+                "Invalid XML signature on trusted list: [{}] {e}",
+                e.class_name()
+            ),
             AdesIndeterminate::GENERIC,
         )
     })?;
     for r in refs {
-        if r
-            .signed_root
+        if r.signed_root
             .as_ref()
             .is_some_and(|(ns, n)| ns.as_deref() == Some(TSL_NS) && n == "TrustServiceStatusList")
         {
@@ -580,12 +634,24 @@ pub struct LotlParseResult {
 pub fn parse_lotl_unsafe(lotl_xml: &str) -> Result<LotlParseResult, EutlError> {
     let doc = xml::parse(lotl_xml)?;
     let root = doc.root_element();
-    let scheme = required(child(root, TSL_NS, "SchemeInformation"), "LOTL scheme information")?;
-    let pointers = required(child(scheme, TSL_NS, "PointersToOtherTSL"), "pointers to other TSLs")?;
-    let info_uris = required(child(scheme, TSL_NS, "SchemeInformationURI"), "scheme information URIs")?;
-    let issued = required(child(scheme, TSL_NS, "ListIssueDateTime"), "LotL issuance date")?;
-    let claimed_date_issued =
-        parse_xsd_datetime(&collapsed_text(issued)).ok_or_else(|| perr("LotL issuance date must be provided"))?;
+    let scheme = required(
+        child(root, TSL_NS, "SchemeInformation"),
+        "LOTL scheme information",
+    )?;
+    let pointers = required(
+        child(scheme, TSL_NS, "PointersToOtherTSL"),
+        "pointers to other TSLs",
+    )?;
+    let info_uris = required(
+        child(scheme, TSL_NS, "SchemeInformationURI"),
+        "scheme information URIs",
+    )?;
+    let issued = required(
+        child(scheme, TSL_NS, "ListIssueDateTime"),
+        "LotL issuance date",
+    )?;
+    let claimed_date_issued = parse_xsd_datetime(&collapsed_text(issued))
+        .ok_or_else(|| perr("LotL issuance date must be provided"))?;
 
     let mut references = Vec::new();
     let mut errors = Vec::new();

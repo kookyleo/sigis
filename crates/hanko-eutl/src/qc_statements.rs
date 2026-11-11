@@ -66,6 +66,8 @@ pub fn qc_types(statement: &QcStatement) -> Result<Vec<ObjectIdentifier>, QcStat
         Some(any) => any
             .decode_as::<Vec<ObjectIdentifier>>()
             .map_err(|e| QcStatementsError(e.to_string())),
-        None => Err(QcStatementsError("QcType statement without statementInfo".into())),
+        None => Err(QcStatementsError(
+            "QcType statement without statementInfo".into(),
+        )),
     }
 }

@@ -110,29 +110,51 @@ pub fn pdf_text(obj: &Object) -> Option<String> {
         return None;
     };
     if let Some(rest) = bytes.strip_prefix(&[0xfe, 0xff]) {
-        let units: Vec<u16> = rest.as_chunks::<2>().0.iter().map(|c| u16::from_be_bytes(*c)).collect();
+        let units: Vec<u16> = rest
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|c| u16::from_be_bytes(*c))
+            .collect();
         return String::from_utf16(&units).ok();
     }
     Some(bytes.iter().map(|b| char::from(*b)).collect())
 }
 
 /// FieldMDP settings of a signature (`fieldmdp`, `FieldMDPSpec.from_pdf_object`).
-pub fn fieldmdp(file: &PdfFile, sig_object: &Dictionary, revision: usize) -> Result<Option<FieldMdpAction>> {
+pub fn fieldmdp(
+    file: &PdfFile,
+    sig_object: &Dictionary,
+    revision: usize,
+) -> Result<Option<FieldMdpAction>> {
     let Some(r) = reference_dict(file, sig_object, "FieldMDP", revision)? else {
         return Ok(None);
     };
     let err = || read_error("Failed to read /FieldMDP settings");
-    let Object::Dictionary(params) = r.get(b"TransformParams").map_err(|_| err()).and_then(|p| resolve(file, p, revision))?
+    let Object::Dictionary(params) = r
+        .get(b"TransformParams")
+        .map_err(|_| err())
+        .and_then(|p| resolve(file, p, revision))?
     else {
         return Err(err());
     };
     let action = params.get(b"Action").map_err(|_| err())?;
     let fields = |params: &Dictionary| -> Result<Vec<String>> {
-        let Object::Array(arr) = params.get(b"Fields").map_err(|_| err()).and_then(|f| resolve(file, f, revision))? else {
+        let Object::Array(arr) = params
+            .get(b"Fields")
+            .map_err(|_| err())
+            .and_then(|f| resolve(file, f, revision))?
+        else {
             return Err(err());
         };
         arr.iter()
-            .map(|o| resolve(file, o, revision).ok().as_ref().and_then(pdf_text).ok_or_else(err))
+            .map(|o| {
+                resolve(file, o, revision)
+                    .ok()
+                    .as_ref()
+                    .and_then(pdf_text)
+                    .ok_or_else(err)
+            })
             .collect()
     };
     let spec = if name_eq(action, "All") {
@@ -148,7 +170,12 @@ pub fn fieldmdp(file: &PdfFile, sig_object: &Dictionary, revision: usize) -> Res
 }
 
 /// Supported `/SubFilter` values (`SigSeedSubFilter`).
-pub const SUBFILTERS: [&str; 4] = ["adbe.pkcs7.detached", "ETSI.CAdES.detached", "ETSI.RFC3161", "PBAD.PAdES"];
+pub const SUBFILTERS: [&str; 4] = [
+    "adbe.pkcs7.detached",
+    "ETSI.CAdES.detached",
+    "ETSI.RFC3161",
+    "PBAD.PAdES",
+];
 
 /// Check `/SubFilter` against a permitted list (`_validate_subfilter`).
 pub fn validate_subfilter(
@@ -157,10 +184,16 @@ pub fn validate_subfilter(
     err_msg: &str,
 ) -> std::result::Result<(), SignatureValidationError> {
     let Some(sf) = subfilter else {
-        return Err(SignatureValidationError::new(err_msg.replace("%s", "None"), None));
+        return Err(SignatureValidationError::new(
+            err_msg.replace("%s", "None"),
+            None,
+        ));
     };
     if !SUBFILTERS.contains(&sf) || !permitted.contains(&sf) {
-        return Err(SignatureValidationError::new(err_msg.replace("%s", &format!("/{sf}")), None));
+        return Err(SignatureValidationError::new(
+            err_msg.replace("%s", &format!("/{sf}")),
+            None,
+        ));
     }
     Ok(())
 }
@@ -175,7 +208,9 @@ pub fn evaluate_modifications(
     doc_mdp: Option<MdpPerm>,
 ) -> Result<DiffOutcome> {
     if coverage < SignatureCoverageLevel::EntireRevision {
-        return Ok(DiffOutcome::Suspicious("Nonstandard signature coverage level".into()));
+        return Ok(DiffOutcome::Suspicious(
+            "Nonstandard signature coverage level".into(),
+        ));
     }
     if coverage == SignatureCoverageLevel::EntireFile {
         return Ok(DiffOutcome::Reviewed(DiffResult {
@@ -236,22 +271,52 @@ mod tests {
     #[test]
     fn docmdp_ok_rules() {
         use SignatureCoverageLevel::*;
-        assert_eq!(docmdp_ok(Some(&reviewed(ModificationLevel::None)), None, EntireRevision), Some(true));
-        assert_eq!(docmdp_ok(Some(&reviewed(ModificationLevel::Other)), None, EntireRevision), Some(false));
         assert_eq!(
-            docmdp_ok(Some(&DiffOutcome::Suspicious("x".into())), None, EntireRevision),
-            Some(false)
-        );
-        assert_eq!(
-            docmdp_ok(Some(&reviewed(ModificationLevel::FormFilling)), Some(MdpPerm::NoChanges), EntireRevision),
-            Some(false)
-        );
-        assert_eq!(
-            docmdp_ok(Some(&reviewed(ModificationLevel::LtaUpdates)), Some(MdpPerm::NoChanges), EntireRevision),
+            docmdp_ok(
+                Some(&reviewed(ModificationLevel::None)),
+                None,
+                EntireRevision
+            ),
             Some(true)
         );
         assert_eq!(
-            docmdp_ok(Some(&reviewed(ModificationLevel::Annotations)), Some(MdpPerm::Annotate), EntireRevision),
+            docmdp_ok(
+                Some(&reviewed(ModificationLevel::Other)),
+                None,
+                EntireRevision
+            ),
+            Some(false)
+        );
+        assert_eq!(
+            docmdp_ok(
+                Some(&DiffOutcome::Suspicious("x".into())),
+                None,
+                EntireRevision
+            ),
+            Some(false)
+        );
+        assert_eq!(
+            docmdp_ok(
+                Some(&reviewed(ModificationLevel::FormFilling)),
+                Some(MdpPerm::NoChanges),
+                EntireRevision
+            ),
+            Some(false)
+        );
+        assert_eq!(
+            docmdp_ok(
+                Some(&reviewed(ModificationLevel::LtaUpdates)),
+                Some(MdpPerm::NoChanges),
+                EntireRevision
+            ),
+            Some(true)
+        );
+        assert_eq!(
+            docmdp_ok(
+                Some(&reviewed(ModificationLevel::Annotations)),
+                Some(MdpPerm::Annotate),
+                EntireRevision
+            ),
             Some(true)
         );
         assert_eq!(docmdp_ok(None, None, EntireFile), Some(true));
@@ -265,7 +330,10 @@ mod tests {
         let ok = ["adbe.pkcs7.detached", "ETSI.CAdES.detached", "PBAD.PAdES"];
         assert!(validate_subfilter(Some("ETSI.CAdES.detached"), &ok, msg).is_ok());
         let e = validate_subfilter(Some("ETSI.RFC3161"), &ok, msg).unwrap_err();
-        assert_eq!(e.failure_message, "/ETSI.RFC3161 is not a recognized SubFilter type in signatures.");
+        assert_eq!(
+            e.failure_message,
+            "/ETSI.RFC3161 is not a recognized SubFilter type in signatures."
+        );
         assert!(validate_subfilter(Some("adbe.x509.rsa_sha1"), &ok, msg).is_err());
         assert!(validate_subfilter(None, &ok, msg).is_err());
     }

@@ -8,14 +8,16 @@ mod common;
 use std::collections::BTreeSet;
 
 use common::*;
-use hanko_certvalidator::{CertRevTrustPolicy, CertificateValidator, ValidationContext, ValidationPath, NO_REVOCATION};
+use hanko_certvalidator::{
+    CertRevTrustPolicy, CertificateValidator, ValidationContext, ValidationPath, NO_REVOCATION,
+};
 use hanko_core::cert::Cert;
 use hanko_core::time::Moment;
 use hanko_eutl::assess::{QualificationAssessor, UNQUALIFIED};
 use hanko_eutl::q_status::{QcPrivateKeyManagementType as K, QualifiedStatus};
 use hanko_eutl::tsp::{
-    Authority, BaseServiceInformation, CriteriaCombination as CC, CriteriaList, Criterion, QcCertType, Qualification,
-    QualifiedServiceInformation, Qualifier, TspRegistry, CA_QC_URI,
+    Authority, BaseServiceInformation, CriteriaCombination as CC, CriteriaList, Criterion,
+    QcCertType, Qualification, QualifiedServiceInformation, Qualifier, TspRegistry, CA_QC_URI,
 };
 use hanko_validate::settings::KeyUsageConstraints;
 
@@ -45,7 +47,10 @@ fn test_criteria_accept() {
         ),
         CriteriaList::new(
             CC::AtLeastOne,
-            [Criterion::CertSubjectDn(set(&["2.5.4.3"])), Criterion::PolicySet(set(&["2.999"]))],
+            [
+                Criterion::CertSubjectDn(set(&["2.5.4.3"])),
+                Criterion::PolicySet(set(&["2.999"])),
+            ],
         ),
         CriteriaList::new(CC::None, [ku(&["key_encipherment"])]),
     ];
@@ -60,11 +65,17 @@ fn test_criteria_reject() {
     let cases = [
         CriteriaList::new(
             CC::All,
-            [Criterion::CertSubjectDn(set(&["2.5.4.3"])), Criterion::PolicySet(set(&["2.999"]))],
+            [
+                Criterion::CertSubjectDn(set(&["2.5.4.3"])),
+                Criterion::PolicySet(set(&["2.999"])),
+            ],
         ),
         CriteriaList::new(
             CC::None,
-            [Criterion::CertSubjectDn(set(&["2.5.4.3"])), Criterion::PolicySet(set(&["2.999"]))],
+            [
+                Criterion::CertSubjectDn(set(&["2.5.4.3"])),
+                Criterion::PolicySet(set(&["2.999"])),
+            ],
         ),
     ];
     let cert = from_ca_signing_cert();
@@ -113,7 +124,8 @@ fn test_tsp_registry_by_name() {
     let mut r = TspRegistry::new();
     r.register_ca(dummy_service_definition(&[]));
     let c = interm_cert();
-    let res = r.applicable_service_definitions(&Authority::named_key(c.subject(), &c.public_key()), None);
+    let res =
+        r.applicable_service_definitions(&Authority::named_key(c.subject(), &c.public_key()), None);
     assert_eq!(res.len(), 1);
     assert_eq!(res[0].base_info.service_name, "test1");
 }
@@ -132,11 +144,22 @@ fn test_tsp_registry_alternative_cert() {
 #[test]
 fn test_tsp_registry_multiple_sds() {
     let mut r = TspRegistry::new();
-    r.register_ca(QualifiedServiceInformation::ca(base("test1", vec![interm_cert()]), [], None));
-    r.register_ca(QualifiedServiceInformation::ca(base("test2", vec![interm_cert()]), [], None));
+    r.register_ca(QualifiedServiceInformation::ca(
+        base("test1", vec![interm_cert()]),
+        [],
+        None,
+    ));
+    r.register_ca(QualifiedServiceInformation::ca(
+        base("test2", vec![interm_cert()]),
+        [],
+        None,
+    ));
     let res = r.applicable_service_definitions(&Authority::of_cert(&interm_cert()), None);
     assert_eq!(res.len(), 2);
-    let names: BTreeSet<&str> = res.iter().map(|r| r.base_info.service_name.as_str()).collect();
+    let names: BTreeSet<&str> = res
+        .iter()
+        .map(|r| r.base_info.service_name.as_str())
+        .collect();
     assert_eq!(names, ["test1", "test2"].into_iter().collect());
 }
 
@@ -154,12 +177,19 @@ fn test_qcstatements_processing() {
     let cases = [
         ("esig-qualified", st(true, QcCertType::QcEsign, K::Qscd)),
         ("eseal-qualified", st(true, QcCertType::QcEseal, K::Qscd)),
-        ("esig-qualified-no-qscd", st(true, QcCertType::QcEsign, K::Unknown)),
+        (
+            "esig-qualified-no-qscd",
+            st(true, QcCertType::QcEsign, K::Unknown),
+        ),
         ("not-qualified", UNQUALIFIED),
         ("not-qualified-nonsense-qcsd", UNQUALIFIED),
     ];
     for (label, expected) in cases {
-        assert_eq!(QualificationAssessor::process_qc_statements(&q(label)).unwrap(), expected, "{label}");
+        assert_eq!(
+            QualificationAssessor::process_qc_statements(&q(label)).unwrap(),
+            expected,
+            "{label}"
+        );
     }
 }
 
@@ -226,8 +256,15 @@ fn path_validation_of_qualified_pki() {
         .moment(at)
         .build()
         .unwrap();
-    for label in ["esig-qualified", "eseal-qualified", "not-qualified", "esig-qualified-no-qscd"] {
-        let path = CertificateValidator::new(&ctx, q(label)).validate().unwrap();
+    for label in [
+        "esig-qualified",
+        "eseal-qualified",
+        "not-qualified",
+        "esig-qualified-no-qscd",
+    ] {
+        let path = CertificateValidator::new(&ctx, q(label))
+            .validate()
+            .unwrap();
         assert_eq!(path, validated_path(label, at));
     }
     let ctx15 = ValidationContext::builder()
@@ -237,8 +274,14 @@ fn path_validation_of_qualified_pki() {
         .moment(t2015())
         .build()
         .unwrap();
-    for label in ["esig-qualified-legacy-policy", "esig-qualified-legacy-policy-qscd", "not-qualified-legacy"] {
-        CertificateValidator::new(&ctx15, q(label)).validate().unwrap();
+    for label in [
+        "esig-qualified-legacy-policy",
+        "esig-qualified-legacy-policy-qscd",
+        "not-qualified-legacy",
+    ] {
+        CertificateValidator::new(&ctx15, q(label))
+            .validate()
+            .unwrap();
     }
 }
 
@@ -266,10 +309,16 @@ fn t2015() -> Moment {
 fn test_conclude_qualified_qcsd() {
     let cases: Vec<(&str, QualifiedServiceInformation)> = vec![
         ("esig-qualified", sd(vec![])),
-        ("esig-qualified-no-qscd", sd(vec![qual(&[Qualifier::WithQscd], must_have_policy0())])),
+        (
+            "esig-qualified-no-qscd",
+            sd(vec![qual(&[Qualifier::WithQscd], must_have_policy0())]),
+        ),
         (
             "not-qualified",
-            sd(vec![qual(&[Qualifier::QcStatement, Qualifier::WithQscd], must_have_policy0())]),
+            sd(vec![qual(
+                &[Qualifier::QcStatement, Qualifier::WithQscd],
+                must_have_policy0(),
+            )]),
         ),
         (
             "not-qualified",
@@ -278,8 +327,14 @@ fn test_conclude_qualified_qcsd() {
                 qual(&[Qualifier::WithQscd], must_have_nonrepud()),
             ]),
         ),
-        ("esig-qualified", sd(vec![qual(&[Qualifier::NoQscd], must_have_policy1())])),
-        ("esig-qualified", sd(vec![qual(&[Qualifier::NotQualified], must_have_policy1())])),
+        (
+            "esig-qualified",
+            sd(vec![qual(&[Qualifier::NoQscd], must_have_policy1())]),
+        ),
+        (
+            "esig-qualified",
+            sd(vec![qual(&[Qualifier::NotQualified], must_have_policy1())]),
+        ),
     ];
     assert_eq!(cases.len(), 6);
     for (i, (label, s)) in cases.into_iter().enumerate() {
@@ -297,7 +352,11 @@ fn test_conclude_qualified_pre_eidas() {
     ] {
         let status = assess(label, vec![sd(vec![])], t2015());
         assert!(status.qualified, "{label}");
-        let want = if expect_qscd { K::QscdByPolicy } else { K::Unknown };
+        let want = if expect_qscd {
+            K::QscdByPolicy
+        } else {
+            K::Unknown
+        };
         assert_eq!(status.qc_key_security, want, "{label}");
     }
 }
@@ -312,7 +371,10 @@ fn test_conclude_not_qualified_pre_eidas() {
 fn test_conclude_not_qualified() {
     let cases: Vec<(&str, QualifiedServiceInformation)> = vec![
         ("not-qualified", sd(vec![])),
-        ("esig-qualified", sd(vec![qual(&[Qualifier::NotQualified], must_have_policy0())])),
+        (
+            "esig-qualified",
+            sd(vec![qual(&[Qualifier::NotQualified], must_have_policy0())]),
+        ),
         // out of scope of this service definition
         ("eseal-qualified", sd(vec![])),
         ("esig-qualified-legacy-policy", sd(vec![])),
@@ -328,7 +390,11 @@ fn test_conclude_not_qualified_contradictory() {
     let sd1 = sd(vec![]);
     let mut b2 = dummy_base_info();
     b2.service_name = "Dummy2".into();
-    let sd2 = QualifiedServiceInformation::ca(b2, [qual(&[Qualifier::NoQscd], must_have_policy0())], None);
+    let sd2 = QualifiedServiceInformation::ca(
+        b2,
+        [qual(&[Qualifier::NoQscd], must_have_policy0())],
+        None,
+    );
     let status = assess("esig-qualified", vec![sd1, sd2], t2020());
     assert!(!status.qualified);
 }
@@ -346,19 +412,31 @@ fn test_conclude_qualified_convergence() {
 #[test]
 fn test_parse_generated_lotl() {
     // Generated by oracle/gen_lists.py with pyHanko's `certomancer_lotl`.
-    let xml = std::fs::read_to_string(common::data(&["lanes", "e", "tl", "certomancer-lotl.xml"])).unwrap();
-    let result = hanko_eutl::parse::validate_and_parse_lotl(&xml, Some(&[q("root")]), None).unwrap();
+    let xml = std::fs::read_to_string(common::data(&["lanes", "e", "tl", "certomancer-lotl.xml"]))
+        .unwrap();
+    let result =
+        hanko_eutl::parse::validate_and_parse_lotl(&xml, Some(&[q("root")]), None).unwrap();
     assert!(result.errors.is_empty());
-    let urls: Vec<&str> = result.references.iter().map(|r| r.location_uri.as_str()).collect();
+    let urls: Vec<&str> = result
+        .references
+        .iter()
+        .map(|r| r.location_uri.as_str())
+        .collect();
     assert_eq!(urls, vec!["https://example.com/"]);
 }
 
 #[test]
 fn generated_qualified_tl_validates() {
     // The trusted list `_testing_ca_registry` builds in test_ades_validation.py.
-    let xml =
-        std::fs::read_to_string(common::data(&["lanes", "e", "tl", "certomancer-qualified-tl.xml"])).unwrap();
-    let (registry, errors) = hanko_eutl::parse::trust_list_to_registry(&xml, &[q("root")], None, None).unwrap();
+    let xml = std::fs::read_to_string(common::data(&[
+        "lanes",
+        "e",
+        "tl",
+        "certomancer-qualified-tl.xml",
+    ]))
+    .unwrap();
+    let (registry, errors) =
+        hanko_eutl::parse::trust_list_to_registry(&xml, &[q("root")], None, None).unwrap();
     assert!(errors.is_empty(), "{errors:?}");
     assert!(!registry.known_certificate_authorities().is_empty());
     assert!(!registry.known_timestamp_authorities().is_empty());

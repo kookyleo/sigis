@@ -16,8 +16,8 @@ use hanko_core::cert::Cert;
 use hanko_core::time::Moment;
 
 use crate::parse::{
-    ojeu_bootstrap_lotl_tlso_certs, parse_lotl_unsafe, trust_list_to_registry, validate_and_parse_lotl,
-    EutlError, ETSI_TSL_MIME_TYPE, LOTL_RULE,
+    ojeu_bootstrap_lotl_tlso_certs, parse_lotl_unsafe, trust_list_to_registry,
+    validate_and_parse_lotl, EutlError, ETSI_TSL_MIME_TYPE, LOTL_RULE,
 };
 use crate::tsp::{TspRegistry, TspServiceParsingError};
 
@@ -80,7 +80,11 @@ impl Default for RetryPolicy {
 
 /// `_get`: retry network errors and 5xx responses; other errors fail at
 /// once.
-pub fn fetch_with_retries(fetcher: &dyn TlFetcher, url: &str, policy: RetryPolicy) -> Result<String, TlFetchError> {
+pub fn fetch_with_retries(
+    fetcher: &dyn TlFetcher,
+    url: &str,
+    policy: RetryPolicy,
+) -> Result<String, TlFetchError> {
     let mut delay = policy.base_delay;
     let mut last = TlFetchError::Network(format!("no attempt made for {url}"));
     for attempt in 0..policy.tries {
@@ -169,13 +173,19 @@ impl FileSystemTlCache {
     }
 
     /// Open (or create) a cache directory with an explicit clock.
-    pub fn with_clock(root: impl AsRef<Path>, expire_after: Duration, clock: Clock) -> std::io::Result<Self> {
+    pub fn with_clock(
+        root: impl AsRef<Path>,
+        expire_after: Duration,
+        clock: Clock,
+    ) -> std::io::Result<Self> {
         let root = root.as_ref().to_path_buf();
         std::fs::create_dir_all(&root)?;
         let mut cache = HashMap::new();
         if let Some(index) = read_index(&root.join("index.json")) {
             for (key, entry) in index {
-                let exp = entry.get("exp_epoch_seconds").and_then(serde_json::Value::as_f64);
+                let exp = entry
+                    .get("exp_epoch_seconds")
+                    .and_then(serde_json::Value::as_f64);
                 let fname = entry.get("fname").and_then(serde_json::Value::as_str);
                 if let (Some(exp), Some(fname)) = (exp, fname) {
                     cache.insert(key, (exp, fname.to_owned()));
@@ -240,7 +250,12 @@ fn hex(bytes: &[u8]) -> String {
 }
 
 /// `_fetch`: consult the cache, else download (and store).
-fn fetch(cache: Option<&dyn TlCache>, uri: &str, fetcher: &dyn TlFetcher, retry: RetryPolicy) -> Result<String, TlFetchError> {
+fn fetch(
+    cache: Option<&dyn TlCache>,
+    uri: &str,
+    fetcher: &dyn TlFetcher,
+    retry: RetryPolicy,
+) -> Result<String, TlFetchError> {
     match cache {
         None => fetch_with_retries(fetcher, uri, retry),
         Some(c) => {
@@ -286,10 +301,14 @@ pub fn bootstrap_lotl_signers(
     for pivot in sorted {
         let step = || -> Result<_, String> {
             let xml = fetch(opts.cache, &pivot, fetcher, opts.retry).map_err(|e| e.to_string())?;
-            let claimed = parse_lotl_unsafe(&xml).map_err(|e| e.to_string())?.claimed_date_issued;
+            let claimed = parse_lotl_unsafe(&xml)
+                .map_err(|e| e.to_string())?
+                .claimed_date_issued;
             validate_and_parse_lotl(&xml, Some(&current), Some(claimed)).map_err(|e| e.to_string())
         };
-        let result = step().map_err(|e| TspServiceParsingError(format!("Failed to process pivot LOTL {pivot}: {e}")))?;
+        let result = step().map_err(|e| {
+            TspServiceParsingError(format!("Failed to process pivot LOTL {pivot}: {e}"))
+        })?;
         let reference = result
             .references
             .iter()
@@ -305,8 +324,17 @@ pub fn bootstrap_lotl_signers(
 }
 
 /// Fetch the LOTL (`fetch_lotl`).
-pub fn fetch_lotl(fetcher: &dyn TlFetcher, opts: FetchOptions<'_>, url: Option<&str>) -> Result<String, TlFetchError> {
-    fetch(opts.cache, url.unwrap_or(EU_LOTL_LOCATION), fetcher, opts.retry)
+pub fn fetch_lotl(
+    fetcher: &dyn TlFetcher,
+    opts: FetchOptions<'_>,
+    url: Option<&str>,
+) -> Result<String, TlFetchError> {
+    fetch(
+        opts.cache,
+        url.unwrap_or(EU_LOTL_LOCATION),
+        fetcher,
+        opts.retry,
+    )
 }
 
 /// Populate a registry from a LOTL, validating the signatures of the LOTL
@@ -383,7 +411,9 @@ pub struct PathFetcher {
 
 impl std::fmt::Debug for PathFetcher {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PathFetcher").field("paths", &self.handlers.keys()).finish()
+        f.debug_struct("PathFetcher")
+            .field("paths", &self.handlers.keys())
+            .finish()
     }
 }
 

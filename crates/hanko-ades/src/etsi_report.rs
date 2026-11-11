@@ -72,7 +72,10 @@ pub struct ValidationObject {
 impl ValidationObject {
     /// `derive_validation_object_identifier`.
     pub fn identifier(&self) -> String {
-        let marker: String = digest_for_poe(&self.data).iter().map(|b| format!("{b:02x}")).collect();
+        let marker: String = digest_for_poe(&self.data)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
         format!("vo-{}-{marker}", self.object_type.value())
     }
 }
@@ -211,16 +214,22 @@ impl W {
         for (k, v) in attrs {
             s.push_attribute((*k, *v));
         }
-        self.w.write_event(Event::Start(s)).map_err(quick_xml::Error::from)
+        self.w
+            .write_event(Event::Start(s))
+            .map_err(quick_xml::Error::from)
     }
 
     fn end(&mut self, name: &str) -> XmlResult {
-        self.w.write_event(Event::End(BytesEnd::new(name))).map_err(quick_xml::Error::from)
+        self.w
+            .write_event(Event::End(BytesEnd::new(name)))
+            .map_err(quick_xml::Error::from)
     }
 
     fn leaf(&mut self, name: &str, attrs: &[(&str, &str)], text: &str) -> XmlResult {
         self.start(name, attrs)?;
-        self.w.write_event(Event::Text(BytesText::new(text))).map_err(quick_xml::Error::from)?;
+        self.w
+            .write_event(Event::Text(BytesText::new(text)))
+            .map_err(quick_xml::Error::from)?;
         self.end(name)
     }
 
@@ -229,7 +238,9 @@ impl W {
         for (k, v) in attrs {
             s.push_attribute((*k, *v));
         }
-        self.w.write_event(Event::Empty(s)).map_err(quick_xml::Error::from)
+        self.w
+            .write_event(Event::Empty(s))
+            .map_err(quick_xml::Error::from)
     }
 
     fn digest(&mut self, wrapper: &str, algo: DigestAlgorithm, value: &[u8]) -> XmlResult {
@@ -252,7 +263,10 @@ fn write_attributes(w: &mut W, a: &SignatureAttributes) -> XmlResult {
         w.start("vr:SigningCertificate", &signed)?;
         for id in ids {
             w.start("vr:CertID", &[])?;
-            w.empty("ds:DigestMethod", &[("Algorithm", digest_algo_uri(id.digest_algorithm))])?;
+            w.empty(
+                "ds:DigestMethod",
+                &[("Algorithm", digest_algo_uri(id.digest_algorithm))],
+            )?;
             w.leaf("ds:DigestValue", &[], &b64(&id.digest))?;
             if let Some(is) = &id.issuer_serial {
                 w.leaf("vr:X509IssuerSerial", &[], &b64(is))?;
@@ -263,7 +277,11 @@ fn write_attributes(w: &mut W, a: &SignatureAttributes) -> XmlResult {
     }
     if let Some(oid) = &a.commitment_type {
         w.start("vr:CommitmentTypeIndication", &signed)?;
-        w.leaf("vr:CommitmentTypeIdentifier", &[], &format!("urn:oid:{oid}"))?;
+        w.leaf(
+            "vr:CommitmentTypeIdentifier",
+            &[],
+            &format!("urn:oid:{oid}"),
+        )?;
         w.end("vr:CommitmentTypeIndication")?;
     }
     if let Some(t) = a.content_timestamp {
@@ -366,7 +384,11 @@ pub fn generate_report(input: &ReportInput) -> Result<String, quick_xml::Error> 
     w.end("vr:ValidationTimeInfo")?;
     // SignersDocument
     w.start("vr:SignersDocument", &[])?;
-    w.digest("vr:DigestAlgAndValue", input.md_algorithm, &input.document_digest)?;
+    w.digest(
+        "vr:DigestAlgAndValue",
+        input.md_algorithm,
+        &input.document_digest,
+    )?;
     w.end("vr:SignersDocument")?;
     write_attributes(&mut w, &input.attributes)?;
     // SignerInformation
@@ -389,11 +411,18 @@ pub fn generate_report(input: &ReportInput) -> Result<String, quick_xml::Error> 
     w.end("vr:SignatureValidationProcess")?;
     // SignatureValidationStatus
     w.start("vr:SignatureValidationStatus", &[])?;
-    w.leaf("vr:MainIndication", &[], main_indication_uri(input.subindication.status()))?;
+    w.leaf(
+        "vr:MainIndication",
+        &[],
+        main_indication_uri(input.subindication.status()),
+    )?;
     w.leaf(
         "vr:SubIndication",
         &[],
-        &format!("urn:etsi:019102:subindication:{}", input.subindication.standard_name()),
+        &format!(
+            "urn:etsi:019102:subindication:{}",
+            input.subindication.standard_name()
+        ),
     )?;
     w.end("vr:SignatureValidationStatus")?;
     w.end("vr:SignatureValidationReport")?;
@@ -425,7 +454,8 @@ mod tests {
             signed_attrs_der: vec![0x31, 0x00],
             document_digest: vec![9; 32],
             validation_time: Moment::from_unix_secs(1_606_262_400),
-            best_signature_time: (process != ValidationProcess::Basic).then(|| Moment::from_unix_secs(1_605_830_400)),
+            best_signature_time: (process != ValidationProcess::Basic)
+                .then(|| Moment::from_unix_secs(1_605_830_400)),
             process,
             subindication: sub,
             signer_cert: vec![0x30, 0x00],
@@ -450,7 +480,11 @@ mod tests {
         assert!(ok.contains("urn:etsi:019102:mainindication:total-passed"));
         assert!(ok.contains("urn:etsi:019102:validationprocess:Basic"));
         assert!(ok.contains("a &lt; b &amp; c"));
-        let failed = generate_report(&input(AdesFailure::HASH_FAILURE.into(), ValidationProcess::Lta)).unwrap();
+        let failed = generate_report(&input(
+            AdesFailure::HASH_FAILURE.into(),
+            ValidationProcess::Lta,
+        ))
+        .unwrap();
         assert!(failed.contains("urn:etsi:019102:mainindication:total-failed"));
         assert!(failed.contains("urn:etsi:019102:subindication:HASH_FAILURE"));
         assert!(failed.contains("urn:etsi:019102:validationprocess:LTA"));

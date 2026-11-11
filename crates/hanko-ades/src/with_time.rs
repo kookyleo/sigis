@@ -58,9 +58,11 @@ pub fn timestamp_subindication(
     if sub != AdesSubIndic::Passed(AdesPassed::OK) {
         return (sub, None);
     }
-    if let (Some(registry), Some(req), Some(path)) =
-        (qualification.registry, requirements, ts.signature.validation_path.as_ref())
-    {
+    if let (Some(registry), Some(req), Some(path)) = (
+        qualification.registry,
+        requirements,
+        ts.signature.validation_path.as_ref(),
+    ) {
         match qualification_analysis(registry, path, Some(ts.timestamp)) {
             Ok(qr) => {
                 if let Err(e) = enforce_requirements(req, &qr, path) {
@@ -75,7 +77,9 @@ pub fn timestamp_subindication(
 
 fn revocation_date(status: &StandardCmsSignatureStatus) -> Option<Moment> {
     match &status.signature.trust_problem {
-        Some(TrustProblem::Path(ValidationError::Revoked { revocation_time, .. })) => *revocation_time,
+        Some(TrustProblem::Path(ValidationError::Revoked {
+            revocation_time, ..
+        })) => *revocation_time,
         _ => None,
     }
 }
@@ -97,8 +101,12 @@ pub fn basic_with_content_ts(
     let Some(ct) = &status.content_timestamp_validity else {
         return (sub, signature_not_before);
     };
-    let ts_req = qualification.ts_requirements.as_ref().or(qualification.requirements.as_ref());
-    if timestamp_subindication(ct, qualification, ts_req).0 != AdesSubIndic::Passed(AdesPassed::OK) {
+    let ts_req = qualification
+        .ts_requirements
+        .as_ref()
+        .or(qualification.requirements.as_ref());
+    if timestamp_subindication(ct, qualification, ts_req).0 != AdesSubIndic::Passed(AdesPassed::OK)
+    {
         return (sub, signature_not_before);
     }
     let snb = signature_not_before.map_or(ct.timestamp, |t| t.max(ct.timestamp));
@@ -107,7 +115,11 @@ pub fn basic_with_content_ts(
         (revocation_date(status), AdesFailure::REVOKED.into())
     } else {
         (
-            status.signature.signing_cert.as_ref().map(|c| c.not_after()),
+            status
+                .signature
+                .signing_cert
+                .as_ref()
+                .map(|c| c.not_after()),
             AdesIndeterminate::EXPIRED.into(),
         )
     };
@@ -153,7 +165,10 @@ pub fn with_time_result(
         result.api_status = Some(status);
         return result;
     };
-    let ts_req = qualification.ts_requirements.as_ref().or(qualification.requirements.as_ref());
+    let ts_req = qualification
+        .ts_requirements
+        .as_ref()
+        .or(qualification.requirements.as_ref());
     let (ts_sub, ts_msg) = timestamp_subindication(&ts, qualification, ts_req);
     if ts_sub != AdesSubIndic::Passed(AdesPassed::OK) {
         result.ades_subindic = ts_sub;
@@ -172,7 +187,11 @@ pub fn with_time_result(
             }
         }
         AdesSubIndic::Indeterminate(AdesIndeterminate::OUT_OF_BOUNDS_NO_POE) => {
-            let not_before = status.signature.signing_cert.as_ref().map(|c| c.not_before());
+            let not_before = status
+                .signature
+                .signing_cert
+                .as_ref()
+                .map(|c| c.not_before());
             if not_before.is_none_or(|nb| poe < nb) {
                 result.ades_subindic = AdesIndeterminate::NOT_YET_VALID.into();
                 result.api_status = Some(status);
@@ -192,7 +211,10 @@ pub fn with_time_result(
         result.api_status = Some(status);
         return result;
     }
-    if let (Some(registry), Some(path)) = (qualification.registry, status.signature.validation_path.as_ref()) {
+    if let (Some(registry), Some(path)) = (
+        qualification.registry,
+        status.signature.validation_path.as_ref(),
+    ) {
         match qualification_analysis(registry, path, Some(poe)) {
             Ok(qr) => {
                 if let Some(req) = &qualification.requirements {
@@ -229,17 +251,25 @@ pub fn with_time_validation(
     signature_poe_time: Option<Moment>,
 ) -> Result<WithTimeValidationResult, hanko_core::errors::HankoError> {
     let validation_time = ctx.timing().validation_time;
-    Ok(match crate::basic::cms_status(content_info, raw_digest, ctx)? {
-        Ok(status) => with_time_result(status, qualification, signature_poe_time, None, validation_time),
-        Err((sub, msg)) => WithTimeValidationResult {
-            ades_subindic: sub,
-            api_status: None,
-            failure_msg: Some(msg),
-            best_signature_time: signature_poe_time,
-            signature_not_before_time: None,
-            qualification: None,
+    Ok(
+        match crate::basic::cms_status(content_info, raw_digest, ctx)? {
+            Ok(status) => with_time_result(
+                status,
+                qualification,
+                signature_poe_time,
+                None,
+                validation_time,
+            ),
+            Err((sub, msg)) => WithTimeValidationResult {
+                ades_subindic: sub,
+                api_status: None,
+                failure_msg: Some(msg),
+                best_signature_time: signature_poe_time,
+                signature_not_before_time: None,
+                qualification: None,
+            },
         },
-    })
+    )
 }
 
 #[cfg(test)]
@@ -264,7 +294,11 @@ mod tests {
             signing_cert: Some(c.clone()),
             signature_mechanism: None,
             md_algorithm: None,
-            validation_path: Some(ValidationPath::new(TrustAnchor::new(c.clone()), vec![], Some(c))),
+            validation_path: Some(ValidationPath::new(
+                TrustAnchor::new(c.clone()),
+                vec![],
+                Some(c),
+            )),
         }
     }
 
@@ -310,35 +344,71 @@ mod tests {
         assert_eq!(name(&r), "OK");
         assert_eq!(r.best_signature_time, Some(t(1_600_000_000)));
         // Revoked after the timestamp: the POE rescues the signature.
-        let r = with_time_result(status(revoked(t(1_700_000_000)), Some(t(1_600_000_000))), &q, None, None, now);
+        let r = with_time_result(
+            status(revoked(t(1_700_000_000)), Some(t(1_600_000_000))),
+            &q,
+            None,
+            None,
+            now,
+        );
         assert_eq!(name(&r), "OK");
         // Revoked before the timestamp: stays REVOKED_NO_POE.
-        let r = with_time_result(status(revoked(t(1_500_000_000)), Some(t(1_600_000_000))), &q, None, None, now);
+        let r = with_time_result(
+            status(revoked(t(1_500_000_000)), Some(t(1_600_000_000))),
+            &q,
+            None,
+            None,
+            now,
+        );
         assert_eq!(name(&r), "REVOKED_NO_POE");
         // Earlier POE wins.
-        let r = with_time_result(status(revoked(t(1_550_000_000)), Some(t(1_600_000_000))), &q, Some(t(1_500_000_000)), None, now);
+        let r = with_time_result(
+            status(revoked(t(1_550_000_000)), Some(t(1_600_000_000))),
+            &q,
+            Some(t(1_500_000_000)),
+            None,
+            now,
+        );
         assert_eq!(name(&r), "OK");
         assert_eq!(r.best_signature_time, Some(t(1_500_000_000)));
         // Content timestamp later than the signature timestamp.
-        let r = with_time_result(status(None, Some(t(1_600_000_000))), &q, None, Some(t(1_650_000_000)), now);
+        let r = with_time_result(
+            status(None, Some(t(1_600_000_000))),
+            &q,
+            None,
+            Some(t(1_650_000_000)),
+            now,
+        );
         assert_eq!(name(&r), "TIMESTAMP_ORDER_FAILURE");
         // Not processed further.
         let mut s = status(None, Some(t(1_600_000_000)));
         s.signature.intact = false;
-        assert_eq!(name(&with_time_result(s, &q, None, None, now)), "HASH_FAILURE");
+        assert_eq!(
+            name(&with_time_result(s, &q, None, None, now)),
+            "HASH_FAILURE"
+        );
         // A failing timestamp propagates.
         let mut s = status(None, Some(t(1_600_000_000)));
         if let Some(tv) = s.timestamp_validity.as_mut() {
             tv.signature.valid = false;
         }
-        assert_eq!(name(&with_time_result(s, &q, None, None, now)), "SIG_CRYPTO_FAILURE");
+        assert_eq!(
+            name(&with_time_result(s, &q, None, None, now)),
+            "SIG_CRYPTO_FAILURE"
+        );
         // TRY_LATER is not resolved by a timestamp.
         let stale = Some(TrustProblem::Path(ValidationError::StaleRevinfo {
             msg: "x".into(),
             time_cutoff: None,
         }));
         assert_eq!(
-            name(&with_time_result(status(stale, Some(t(1_600_000_000))), &q, None, None, now)),
+            name(&with_time_result(
+                status(stale, Some(t(1_600_000_000))),
+                &q,
+                None,
+                None,
+                now
+            )),
             "TRY_LATER"
         );
     }

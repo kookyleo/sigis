@@ -144,7 +144,12 @@ impl Canon<'_, '_, '_> {
         }
     }
 
-    fn element(&mut self, node: Node<'_, '_>, rendered: &Rendered, is_apex: bool) -> Result<(), XmlError> {
+    fn element(
+        &mut self,
+        node: Node<'_, '_>,
+        rendered: &Rendered,
+        is_apex: bool,
+    ) -> Result<(), XmlError> {
         let prefix = element_prefix(node);
         let local = node.tag_name().name();
 
@@ -260,7 +265,11 @@ impl Canon<'_, '_, '_> {
 
     /// Inclusive canonicalization of a document subset imports `xml:lang`,
     /// `xml:space` (and, for 1.0, `xml:base`) from ancestors of the apex.
-    fn inherit_xml_attrs(&self, node: Node<'_, '_>, attrs: &mut Vec<(String, String, String, String)>) {
+    fn inherit_xml_attrs(
+        &self,
+        node: Node<'_, '_>,
+        attrs: &mut Vec<(String, String, String, String)>,
+    ) {
         let names: &[&str] = match self.params.method {
             C14nMethod::Inclusive10 => &["lang", "space", "base"],
             _ => &["lang", "space"],
@@ -271,7 +280,12 @@ impl Canon<'_, '_, '_> {
             }
             for anc in node.ancestors().skip(1).filter(|a| a.is_element()) {
                 if let Some(v) = anc.attribute((XML_NS, *name)) {
-                    attrs.push((XML_NS.to_owned(), (*name).to_owned(), format!("xml:{name}"), v.to_owned()));
+                    attrs.push((
+                        XML_NS.to_owned(),
+                        (*name).to_owned(),
+                        format!("xml:{name}"),
+                        v.to_owned(),
+                    ));
                     break;
                 }
             }
@@ -313,7 +327,10 @@ mod tests {
     fn c14n(xml: &str, method: C14nMethod, apex_name: Option<&str>) -> String {
         let doc = parse(xml).unwrap();
         let apex = match apex_name {
-            Some(n) => doc.descendants().find(|n2| n2.is_element() && n2.tag_name().name() == n).unwrap(),
+            Some(n) => doc
+                .descendants()
+                .find(|n2| n2.is_element() && n2.tag_name().name() == n)
+                .unwrap(),
             None => doc.root(),
         };
         let p = C14nParams {

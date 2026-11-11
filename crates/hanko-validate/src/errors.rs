@@ -52,7 +52,10 @@ impl SignatureValidationError {
     }
 
     /// `DisallowedAlgorithmError`.
-    pub fn disallowed_algorithm(failure_message: impl Into<String>, time_horizon: Option<Moment>) -> Self {
+    pub fn disallowed_algorithm(
+        failure_message: impl Into<String>,
+        time_horizon: Option<Moment>,
+    ) -> Self {
         let sub = if time_horizon.is_none() {
             AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
         } else {
