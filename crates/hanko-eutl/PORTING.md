@@ -41,12 +41,19 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_trusted_list.py` | `tests/trusted_list.rs` | 53 | 39 | 0 | 14 |
+| `test_trusted_list.py` | `tests/trusted_list.rs`, `tests/qualification.rs` | 53 | 52 | 0 | 1 |
 
-Pending: the 14 functions that need the Certomancer `testing-ca`,
-`testing-ca-ecdsa` and `testing-ca-qualified` PKIs (`test_parse_generated_lotl`,
-`test_criteria_accept`, `test_criteria_reject`, `test_tsp_registry*` (4),
-`test_qcstatements_processing`, `test_conclude_*` (7)).
+Pending: `test_parse_generated_lotl` (needs a LOTL signed with signxml by
+the oracle; generator not run yet).
+
+PKI: `tests/qualification.rs` uses the Certomancer PKIs exported by
+`oracle/export_pki.py` into `crates/hanko-testdata/data/lanes/e/pki/`
+(certificates only). The seven `test_conclude_*` functions assemble the
+validation path root → interm-qualified → leaf directly instead of running
+`CertificateValidator`: `hanko-certvalidator` rejects this PKI because
+`const-oid` cannot decode the `2.999.31337.*` policy OIDs (request R-E5).
+The ignored test `path_validation_of_qualified_pki` checks that part and is
+to be enabled once R-E5 is fixed.
 
 Time pinning: upstream tests that validate signatures at the current time
 (`test_validate_tl_wrong_signature`, `test_validate_and_parse_lotl_default_certs`,
@@ -74,6 +81,9 @@ they do not break when the list signer certificates expire.
   `X509Certificate` values lazily with asn1crypto; an undecodable
   certificate makes the service definition fail with a
   `TspServiceParsingError` here (the service is not registered).
+- **D-E5** (OID decoding): certificate policy OIDs are decoded with a
+  small DER reader (`util::certificate_policy_oids`) because `const-oid`
+  rejects arcs such as `2.999`. Same result as asn1crypto.
 - **D-E4** (XML schema validation): signxml validates the `ds:Signature`
   element against the XMLDSig schema. The port checks the element order of
   `Signature`, `SignedInfo` and `Reference` only.

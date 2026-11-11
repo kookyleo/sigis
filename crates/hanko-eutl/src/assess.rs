@@ -11,7 +11,7 @@ use hanko_core::cert::Cert;
 use hanko_core::time::Moment;
 use hanko_validate::errors::SignatureValidationError;
 use hanko_validate::report::AdesIndeterminate;
-use x509_cert::ext::pkix::{CertificatePolicies, InhibitAnyPolicy, PolicyConstraints, PolicyMappings};
+use x509_cert::ext::pkix::{InhibitAnyPolicy, PolicyConstraints, PolicyMappings};
 
 use crate::q_status::{QcPrivateKeyManagementType, QualificationResult, QualifiedStatus};
 use crate::qc_statements::{self, QcStatementsError};
@@ -103,12 +103,7 @@ pub fn path_qualified_policies(path: &ValidationPath) -> Option<BTreeSet<String>
             restrictive = true;
         }
     }
-    let policies = |c: &Cert| -> Option<BTreeSet<String>> {
-        match c.extension::<CertificatePolicies>() {
-            Ok(Some((_, p))) => Some(p.0.iter().map(|pi| pi.policy_identifier.to_string()).collect()),
-            _ => None,
-        }
-    };
+    let policies = |c: &Cert| -> Option<BTreeSet<String>> { crate::util::certificate_policy_oids(c) };
     let mut result = policies(leaf)?;
     result.remove(ANY_POLICY);
     for c in &certs[..certs.len() - 1] {

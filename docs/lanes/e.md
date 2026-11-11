@@ -11,10 +11,12 @@ Owner: lane E (branch `hanko/e-validate`). See `docs/hanko-lanes.md`.
 - Next: `hanko-validate` PDF validation (`pdf_embedded`, `status`, `dss`) and
   `hanko-ades` (`ades.py`, reports), coded against the lane A/B/C stubs.
 
-PKI: the Certomancer test PKIs are not exported yet (lead item L1). Tests
-that need them are pending; lane E will run the export locally into
-`crates/hanko-testdata/data/lanes/e/` once a local pyHanko venv installs
-(`/tmp/lane-e/venv`, outside the repository).
+PKI: lead item L1 is open, so lane E exported the Certomancer test PKIs
+(`testing-ca`, `testing-ca-ecdsa`, `testing-ca-qualified`, `unrelated-tsa`;
+certificates only) locally with `crates/hanko-eutl/oracle/export_pki.py`
+into `crates/hanko-testdata/data/lanes/e/pki/`. The export ran with a local
+pyHanko 0.38.1 + certomancer 0.16.0 venv outside the repository. Once L1
+lands, the tests can switch to `data/pyhanko-pki/`.
 
 ## Per-suite counts
 
@@ -23,7 +25,7 @@ that need them are pending; lane E will run the export locally into
 | `test_ades_validation.py` | 40 | 0 | 0 | 40 |
 | `test_ades_validation_report.py` | 5 | 0 | 0 | 5 |
 | `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 |
-| `test_trusted_list.py` | 53 | 39 | 0 | 14 |
+| `test_trusted_list.py` | 53 | 52 | 0 | 1 |
 
 ## Known divergences
 
@@ -54,6 +56,17 @@ See `crates/hanko-eutl/PORTING.md` (D-E1 … D-E4). All of them fail closed.
   trust manager hook in `ValidationContextBuilder` (pyhanko-certvalidator
   `TrustManager` with `as_trust_anchor` / `find_potential_issuers`), so a
   `TSPRegistry` can act as the trust source (divergence D-E2).
+- **R-E5 (crate gap, blocks lane A and E tests).** `const-oid` 0.10.x
+  (also 0.10.3) rejects OIDs whose first arc is 2 and second arc exceeds 39
+  (`ARC_MAX_SECOND = 39` in `arcs.rs`), e.g. `2.999.31337.0`, which pyHanko's
+  Certomancer PKI `testing-ca-qualified` uses as certificate policies.
+  Decoding any certificate with such an OID fails (`malformed OID`), and
+  `hanko-certvalidator` path validation fails with `EncodingError`.
+  Proposal: an upstream fix in RustCrypto/formats (const-oid stores the
+  first two arcs in one byte), and until it is released a patched
+  `const-oid` under `vendor/` via `[patch.crates-io]` (lead-owned root
+  `Cargo.toml`). Lane E works around it for policy matching
+  (`hanko_eutl::util::certificate_policy_oids`).
 - **R-E4 (hanko-core, minor).** `Moment::parse_rfc3339` ignores numeric
   offsets other than `+00:00`. `hanko-eutl` has its own `xsd:dateTime`
   parser (`util::parse_xsd_datetime`); a shared one in `hanko-core` would

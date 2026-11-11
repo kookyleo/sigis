@@ -10,7 +10,7 @@ use hanko_certvalidator::{TrustAnchor, ValidationPath};
 use hanko_core::cert::Cert;
 use hanko_core::time::Moment;
 use hanko_validate::settings::KeyUsageConstraints;
-use x509_cert::ext::pkix::{AuthorityKeyIdentifier, CertificatePolicies, SubjectKeyIdentifier};
+use x509_cert::ext::pkix::{AuthorityKeyIdentifier, SubjectKeyIdentifier};
 
 /// Service type URI of a qualified CA (`CA_QC_URI`).
 pub const CA_QC_URI: &str = "http://uri.etsi.org/TrstSvc/Svctype/CA/QC";
@@ -192,11 +192,10 @@ pub enum Criterion {
 }
 
 /// Policy OIDs (dotted) asserted in the certificate policies extension.
+///
+/// Decoded without `const-oid`, which rejects arcs such as `2.999`.
 pub fn cert_policy_oids(cert: &Cert) -> BTreeSet<String> {
-    match cert.extension::<CertificatePolicies>() {
-        Ok(Some((_, pols))) => pols.0.iter().map(|p| p.policy_identifier.to_string()).collect(),
-        _ => BTreeSet::new(),
-    }
+    crate::util::certificate_policy_oids(cert).unwrap_or_default()
 }
 
 impl Criterion {

@@ -92,3 +92,11 @@ impl Drop for TempDir {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+
+/// A certificate from the lane E export of the Certomancer test PKIs.
+pub fn pki_cert(arch: &str, label: &str) -> Cert {
+    let p = hanko_testdata::path(&["lanes", "e", "pki", arch, &format!("{label}.cert.pem")]);
+    hanko_eutl::util::load_certs_from_pemder(&std::fs::read(p).unwrap())
+        .unwrap()
+        .remove(0)
+}
