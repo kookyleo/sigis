@@ -355,7 +355,15 @@ pub fn enumerate_sig_fields(
 /// Id of the AcroForm dictionary, making it indirect if it is direct.
 fn acroform_id(update: &mut PdfUpdate) -> Result<Option<ObjectId>> {
     match update.root()?.get(b"AcroForm") {
-        Ok(Object::Reference(id)) => Ok(Some(*id)),
+        Ok(Object::Reference(id)) => {
+            let id = *id;
+            if !update.is_strict() && update.get(id).is_err() {
+                // a dangling reference reads as null in lenient mode
+                update.root_mut()?.remove(b"AcroForm");
+                return Ok(None);
+            }
+            Ok(Some(id))
+        }
         Ok(Object::Dictionary(d)) => {
             let d = d.clone();
             let id = update.add(Object::Dictionary(d));

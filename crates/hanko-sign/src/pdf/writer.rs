@@ -65,6 +65,7 @@ pub struct PdfUpdate {
     encrypted: bool,
     placeholders: BTreeMap<ObjectId, usize>,
     fresh: bool,
+    strict: bool,
 }
 
 /// Find the offset after the last `startxref` keyword.
@@ -138,6 +139,7 @@ impl PdfUpdate {
             encrypted,
             placeholders: BTreeMap::new(),
             fresh: false,
+            strict: true,
         })
     }
 
@@ -150,6 +152,17 @@ impl PdfUpdate {
         u.stream_xrefs = false;
         u.hybrid = false;
         Ok(u)
+    }
+
+    /// Lenient mode (pyHanko's `strict=False`): dangling references read
+    /// as `null` where the signing code tolerates it.
+    pub fn set_strict(&mut self, strict: bool) {
+        self.strict = strict;
+    }
+
+    /// Strict mode (the default).
+    pub fn is_strict(&self) -> bool {
+        self.strict
     }
 
     /// `true` for a document started with [`PdfUpdate::fresh`].

@@ -33,8 +33,8 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 | --- | ---: | ---: | ---: | ---: |
 | `test_signing.py` | 78 | 57 | 9 | 12 |
 | `test_pades.py` | 48 | 39 | 1 | 8 |
-| `test_fields.py` | 27 | 0 | 0 | 27 |
-| `test_seed_values.py` | 36 | 0 | 0 | 36 |
+| `test_fields.py` | 27 | 25 | 0 | 2 |
+| `test_seed_values.py` | 36 | 34 | 1 | 1 |
 | `test_pkcs11.py` | 36 | 0 | 0 | 36 |
 | `test_csc.py` | 17 | 0 | 0 | 17 |
 | `test_sign_encrypted.py` | 11 | 0 | 0 | 11 |
@@ -78,6 +78,15 @@ L1); see the README there.
   (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448 / ML-DSA, lane A).
 - `test_sign_prescribed_attrs` uses the local TSA instead of pyHanko's HTTP
   timestamp client against the mocked TSA (HTTP client: lane A).
+
+### `test_fields.py` / `test_seed_values.py` details
+
+- `test_fields.py` pending (2): `test_sign_with_new_field_spec` and
+  `test_sign_with_cert_no_common_name_appearance` need signature appearances
+  (appearances sub-slice).
+- `test_seed_values.py` skipped (1): `test_sign_with_sv_missing_cert`
+  (`ExternalSigner(signing_cert=None)`, see above); pending (1):
+  `test_sv_timestamp_url` (HTTP TSA client from the seed value URL, lane A).
 
 ### `test_pades.py` details
 

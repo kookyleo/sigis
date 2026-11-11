@@ -81,9 +81,13 @@ pub fn embedded_signatures(pdf: &[u8]) -> Vec<FoundSig> {
     let Some(Object::Array(fields)) = dict_get(&doc, form, b"Fields") else {
         return out;
     };
-    fn walk(doc: &lopdf::Document, arr: &[Object], prefix: &str, ft_inh: Option<Vec<u8>>, out: &mut Vec<FoundSig>) {
+    fn walk(doc: &lopdf::Document, arr: &[Object], prefix: &str, ft_inh: Option<Vec<u8>>, out: &mut Vec<FoundSig>, seen: &mut Vec<ObjectId>) {
         for f in arr {
             let Object::Reference(fid) = f else { continue };
+            if seen.contains(fid) {
+                panic!("Circular reference in form tree");
+            }
+            seen.push(*fid);
             let Ok(field) = doc.get_dictionary(*fid) else { continue };
             let partial = text(dict_get(doc, field, b"T"));
             let fq = if prefix.is_empty() { partial.clone() } else { format!("{prefix}.{partial}") };
@@ -117,13 +121,13 @@ pub fn embedded_signatures(pdf: &[u8]) -> Vec<FoundSig> {
             }
             if let Some(Object::Array(kids)) = dict_get(doc, field, b"Kids") {
                 if !partial.is_empty() {
-                    walk(doc, kids, &fq, ft.clone(), out);
+                    walk(doc, kids, &fq, ft.clone(), out, seen);
                 }
             }
         }
     }
     let fields = fields.clone();
-    walk(&doc, &fields, "", None, &mut out);
+    walk(&doc, &fields, "", None, &mut out, &mut Vec::new());
     // pyHanko orders signatures by the revision they cover
     out.sort_by_key(|s| s.byte_range.get(2).zip(s.byte_range.get(3)).map(|(a, b)| a + b).unwrap_or(0));
     out

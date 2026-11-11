@@ -59,6 +59,9 @@ def status_json(st):
         out['signer_reported_dt'] = st.signer_reported_dt.isoformat()
     if getattr(st, 'signing_cert', None) is not None:
         out['signing_cert_sha256'] = st.signing_cert.sha256.hex()
+    sv_err = getattr(st, 'seed_value_constraint_error', None)
+    if sv_err is not None:
+        out['seed_value_error'] = str(sv_err.args[0]) if sv_err.args else str(sv_err)
     if hasattr(st, 'ac_attrs'):
         out['ac_attrs_is_none'] = st.ac_attrs is None
         out['ac_attrs_len'] = len(st.ac_attrs) if st.ac_attrs else 0

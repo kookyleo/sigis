@@ -760,6 +760,7 @@ impl PdfSigner {
         } else {
             PdfUpdate::new(pdf)?
         };
+        update.set_strict(opts.strict);
         let (prepared, session) = self.prepare(&mut update, opts)?;
         let meta = self.meta();
         let post_sign_instructions = if session.use_pades() && meta.embed_validation_info {
