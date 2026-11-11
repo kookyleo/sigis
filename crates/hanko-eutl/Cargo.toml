@@ -1,0 +1,15 @@
+[package]
+name = "hanko-eutl"
+description = "EU trusted lists and qualified status (port of pyHanko sign.validation.qualified)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+hanko-core = { workspace = true }
+
+[dev-dependencies]
+hanko-testdata = { workspace = true }

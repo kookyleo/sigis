@@ -1,0 +1,23 @@
+[package]
+name = "hanko-cms"
+description = "CMS SignedData and RFC 3161 timestamp validation (port of pyHanko generic_cms)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+hanko-core = { workspace = true }
+hanko-certvalidator = { workspace = true }
+der = { workspace = true }
+spki = { workspace = true }
+const-oid = { workspace = true }
+x509-cert = { workspace = true }
+cms = { workspace = true }
+x509-tsp = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+hanko-testdata = { workspace = true }

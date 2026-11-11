@@ -1,19 +1,22 @@
-//! Signature validation foundation for Sigis.
-//!
-//! `sigis-hanko` is a Rust port of the validation foundation of
+//! Signature validation and signing for Sigis: a Rust port of
 //! [pyHanko](https://github.com/MatthiasValvekens/pyHanko) and
-//! pyhanko-certvalidator (MIT). See `PORTING.md` for the module mapping and
-//! test status, and `NOTICE` for the files derived from pyHanko.
+//! pyhanko-certvalidator (MIT).
+//!
+//! This facade re-exports the workspace crates. See `PORTING.md` for the
+//! module and test mapping, `NOTICE` for derived files, and
+//! `docs/hanko-lanes.md` for how the port is organised.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
-#![cfg_attr(
-    not(test),
-    warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
-)]
 
-pub mod algorithms;
-pub mod asn1;
-pub mod certvalidator;
-pub mod errors;
-pub mod time;
+pub use hanko_ades as ades;
+pub use hanko_certvalidator as certvalidator;
+pub use hanko_cms as cms;
+pub use hanko_core::{algorithms, asn1, cert, errors, fetch, sign as keys, time};
+pub use hanko_core::{HankoError, Result};
+pub use hanko_diff as diff;
+pub use hanko_eutl as eutl;
+pub use hanko_fetch as fetchers;
+pub use hanko_pdf as pdf;
+pub use hanko_sign as sign;
+pub use hanko_validate as validate;

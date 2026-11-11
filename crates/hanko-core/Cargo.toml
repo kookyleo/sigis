@@ -1,0 +1,32 @@
+[package]
+name = "hanko-core"
+description = "Shared types, algorithms, ASN.1 and traits of the sigis-hanko pyHanko port"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+der = { workspace = true }
+spki = { workspace = true }
+const-oid = { workspace = true }
+x509-cert = { workspace = true }
+cms = { workspace = true }
+x509-ocsp = { workspace = true }
+x509-tsp = { workspace = true }
+rsa = { workspace = true }
+ecdsa = { workspace = true }
+p256 = { workspace = true }
+p384 = { workspace = true }
+p521 = { workspace = true }
+ed25519-dalek = { workspace = true }
+signature = { workspace = true }
+sha2 = { workspace = true }
+sha1 = { workspace = true }
+base64ct = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+

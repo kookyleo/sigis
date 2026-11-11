@@ -1,42 +1,25 @@
 [package]
 name = "sigis-hanko"
-version = "0.0.1"
-edition = "2021"
-rust-version = "1.89"
-description = "Signature validation foundation for Sigis, ported from pyHanko and pyhanko-certvalidator"
-# Original Sigis code is Apache-2.0; files derived from pyHanko keep its MIT license.
-license = "Apache-2.0 AND MIT"
-repository = "https://github.com/kookyleo/sigis"
-publish = false
+description = "Signature validation and signing for Sigis: Rust port of pyHanko (facade crate)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
 readme = "README.md"
 
 [dependencies]
-# RustCrypto formats. The rc versions are pinned exactly to the versions that
-# certval 0.2.0-rc.2 uses, so that types are shared with certval.
-der = { version = "0.8.3", features = ["alloc", "derive", "oid", "pem"] }
-spki = { version = "0.8.1", features = ["alloc"] }
-const-oid = { version = "0.10.2", features = ["db"] }
-x509-cert = { version = "0.3.0", default-features = false, features = ["pem"] }
-cms = { version = "=0.3.0-rc.1", default-features = false }
-x509-ocsp = { version = "=0.3.0-rc.0", default-features = false }
-x509-tsp = { version = "=0.2.0-rc.0", default-features = false }
-certval = { version = "=0.2.0-rc.2", default-features = false, features = ["std", "revocation", "rsa", "eddsa", "sha1_sig"] }
-
-# Signature verification (same versions as certval).
-rsa = { version = "=0.10.0-rc.21", default-features = false, features = ["encoding"] }
-ecdsa = { version = "0.17.0", default-features = false, features = ["der", "digest"] }
-p256 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
-p384 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
-p521 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
-ed25519-dalek = { version = "3.0.0", default-features = false }
-signature = { version = "3.0.0", default-features = false }
-sha2 = { version = "0.11.0", default-features = false, features = ["oid"] }
-sha1 = { version = "0.11.0", default-features = false, features = ["oid"] }
-
-base64ct = { version = "1.8", features = ["alloc"] }
-thiserror = "2"
+hanko-core = { workspace = true }
+hanko-certvalidator = { workspace = true }
+hanko-cms = { workspace = true }
+hanko-fetch = { workspace = true }
+hanko-pdf = { workspace = true }
+hanko-diff = { workspace = true }
+hanko-sign = { workspace = true }
+hanko-validate = { workspace = true }
+hanko-ades = { workspace = true }
+hanko-eutl = { workspace = true }
 
 [dev-dependencies]
-base64 = "0.22"
-regex = "1"
-serde_json = "1"
+

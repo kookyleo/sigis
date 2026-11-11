@@ -1,0 +1,17 @@
+[package]
+name = "hanko-diff"
+description = "DocMDP/FieldMDP modification analysis (port of pyHanko diff_analysis)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+hanko-core = { workspace = true }
+hanko-pdf = { workspace = true }
+lopdf = { workspace = true }
+
+[dev-dependencies]
+hanko-testdata = { workspace = true }

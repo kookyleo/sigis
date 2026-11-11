@@ -1,37 +1,20 @@
-sigis-hanko
+sigis-hanko (facade)
 Copyright 2026 The Sigis authors
 
-Original Sigis code is licensed under the Apache License 2.0 (see the LICENSE
-file at the repository root). The files listed below are derived from pyHanko
-or pyhanko-certvalidator, at upstream commit
-0b27455d49ecde3d2853f598558f76d1af38cbf1, and remain under the MIT License in
-LICENSE-pyHanko. Each derived file names its upstream source in its header.
+sigis-hanko re-exports the hanko-* workspace crates. Original Sigis code is
+Apache-2.0. Parts of the hanko-* crates are derived from pyHanko and
+pyhanko-certvalidator (MIT, see LICENSE-pyHanko); each crate lists its
+derived files in its own NOTICE:
 
-Derived from pyhanko-certvalidator (src/pyhanko_certvalidator/):
-  src/errors.rs                              errors.py
-  src/algorithms.rs                          sig_validate.py, util.py, policy_decl.py
-  src/certvalidator/authority.rs             authority.py (partly)
-  src/certvalidator/context.rs               context.py (partly)
-  src/certvalidator/path.rs                  path.py
-  src/certvalidator/policy.rs                policy_decl.py
-  src/certvalidator/validate.rs              validate.py, __init__.py (partly)
-  src/certvalidator/revinfo/mod.rs           revinfo/*.py, validate.py (_check_revocation)
-  src/certvalidator/revinfo/freshness.rs     revinfo/archival.py
-  src/certvalidator/revinfo/crl.rs           revinfo/validate_crl.py
-  src/certvalidator/revinfo/ocsp.rs          revinfo/validate_ocsp.py
+  crates/hanko-core/NOTICE
+  crates/hanko-certvalidator/NOTICE
+  crates/hanko-cms/NOTICE
+  crates/hanko-fetch/NOTICE
+  crates/hanko-pdf/NOTICE
+  crates/hanko-diff/NOTICE
+  crates/hanko-sign/NOTICE
+  crates/hanko-validate/NOTICE
+  crates/hanko-ades/NOTICE
+  crates/hanko-eutl/NOTICE
 
-Derived from pyhanko-certvalidator (tests/):
-  tests/common/mod.rs                        common.py
-  tests/sig_validate.rs                      test_sig_validate.py
-  tests/certificate_validator.rs             test_certificate_validator.py
-  tests/freshness.rs                         test_freshness.py
-  tests/validate.rs                          test_validate.py
-  tests/pkits.rs                             test_validate.py (test_nist_pkits)
-  tests/openssl_ocsp.rs                      test_validate.py (test_openssl_ocsp)
-  tests/data/certvalidator/                  fixtures/ (see its README.md for
-                                             the licenses of the NIST PKITS and
-                                             OpenSSL test vectors)
-
-Original Sigis code (Apache-2.0):
-  src/lib.rs, src/time.rs, src/asn1/, src/certvalidator/mod.rs,
-  tests/data/sigis-generated/
+Test fixtures and their licenses: crates/hanko-testdata/data/*/README.md

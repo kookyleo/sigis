@@ -1,0 +1,15 @@
+[package]
+name = "hanko-fetch"
+description = "HTTP fetchers for OCSP, CRLs, certificates and RFC 3161 timestamps"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+hanko-core = { workspace = true }
+
+[dev-dependencies]
+hanko-testdata = { workspace = true }

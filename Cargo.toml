@@ -11,10 +11,73 @@ categories = ["cryptography"]
 exclude = ["vendor/"]
 
 [workspace]
-members = [".", "crates/hanko"]
+members = [
+    ".",
+    "crates/hanko",
+    "crates/hanko-core",
+    "crates/hanko-testdata",
+    "crates/hanko-certvalidator",
+    "crates/hanko-cms",
+    "crates/hanko-fetch",
+    "crates/hanko-pdf",
+    "crates/hanko-diff",
+    "crates/hanko-sign",
+    "crates/hanko-validate",
+    "crates/hanko-ades",
+    "crates/hanko-eutl",
+]
 # The vendored crate is a patched dependency, not a workspace member: its own
 # tests need fixtures that are not shipped.
 exclude = ["vendor/underskrift"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.89"
+# Original Sigis code is Apache-2.0; files derived from pyHanko keep its MIT license.
+license = "Apache-2.0 AND MIT"
+repository = "https://github.com/kookyleo/sigis"
+publish = false
+
+# Shared dependency versions for the sigis-hanko crates (owned by the lead,
+# see docs/hanko-lanes.md). The RustCrypto rc versions are pinned exactly to
+# the versions certval =0.2.0-rc.2 uses, so that types are shared.
+[workspace.dependencies]
+hanko-core = { path = "crates/hanko-core" }
+hanko-testdata = { path = "crates/hanko-testdata" }
+hanko-certvalidator = { path = "crates/hanko-certvalidator" }
+hanko-cms = { path = "crates/hanko-cms" }
+hanko-fetch = { path = "crates/hanko-fetch" }
+hanko-pdf = { path = "crates/hanko-pdf" }
+hanko-diff = { path = "crates/hanko-diff" }
+hanko-sign = { path = "crates/hanko-sign" }
+hanko-validate = { path = "crates/hanko-validate" }
+hanko-ades = { path = "crates/hanko-ades" }
+hanko-eutl = { path = "crates/hanko-eutl" }
+
+der = { version = "0.8.3", features = ["alloc", "derive", "oid", "pem"] }
+spki = { version = "0.8.1", features = ["alloc"] }
+const-oid = { version = "0.10.2", features = ["db"] }
+x509-cert = { version = "0.3.0", default-features = false, features = ["pem"] }
+cms = { version = "=0.3.0-rc.1", default-features = false }
+x509-ocsp = { version = "=0.3.0-rc.0", default-features = false }
+x509-tsp = { version = "=0.2.0-rc.0", default-features = false }
+certval = { version = "=0.2.0-rc.2", default-features = false, features = ["std", "revocation", "rsa", "eddsa", "sha1_sig"] }
+rsa = { version = "=0.10.0-rc.21", default-features = false, features = ["encoding"] }
+ecdsa = { version = "0.17.0", default-features = false, features = ["der", "digest"] }
+p256 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
+p384 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
+p521 = { version = "0.14.0", default-features = false, features = ["ecdsa"] }
+ed25519-dalek = { version = "3.0.0", default-features = false }
+signature = { version = "3.0.0", default-features = false }
+sha2 = { version = "0.11.0", default-features = false, features = ["oid"] }
+sha1 = { version = "0.11.0", default-features = false, features = ["oid"] }
+base64ct = { version = "1.8", features = ["alloc"] }
+thiserror = "2"
+lopdf = { version = "0.47", default-features = false }
+base64 = "0.22"
+regex = "1"
+serde_json = "1"
 
 [dependencies]
 axum = { version = "0.8", features = ["multipart"] }

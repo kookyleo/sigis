@@ -1,0 +1,8 @@
+hanko-pdf
+Copyright 2026 The Sigis authors
+
+Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
+(MIT, see LICENSE-pyHanko) are listed below with their upstream source; each
+also names its source in its header.
+
+Derived files:
