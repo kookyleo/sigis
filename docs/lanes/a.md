@@ -61,6 +61,14 @@ See `docs/hanko-lanes.md`.
 Remaining: `test_embed_ac_revinfo_adobe_style` waits on lane E
 (`ades_lta_validation`).
 
+Gate (2026-11-12): lane A crates green at every commit (fmt, build, test,
+clippy `--all-targets`, doc with `-D warnings`). Workspace: at 62757c1,
+`cargo nextest run --workspace --exclude hanko-ades` passes (439 tests) and
+only the `hanko-ades` unit tests fail to compile (R7); at 7fb18a5,
+`hanko-eutl` and its dependents also need R8. A fresh harvest of
+`test_cms.py` with `/tmp/pyhanko-oracle/venv` (new ECDSA signatures)
+replays 77/77.
+
 ## Per-suite counts
 
 | Suite | Total | Ported-pass | Skipped | Pending |
