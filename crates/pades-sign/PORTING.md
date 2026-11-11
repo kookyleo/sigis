@@ -38,9 +38,9 @@ counts: `docs/lanes/d.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | `tests/test_signing.rs` | 78 | 58 | 9 | 11 |
+| `test_signing.py` | `tests/test_signing.rs`, `tests/test_signing_appearance.rs` | 78 | 63 | 9 | 6 |
 | `test_pades.py` | `tests/test_pades.rs` | 48 | 39 | 1 | 8 |
-| `test_fields.py` | `tests/test_fields.rs` | 27 | 25 | 0 | 2 |
+| `test_fields.py` | `tests/test_fields.rs` | 27 | 27 | 0 | 0 |
 | `test_seed_values.py` | `tests/test_seed_values.rs` | 36 | 34 | 1 | 1 |
 | `test_sign_encrypted.py` | `tests/test_sign_encrypted.rs` | 11 | 8 | 0 | 3 |
 | `test_pkcs11.py` | `tests/test_pkcs11.rs` | 36 | 34 | 2 | 0 |

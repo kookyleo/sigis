@@ -213,7 +213,6 @@ fn test_async_sign_new_existingonly() {
 }
 
 #[test]
-#[ignore = "needs signature appearances (stamp sub-slice, pending merge)"]
 fn test_sign_with_new_field_spec() {
     let spec = SigFieldSpec::new("Sig1").with_box((20.0, 20.0, 80.0, 40.0));
     let mut s = signer().with_field_spec(spec.clone());
@@ -398,4 +397,26 @@ fn test_create_with_separate_annot() {
     let (_, pg) = pages(&out);
     let page_annots = dict_get(&doc, &pg[0], b"Annots").unwrap().as_array().unwrap();
     assert_eq!(kids, page_annots);
+}
+
+#[test]
+fn test_sign_with_cert_no_common_name_appearance() {
+    // falls back to the organisation name
+    let p = pki("testing-ca-with-errors");
+    let signer = hanko_sign::SimpleSigner::new(
+        p.key("signer1"),
+        p.cert("signer-no-cn"),
+        vec![pki("testing-ca").cert("root"), pki("testing-ca").cert("interm")],
+    )
+    .unwrap();
+    let out = PdfSigner::new(meta(""), Arc::new(signer))
+        .at(at(T))
+        .sign_pdf_with(&pdf("minimal-with-field.pdf"), &SignOptions { existing_fields_only: true, ..Default::default() })
+        .unwrap();
+    let (doc, pg) = pages(&out);
+    let annot = &annots(&doc, &pg[0])[0];
+    let ap = annot.get(b"AP").unwrap().as_dict().unwrap();
+    let data = stream_data(&doc, ap.get(b"N").unwrap());
+    let needle = b"signed by Example Inc ";
+    assert!(data.windows(needle.len()).any(|w| w == needle), "{}", String::from_utf8_lossy(&data));
 }

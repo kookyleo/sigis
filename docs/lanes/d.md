@@ -19,7 +19,12 @@ In progress. Landed on the lane branch:
   ESIC / ISO 32002 extensions, size estimation, ByteRange digest.
 - PAdES B-B / B-T / B-LT / B-LTA: revocation info collection through the
   context's fetchers, DSS writing (VRI, dedup), document timestamps,
-  archival timestamp chain renewal, `add_validation_info`.
+  archival timestamp chain renewal, `add_validation_info`; interrupted /
+  remote signing (`digest_doc_for_signing`, `PdfTbsDocument::finish_signing`).
+- Signing encrypted documents (standard security handler), ML-DSA keys.
+- Key providers: PKCS#11 (`cryptoki`, SoftHSM tests), CSC remote signing.
+- Visible appearances: stamps (text, QR, static), layout, fonts (OpenType
+  embedding and subsetting), images, QR codes, Code 128 barcodes.
 
 Validation of produced files: Rust-side integrity checks plus pyHanko's own
 verdict through the oracle (`crates/hanko-sign/oracle/validate_pdf.py`,
@@ -31,17 +36,17 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | 78 | 58 | 9 | 11 |
+| `test_signing.py` | 78 | 63 | 9 | 6 |
 | `test_pades.py` | 48 | 39 | 1 | 8 |
-| `test_fields.py` | 27 | 25 | 0 | 2 |
+| `test_fields.py` | 27 | 27 | 0 | 0 |
 | `test_seed_values.py` | 36 | 34 | 1 | 1 |
 | `test_pkcs11.py` | 36 | 34 | 2 | 0 |
 | `test_csc.py` | 17 | 17 | 0 | 0 |
 | `test_sign_encrypted.py` | 11 | 8 | 0 | 3 |
-| `test_stamp.py` | 25 | 0 | 0 | 25 |
-| `test_text.py` | 15 | 0 | 0 | 15 |
-| `test_images.py` | 2 | 0 | 0 | 2 |
-| `test_barcode.py` | 2 | 0 | 0 | 2 |
+| `test_stamp.py` | 25 | 25 | 0 | 0 |
+| `test_text.py` | 15 | 15 | 0 | 0 |
+| `test_images.py` | 2 | 2 | 0 | 0 |
+| `test_barcode.py` | 2 | 2 | 0 | 0 |
 
 Infrastructure tests (key loading, CMS, TSA): `tests/keys_and_cms.rs`, 10.
 
@@ -69,10 +74,11 @@ L1); see the README there.
   `test_interrupted_no_estimation`, `test_interrupted_with_delayed_signing_no_prevalidation`,
   `test_determine_mechanism_no_signing_cert`, `test_signer_info_no_signing_cert`
   (the `KeySigner` interface always has a signing certificate).
-- Pending (12): five appearance tests (`test_simple_qr_sign`,
+- The five appearance tests (`test_simple_qr_sign`,
   `test_qr_sign_enforce_url_param`, `test_no_email`,
-  `test_sign_appearance_noop`, `test_sign_visible_with_separate_annot`;
-  appearances sub-slice in progress); `test_embed_signed_attachment`
+  `test_sign_appearance_noop`, `test_sign_visible_with_separate_annot`) are in
+  `tests/test_signing_appearance.rs`.
+- Pending (6): `test_embed_signed_attachment`
   (embedded files, lane B); `test_ed448`, `test_ed448_trust`,
   `test_ed448_invalid_hash_algo`, `test_ecdsa_with_sha3`, `test_rsa_with_sha3`
   (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448, lane A).
@@ -81,6 +87,24 @@ L1); see the README there.
   oracle verifies.
 - `test_sign_prescribed_attrs` uses the local TSA instead of pyHanko's HTTP
   timestamp client against the mocked TSA (HTTP client: lane A).
+
+### Appearance suites (`test_stamp.py`, `test_text.py`, `test_images.py`, `test_barcode.py`)
+
+- All ported; layout tests render with `pdftoppm` and compare with ImageMagick
+  `compare -metric ae` against pyHanko's expected outputs
+  (`tests/support/layout.rs`), skipping only if a tool is missing.
+- Divergences: layout / form-filling / configuration errors are
+  `HankoError::Malformed` with a message prefix (a dedicated variant would
+  need `hanko-core`); stamp timestamps render in UTC (pyHanko: local zone for
+  standalone stamps); `rustybuzz` instead of HarfBuzz (language tags via the
+  `x-hbot` private-use form); `subsetter` instead of fontTools (CFF subsets
+  desubroutinized and rebuilt in fontTools' layout; TrueType subsets use a
+  `/CIDToGIDMap` stream); one object stream per update; images: PNG and JPEG
+  only (1-bit and 16-bit accepted where Pillow rejects); barcodes: Code 128
+  only; QR symbols from the `qrcode` crate with python-qrcode's segmentation,
+  version and mask choice; standalone stamping takes no decode limits;
+  inherited `/DecodeParms` are kept when importing pages.
+- Signing a visible field without a style renders pyHanko's default stamp.
 
 ### `test_pkcs11.py` / `test_csc.py` details
 
@@ -103,9 +127,6 @@ L1); see the README there.
 
 ### `test_fields.py` / `test_seed_values.py` details
 
-- `test_fields.py` pending (2): `test_sign_with_new_field_spec` and
-  `test_sign_with_cert_no_common_name_appearance` need signature appearances
-  (appearances sub-slice).
 - `test_seed_values.py` skipped (1): `test_sign_with_sv_missing_cert`
   (`ExternalSigner(signing_cert=None)`, see above); pending (1):
   `test_sv_timestamp_url` (HTTP TSA client from the seed value URL, lane A).
@@ -175,6 +196,7 @@ is required first.
    `PdfSigner` (`new_field_spec`, `stamp_style`, `appearance_text_params`,
    `cms_options`, `signing_time`, `ignore_sv`, constructor `PdfSigner::new`).
    `SimpleSigner` moved to `hanko_sign::signer` (re-exported at the root).
+   `SubFilter` gained `PbadPades`. `pkcs11::Pkcs11Config` gained fields.
 2. **Shared target directory breaks lane fixtures:** `hanko_testdata::data_dir()`
    uses compile-time `env!("CARGO_MANIFEST_DIR")`; with the shared
    `/build/sigis/target`, the linked `hanko-testdata` can come from another
@@ -184,8 +206,9 @@ is required first.
    (or a `HANKO_TESTDATA` override).
 3. **Lane A (`hanko-core::algorithms`):** `DigestAlgorithm` lacks SHA3-256/384/512
    and SHAKE256; needed for `test_ecdsa_with_sha3`, `test_rsa_with_sha3`,
-   Ed448 (`shake256_len`). Signing support for Ed448, DSA and ML-DSA would
-   need RustCrypto `ed448-goldilocks`, `dsa`, `ml-dsa` (not in the lock file).
+   Ed448 (`shake256_len`). Signing support for Ed448 and DSA would need RustCrypto
+   `ed448-goldilocks` / `dsa`. ML-DSA signing is done in `hanko-sign` with the
+   `ml-dsa` crate; `validate_signature` in `hanko-core` cannot verify ML-DSA yet.
 4. **Lane A (`hanko-certvalidator`):** a getter for the CRLs / OCSP responses
    supplied to a `ValidationContext` (pyHanko embeds `vc.ocsps` / `vc.crls`,
    e.g. `dummy_ocsp_vc` in `test_ocsp_embed`, `test_pades_revinfo_dummydata`).
@@ -195,3 +218,5 @@ is required first.
    output when the previous revision used one, and encryption of new
    objects (standard handler done on `lopdf` in lane D; the public-key
    handler is missing for `test_sign_encrypted.py`).
+6. **hanko-core:** a `HankoError::Layout` (and ideally `Configuration`,
+   `FormFilling`) variant, to replace the message-prefix workaround.
