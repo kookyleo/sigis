@@ -43,14 +43,15 @@ curve25519-dalek = { version = "5", default-features = false }
 # X448 field arithmetic (no X448 crate available offline)
 crypto-bigint = { version = "0.7", default-features = false }
 x509-cert = { workspace = true }
-spki = { workspace = true }
-const-oid = { workspace = true }
-pkcs8 = { version = "0.11", features = ["encryption", "pem", "std", "3des"] }
-# PBES2 with the default HMAC-SHA1 PRF (encrypted PKCS#8 test keys)
+# encrypted PKCS#8 recipient keys (PBES2, PBES1 3DES)
+pkcs8 = { version = "0.11", features = ["encryption", "std", "3des"] }
+# feature only: PBES2 with the default HMAC-SHA1 PRF
 pkcs5 = { version = "0.8", features = ["sha1-insecure"] }
+# SimpleEnvelopeKeyDecrypter.load_pkcs12
 p12 = "0.6.3"
 rand_core = { version = "0.10", default-features = false }
 getrandom04 = { package = "getrandom", version = "0.4", features = ["sys_rng"] }
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }
+spki = { workspace = true }
