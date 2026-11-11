@@ -33,18 +33,24 @@ blocked, and record it. Every pyHanko module gets one status in its crate's
 
 ## 2. Crates and ownership
 
+**Renamed on 2026-11-12** into the layered layout of `docs/crates.md`
+(authoritative for crate names, layers and the layering rule). This file
+was rewritten to the new paths; the integration log in §8 keeps the names
+of the time. Package names are `sigis-<directory>`; Rust paths are
+`sigis_<directory>` (e.g. `sigis_pki_core`, `sigis_pades::ades`).
+
 Each path has exactly one owner. A lane edits only the paths it owns. Changes
 to other paths are requested from the lead (see §6).
 
 | Path | Owner | Content |
 | --- | --- | --- |
-| `Cargo.toml` (root), `Cargo.lock`*, `crates/hanko/` (facade `sigis-hanko`), `crates/hanko-core/` except `algorithms.rs`, `asn1/`, `key_usage.rs` and `ades.rs`, `crates/hanko-testdata/src/`, `crates/hanko-testdata/data/{pyhanko,pyhanko-certvalidator,sigis-generated,pyhanko-pki}/`, `tools/`, `docs/hanko-lanes.md`, `src/`, `web/`, `vendor/` | Lead | Workspace, shared types and traits, shared fixtures, service |
-| `crates/hanko-core/src/algorithms.rs`, `crates/hanko-core/src/asn1/`, `crates/hanko-core/src/key_usage.rs`, `crates/hanko-certvalidator/`, `crates/hanko-cms/`, `crates/hanko-fetch/` | Lane A | Certificate validation, CMS / TSP validation, fetchers |
-| `crates/hanko-pdf/` (incl. `fuzz/`) | Lane B | PDF layer, encryption, metadata |
-| `crates/hanko-diff/` | Lane C | DocMDP / FieldMDP analysis |
-| `crates/hanko-sign/` | Lane D | Signers, fields, appearances, key providers |
-| `crates/hanko-validate/`, `crates/hanko-ades/`, `crates/hanko-eutl/`, `crates/hanko-core/src/ades.rs` | Lane E | PDF validation, AdES, reports, trusted lists |
-| `crates/hanko-testdata/data/lanes/<lane>/`, `docs/lanes/<lane>.md` | That lane | Lane fixtures; lane status and interface requests |
+| `Cargo.toml` (root), `Cargo.lock`*, `crates/hanko/` (facade `sigis-hanko`), `crates/pki-core/` except `algorithms.rs`, `asn1/`, `key_usage.rs` and `ades.rs`, `crates/testdata/src/`, `crates/testdata/data/{pyhanko,pyhanko-certvalidator,sigis-generated,pyhanko-pki}/`, `tools/`, `docs/hanko-lanes.md`, `src/`, `web/`, `vendor/` | Lead | Workspace, shared types and traits, shared fixtures, service |
+| `crates/pki-core/src/algorithms.rs`, `crates/pki-core/src/asn1/`, `crates/pki-core/src/key_usage.rs`, `crates/pki-certvalidator/`, `crates/cms/`, `crates/pki-fetch/` | Lane A | Certificate validation, CMS / TSP validation, fetchers |
+| `crates/pdf/` (incl. `fuzz/`) | Lane B | PDF layer, encryption, metadata |
+| `crates/pdf-diff/` | Lane C | DocMDP / FieldMDP analysis |
+| `crates/pades-sign/` | Lane D | Signers, fields, appearances, key providers |
+| `crates/pades/` (incl. module `ades`), `crates/ades-model/`, `crates/eutl/`, `crates/pki-core/src/ades.rs` | Lane E | PDF validation, AdES, reports, trusted lists |
+| `crates/testdata/data/lanes/<lane>/`, `docs/lanes/<lane>.md` | That lane | Lane fixtures; lane status and interface requests |
 
 \* Any lane may change `Cargo.lock` as a side effect of adding a dependency
 to its own crate. On a rebase conflict, take `main`'s `Cargo.lock` and run
@@ -52,24 +58,11 @@ to its own crate. On a rebase conflict, take `main`'s `Cargo.lock` and run
 `Cargo.toml` with explicit versions; the lead hoists shared ones into
 `[workspace.dependencies]`.
 
-Dependency graph (normal dependencies, as merged on 2026-11-12):
-
-| Crate | Depends on (hanko-*) |
-| --- | --- |
-| `hanko-core` | — |
-| `hanko-certvalidator` | core |
-| `hanko-cms` | core, certvalidator |
-| `hanko-fetch` | core |
-| `hanko-pdf` | core |
-| `hanko-diff` | core, pdf |
-| `hanko-sign` | core, certvalidator, pdf (+ cms) |
-| `hanko-validate` | core, certvalidator, cms, pdf, diff |
-| `hanko-eutl` | core, certvalidator, validate |
-| `hanko-ades` | core, certvalidator, cms, pdf, validate, eutl |
-| `sigis-hanko` (facade) | all |
+Dependency graph and layering rule: `docs/crates.md` (generated graph,
+checked by `cargo test --test layering`).
 
 No crate may depend on a crate that depends on it. Dev-dependencies may
-point "upwards" (for example `hanko-sign` tests may use `hanko-validate`).
+point "upwards" (for example `sigis-pades-sign` tests may use `sigis-pades`).
 
 Patched dependencies (root `[patch.crates-io]`, lead-owned):
 `underskrift` (B-T timestamps, to be removed when lane D replaces it) and
@@ -81,11 +74,11 @@ Patched dependencies (root `[patch.crates-io]`, lead-owned):
 
 | Lane | Branch | Owned crates | Scope | pyHanko tests | Est. Rust (prod) |
 | --- | --- | --- | --- | --- | --- |
-| A — Certificates & CMS | `hanko/a-cms-cert` | `hanko-certvalidator`, `hanko-cms`, `hanko-fetch`, `hanko-core::{algorithms,asn1}` | `generic_cms` (SignerInfo, signed-attribute digest, SigningCertificateV2 binding, signature and content timestamps), certvalidator gaps (indirect CRLs, `onlySomeReasons`, delegated OCSP responder revocation, registry/AIA, policy qualifiers, trust-anchor qualifiers, attribute certificates, `ltv`: POE, time slide, past validation), HTTP fetchers and TSA client with cache, limits, timeouts, multi-URL fallback | 271 functions | 5–7k lines |
-| B — PDF layer | `hanko/b-pdf` | `hanko-pdf` | Reader with revision history (xref tables and streams, object streams, hybrid files, broken-file recovery), filters and decode limits, incremental writer, signature and DSS discovery, byte-range extraction, embedded files, metadata (Info, XMP), content stream parser, encryption (standard and public-key security handlers, crypt filters), PDF MAC (ISO 32004), cargo-fuzz targets | 406 functions | 8–11k lines |
-| C — Modification analysis | `hanko/c-diff` | `hanko-diff` | `diff_analysis`: DocMDP / FieldMDP rules (file structure, metadata, form fields, annotations, DSS / DTS updates), whitelisting policy, `SuspiciousModification` reporting | 94 functions | 3–4k lines |
-| D — Signing | `hanko/d-sign` | `hanko-sign` | CMS signing (`cms` builder), PAdES B-B / B-T / B-LT / B-LTA, signature field creation and seed values, certification (DocMDP), DSS updates, document timestamps, LTA renewal, CAdES signed attributes, key providers (software keys, PKCS#11 via `cryptoki` with SoftHSM tests, CSC remote signing), local test TSA, visible appearances (stamps, text layout, fonts, images, QR / barcodes), signing encrypted documents. When at parity: switch the Sigis service from `underskrift` to `hanko-sign` (via the lead) | 297 functions | 8–11k lines |
-| E — Validation & AdES | `hanko/e-validate` | `hanko-validate`, `hanko-ades`, `hanko-eutl` | `pdf_embedded` (signatures per revision, coverage, DocMDP / FieldMDP via lane C), `status`, `settings`, validation-side `dss` / LTV, `ades` (EN 319 102-1 building blocks, LTV / LTA, POE extraction, past signature validation), reports (JSON, ETSI TS 119 102-2 XML), EU trusted lists and qualified status (TS 119 612 parsing, XAdES signature check, `quick-xml` bindings instead of `generated/`) | 100 functions | 7–10k lines |
+| A — Certificates & CMS | `hanko/a-cms-cert` | `sigis-pki-certvalidator`, `sigis-cms`, `sigis-pki-fetch`, `hanko-core::{algorithms,asn1}` | `generic_cms` (SignerInfo, signed-attribute digest, SigningCertificateV2 binding, signature and content timestamps), certvalidator gaps (indirect CRLs, `onlySomeReasons`, delegated OCSP responder revocation, registry/AIA, policy qualifiers, trust-anchor qualifiers, attribute certificates, `ltv`: POE, time slide, past validation), HTTP fetchers and TSA client with cache, limits, timeouts, multi-URL fallback | 271 functions | 5–7k lines |
+| B — PDF layer | `hanko/b-pdf` | `sigis-pdf` | Reader with revision history (xref tables and streams, object streams, hybrid files, broken-file recovery), filters and decode limits, incremental writer, signature and DSS discovery, byte-range extraction, embedded files, metadata (Info, XMP), content stream parser, encryption (standard and public-key security handlers, crypt filters), PDF MAC (ISO 32004), cargo-fuzz targets | 406 functions | 8–11k lines |
+| C — Modification analysis | `hanko/c-diff` | `sigis-pdf-diff` | `diff_analysis`: DocMDP / FieldMDP rules (file structure, metadata, form fields, annotations, DSS / DTS updates), whitelisting policy, `SuspiciousModification` reporting | 94 functions | 3–4k lines |
+| D — Signing | `hanko/d-sign` | `sigis-pades-sign` | CMS signing (`cms` builder), PAdES B-B / B-T / B-LT / B-LTA, signature field creation and seed values, certification (DocMDP), DSS updates, document timestamps, LTA renewal, CAdES signed attributes, key providers (software keys, PKCS#11 via `cryptoki` with SoftHSM tests, CSC remote signing), local test TSA, visible appearances (stamps, text layout, fonts, images, QR / barcodes), signing encrypted documents. When at parity: switch the Sigis service from `underskrift` to `sigis-pades-sign` (via the lead) | 297 functions | 8–11k lines |
+| E — Validation & AdES | `hanko/e-validate` | `sigis-pades`, `sigis-pades`, `sigis-eutl` | `pdf_embedded` (signatures per revision, coverage, DocMDP / FieldMDP via lane C), `status`, `settings`, validation-side `dss` / LTV, `ades` (EN 319 102-1 building blocks, LTV / LTA, POE extraction, past signature validation), reports (JSON, ETSI TS 119 102-2 XML), EU trusted lists and qualified status (TS 119 612 parsing, XAdES signature check, `quick-xml` bindings instead of `generated/`) | 100 functions | 7–10k lines |
 | L — Lead / integration | `main` | see §2 | Skeleton, shared fixtures and oracle, merges, service wiring (`/api/verify` flag, later signing switch), CLI crate and CLI tests after the lanes | 263 functions (CLI, live integration) | — |
 
 Merge order: the skeleton (done) → A and B (first increments that fill their
@@ -98,27 +91,27 @@ All functions and types below exist on `main` and compile. Stubs return
 `HankoError::NotImplemented(...)` and never panic. Signatures may only change
 through the lead.
 
-- **`hanko-core`** (lead; `algorithms`, `asn1`, `key_usage` lane A; `ades` lane E):
+- **`sigis-pki-core`** (lead; `algorithms`, `asn1`, `key_usage` lane A; `ades` lane E):
   - `errors::{HankoError, Result, ValidationError, SignatureError, FetchError, FetchErrorKind, not_implemented}`;
     `HankoError::SignatureValidation { message, ades_subindication: Option<ades::AdesSubIndic> }`
     for signature validation failures (pyHanko `SignatureValidationError`).
-  - `ades::{AdesStatus, AdesSubIndic, AdesPassed, AdesFailure, AdesIndeterminate}` (moved from `hanko-validate`, re-exported as `hanko_validate::report`).
-  - `key_usage::KeyUsageConstraints` and helpers (moved from `hanko-validate`, re-exported as `hanko_validate::settings`; `hanko-cms` must use this one).
+  - `ades::{AdesStatus, AdesSubIndic, AdesPassed, AdesFailure, AdesIndeterminate}` (moved from `sigis-pades`, re-exported as `sigis_pades::report`).
+  - `key_usage::KeyUsageConstraints` and helpers (moved from `sigis-pades`, re-exported as `sigis_pades::settings`; `sigis-cms` must use this one).
   - `cert::Cert` (parsed certificate plus exact DER).
   - `time::Moment` (`parse_rfc3339` with offsets, strict `parse_xsd_datetime`).
   - `algorithms::{DigestAlgorithm, SignatureMechanism, validate_signature, AlgorithmUsagePolicy, DisallowWeakAlgorithmsPolicy}`.
   - `asn1::{ess, sig_policy, commitment, oids}`.
   - `fetch::{OcspFetcher, CrlFetcher, CertificateFetcher, Fetchers}`: synchronous traits; async callers use a blocking task.
   - `sign::{KeySigner, TimeStamper}`: `sign_raw(data, digest)` gets the data, not a digest; `timestamp(message_digest, digest)` returns a `TimeStampToken` `ContentInfo`.
-- **`hanko-certvalidator`** (A): `ValidationContext` (+ `ValidationContextBuilder::fetchers`), `ValidationPath`, `TrustAnchor`, `build_paths`, `validate_path`, `CertificateValidator`, `policy::*`, `revinfo::freshness::{FreshnessJudge, judge_revinfo}`, `ltv::{poe::{PoeManager, PoeType, digest_for_poe}, time_slide::time_slide, past_validate}`.
-- **`hanko-cms`** (A): `SignedContent`, `SignatureStatus`, `TimestampSignatureStatus`, `StandardCmsSignatureStatus`, `TrustProblem`, `validate_cms_signature`, `validate_timestamp_token`, `validate_detached_cms`.
-- **`hanko-fetch`** (A): `HttpFetchers` (implements the three fetch traits), `HttpTimeStamper` (implements `TimeStamper`), `FetchLimits`.
-- **`hanko-pdf`** (B): `lopdf` re-export; `PdfFile::{parse, bytes, revisions, object_in_revision, objects_written_in, trailer_in_revision, embedded_signatures, dss}`, `RevisionInfo`, `EmbeddedSignature{..}::signed_data`, `SignatureKind`, `DocumentSecurityStore`, `VriEntry`, `MdpPerm`, `IncrementalWriter::{new, put, allocate, write}`.
-- **`hanko-diff`** (C): `DiffPolicy::review_file`, `StandardDiffPolicy`, `DiffOutcome`, `DiffResult`, `ModificationLevel`, `FieldMdpAction`, `MdpPerm` (re-export).
-- **`hanko-sign`** (D): `SimpleSigner::{from_pkcs8_der, from_pkcs12}` (implements `KeySigner`), `PdfSignatureMetadata`, `SubFilter`, `PdfSigner::sign_pdf`, `sign_general_data`, `add_document_timestamp`, `add_validation_info`, `pkcs11::{Pkcs11Config, open}`.
-- **`hanko-validate`** (E): `validate_pdf_signature`, `validate_pdf_timestamp`, `validate_pdf_ltv_signature`, `PdfSignatureStatus`, `DocumentTimestampStatus`, `SignatureCoverageLevel`, `RevocationInfoValidationType`.
-- **`hanko-ades`** (E): `validate_pdf_ades`, `AdesLevel`, `AdesStatus`, `AdesSubIndication`, `AdesValidationResult`, `report::{to_json, to_etsi_xml}`.
-- **`hanko-eutl`** (E): `TrustedList`, `TrustService`, `QualificationResult`, `parse_trusted_list`, `qualification`.
+- **`sigis-pki-certvalidator`** (A): `ValidationContext` (+ `ValidationContextBuilder::fetchers`), `ValidationPath`, `TrustAnchor`, `build_paths`, `validate_path`, `CertificateValidator`, `policy::*`, `revinfo::freshness::{FreshnessJudge, judge_revinfo}`, `ltv::{poe::{PoeManager, PoeType, digest_for_poe}, time_slide::time_slide, past_validate}`.
+- **`sigis-cms`** (A): `SignedContent`, `SignatureStatus`, `TimestampSignatureStatus`, `StandardCmsSignatureStatus`, `TrustProblem`, `validate_cms_signature`, `validate_timestamp_token`, `validate_detached_cms`.
+- **`sigis-pki-fetch`** (A): `HttpFetchers` (implements the three fetch traits), `HttpTimeStamper` (implements `TimeStamper`), `FetchLimits`.
+- **`sigis-pdf`** (B): `lopdf` re-export; `PdfFile::{parse, bytes, revisions, object_in_revision, objects_written_in, trailer_in_revision, embedded_signatures, dss}`, `RevisionInfo`, `EmbeddedSignature{..}::signed_data`, `SignatureKind`, `DocumentSecurityStore`, `VriEntry`, `MdpPerm`, `IncrementalWriter::{new, put, allocate, write}`.
+- **`sigis-pdf-diff`** (C): `DiffPolicy::review_file`, `StandardDiffPolicy`, `DiffOutcome`, `DiffResult`, `ModificationLevel`, `FieldMdpAction`, `MdpPerm` (re-export).
+- **`sigis-pades-sign`** (D): `SimpleSigner::{from_pkcs8_der, from_pkcs12}` (implements `KeySigner`), `PdfSignatureMetadata`, `SubFilter`, `PdfSigner::sign_pdf`, `sign_general_data`, `add_document_timestamp`, `add_validation_info`, `pkcs11::{Pkcs11Config, open}`.
+- **`sigis-pades`** (E): `validate_pdf_signature`, `validate_pdf_timestamp`, `validate_pdf_ltv_signature`, `PdfSignatureStatus`, `DocumentTimestampStatus`, `SignatureCoverageLevel`, `RevocationInfoValidationType`.
+- **`sigis-pades`** (E): `validate_pdf_ades`, `AdesLevel`, `AdesStatus`, `AdesSubIndication`, `AdesValidationResult`, `report::{to_json, to_etsi_xml}`.
+- **`sigis-eutl`** (E): `TrustedList`, `TrustService`, `QualificationResult`, `parse_trusted_list`, `qualification`.
 
 Lanes may add public items to their own crates freely. They may not remove or
 change the items above without a lead-approved request.
@@ -201,22 +194,22 @@ implementation lands, and switches to the real implementation afterwards.
 
 ### 5.2 Fixtures
 
-- **Locate fixtures at run time.** Use `hanko_testdata::{data_dir, path,
+- **Locate fixtures at run time.** Use `sigis_testdata::{data_dir, path,
   read, certvalidator, pyhanko}` for fixtures and
-  `hanko_testdata::manifest_dir()` for files of your own crate (oracle
+  `sigis_testdata::manifest_dir()` for files of your own crate (oracle
   scripts). Never use `env!("CARGO_MANIFEST_DIR")` in tests: all worktrees
   share one target directory, so a compile-time path can point into another
   worktree. `$HANKO_TESTDATA` overrides the fixture directory.
-- Shared pyHanko fixtures are in `crates/hanko-testdata/data/` (lead-owned),
+- Shared pyHanko fixtures are in `crates/testdata/data/` (lead-owned),
   copied from the release tags with their licenses:
   - `pyhanko/`: test PKI configuration and public test keys, PDFs, XML,
     images, fonts (OFL), EU trusted lists (CC BY 4.0).
   - `pyhanko-certvalidator/`: NIST PKITS, OpenSSL OCSP vectors, test PKIs.
   - `sigis-generated/`: certificates generated for algorithm tests.
 - Each subdirectory has a `README.md` with origin and license. Load fixtures
-  with `hanko_testdata::{path, read, certvalidator, pyhanko}`.
+  with `sigis_testdata::{path, read, certvalidator, pyhanko}`.
 - Lane-generated fixtures (oracle outputs, exported PKI) go to
-  `crates/hanko-testdata/data/lanes/<lane>/`, with the generating script
+  `crates/testdata/data/lanes/<lane>/`, with the generating script
   under `crates/<crate>/oracle/` and a README stating how they were produced.
 - Generated material must be reproducible from a committed script and a
   pinned validation time. Never commit private keys other than pyHanko's
@@ -229,7 +222,7 @@ implementation lands, and switches to the real implementation afterwards.
   and, where pyHanko checks it, message pattern).
 - Data-driven suites keep an explicit `KNOWN_DIVERGENCES` list with a reason
   per case. The test fails on an unlisted divergence and on a listed case
-  that now agrees (see `crates/hanko-certvalidator/tests/pkits.rs`).
+  that now agrees (see `crates/pki-certvalidator/tests/pkits.rs`).
 - **Never accept what pyHanko rejects.** Every divergence must fail closed:
   where pyHanko rejects or flags something, the port must not accept it.
   Data-driven tests assert this explicitly ("fail-open divergence" check).
@@ -253,21 +246,21 @@ implementation lands, and switches to the real implementation afterwards.
   installs pyHanko's test utilities from the `v0.38.1` checkout. Built and
   verified on 2026-11-12: lane C's sweep and lane E's trusted-list
   differential tests pass against it.
-  `hanko_testdata::oracle` uses it by default; `$HANKO_ORACLE` overrides
+  `sigis_testdata::oracle` uses it by default; `$HANKO_ORACLE` overrides
   the interpreter. Lane-local venvs (`/tmp/lane-a`, `/tmp/c-diff-oracle`,
   ...) are no longer needed; add missing packages to `requirements.txt`
   through the lead.
 - Fixture generators run pyHanko (and Certomancer for the test PKI) and write
   inputs plus pyHanko's verdicts as JSON. Their outputs are committed, so
   normal test runs need no Python.
-- Differential tests call `hanko_testdata::oracle::run_json(script, args)` and
+- Differential tests call `sigis_testdata::oracle::run_json(script, args)` and
   compare pyHanko's verdict with the Rust verdict on the same input. They skip
   with a message when the oracle is not installed, and fail if pyHanko's
   verdict is stricter than the port's.
 - Lead open item **L1**: record collected-case counts in §5.1, and
   export the Certomancer test PKI (`crypto/certomancer.yml`, arch
   `testing-ca` and the others the tests use) to
-  `crates/hanko-testdata/data/pyhanko-pki/` at a pinned time. Lanes that need
+  `crates/testdata/data/pyhanko-pki/` at a pinned time. Lanes that need
   the PKI before L1 lands may run the export locally into their own lane
   directory, and must say so in their status file.
 
@@ -321,25 +314,25 @@ include §1–§6 by reference.
 > worktree `../sigis-wt/a-cms-cert` on branch `hanko/a-cms-cert` (create it
 > from `main`).
 >
-> You own `crates/hanko-certvalidator`, `crates/hanko-cms`,
-> `crates/hanko-fetch`, `crates/hanko-core/src/algorithms.rs`,
-> `crates/hanko-core/src/asn1/`, `crates/hanko-testdata/data/lanes/a/` and
+> You own `crates/pki-certvalidator`, `crates/cms`,
+> `crates/pki-fetch`, `crates/pki-core/src/algorithms.rs`,
+> `crates/pki-core/src/asn1/`, `crates/testdata/data/lanes/a/` and
 > `docs/lanes/a.md`.
 >
 > Scope (baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0 tags):
-> 1. `hanko-cms`: port `sign/validation/generic_cms.py` (with the CMS-level
+> 1. `sigis-cms`: port `sign/validation/generic_cms.py` (with the CMS-level
 >    parts of `status.py` and `sign/general.py`): SignerInfo validation,
 >    signed-attribute digest check, `SigningCertificate(V2)` binding,
 >    signature-timestamp and content-timestamp validation (`x509-tsp`), key
 >    usage constraints, the `StandardCmsSignatureStatus` family. Use the
 >    `cms` crate for parsing.
-> 2. `hanko-certvalidator` gaps: indirect CRLs / `cRLIssuer`,
+> 2. `sigis-pki-certvalidator` gaps: indirect CRLs / `cRLIssuer`,
 >    `onlySomeReasons` accumulation, revocation of delegated OCSP responders,
 >    registry and AIA issuer disambiguation, policy qualifiers and trust-anchor
 >    qualifiers (`policy_proc`), attribute certificate validation, and `ltv/`
 >    (POE manager, time slide, past validation), filling the stubs in
 >    `src/ltv/`.
-> 3. `hanko-fetch`: HTTP fetchers (OCSP, CRL, certificates) and the RFC 3161
+> 3. `sigis-pki-fetch`: HTTP fetchers (OCSP, CRL, certificates) and the RFC 3161
 >    TSA client, with cache, size limits, timeouts and multi-URL fallback
 >    (`fetchers/`, `sign/timestamps/{api,requests_client,aiohttp_client,common_utils}.py`).
 >    Use `reqwest` (blocking). Test against a local server on 127.0.0.1.
@@ -352,7 +345,7 @@ include §1–§6 by reference.
 > behaviour (show the equivalent coverage). For signed inputs before lane D
 > lands, generate fixtures with the pyHanko oracle (§5.4).
 >
-> Interfaces you fill: `hanko-cms` and `hanko-fetch` stubs,
+> Interfaces you fill: `sigis-cms` and `sigis-pki-fetch` stubs,
 > `hanko-certvalidator::ltv`. Lanes D and E depend on them, so land
 > `validate_cms_signature` / `validate_timestamp_token` early.
 >
@@ -368,8 +361,8 @@ include §1–§6 by reference.
 > `/home/l/D/kooky/sigis`). Read `docs/hanko-lanes.md` first; its rules are
 > binding. Work in `../sigis-wt/b-pdf` on branch `hanko/b-pdf`.
 >
-> You own `crates/hanko-pdf` (including `crates/hanko-pdf/fuzz`),
-> `crates/hanko-testdata/data/lanes/b/` and `docs/lanes/b.md`.
+> You own `crates/pdf` (including `crates/pdf/fuzz`),
+> `crates/testdata/data/lanes/b/` and `docs/lanes/b.md`.
 >
 > Scope (pyHanko 0.38.1 `pdf_utils/`), on top of `lopdf` 0.47 wherever it
 > is sound. Measure lopdf against the tests; where lopdf is wrong or
@@ -391,16 +384,16 @@ include §1–§6 by reference.
 >    permissions, credential serialization (`crypt/`), and PDF MAC
 >    (`crypt/pdfmac.py`, ISO 32004). Use RustCrypto for the primitives.
 > 6. cargo-fuzz targets for parsing, xref and object-stream decoding, and the
->    incremental writer round trip, in `crates/hanko-pdf/fuzz`. No panics on
+>    incremental writer round trip, in `crates/pdf/fuzz`. No panics on
 >    any input.
 >
 > Tests to port: `test_xref.py` (60), `test_internal_utils.py` (127),
 > `test_decode_limits.py` (29), `test_content_stream_parser.py` (8),
 > `test_embed.py` (9), `test_meta.py` (39), `test_crypt.py` (84),
 > `test_pdfmac.py` (50). Fixture PDFs are in
-> `crates/hanko-testdata/data/pyhanko/pdf/`.
+> `crates/testdata/data/pyhanko/pdf/`.
 >
-> Interfaces you fill: everything in `hanko-pdf` (§4). Lanes C, D and E code
+> Interfaces you fill: everything in `sigis-pdf` (§4). Lanes C, D and E code
 > against it, so land `revisions`, `object_in_revision`,
 > `objects_written_in`, `embedded_signatures`, `signed_data`, `dss` and
 > `IncrementalWriter` first.
@@ -415,7 +408,7 @@ include §1–§6 by reference.
 > `/home/l/D/kooky/sigis`). Read `docs/hanko-lanes.md` first; its rules are
 > binding. Work in `../sigis-wt/c-diff` on branch `hanko/c-diff`.
 >
-> You own `crates/hanko-diff`, `crates/hanko-testdata/data/lanes/c/` and
+> You own `crates/pdf-diff`, `crates/testdata/data/lanes/c/` and
 > `docs/lanes/c.md`.
 >
 > Scope: port pyHanko 0.38.1 `sign/diff_analysis/` (`commons.py`,
@@ -425,14 +418,14 @@ include §1–§6 by reference.
 > whitelisting-based review of revisions after a signature: DocMDP levels,
 > FieldMDP locks, form filling, annotations, DSS and document-timestamp
 > updates, metadata updates, and `SuspiciousModification` reporting.
-> Implement `DiffPolicy` / `StandardDiffPolicy` in `hanko-diff`, using only
-> `hanko-pdf` for PDF access.
+> Implement `DiffPolicy` / `StandardDiffPolicy` in `sigis-pdf-diff`, using only
+> `sigis-pdf` for PDF access.
 >
 > Tests to port: `test_diff_analysis.py` (94 functions at the v0.38.1 tag;
 > pyHanko `main` has more, which are not part of the baseline). Most tests
 > modify signed PDFs with pyHanko's writer. Generate those inputs (and
 > pyHanko's verdicts) with the oracle (§5.4) into
-> `crates/hanko-testdata/data/lanes/c/`, and add a differential test that
+> `crates/testdata/data/lanes/c/`, and add a differential test that
 > runs pyHanko's diff policy on every input.
 >
 > Dependencies: lane B (`PdfFile::{revisions, object_in_revision,
@@ -450,7 +443,7 @@ include §1–§6 by reference.
 > `/home/l/D/kooky/sigis`). Read `docs/hanko-lanes.md` first; its rules are
 > binding. Work in `../sigis-wt/d-sign` on branch `hanko/d-sign`.
 >
-> You own `crates/hanko-sign`, `crates/hanko-testdata/data/lanes/d/` and
+> You own `crates/pades-sign`, `crates/testdata/data/lanes/d/` and
 > `docs/lanes/d.md`.
 >
 > Scope (pyHanko 0.38.1):
@@ -477,7 +470,7 @@ include §1–§6 by reference.
 > `test_csc.py` (17), `test_sign_encrypted.py` (11), `test_stamp.py` (25),
 > `test_text.py` (15), `test_images.py` (2), `test_barcode.py` (2). These
 > tests validate what they sign: until lane E lands, validate outputs with the
-> pyHanko oracle (differential), then with `hanko-validate`. Every produced
+> pyHanko oracle (differential), then with `sigis-pades`. Every produced
 > PDF in the tests must also pass pyHanko's validator.
 >
 > Dependencies: lane B (`IncrementalWriter`, `PdfFile`), lane A
@@ -485,7 +478,7 @@ include §1–§6 by reference.
 > against the stubs and ask the lead for interface additions.
 >
 > Final step (only at parity, through the lead): replace the vendored
-> `underskrift` in the Sigis service with `hanko-sign`. Do not touch `src/`
+> `underskrift` in the Sigis service with `sigis-pades-sign`. Do not touch `src/`
 > yourself.
 >
 > Acceptance: all assigned tests ported and passing or skipped with a
@@ -498,22 +491,22 @@ include §1–§6 by reference.
 > `/home/l/D/kooky/sigis`). Read `docs/hanko-lanes.md` first; its rules are
 > binding. Work in `../sigis-wt/e-validate` on branch `hanko/e-validate`.
 >
-> You own `crates/hanko-validate`, `crates/hanko-ades`, `crates/hanko-eutl`,
-> `crates/hanko-testdata/data/lanes/e/` and `docs/lanes/e.md`.
+> You own `crates/pades` (with the AdES module `ades`), `crates/ades-model`, `crates/eutl`,
+> `crates/testdata/data/lanes/e/` and `docs/lanes/e.md`.
 >
 > Scope (pyHanko 0.38.1 `sign/validation/`):
-> 1. `hanko-validate`: `pdf_embedded.py` (signatures per revision, coverage
->    levels, DocMDP / FieldMDP through `hanko-diff`), `status.py`,
+> 1. `sigis-pades`: `pdf_embedded.py` (signatures per revision, coverage
+>    levels, DocMDP / FieldMDP through `sigis-pdf-diff`), `status.py`,
 >    `settings.py`, `policy_decl.py`, `utils.py`, `errors.py`, and the
 >    validation side of `dss.py` (LTV with embedded revocation information,
 >    Adobe-style and PAdES-LT/LTA modes).
-> 2. `hanko-ades`: `ades.py` (EN 319 102-1 basic building blocks, validation
+> 2. `sigis-pades`: `ades.py` (EN 319 102-1 basic building blocks, validation
 >    with timestamps, LTV / LTA, POE extraction, past signature validation,
 >    using `hanko-certvalidator::ltv`), `sign/ades/report.py`, and
 >    `report/tools.py` (JSON report and ETSI TS 119 102-2 XML via
 >    `quick-xml`; do not translate `generated/`, write `serde` bindings for
 >    the elements actually used).
-> 3. `hanko-eutl`: `qualified/` (TS 119 612 trusted list parsing, LOTL
+> 3. `sigis-eutl`: `qualified/` (TS 119 612 trusted list parsing, LOTL
 >    pivots, XAdES signature verification of lists, service history and
 >    qualifiers, qualified status assessment), with `quick-xml`. XMLDSig
 >    needs canonicalization: evaluate existing crates, contribute upstream if
@@ -523,13 +516,13 @@ include §1–§6 by reference.
 > Tests to port: `test_ades_validation.py` (40),
 > `test_ades_validation_report.py` (5), `test_ades_validation_requests.py`
 > (2), `test_trusted_list.py` (53). Trusted-list fixtures are in
-> `crates/hanko-testdata/data/pyhanko/tl/`. Signed PDFs for the validation
+> `crates/testdata/data/pyhanko/tl/`. Signed PDFs for the validation
 > tests: generate with the oracle (§5.4) until lane D lands. Add a
 > differential test comparing your verdicts with pyHanko's on every
 > generated input.
 >
-> Dependencies: lanes A (`hanko-cms`, `ltv`), B (`hanko-pdf`), C
-> (`hanko-diff`). Code against the stubs.
+> Dependencies: lanes A (`sigis-cms`, `ltv`), B (`sigis-pdf`), C
+> (`sigis-pdf-diff`). Code against the stubs.
 >
 > Acceptance: all assigned tests ported and passing or skipped with a
 > reason; differential verdicts never more lenient than pyHanko; gate green
@@ -545,12 +538,12 @@ Merged into `main` (fast-forward after rebase): lane C (`hanko/c-diff`,
 `main`:
 
 - Fixtures resolve at run time (R-E9, A-R4, D-2); see §5.2.
-- `hanko-core`: `x509-cert` feature `hazmat` (C2, A-R3, B-1);
+- `sigis-pki-core`: `x509-cert` feature `hazmat` (C2, A-R3, B-1);
   `Moment::parse_rfc3339` offsets and `parse_xsd_datetime` (R-E4);
-  `key_usage` and `ades` modules moved from `hanko-validate` (R-E1);
+  `key_usage` and `ades` modules moved from `sigis-pades` (R-E1);
   `HankoError::SignatureValidation` (R-E8, A-R2).
-- `quick-xml` 0.38.4 in `[workspace.dependencies]`, used by `hanko-diff` and
-  `hanko-ades` (C3).
+- `quick-xml` 0.38.4 in `[workspace.dependencies]`, used by `sigis-pdf-diff` and
+  `sigis-pades` (C3).
 - `const-oid` patched for `2.999.*` OIDs (R-E5); upstream issue and patch
   prepared in `vendor/const-oid.UPSTREAM.md`, not yet submitted.
 - Standard oracle venv and `requirements.txt` (§5.4).
@@ -562,9 +555,9 @@ Interface decisions:
   `SignatureStatus` / `StandardCmsSignatureStatus` fields, `HttpFetchers::new`,
   `HttpTimeStamper::new`), lane D 1 (`PdfSignatureMetadata::md_algorithm` and
   `subfilter` as `Option`, new metadata and signer fields,
-  `hanko_sign::signer`), lane C `ConfigurableDiffPolicy`, lane E
+  `sigis_pades_sign::signer`), lane C `ConfigurableDiffPolicy`, lane E
   `PdfSignatureStatus::{docmdp_ok, bottom_line}`.
 - Lane A R1 approved: lane A adds `md-5`, `sha3`, `dsa` and
-  `ed448-goldilocks` to `crates/hanko-core/Cargo.toml` `[dependencies]` in the
+  `ed448-goldilocks` to `crates/pki-core/Cargo.toml` `[dependencies]` in the
   same commit as the code that uses them (a one-time exception to §2, so the
   gate has no unused-dependency warning).

@@ -9,7 +9,7 @@ Phase 1 (core) landed on `hanko/b-pdf`: reader with revision history
 modes, `startxref` recovery), decoding limits, filters, historical
 resolution (`HistoricalResolver`, reverse path index for lane C),
 base/new-file/incremental writer, signature field enumeration, embedded
-signature discovery, DSS reading. All §4 `hanko-pdf` interface functions are
+signature discovery, DSS reading. All §4 `sigis-pdf` interface functions are
 implemented (no `NotImplemented` stubs left).
 
 Phase 2 landed: developer extensions, page import, XMP metadata
@@ -37,8 +37,8 @@ Notes for lanes C, D, E:
   compare streams by `dict` and `content`, not with `==` on `Stream`.
 - Lane C request C1 is served by new items (no §4 change):
   `PdfFile::{xref_section, last_change, introducing_revision, resolves_in,
-  strict}` and `hanko_pdf::XrefSectionInfo` (same fields as
-  `hanko_diff::XrefSectionInfo`). `trailer_in_revision(rev)` now returns the
+  strict}` and `sigis_pdf::XrefSectionInfo` (same fields as
+  `sigis_pdf_diff::XrefSectionInfo`). `trailer_in_revision(rev)` now returns the
   section's own trailer, as lane C asked; the merged view is
   `effective_trailer_in_revision`.
 - Lane E request R-E6 / B-2: `RevisionInfo::{startxref, xref_end}` and
@@ -63,7 +63,7 @@ Notes for lanes C, D, E:
 | **Total** | **406** | **384** | **17** | **5** |
 
 Skipped and pending tests are listed with reasons in
-`crates/hanko-pdf/PORTING.md`. Pending tests that depend on other lanes:
+`crates/pdf/PORTING.md`. Pending tests that depend on other lanes:
 `test_decode_limits.py::{test_post_sign_reopen_keeps_limits,
 test_archival_timestamp_update_keeps_limits, test_add_dss_keeps_limits}`
 (lane D signing and DSS updates), `test_pdfmac.py::{test_pdf_mac_pades,
@@ -76,7 +76,7 @@ test_resource_add_test, test_duplicate_resource}` (`layout.py`,
 
 ## Fuzzing
 
-Targets in `crates/hanko-pdf/fuzz` (see its README). Budget: 15 minutes per
+Targets in `crates/pdf/fuzz` (see its README). Budget: 15 minutes per
 target, single process each, seeds from pyHanko's test PDFs/XML, on
 2026-11-12 (machine load ~60). Final run: all six clean —
 `parse_pdf` 305,620 runs, `parse_object` 5,786,728, `xref_stream` 367,360,
@@ -89,13 +89,13 @@ parity, excluded from the round-trip invariant).
 
 ## Known divergences
 
-See `crates/hanko-pdf/PORTING.md` ("Known divergences"). All fail closed.
+See `crates/pdf/PORTING.md` ("Known divergences"). All fail closed.
 
 ## Requests to the lead
 
 None open. (Item 1, `hazmat`, is done on `main`. Item 2: lane B used the
 lane-local venv `/tmp/hanko-b/venv` to export its crypt PKI and the PDF MAC
-signature fixtures; scripts are committed under `crates/hanko-pdf/oracle/`
+signature fixtures; scripts are committed under `crates/pdf/oracle/`
 and run against `/tmp/pyhanko-oracle/venv` as well.)
 
 ## Requests from other lanes (relayed by the lead, 2026-11-12)
@@ -103,7 +103,7 @@ and run against `/tmp/pyhanko-oracle/venv` as well.)
 When rebasing onto `main`, keep this section in your version of this file.
 
 - **B-1 (from lane C, C1; needed for an exact `PdfFileSource`).** Add to
-  `hanko_pdf::PdfFile`:
+  `sigis_pdf::PdfFile`:
   ```rust
   pub struct XrefSectionInfo {      // XRefSectionData + XRefSectionMetaInfo
       pub size: u32,                // /Size of the section
@@ -121,8 +121,8 @@ When rebasing onto `main`, keep this section in your version of this file.
       pub fn strict(&self) -> bool;
   }
   ```
-  `hanko_diff::XrefSectionInfo` has exactly these fields; define it in
-  `hanko-pdf`, and the lead will switch `hanko-diff` to a re-export. Please
+  `sigis_pdf_diff::XrefSectionInfo` has exactly these fields; define it in
+  `sigis-pdf`, and the lead will switch `sigis-pdf-diff` to a re-export. Please
   also pin the semantics of the existing methods in their docs:
   `object_in_revision(id, rev)` returns what
   `HistoricalResolver(rev).get_object(id)` returns (`None` when the reference
@@ -138,7 +138,7 @@ When rebasing onto `main`, keep this section in your version of this file.
   numbers exactly (`Decimal`). If `PdfFile` can keep the original numeric
   text (or an `f64`), the diff rules will use it; otherwise this stays a
   listed low-risk divergence in lane C. Tell the lead which way you go.
-- **B-4 (from lane D).** Signing needs from `hanko-pdf`: an incremental writer
+- **B-4 (from lane D).** Signing needs from `sigis-pdf`: an incremental writer
   with object get / put / add; a way to locate placeholder offsets in the
   output (or a hook to serialize one object with placeholders); xref-stream
   output when the previous revision used one; and encryption of new objects
@@ -146,12 +146,12 @@ When rebasing onto `main`, keep this section in your version of this file.
   missing for `test_sign_encrypted.py`).
 - **Lead answers to your requests:** item 1 (`hazmat`) done on `main`;
   item 2: the standard oracle venv is `/tmp/pyhanko-oracle/venv` now (see
-  `docs/hanko-lanes.md` §5.4). Use `hanko_testdata::data_dir()` /
+  `docs/hanko-lanes.md` §5.4). Use `sigis_testdata::data_dir()` /
   `manifest_dir()` (run-time paths), never `env!("CARGO_MANIFEST_DIR")`.
 
 ### Lane B answers (2026-11-12)
 
-- **B-1: done** (`hanko_pdf::XrefSectionInfo`, `PdfFile::{xref_section,
+- **B-1: done** (`sigis_pdf::XrefSectionInfo`, `PdfFile::{xref_section,
   last_change, introducing_revision, resolves_in, strict}`). Semantics are
   pinned in the docs: `object_in_revision` as `HistoricalResolver(rev).get_object`
   (`None` when the reference does not resolve), `trailer_in_revision` is the

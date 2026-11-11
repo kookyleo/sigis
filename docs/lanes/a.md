@@ -6,7 +6,7 @@ See `docs/hanko-lanes.md`.
 ## Status
 
 - Phase 0 (before the lane split): certvalidator foundation.
-- Phase 1 (this branch): `hanko-cms` ported (`generic_cms.py`, CMS part of
+- Phase 1 (this branch): `sigis-cms` ported (`generic_cms.py`, CMS part of
   `status.py`, `KeyUsageConstraints`, CMS algorithm policy, `sign/general.py`
   helpers). `validate_cms_signature`, `validate_timestamp_token` and
   `validate_detached_cms` are filled; `validate_cms_signature_with` and the
@@ -20,9 +20,9 @@ See `docs/hanko-lanes.md`.
   digest), the `ecdsa` signature OID.
 - Oracle: the standard venv `/tmp/pyhanko-oracle/venv` and the sources in
   `/tmp/pyhanko-oracle/src` (§5.4). Fixtures:
-  `crates/hanko-testdata/data/lanes/a/harvest/` (see its README).
+  `crates/testdata/data/lanes/a/harvest/` (see its README).
 
-- Phase 2: `hanko-fetch` ported (HTTP fetchers with caches, budget,
+- Phase 2: `sigis-pki-fetch` ported (HTTP fetchers with caches, budget,
   multi-URL fallback; RFC 3161 client). Tests use a local server on
   127.0.0.1 and pyHanko-produced TSA responses (`data/lanes/a/tsa/`).
 
@@ -35,18 +35,18 @@ See `docs/hanko-lanes.md`.
 - Phase 3b: `ltv` filled: `PoeManager`, `time_slide`, `past_validate`
   (lane E can use them now).
 
-- Phase 3c: attribute certificate validation (`hanko_certvalidator::ac`),
-  used by `hanko-cms` for certified signer attributes; pyHanko's list of
+- Phase 3c: attribute certificate validation (`sigis_pki_certvalidator::ac`),
+  used by `sigis-cms` for certified signer attributes; pyHanko's list of
   supported critical extensions enforced.
 
 - Phase 3d: certificate registry and trust anchor qualifiers
   (`test_registry.py`, `test_policy_proc.py`); `test_name_trees.py` and
   `test_policy_graph.py` skipped with equivalent coverage (see
-  `crates/hanko-certvalidator/PORTING.md`).
+  `crates/pki-certvalidator/PORTING.md`).
 
-- Round 1 integration (rebased on `main` b9176be): `hanko_core::key_usage`
-  is the single `KeyUsageConstraints` (A-4), `hanko-cms` uses
-  `hanko_core::ades`, `CmsError` maps to `HankoError::SignatureValidation`,
+- Round 1 integration (rebased on `main` b9176be): `sigis_pki_core::key_usage`
+  is the single `KeyUsageConstraints` (A-4), `sigis-cms` uses
+  `sigis_pki_core::ades`, `CmsError` maps to `HankoError::SignatureValidation`,
   fixtures resolve at run time. `ValidationContext` gained a trust manager
   hook (A-2), `crls()` / `ocsps()` (A-6) and `with_revinfo` (A-3).
 
@@ -54,7 +54,7 @@ See `docs/hanko-lanes.md`.
   (with parameter inheritance in paths) and Ed448 verification, the DSA key
   size threshold of `DisallowWeakAlgorithmsPolicy`, and CMS policies passed
   through the validation context (`AlgorithmUsagePolicy::digest_combination`).
-  certval verifies certificate signatures through `hanko-core` for the
+  certval verifies certificate signatures through `sigis-pki-core` for the
   algorithms it lacks. All 161 recorded `test_cms.py` calls and 245/246
   PKITS cases agree. This commit needs R8 in lane E code.
 
@@ -64,8 +64,8 @@ Remaining: `test_embed_ac_revinfo_adobe_style` waits on lane E
 Gate (2026-11-12): lane A crates green at every commit (fmt, build, test,
 clippy `--all-targets`, doc with `-D warnings`). Workspace: at 62757c1,
 `cargo nextest run --workspace --exclude hanko-ades` passes (439 tests) and
-only the `hanko-ades` unit tests fail to compile (R7); at 7fb18a5,
-`hanko-eutl` and its dependents also need R8. A fresh harvest of
+only the `sigis-pades` unit tests fail to compile (R7); at 7fb18a5,
+`sigis-eutl` and its dependents also need R8. A fresh harvest of
 `test_cms.py` with `/tmp/pyhanko-oracle/venv` (new ECDSA signatures)
 replays 77/77.
 
@@ -93,7 +93,7 @@ replays 77/77.
 | **Total** | **271** | **209** | **61** | **1** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
-`crates/hanko-cms/PORTING.md`.
+`crates/cms/PORTING.md`.
 
 ## Known divergences
 
@@ -101,7 +101,7 @@ All fail closed (the port rejects or reports less trust where pyHanko
 accepts); the tests assert this.
 
 - NIST PKITS: 1 case (4.2.3, UTCTime 1950 not decodable), see
-  `crates/hanko-certvalidator/PORTING.md`.
+  `crates/pki-certvalidator/PORTING.md`.
 - `test_cms.py` recorded calls: all 161 agree.
 - DSA: only the FIPS 186 key sizes (1024/160, 2048/224, 2048/256,
   3072/256) verify (RustCrypto `dsa`); pyca accepts other sizes.
@@ -116,19 +116,19 @@ and R5 done or approved.
 
 - **R6 — `ValidationError` variants for LTV (open).** pyhanko-certvalidator
   has `InsufficientPOEError` and `TimeSlideFailure`.
-  `hanko_certvalidator::ltv` reports them through its own `LtvError`; the §4
+  `sigis_pki_certvalidator::ltv` reports them through its own `LtvError`; the §4
   functions (`time_slide`, `past_validate`) map them to
   `ValidationError::PathValidation` with the message. If lane E needs to
   tell them apart through `HankoError`, please add
   `ValidationError::InsufficientPoe(String)` (a `PathValidationError`
   subclass in pyHanko).
-- **R7 — lane E unit tests construct `hanko_cms` status structs with
+- **R7 — lane E unit tests construct `sigis_cms` status structs with
   literals (needs a lane E change).** R5 added fields to `SignatureStatus`
   and `StandardCmsSignatureStatus`, so three struct literals in lane E's
   `#[cfg(test)]` code no longer compile:
-  `crates/hanko-ades/src/basic.rs:303` and
-  `crates/hanko-ades/src/with_time.rs:290` (`SignatureStatus { .. }`),
-  `crates/hanko-ades/src/with_time.rs:313`
+  `crates/pades/src/basic.rs:303` and
+  `crates/pades/src/with_time.rs:290` (`SignatureStatus { .. }`),
+  `crates/pades/src/with_time.rs:313`
   (`StandardCmsSignatureStatus { .. }`). Both types now derive `Default`
   (the fail-closed status); the fix is `..Default::default()` as the last
   line of each literal. Everything else in the workspace builds; clippy is
@@ -137,12 +137,12 @@ and R5 done or approved.
   `DigestAlgorithm` variants (`Md5`, `Sha3_224`, `Sha3_256`, `Sha3_384`,
   `Sha3_512`, `Shake256`) break three exhaustive `match`es in lane E code
   that did not exist when R1 was written:
-  `crates/hanko-eutl/src/xml/dsig.rs:304` and `:346` (digest to
+  `crates/eutl/src/xml/dsig.rs:304` and `:346` (digest to
   RSA / ECDSA signature OID) and
-  `crates/hanko-ades/src/etsi_report.rs:179` (digest to XML URI). Lane A
+  `crates/pades/src/etsi_report.rs:179` (digest to XML URI). Lane A
   keeps the R1 work in a separate commit at the end of this branch
   ("Verify MD5, SHA-3, SHAKE256, DSA and Ed448 signatures"); every lane A
-  crate is green with it, `hanko-eutl` and `hanko-ades` need the arms. Each
+  crate is green with it, `sigis-eutl` and `sigis-pades` need the arms. Each
   match needs an arm for the new variants: in `dsig.rs`, an "unsupported
   algorithm" error (XML-DSig there only uses SHA-1/SHA-2), and in
   `etsi_report.rs`, the XML Signature URIs
@@ -159,30 +159,30 @@ Status of the relayed items:
   `Option<&[QualifiedPolicy]>` (issuer- and user-domain policy OIDs, plus
   CPS URI and user notice text), set on paths returned by
   `validate_path_qualified` / `find_valid_path`. The pre-eIDAS check of
-  `hanko-eutl` can use it.
+  `sigis-eutl` can use it.
 - **A-2 (lane E): done.** `TrustAnchor::with_qualifiers(cert,
   TrustQualifiers { valid_from, valid_until, trusted_service_type,
   standard_parameters, max_path_length, .. })` and
   `TrustAnchor::from_name_and_key`; qualifiers are enforced during
   validation. Trust manager hook: trait
-  `hanko_certvalidator::TrustManager` (`as_trust_anchor(&Cert)`,
+  `sigis_pki_certvalidator::TrustManager` (`as_trust_anchor(&Cert)`,
   `find_potential_issuers(&Cert)`) and
   `ValidationContextBuilder::trust_manager(Arc<dyn TrustManager>)`. Path
   building consults the manager after the supplied anchors; CRL and OCSP
   issuer lookup sees the supplied anchors, other certificates and the path.
-- **A-3 (lane E): done.** `hanko_cms::validate_cms_signature_with(..,
+- **A-3 (lane E): done.** `sigis_cms::validate_cms_signature_with(..,
   &CmsValidationOptions)` takes `key_usage_settings`, the CMS algorithm
   policy and separate timestamp / AC contexts; pyHanko's PDF defaults
   (`non_repudiation` or `digital_signature`) are passed by the caller, as in
   pyHanko. `is_ee_cert` / `is_side_validation`: `ValidationError` is
-  lead-owned, so they are on `hanko_certvalidator::PathFailure` (returned by
+  lead-owned, so they are on `sigis_pki_certvalidator::PathFailure` (returned by
   `find_valid_path` / `validate_path_detailed`), and
-  `hanko_cms::validate::handle_path_failure` already ports
+  `sigis_cms::validate::handle_path_failure` already ports
   `handle_certvalidator_errors` (`CertUsageResult::error_subindic`). If lane
   E prefers the fields on `ValidationError::{Expired, Revoked}`, that is a
   lead change. DSS material: `ValidationContext::with_revinfo(certs, crls,
   ocsps)` returns an extended copy; POEs go into
-  `hanko_certvalidator::ltv::poe::PoeManager` (`register`,
+  `sigis_pki_certvalidator::ltv::poe::PoeManager` (`register`,
   `register_by_digest`, `merge`).
 - **A-4 (lead): done.** See commit "Use the shared key usage and AdES types
   from hanko-core". The lane E call sites compile unchanged. `Default` now
@@ -196,6 +196,6 @@ Status of the relayed items:
   Shake256}` (SHAKE256 with 64-byte output; `id-shake256-len` maps to it),
   `DigestAlgorithm::ALL` / `from_name`, `SignatureMechanism::{Dsa, Ed448}`;
   DSA and Ed448 verification. Signing (Ed448, DSA, ML-DSA) is lane D's; the crates are
-  then available in `hanko-core`.
+  then available in `sigis-pki-core`.
 - **A-6 (lane D): done.** `ValidationContext::crls()` and `ocsps()` return
   the supplied DER encodings.

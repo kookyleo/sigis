@@ -5,11 +5,11 @@ Owner: lane C (branch `hanko/c-diff`). See `docs/hanko-lanes.md`.
 ## Status
 
 Phase 1 done (2026-11-11): `sign/diff_analysis/` of pyHanko 0.38.1 is
-ported in `crates/hanko-diff` (rules, policy, form analysis, DSS, metadata,
-historical resolver parts). Details: `crates/hanko-diff/PORTING.md`.
+ported in `crates/pdf-diff` (rules, policy, form analysis, DSS, metadata,
+historical resolver parts). Details: `crates/pdf-diff/PORTING.md`.
 
 - `StandardDiffPolicy` (unit struct, `DEFAULT_DIFF_POLICY`) implements
-  `DiffPolicy::review_file` on `hanko_pdf::PdfFile`. It works as soon as
+  `DiffPolicy::review_file` on `sigis_pdf::PdfFile`. It works as soon as
   lane B fills `PdfFile::{revisions, objects_written_in, object_in_revision,
   trailer_in_revision}`; request C1 makes it exact.
 - `ConfigurableDiffPolicy` is the configurable `StandardDiffPolicy` class
@@ -34,7 +34,7 @@ For lane E (`pdf_embedded.evaluate_modifications`): check coverage first
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_diff_analysis.py` | 94 | 87 | 6 | 1 |
+| `test_diff_analysis.py` | 94 | 88 | 6 | 0 |
 
 Skipped (no difference analysis runs; reasons in PORTING.md):
 `test_anomalous_coverage`, `test_tamper_sig_obj` (coverage, lane E),
@@ -55,14 +55,14 @@ one deliberately broken hybrid file.
 
 ## Known divergences
 
-See `crates/hanko-diff/PORTING.md` § Known divergences. All are stricter
+See `crates/pdf-diff/PORTING.md` § Known divergences. All are stricter
 than pyHanko except the `f32` reals of lopdf (C4).
 
 ## Requests to the lead
 
 - **C1 (lane B interface, needed for exactness).** `PdfFileSource` currently
   derives the cross-reference details from `objects_written_in` /
-  `object_in_revision`. Please add to `hanko_pdf::PdfFile` (stubs, lane B
+  `object_in_revision`. Please add to `sigis_pdf::PdfFile` (stubs, lane B
   fills them):
   ```rust
   pub struct XrefSectionInfo {      // XRefSectionData + XRefSectionMetaInfo
@@ -81,8 +81,8 @@ than pyHanko except the `f32` reals of lopdf (C4).
       pub fn strict(&self) -> bool;
   }
   ```
-  `hanko_diff::XrefSectionInfo` has exactly these fields; it can move to
-  `hanko-pdf` and be re-exported. Please also pin the semantics of the
+  `sigis_pdf_diff::XrefSectionInfo` has exactly these fields; it can move to
+  `sigis-pdf` and be re-exported. Please also pin the semantics of the
   existing methods in their docs: `object_in_revision(id, rev)` returns what
   `HistoricalResolver(rev).get_object(id)` returns (`None` when the
   reference does not resolve: free or never defined), and
@@ -94,7 +94,7 @@ than pyHanko except the `f32` reals of lopdf (C4).
   (certval) enables it. Please add `features = ["hazmat"]` to hanko-core's
   `x509-cert` dependency. Lane C builds with
   `-p hanko-diff -p hanko-certvalidator` meanwhile.
-- **C3 (dependency).** `hanko-diff` depends on `quick-xml = "0.38.4"` (XMP
+- **C3 (dependency).** `sigis-pdf-diff` depends on `quick-xml = "0.38.4"` (XMP
   check). Please hoist it into `[workspace.dependencies]` together with
   lane E's XML dependency (same version, to avoid two copies).
 - **C4 (lane B, reals).** `lopdf::Object::Real` is `f32`; pyHanko compares
@@ -109,7 +109,15 @@ than pyHanko except the `f32` reals of lopdf (C4).
 
 Merged into `main` with the lead round recorded in `docs/hanko-lanes.md` §8.
 - C1 relayed to lane B (B-1); C4 relayed to lane B (B-3). When B lands
-  `XrefSectionInfo`, `hanko-diff` switches to a re-export.
+  `XrefSectionInfo`, `sigis-pdf-diff` switches to a re-export.
 - C2 done (`hazmat`). C3 done (`quick-xml` from the workspace).
-- `tests/sweep.rs` now uses `hanko_testdata::manifest_dir()`; the committed
+- `tests/sweep.rs` now uses `sigis_testdata::manifest_dir()`; the committed
   `oracle/__pycache__` file was removed (`.gitignore` covers it).
+
+## Lead round 2 (2026-11-12)
+
+- `test_duplicate_xref_table_entry_rejected` runs and passes against lane
+  B's reader (pending → ported).
+- `hanko_diff::XrefSectionInfo` is lane B's type now (re-export).
+- B-3: `f32` reals stay; listed below under Known divergences (low risk).
+- Crate renamed: `crates/pdf-diff` (`sigis-pdf-diff`), see `docs/crates.md`.

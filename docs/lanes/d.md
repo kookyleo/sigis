@@ -34,17 +34,17 @@ None yet.
 
 When rebasing onto `main`, keep this section in your version of this file.
 
-- **D-1 (from lane E).** Seed value validation in `hanko-validate` is pending
+- **D-1 (from lane E).** Seed value validation in `sigis-pades` is pending
   on `SigSeedValueSpec` (pyHanko `sign/fields.py`). Please expose the seed
   value model with parsing from a PDF dictionary
   (`SigSeedValueSpec::from_pdf_object`, including `/MDP`, `/LockDocument`,
   `/Cert` constraints, `/Reasons`, `/SubFilter`, `/DigestMethod`, `/TimeStamp`,
-  `/AppearanceFilter`, `/Ff`) as public API of `hanko-sign`. `hanko-validate`
-  may depend on `hanko-sign` (no cycle: `hanko-sign` must not depend on
-  `hanko-validate`; dev-dependencies may).
-- **D-2 (from the lead).** `crates/hanko-sign/tests/support/mod.rs` uses
-  `env!("CARGO_MANIFEST_DIR")`; switch to `hanko_testdata::manifest_dir()` /
-  `hanko_testdata::data_dir()` (run-time paths, see `docs/hanko-lanes.md`
+  `/AppearanceFilter`, `/Ff`) as public API of `sigis-pades-sign`. `sigis-pades`
+  may depend on `sigis-pades-sign` (no cycle: `sigis-pades-sign` must not depend on
+  `sigis-pades`; dev-dependencies may).
+- **D-2 (from the lead).** `crates/pades-sign/tests/support/mod.rs` uses
+  `env!("CARGO_MANIFEST_DIR")`; switch to `sigis_testdata::manifest_dir()` /
+  `sigis_testdata::data_dir()` (run-time paths, see `docs/hanko-lanes.md`
   §5.2).
 - **Lead answers to your requests:** 1 approved (recorded in
   `docs/hanko-lanes.md` §8). 2 done on `main` (run-time fixture paths).
