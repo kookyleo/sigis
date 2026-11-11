@@ -4,14 +4,32 @@ Owner: lane E (branch `hanko/e-validate`). See `docs/hanko-lanes.md`.
 
 ## Status
 
-- Phase 1 (in progress): `hanko-eutl` — trusted list parsing, XMLDSig/XAdES
-  verification with an own C14N implementation, TSP registry, qualification
-  assessment, LOTL bootstrapping and fetching, caches. `hanko-validate`:
-  `settings` (`KeyUsageConstraints`), `errors`, AdES indications (`report`).
-- Phase 2 (in progress): `hanko-validate` PDF validation coded against the
-  lane A/B/C stubs (coverage, DocMDP/FieldMDP, modification review, CMS and
-  document timestamp validation calls). Next: `hanko-ades` (`ades.py`,
-  reports) and Rust replays of the AdES oracle recordings.
+Phase gate (2026-11-11, branch `hanko/e-validate`, rebased on `main`
+c2f1b08): `cargo clippy --workspace --all-targets` clean,
+`cargo doc --no-deps --workspace` with `-D warnings` clean,
+`cargo nextest run --workspace` 134 passed, 15 skipped (ignored tests
+blocked on other lanes).
+
+- `hanko-eutl`: done. TS 119 612 parsing with service history, XMLDSig /
+  XAdES verification (own C14N 1.0/1.1 and Exclusive C14N on `roxmltree`),
+  TSP registry, qualification assessment and requirements, LOTL parsing and
+  signer bootstrapping, fetching with in-memory / file system caches.
+  `test_trusted_list.py` 53/53; differential test against pyHanko 18/18.
+- `hanko-validate`: `settings` (`KeyUsageConstraints`), `errors`, AdES
+  indications; PDF signature and document timestamp validation against the
+  lane A/B/C interfaces (SubFilter, coverage levels, DocMDP / FieldMDP /
+  `/Lock`, modification review, `docmdp_ok`). Pending: seed values (lane D
+  `SigSeedValueSpec`), signer attributes, validation side of `dss.py`.
+- `hanko-ades`: basic validation (§5.3) and validation with time (§5.5)
+  on top of `hanko_cms`, qualification analysis, TS 119 102-2 XML reports,
+  JSON / status-only reports. Pending: LTA (§5.6), past signature
+  validation, POE extraction (needs lane A `ltv`, lane B DSS).
+- Oracle: AdES recordings for all 76 upstream cases; 13 replayed test ports
+  written and ignored until `hanko_cms::validate_cms_signature` lands.
+
+Interface additions in lane E crates: `PdfSignatureStatus::docmdp_ok`,
+`PdfSignatureStatus::bottom_line`; `hanko_ades::AdesStatus` is now a
+re-export of the identical `hanko_validate::report::AdesStatus`.
 
 PKI: lead item L1 is open, so lane E exported the Certomancer test PKIs
 (`testing-ca`, `testing-ca-ecdsa`, `testing-ca-qualified`, `unrelated-tsa`;
