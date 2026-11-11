@@ -5,9 +5,10 @@
 //! Basic signature validation (EN 319 102-1, §5.3) on top of the CMS
 //! validation of `hanko-cms`.
 
-use hanko_certvalidator::ValidationPath;
-use hanko_cms::{SignatureStatus, StandardCmsSignatureStatus, TrustProblem};
-use hanko_core::errors::ValidationError;
+use hanko_certvalidator::{ValidationContext, ValidationPath};
+use hanko_cms::{SignatureStatus, SignedContent, StandardCmsSignatureStatus, TrustProblem};
+use hanko_core::algorithms::DigestAlgorithm;
+use hanko_core::errors::{HankoError, ValidationError};
 use hanko_core::time::Moment;
 use hanko_eutl::assess::{enforce_requirements, QualificationAssessor, QualificationRequirements};
 use hanko_eutl::q_status::QualificationResult;
@@ -140,6 +141,54 @@ pub fn basic_result(
     }
     result.api_status = Some(status);
     result
+}
+
+/// Digest algorithm of the first `SignerInfo` of a DER `ContentInfo`.
+fn signer_digest_algorithm(content_info: &[u8]) -> Option<DigestAlgorithm> {
+    use der::Decode;
+    let ci = cms::content_info::ContentInfo::from_der(content_info).ok()?;
+    let sd: cms::signed_data::SignedData = ci.content.decode_as().ok()?;
+    let si = sd.signer_infos.0.iter().next()?;
+    DigestAlgorithm::from_oid(&si.digest_alg.oid)
+}
+
+/// Basic validation of a CMS signature (`ades_basic_validation`).
+///
+/// `content_info` is the DER `ContentInfo`; `raw_digest` is the digest of
+/// detached content (PDF byte ranges), computed with the signer's digest
+/// algorithm. Errors other than [`HankoError::NotImplemented`] from the CMS
+/// layer become failed / indeterminate results, as pyHanko's
+/// `SignatureValidationError`s do.
+pub fn basic_validation(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &ValidationContext,
+    qualification: &QualificationSpec<'_>,
+) -> Result<BasicValidationResult, HankoError> {
+    let content = match raw_digest {
+        Some(d) => {
+            let alg = signer_digest_algorithm(content_info)
+                .ok_or_else(|| HankoError::Malformed("cannot read the signer's digest algorithm".into()))?;
+            SignedContent::Digest(alg, d)
+        }
+        None => SignedContent::Encapsulated,
+    };
+    match hanko_cms::validate_cms_signature(content_info, content, ctx) {
+        Ok(status) => Ok(basic_result(status, qualification, Some(ctx.timing().validation_time))),
+        Err(e @ HankoError::NotImplemented(_)) => Err(e),
+        Err(e) => {
+            let sub: AdesSubIndic = match e {
+                HankoError::Malformed(_) => AdesFailure::FORMAT_FAILURE.into(),
+                _ => AdesIndeterminate::GENERIC.into(),
+            };
+            Ok(BasicValidationResult {
+                ades_subindic: sub,
+                api_status: None,
+                failure_msg: Some(e.to_string()),
+                qualification: None,
+            })
+        }
+    }
 }
 
 /// `_qualification_analysis`.

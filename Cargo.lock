@@ -1121,6 +1121,9 @@ name = "hanko-ades"
 version = "0.0.1"
 dependencies = [
  "base64 0.22.1",
+ "cms 0.3.0-rc.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
  "hanko-certvalidator",
  "hanko-cms",
  "hanko-core",
@@ -1130,6 +1133,7 @@ dependencies = [
  "hanko-validate",
  "quick-xml",
  "serde_json",
+ "x509-cert 0.3.0",
 ]
 
 [[package]]
