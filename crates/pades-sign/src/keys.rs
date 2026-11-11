@@ -37,6 +37,12 @@ pub enum PrivateKey {
     P521(Box<p521::ecdsa::SigningKey>),
     /// Ed25519.
     Ed25519(Box<ed25519_dalek::SigningKey>),
+    /// ML-DSA-44 (FIPS 204).
+    MlDsa44(Box<ml_dsa::SigningKey<ml_dsa::MlDsa44>>),
+    /// ML-DSA-65.
+    MlDsa65(Box<ml_dsa::SigningKey<ml_dsa::MlDsa65>>),
+    /// ML-DSA-87.
+    MlDsa87(Box<ml_dsa::SigningKey<ml_dsa::MlDsa87>>),
 }
 
 impl std::fmt::Debug for PrivateKey {
@@ -47,6 +53,9 @@ impl std::fmt::Debug for PrivateKey {
             Self::P384(_) => "PrivateKey::P384(..)",
             Self::P521(_) => "PrivateKey::P521(..)",
             Self::Ed25519(_) => "PrivateKey::Ed25519(..)",
+            Self::MlDsa44(_) => "PrivateKey::MlDsa44(..)",
+            Self::MlDsa65(_) => "PrivateKey::MlDsa65(..)",
+            Self::MlDsa87(_) => "PrivateKey::MlDsa87(..)",
         })
     }
 }
@@ -90,7 +99,19 @@ impl PrivateKey {
             oids::ED448 => Err(unsupported("Ed448 private keys are not supported")),
             oids::DSA => Err(unsupported("DSA private keys are not supported")),
             oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87 => {
-                Err(unsupported("ML-DSA private keys are not supported"))
+                use pkcs8::DecodePrivateKey;
+                let bad = |e: pkcs8::Error| malformed(format!("ML-DSA private key: {e}"));
+                Ok(match oid {
+                    oids::ML_DSA_44 => Self::MlDsa44(Box::new(
+                        ml_dsa::SigningKey::<ml_dsa::MlDsa44>::from_pkcs8_der(der).map_err(bad)?,
+                    )),
+                    oids::ML_DSA_65 => Self::MlDsa65(Box::new(
+                        ml_dsa::SigningKey::<ml_dsa::MlDsa65>::from_pkcs8_der(der).map_err(bad)?,
+                    )),
+                    _ => Self::MlDsa87(Box::new(
+                        ml_dsa::SigningKey::<ml_dsa::MlDsa87>::from_pkcs8_der(der).map_err(bad)?,
+                    )),
+                })
             }
             other => Err(unsupported(format!("private key algorithm {other}"))),
         }
@@ -160,6 +181,9 @@ impl PrivateKey {
                 )?,
             }
             .to_der()?,
+            Self::MlDsa44(k) => mldsa_spki(k.as_ref())?,
+            Self::MlDsa65(k) => mldsa_spki(k.as_ref())?,
+            Self::MlDsa87(k) => mldsa_spki(k.as_ref())?,
         };
         Ok(SubjectPublicKeyInfoOwned::from_der(&der)?)
     }
@@ -171,8 +195,23 @@ impl PrivateKey {
             Self::Rsa(_) => "rsa",
             Self::P256(_) | Self::P384(_) | Self::P521(_) => "ec",
             Self::Ed25519(_) => "ed25519",
+            Self::MlDsa44(_) => "mldsa44",
+            Self::MlDsa65(_) => "mldsa65",
+            Self::MlDsa87(_) => "mldsa87",
         }
     }
+}
+
+fn mldsa_spki<P: ml_dsa::MlDsaParams>(k: &ml_dsa::SigningKey<P>) -> Result<Vec<u8>>
+where
+    ml_dsa::VerifyingKey<P>: pkcs8::EncodePublicKey,
+{
+    use pkcs8::EncodePublicKey;
+    use signature::Keypair;
+    Ok(k.verifying_key()
+        .to_public_key_der()
+        .map_err(|e| malformed(format!("ML-DSA public key: {e}")))?
+        .into_vec())
 }
 
 fn ec_spki(curve: ObjectIdentifier, point: &[u8]) -> Result<Vec<u8>> {

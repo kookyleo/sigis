@@ -101,6 +101,9 @@ fn placeholder_signature(cert: &Cert) -> Vec<u8> {
         }
         oids::ED25519 => 64,
         oids::ED448 => 114,
+        oids::ML_DSA_44 => 2420,
+        oids::ML_DSA_65 => 3309,
+        oids::ML_DSA_87 => 4627,
         _ => 512,
     };
     vec![0u8; len]

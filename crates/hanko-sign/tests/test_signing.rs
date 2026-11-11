@@ -988,3 +988,20 @@ fn test_do_not_enforce_key_usage_if_signer_is_root() {
         assert_eq!(v[0]["trusted"], true, "{}", v[0]);
     }
 }
+
+#[test]
+fn test_mldsa44() {
+    let p = pki("testing-ca-mldsa");
+    for label in ["signer1", "signer1_65", "signer1_87"] {
+        let signer = SimpleSigner::new(
+            p.key(&p.key_label_of(label)),
+            p.cert(label),
+            vec![p.cert("root"), p.cert("interm")],
+        )
+        .unwrap();
+        let out = sign(&minimal(), meta("Sig1"), signer, T_2020_11_01);
+        if let Some(s) = val_untrusted(&out, 0, T_2020_11_01, false) {
+            assert_eq!(s["md_algorithm"], "sha256", "{label}: {s}");
+        }
+    }
+}

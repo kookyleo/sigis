@@ -31,7 +31,7 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | 78 | 57 | 9 | 12 |
+| `test_signing.py` | 78 | 58 | 9 | 11 |
 | `test_pades.py` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | 27 | 25 | 0 | 2 |
 | `test_seed_values.py` | 36 | 34 | 1 | 1 |
@@ -73,9 +73,12 @@ L1); see the README there.
   `test_qr_sign_enforce_url_param`, `test_no_email`,
   `test_sign_appearance_noop`, `test_sign_visible_with_separate_annot`;
   appearances sub-slice in progress); `test_embed_signed_attachment`
-  (embedded files, lane B); `test_mldsa44`, `test_ed448`, `test_ed448_trust`,
+  (embedded files, lane B); `test_ed448`, `test_ed448_trust`,
   `test_ed448_invalid_hash_algo`, `test_ecdsa_with_sha3`, `test_rsa_with_sha3`
-  (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448 / ML-DSA, lane A).
+  (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448, lane A).
+- ML-DSA (`test_mldsa44`) signs with the `ml-dsa` crate; the Rust-side
+  signature check is skipped for it (lane A's verifier lacks ML-DSA), the
+  oracle verifies.
 - `test_sign_prescribed_attrs` uses the local TSA instead of pyHanko's HTTP
   timestamp client against the mocked TSA (HTTP client: lane A).
 

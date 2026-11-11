@@ -170,6 +170,7 @@ pub fn default_signature_mechanism(
             None,
         ),
         oids::ED25519 => (oids::ED25519, None),
+        oid @ (oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87) => (oid, None),
         other => {
             return Err(signing_error(format!(
                 "Signature mechanism {other} is unsupported."
@@ -270,6 +271,16 @@ pub fn sign_with_key(
     data: &[u8],
     digest: DigestAlgorithm,
 ) -> Result<Vec<u8>> {
+    if matches!(mech.oid, oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87) {
+        use signature::Signer;
+        let bad = || signing_error("The signature mechanism ml-dsa is unsupported by this signer.");
+        return match (mech.oid, key) {
+            (oids::ML_DSA_44, PrivateKey::MlDsa44(k)) => Ok(k.sign(data).encode().to_vec()),
+            (oids::ML_DSA_65, PrivateKey::MlDsa65(k)) => Ok(k.sign(data).encode().to_vec()),
+            (oids::ML_DSA_87, PrivateKey::MlDsa87(k)) => Ok(k.sign(data).encode().to_vec()),
+            _ => Err(bad()),
+        };
+    }
     let resolved = if mech.oid == oids::ED25519 {
         SignatureMechanism::Ed25519
     } else {
