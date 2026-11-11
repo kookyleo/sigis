@@ -46,6 +46,13 @@ ml-dsa = "0.1"
 # Key providers: PKCS#11 tokens and CSC remote signing services.
 cryptoki = "0.12.1"
 reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+# appearances: stamps, text layout, fonts, images, QR codes, barcodes
+ttf-parser = "0.25.1"
+rustybuzz = "0.20.1"
+subsetter = { version = "0.2.6", default-features = false }
+qrcode = { version = "0.14.1", default-features = false }
+png = "0.18.1"
+zune-jpeg = "0.4.21"
 serde_json = { workspace = true }
 
 [dev-dependencies]

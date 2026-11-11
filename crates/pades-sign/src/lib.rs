@@ -26,6 +26,16 @@ pub mod signer;
 pub mod stamp;
 pub mod timestamps;
 
+// appearances: layout, text, fonts, images, QR codes, barcodes, forms
+pub mod barcodes;
+pub mod content;
+pub mod font;
+pub mod form_tools;
+pub mod images;
+pub mod layout;
+pub mod qr;
+pub mod text;
+
 use std::sync::Arc;
 
 use hanko_certvalidator::ValidationContext;

@@ -15,3 +15,18 @@ Derived files:
 - src/timestamps.rs: pyhanko/sign/timestamps/dummy_client.py, common_utils.py, api.py
 - oracle/*.py: test-support scripts that call pyHanko 0.38.1
 - tests/*.rs: ported from pkgs/pyhanko/tests/ (each file names its upstream module)
+- src/layout.rs: pyhanko/pdf_utils/layout.py
+- src/text.rs: pyhanko/pdf_utils/text.py
+- src/content/mod.rs: pyhanko/pdf_utils/content.py, writer.py (content helpers), rw_common.py
+- src/content/ops.rs: pyhanko/pdf_utils/generic.py (text string serialization), misc.py
+- src/content/import.rs: pyhanko/pdf_utils/writer.py (import_object, import_page_as_xobject)
+- src/font/mod.rs: pyhanko/pdf_utils/font/__init__.py, font/api.py
+- src/font/basic.rs: pyhanko/pdf_utils/font/basic.py
+- src/font/opentype.rs: pyhanko/pdf_utils/font/opentype.py
+- src/images.rs: pyhanko/pdf_utils/images.py
+- src/qr.rs: pyhanko/pdf_utils/qr.py (plus python-qrcode's symbol construction, BSD)
+- src/barcodes.rs: pyhanko/pdf_utils/barcodes.py (plus python-barcode's Code 128 encoder, MIT)
+- src/form_tools.rs: pyhanko/pdf_utils/form_tools.py
+- src/stamp/mod.rs: pyhanko/stamp/__init__.py, appearances.py, base.py, noop.py, static.py, text.py, qr.py, functions.py; sign/signers/cms_embedder.py (SigAppearanceSetup)
+- src/stamp/art.rs: pyhanko/stamp/art.py
+- src/stamp/config.rs: pyhanko/config/api.py and the stamp/text/layout process_entries hooks

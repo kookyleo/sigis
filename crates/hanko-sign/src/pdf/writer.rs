@@ -68,6 +68,9 @@ pub struct PdfUpdate {
     strict: bool,
     crypt: Option<lopdf::EncryptionState>,
     encrypt_ref: Option<ObjectId>,
+    /// Objects to write into an object stream when the update uses an xref
+    /// stream (`add_object(..., obj_stream=...)`).
+    objstm_members: std::collections::BTreeSet<ObjectId>,
 }
 
 /// Find the offset after the last `startxref` keyword.
@@ -165,6 +168,7 @@ impl PdfUpdate {
             strict: true,
             crypt,
             encrypt_ref,
+            objstm_members: std::collections::BTreeSet::new(),
         })
     }
 
@@ -321,6 +325,22 @@ impl PdfUpdate {
         self.next_id += 1;
         self.objects.insert(id, obj);
         id
+    }
+
+    /// Add a new object to be written into an object stream if the update
+    /// uses an xref stream (`add_object(obj, obj_stream=...)`); streams are
+    /// never put into object streams.
+    pub fn add_in_object_stream(&mut self, obj: Object) -> ObjectId {
+        let id = self.add(obj);
+        self.objstm_members.insert(id);
+        id
+    }
+
+    /// Replace object `id` and write it into an object stream if possible
+    /// (see [`Self::add_in_object_stream`]).
+    pub fn update_in_object_stream(&mut self, id: ObjectId, obj: Object) {
+        self.update(id, obj);
+        self.objstm_members.insert(id);
     }
 
     /// The document catalog.
@@ -500,6 +520,55 @@ impl PdfUpdate {
         }
         let mut positions: BTreeMap<ObjectId, usize> = BTreeMap::new();
         let mut offsets = BTreeMap::new();
+        // objects packed into an object stream: id -> index in the stream
+        let mut in_objstm: BTreeMap<ObjectId, u16> = BTreeMap::new();
+        let mut next_id = self.next_id;
+        let objstm_id = if self.stream_xrefs && crypt.is_none() && !self.fresh {
+            let members: Vec<ObjectId> = self
+                .objstm_members
+                .iter()
+                .copied()
+                .filter(|id| {
+                    id.1 == 0
+                        && !self.placeholders.contains_key(id)
+                        && matches!(self.objects.get(id), Some(o) if !matches!(o, Object::Stream(_)))
+                })
+                .collect();
+            if members.is_empty() {
+                None
+            } else {
+                let objstm_id = (next_id, 0);
+                next_id += 1;
+                let mut header = Vec::new();
+                let mut body = Vec::new();
+                for (ix, id) in members.iter().enumerate() {
+                    let _ = write!(header, "{} {} ", id.0, body.len());
+                    if let Some(obj) = self.objects.get(id) {
+                        lopdf::Writer::write_object(&mut body, obj)
+                            .map_err(|e| HankoError::Signing(format!("serialize object: {e}")))?;
+                    }
+                    body.push(b'\n');
+                    in_objstm.insert(*id, u16::try_from(ix).unwrap_or(u16::MAX));
+                }
+                let mut d = Dictionary::new();
+                d.set("Type", Object::Name(b"ObjStm".to_vec()));
+                d.set("N", Object::Integer(i64::try_from(members.len()).unwrap_or(0)));
+                d.set("First", Object::Integer(i64::try_from(header.len()).unwrap_or(0)));
+                header.extend_from_slice(&body);
+                let mut stream = Stream::new(d, header);
+                stream
+                    .compress()
+                    .map_err(|e| HankoError::Signing(format!("compress object stream: {e}")))?;
+                positions.insert(objstm_id, out.len());
+                let _ = writeln!(out, "{} {} obj", objstm_id.0, objstm_id.1);
+                lopdf::Writer::write_object(&mut out, &Object::Stream(stream))
+                    .map_err(|e| HankoError::Signing(format!("serialize object stream: {e}")))?;
+                out.extend_from_slice(b"\nendobj\n");
+                Some(objstm_id)
+            }
+        } else {
+            None
+        };
         // The placeholders normally sit in the registered signature
         // dictionary, but may live in another object (e.g. an indirect
         // `/Contents`); patch them wherever they are written.
@@ -507,6 +576,9 @@ impl PdfUpdate {
         let mut contents_at: Option<usize> = None;
         let mut byte_range_at: Option<usize> = None;
         for (&id, obj) in &all {
+            if in_objstm.contains_key(&id) {
+                continue;
+            }
             let encrypted_copy;
             let obj: &Object = match crypt {
                 Some(state) if Some(id) != self.encrypt_ref => {
@@ -577,8 +649,14 @@ impl PdfUpdate {
         let xref_location;
         if self.stream_xrefs {
             xref_location = out.len();
-            let xref_id = self.next_id;
+            let xref_id = next_id;
             positions.insert((xref_id, 0), xref_location);
+            let objstm_index: u32 = objstm_id.map(|o| o.0).unwrap_or(0);
+            // entries in object streams are listed with their stream's id
+            // and their index (type 2); positions holds a placeholder
+            for id in in_objstm.keys() {
+                positions.insert(*id, 0);
+            }
             trailer.set("Size", Object::Integer(i64::from(xref_id) + 1));
             trailer.set("Type", Object::Name(b"XRef".to_vec()));
             trailer.set(
@@ -591,10 +669,19 @@ impl PdfUpdate {
             for (first, chunk) in contiguous_chunks(&positions) {
                 index.push(Object::Integer(i64::from(first)));
                 index.push(Object::Integer(i64::try_from(chunk.len()).unwrap_or(0)));
-                for (pos, gen) in chunk {
-                    data.push(1);
-                    data.extend_from_slice(&(pos as u64).to_be_bytes());
-                    data.extend_from_slice(&gen.to_be_bytes());
+                for (pos, gen, id) in chunk_ids(first, &chunk) {
+                    match in_objstm.get(&(id, gen)) {
+                        Some(ix) => {
+                            data.push(2);
+                            data.extend_from_slice(&u64::from(objstm_index).to_be_bytes());
+                            data.extend_from_slice(&ix.to_be_bytes());
+                        }
+                        None => {
+                            data.push(1);
+                            data.extend_from_slice(&(pos as u64).to_be_bytes());
+                            data.extend_from_slice(&gen.to_be_bytes());
+                        }
+                    }
                 }
             }
             trailer.set("Index", Object::Array(index));
@@ -662,6 +749,15 @@ fn has_hybrid_trailer(bytes: &[u8]) -> bool {
         from = start;
     }
     false
+}
+
+/// The entries of a chunk with their object numbers.
+fn chunk_ids(first: u32, chunk: &[(usize, u16)]) -> Vec<(usize, u16, u32)> {
+    chunk
+        .iter()
+        .zip(first..)
+        .map(|(&(pos, gen), id)| (pos, gen, id))
+        .collect()
 }
 
 fn contiguous_chunks(positions: &BTreeMap<ObjectId, usize>) -> Vec<(u32, Vec<(usize, u16)>)> {
