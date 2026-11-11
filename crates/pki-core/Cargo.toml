@@ -1,0 +1,36 @@
+[package]
+name = "sigis-pki-core"
+description = "Shared types, algorithms, ASN.1 and traits of the sigis-hanko pyHanko port"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+der = { workspace = true }
+spki = { workspace = true }
+const-oid = { workspace = true }
+x509-cert = { workspace = true, features = ["hazmat"] }
+cms = { workspace = true }
+x509-ocsp = { workspace = true }
+x509-tsp = { workspace = true }
+rsa = { workspace = true }
+ecdsa = { workspace = true }
+p256 = { workspace = true }
+p384 = { workspace = true }
+p521 = { workspace = true }
+ed25519-dalek = { workspace = true }
+signature = { workspace = true }
+sha2 = { workspace = true }
+sha1 = { workspace = true }
+md-5 = { version = "0.11", default-features = false, features = ["oid"] }
+sha3 = { version = "0.11", default-features = false, features = ["oid"] }
+dsa = { version = "0.7", default-features = false, features = ["pkcs8"] }
+ed448-goldilocks = { version = "0.14.0-pre.15", default-features = false, features = ["signing"] }
+base64ct = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+

@@ -1,6 +1,6 @@
 [package]
 name = "sigis-hanko"
-description = "Signature validation and signing for Sigis: Rust port of pyHanko (facade crate)"
+description = "Facade of the pyHanko port: PDF and CMS signing and validation (layer L4)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,16 +10,17 @@ publish.workspace = true
 readme = "README.md"
 
 [dependencies]
-hanko-core = { workspace = true }
-hanko-certvalidator = { workspace = true }
-hanko-cms = { workspace = true }
-hanko-fetch = { workspace = true }
-hanko-pdf = { workspace = true }
-hanko-diff = { workspace = true }
-hanko-sign = { workspace = true }
-hanko-validate = { workspace = true }
-hanko-ades = { workspace = true }
-hanko-eutl = { workspace = true }
+sigis-pki-core = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+sigis-pki-fetch = { workspace = true }
+sigis-cms = { workspace = true }
+sigis-pdf = { workspace = true }
+sigis-pdf-diff = { workspace = true }
+sigis-ades-model = { workspace = true }
+sigis-eutl = { workspace = true }
+sigis-pades = { workspace = true }
+sigis-pades-sign = { workspace = true }
+sigis-cades = { workspace = true }
 
 [dev-dependencies]
 

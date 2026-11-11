@@ -1,0 +1,24 @@
+[package]
+name = "sigis-sign"
+description = "Unified sign / verify / report API of the Sigis service over the PDF and XML stacks (layer L5)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+sigis-ades-model = { workspace = true }
+sigis-hanko = { workspace = true, optional = true }
+sigis-xsig = { workspace = true, optional = true }
+
+[features]
+default = ["pdf"]
+# PDF and CMS through the pyHanko port.
+pdf = ["dep:sigis-hanko"]
+# XML signatures, ASiC, OOXML, ODF.
+xml = ["dep:sigis-xsig"]
+
+[dev-dependencies]

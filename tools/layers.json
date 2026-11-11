@@ -1,0 +1,40 @@
+{
+  "comment": "Layer of every workspace package (docs/crates.md). Normal and build dependencies must point to a strictly lower layer, or to a same-layer package listed in same_layer_allowed. dev_only packages may only be dev-dependencies. Checked by tests/layering.rs.",
+  "layers": {
+    "sigis-pki-core": 0,
+    "sigis-pki-certvalidator": 0,
+    "sigis-pki-fetch": 0,
+    "sigis-cms": 1,
+    "sigis-pdf": 1,
+    "sigis-pdf-diff": 1,
+    "sigis-xmldsig": 1,
+    "sigis-ades-model": 2,
+    "sigis-eutl": 2,
+    "sigis-pades": 2,
+    "sigis-pades-sign": 2,
+    "sigis-cades": 2,
+    "sigis-xades": 2,
+    "sigis-asic": 2,
+    "sigis-ooxml": 3,
+    "sigis-odf": 3,
+    "sigis-hanko": 4,
+    "sigis-xsig": 4,
+    "sigis-sign": 5,
+    "sigis": 6
+  },
+  "same_layer_allowed": [
+    ["sigis-pki-certvalidator", "sigis-pki-core"],
+    ["sigis-pki-fetch", "sigis-pki-core"],
+    ["sigis-pdf-diff", "sigis-pdf"],
+    ["sigis-eutl", "sigis-ades-model"],
+    ["sigis-pades", "sigis-ades-model"],
+    ["sigis-pades", "sigis-eutl"],
+    ["sigis-pades-sign", "sigis-ades-model"],
+    ["sigis-cades", "sigis-ades-model"],
+    ["sigis-xades", "sigis-ades-model"],
+    ["sigis-asic", "sigis-ades-model"],
+    ["sigis-asic", "sigis-cades"],
+    ["sigis-asic", "sigis-xades"]
+  ],
+  "dev_only": ["sigis-testdata"]
+}

@@ -1,0 +1,19 @@
+sigis-pki-core
+Copyright 2026 The Sigis authors
+
+Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
+(MIT, see LICENSE-pyHanko) are listed below; each also names its source in
+its header.
+
+Derived from pyhanko-certvalidator (tag pyhanko-certvalidator/v0.33.0,
+src/pyhanko_certvalidator/):
+  src/errors.rs        errors.py
+  src/algorithms.rs    sig_validate.py, util.py, policy_decl.py
+  src/cert.rs          authority.py (partly)
+  src/fetch.rs         fetchers/api.py (interfaces)
+
+Derived from pyHanko (tag v0.38.1, src/pyhanko/):
+  src/key_usage.rs     sign/validation/settings.py (KeyUsageConstraints)
+  src/ades.rs          sign/ades/report.py (AdES indications)
+
+Original Sigis code: src/lib.rs, src/time.rs, src/sign.rs, src/asn1/

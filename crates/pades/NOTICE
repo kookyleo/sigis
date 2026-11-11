@@ -1,0 +1,29 @@
+sigis-pades
+Copyright 2026 The Sigis authors
+
+Original code: Apache-2.0. Files derived from pyHanko (MIT, see
+LICENSE-pyHanko) are listed below with their upstream source; each also
+names its source in its header. This crate merges the former crates
+hanko-validate and hanko-ades (2026-11-12).
+
+Derived files:
+- src/lib.rs, src/integrity.rs: pyHanko `sign/validation/pdf_embedded.py`,
+  `sign/validation/__init__.py`, `sign/validation/status.py`.
+- src/coverage.rs: pyHanko `sign/validation/pdf_embedded.py`
+  (`evaluate_signature_coverage`), `pdf_utils/reader.py`
+  (`read_next_end_line`, `process_data_at_eof`).
+- src/ades/mod.rs, src/ades/basic.rs: pyHanko `sign/validation/ades.py`,
+  `sign/validation/generic_cms.py` (`handle_certvalidator_errors`).
+- src/ades/etsi_report.rs: pyHanko `sign/validation/report/tools.py`,
+  `sign/validation/ades.py` (validation object helpers).
+- src/ades/with_time.rs: pyHanko `sign/validation/ades.py`
+  (`_process_basic_validation`, `_scoped_ades_with_time_validation`).
+- tests/ades_validation.rs, tests/common/mod.rs: pyHanko
+  `pkgs/pyhanko/tests/test_ades_validation.py`.
+
+Original (no pyHanko code copied): oracle/record_plugin.py,
+oracle/run_oracle.sh (drive pyHanko's own test suite).
+
+Moved elsewhere: settings.rs -> crates/pki-core/src/key_usage.rs,
+report.rs -> crates/pki-core/src/ades.rs, errors.rs ->
+crates/ades-model/src/errors.rs (each NOTICE lists them).

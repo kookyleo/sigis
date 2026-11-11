@@ -1,0 +1,8 @@
+sigis-ades-model
+Copyright 2026 The Sigis authors
+
+Original code: Apache-2.0. Files derived from pyHanko (MIT, see
+LICENSE-pyHanko) are listed below; each also names its source in its header.
+
+Derived files:
+- src/errors.rs: pyHanko `sign/validation/errors.py` (moved from sigis-pades).

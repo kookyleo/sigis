@@ -1,0 +1,26 @@
+[package]
+name = "sigis-cms"
+description = "CMS SignedData and RFC 3161 timestamp validation (port of pyHanko generic_cms)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+der = { workspace = true }
+spki = { workspace = true }
+const-oid = { workspace = true }
+x509-cert = { workspace = true }
+cms = { workspace = true }
+x509-tsp = { workspace = true }
+certval = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+sigis-testdata = { workspace = true }
+base64 = { workspace = true }
+serde_json = { workspace = true }

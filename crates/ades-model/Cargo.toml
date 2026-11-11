@@ -1,0 +1,15 @@
+[package]
+name = "sigis-ades-model"
+description = "Shared AdES verdict and report model (ETSI EN 319 102-1 indications, validation errors)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]

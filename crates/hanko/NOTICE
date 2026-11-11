@@ -1,20 +1,20 @@
 sigis-hanko (facade)
 Copyright 2026 The Sigis authors
 
-sigis-hanko re-exports the hanko-* workspace crates. Original Sigis code is
-Apache-2.0. Parts of the hanko-* crates are derived from pyHanko and
-pyhanko-certvalidator (MIT, see LICENSE-pyHanko); each crate lists its
-derived files in its own NOTICE:
+sigis-hanko re-exports the PDF and CMS crates of the workspace
+(docs/crates.md). Original Sigis code is Apache-2.0. Parts of these crates
+are derived from pyHanko and pyhanko-certvalidator (MIT, see
+LICENSE-pyHanko); each crate lists its derived files in its own NOTICE:
 
-  crates/hanko-core/NOTICE
-  crates/hanko-certvalidator/NOTICE
-  crates/hanko-cms/NOTICE
-  crates/hanko-fetch/NOTICE
-  crates/hanko-pdf/NOTICE
-  crates/hanko-diff/NOTICE
-  crates/hanko-sign/NOTICE
-  crates/hanko-validate/NOTICE
-  crates/hanko-ades/NOTICE
-  crates/hanko-eutl/NOTICE
+  crates/pki-core/NOTICE
+  crates/pki-certvalidator/NOTICE
+  crates/pki-fetch/NOTICE
+  crates/cms/NOTICE
+  crates/pdf/NOTICE
+  crates/pdf-diff/NOTICE
+  crates/ades-model/NOTICE
+  crates/eutl/NOTICE
+  crates/pades/NOTICE
+  crates/pades-sign/NOTICE
 
-Test fixtures and their licenses: crates/hanko-testdata/data/*/README.md
+Test fixtures and their licenses: crates/testdata/data/*/README.md

@@ -7,25 +7,25 @@ certval, lopdf). Not wired into the Sigis service yet.
 
 ## Structure
 
-`sigis-hanko` is a facade over the `hanko-*` workspace crates:
+`sigis-hanko` is the layer-L4 facade of the PDF and CMS stack
+(`docs/crates.md`); the XML stack has its own facade, `sigis-xsig`, and the
+service uses `sigis-sign`.
 
 | Module | Crate | Content |
 | --- | --- | --- |
-| `algorithms`, `asn1`, `cert`, `errors`, `fetch`, `keys`, `time` | `hanko-core` | Shared types and traits |
-| `certvalidator` | `hanko-certvalidator` | Path validation, revocation, LTV building blocks |
-| `cms` | `hanko-cms` | CMS and RFC 3161 timestamp validation |
-| `fetchers` | `hanko-fetch` | HTTP fetchers and TSA client |
-| `pdf` | `hanko-pdf` | PDF reading, revisions, incremental writing |
-| `diff` | `hanko-diff` | DocMDP / FieldMDP analysis |
-| `sign` | `hanko-sign` | Signing (PAdES B-B to B-LTA) |
-| `validate` | `hanko-validate` | PDF signature validation |
-| `ades` | `hanko-ades` | AdES validation and reports |
-| `eutl` | `hanko-eutl` | EU trusted lists, qualified status |
+| `algorithms`, `asn1`, `cert`, `errors`, `fetch`, `keys`, `time` | `sigis-pki-core` | Shared types and traits |
+| `certvalidator` | `sigis-pki-certvalidator` | Path validation, revocation, LTV building blocks |
+| `fetchers` | `sigis-pki-fetch` | HTTP fetchers and TSA client |
+| `cms` | `sigis-cms` | CMS and RFC 3161 timestamp validation |
+| `pdf` | `sigis-pdf` | PDF reading, revisions, incremental writing, encryption |
+| `diff` | `sigis-pdf-diff` | DocMDP / FieldMDP analysis |
+| `validate`, `ades` | `sigis-pades` | PDF signature validation, AdES validation and reports |
+| `sign` | `sigis-pades-sign` | PDF and CMS signing (PAdES B-B to B-LTA) |
+| `ades_model` | `sigis-ades-model` | Shared AdES verdict model |
+| `eutl` | `sigis-eutl` | EU trusted lists, qualified status |
+| `cades` | `sigis-cades` | CAdES outside PDF (skeleton) |
 
-Only certificate path validation and offline revocation checking work today;
-the other crates are interface skeletons that return
-`HankoError::NotImplemented`. See [PORTING.md](PORTING.md) and
-`docs/hanko-lanes.md`.
+Status per crate: [PORTING.md](PORTING.md).
 
 ## License
 

@@ -1,0 +1,19 @@
+[package]
+name = "sigis-pdf-diff"
+description = "DocMDP/FieldMDP modification analysis (port of pyHanko diff_analysis)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+sigis-pdf = { workspace = true }
+lopdf = { workspace = true }
+quick-xml = { workspace = true }
+
+[dev-dependencies]
+sigis-testdata = { workspace = true }
+serde_json = { workspace = true }

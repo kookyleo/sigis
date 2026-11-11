@@ -1,0 +1,19 @@
+sigis-eutl
+Copyright 2026 The Sigis authors
+
+Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
+(MIT, see LICENSE-pyHanko) are listed below with their upstream source; each
+also names its source in its header.
+
+Derived files:
+- src/lib.rs, src/tsp.rs, src/q_status.rs, src/assess.rs, src/parse.rs,
+  src/fetch.rs: pyHanko `pkgs/pyhanko/src/pyhanko/sign/validation/qualified/`
+  (`__init__.py`, `tsp.py`, `q_status.py`, `assess.py`, `eutl_parse.py`,
+  `eutl_fetch.py`) and `sign/validation/policy_decl.py`.
+- src/qc_statements.rs: pyHanko `sign/ades/qualified_asn1.py`.
+- lotl-certs/*.pem: pyHanko `sign/validation/qualified/lotl-certs/`
+  (LOTL signer certificates published by the European Commission).
+- tests/trusted_list.rs, tests/common/mod.rs: pyHanko
+  `pkgs/pyhanko/tests/test_trusted_list.py`.
+- oracle/export_pki.py, oracle/tl_verdicts.py, tests/differential.rs:
+  original (call pyHanko's test utilities and parser).

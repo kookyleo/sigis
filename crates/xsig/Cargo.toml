@@ -1,0 +1,21 @@
+[package]
+name = "sigis-xsig"
+description = "Facade of the XML signature stack: XMLDSig, XAdES, ASiC, OOXML, ODF (layer L4)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-ades-model = { workspace = true }
+sigis-xmldsig = { workspace = true }
+sigis-xades = { workspace = true }
+sigis-asic = { workspace = true }
+sigis-ooxml = { workspace = true }
+sigis-odf = { workspace = true }
+sigis-eutl = { workspace = true }
+
+[dev-dependencies]
+

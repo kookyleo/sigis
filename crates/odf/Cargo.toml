@@ -1,0 +1,19 @@
+[package]
+name = "sigis-odf"
+description = "OpenDocument (ODF 1.2+) document signatures (layer L3)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+sigis-ades-model = { workspace = true }
+sigis-xmldsig = { workspace = true }
+sigis-xades = { workspace = true }
+
+[dev-dependencies]
+

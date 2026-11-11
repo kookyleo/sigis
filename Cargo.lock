@@ -1238,221 +1238,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hanko-ades"
-version = "0.0.1"
-dependencies = [
- "base64 0.22.1",
- "cms 0.3.0-rc.1",
- "const-oid 0.10.3",
- "der 0.8.3",
- "hanko-certvalidator",
- "hanko-cms",
- "hanko-core",
- "hanko-eutl",
- "hanko-pdf",
- "hanko-testdata",
- "hanko-validate",
- "quick-xml",
- "serde_json",
- "x509-cert 0.3.0",
-]
-
-[[package]]
-name = "hanko-certvalidator"
-version = "0.0.1"
-dependencies = [
- "base64 0.22.1",
- "certval",
- "const-oid 0.10.3",
- "der 0.8.3",
- "hanko-core",
- "hanko-testdata",
- "regex",
- "serde_json",
- "spki 0.8.1",
- "thiserror",
- "unicode-normalization",
- "x509-cert 0.3.0",
- "x509-ocsp",
-]
-
-[[package]]
-name = "hanko-cms"
-version = "0.0.1"
-dependencies = [
- "base64 0.22.1",
- "certval",
- "cms 0.3.0-rc.1",
- "const-oid 0.10.3",
- "der 0.8.3",
- "hanko-certvalidator",
- "hanko-core",
- "hanko-testdata",
- "serde_json",
- "spki 0.8.1",
- "thiserror",
- "x509-cert 0.3.0",
- "x509-tsp",
-]
-
-[[package]]
-name = "hanko-core"
-version = "0.0.1"
-dependencies = [
- "base64ct",
- "cms 0.3.0-rc.1",
- "const-oid 0.10.3",
- "der 0.8.3",
- "dsa",
- "ecdsa 0.17.0",
- "ed25519-dalek 3.0.0",
- "ed448-goldilocks",
- "md-5 0.11.0",
- "p256 0.14.0",
- "p384 0.14.0",
- "p521 0.14.0",
- "rsa 0.10.0-rc.21",
- "sha1 0.11.0",
- "sha2 0.11.1",
- "sha3 0.11.0",
- "signature 3.0.0",
- "spki 0.8.1",
- "thiserror",
- "x509-cert 0.3.0",
- "x509-ocsp",
- "x509-tsp",
-]
-
-[[package]]
-name = "hanko-diff"
-version = "0.0.1"
-dependencies = [
- "hanko-core",
- "hanko-pdf",
- "hanko-testdata",
- "lopdf 0.47.0",
- "quick-xml",
- "serde_json",
-]
-
-[[package]]
-name = "hanko-eutl"
-version = "0.0.1"
-dependencies = [
- "base64 0.22.1",
- "const-oid 0.10.3",
- "der 0.8.3",
- "hanko-certvalidator",
- "hanko-core",
- "hanko-testdata",
- "hanko-validate",
- "roxmltree",
- "rsa 0.10.0-rc.21",
- "serde_json",
- "spki 0.8.1",
- "thiserror",
- "x509-cert 0.3.0",
-]
-
-[[package]]
-name = "hanko-fetch"
-version = "0.0.1"
-dependencies = [
- "base64 0.22.1",
- "const-oid 0.10.3",
- "der 0.8.3",
- "getrandom 0.3.4",
- "hanko-certvalidator",
- "hanko-cms",
- "hanko-core",
- "hanko-testdata",
- "reqwest",
- "serde_json",
- "spki 0.8.1",
- "thiserror",
- "x509-cert 0.3.0",
- "x509-ocsp",
- "x509-tsp",
-]
-
-[[package]]
-name = "hanko-pdf"
-version = "0.0.1"
-dependencies = [
- "aes 0.9.4",
- "aes-gcm",
- "aes-kw",
- "cms 0.3.0-rc.1",
- "crypto-bigint 0.7.11",
- "curve25519-dalek 5.0.0",
- "der 0.8.3",
- "des 0.9.0",
- "flate2",
- "getrandom 0.3.4",
- "getrandom 0.4.3",
- "hanko-core",
- "hanko-testdata",
- "hkdf 0.13.0",
- "hmac 0.13.0",
- "indexmap",
- "log",
- "lopdf 0.47.0",
- "md-5 0.11.0",
- "p12",
- "p256 0.14.0",
- "p384 0.14.0",
- "p521 0.14.0",
- "pkcs5",
- "pkcs8 0.11.0",
- "quick-xml",
- "rand_core 0.10.1",
- "rc2",
- "rsa 0.10.0-rc.21",
- "sha1 0.11.0",
- "sha2 0.11.1",
- "sha3 0.10.9",
- "spki 0.8.1",
- "stringprep",
- "thiserror",
- "x509-cert 0.3.0",
-]
-
-[[package]]
-name = "hanko-sign"
-version = "0.0.1"
-dependencies = [
- "hanko-certvalidator",
- "hanko-core",
- "hanko-pdf",
- "hanko-testdata",
- "spki 0.8.1",
-]
-
-[[package]]
-name = "hanko-testdata"
-version = "0.0.1"
-dependencies = [
- "serde_json",
-]
-
-[[package]]
-name = "hanko-validate"
-version = "0.0.1"
-dependencies = [
- "cms 0.3.0-rc.1",
- "der 0.8.3",
- "hanko-certvalidator",
- "hanko-cms",
- "hanko-core",
- "hanko-diff",
- "hanko-pdf",
- "hanko-testdata",
- "thiserror",
- "x509-cert 0.3.0",
- "x509-tsp",
-]
-
-[[package]]
 name = "hash2curve"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3155,19 +2940,311 @@ dependencies = [
 ]
 
 [[package]]
+name = "sigis-ades-model"
+version = "0.0.1"
+dependencies = [
+ "sigis-pki-core",
+ "thiserror",
+]
+
+[[package]]
+name = "sigis-asic"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-cades",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-xades",
+]
+
+[[package]]
+name = "sigis-cades"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+]
+
+[[package]]
+name = "sigis-cms"
+version = "0.0.1"
+dependencies = [
+ "base64 0.22.1",
+ "certval",
+ "cms 0.3.0-rc.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "serde_json",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+ "thiserror",
+ "x509-cert 0.3.0",
+ "x509-tsp",
+]
+
+[[package]]
+name = "sigis-eutl"
+version = "0.0.1"
+dependencies = [
+ "base64 0.22.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "roxmltree",
+ "rsa 0.10.0-rc.21",
+ "serde_json",
+ "sigis-ades-model",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+ "thiserror",
+ "x509-cert 0.3.0",
+]
+
+[[package]]
 name = "sigis-hanko"
 version = "0.0.1"
 dependencies = [
- "hanko-ades",
- "hanko-certvalidator",
- "hanko-cms",
- "hanko-core",
- "hanko-diff",
- "hanko-eutl",
- "hanko-fetch",
- "hanko-pdf",
- "hanko-sign",
- "hanko-validate",
+ "sigis-ades-model",
+ "sigis-cades",
+ "sigis-cms",
+ "sigis-eutl",
+ "sigis-pades",
+ "sigis-pades-sign",
+ "sigis-pdf",
+ "sigis-pdf-diff",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-pki-fetch",
+]
+
+[[package]]
+name = "sigis-odf"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-xades",
+ "sigis-xmldsig",
+]
+
+[[package]]
+name = "sigis-ooxml"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-xades",
+ "sigis-xmldsig",
+]
+
+[[package]]
+name = "sigis-pades"
+version = "0.0.1"
+dependencies = [
+ "base64 0.22.1",
+ "cms 0.3.0-rc.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "quick-xml",
+ "serde_json",
+ "sigis-ades-model",
+ "sigis-cms",
+ "sigis-eutl",
+ "sigis-pdf",
+ "sigis-pdf-diff",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "thiserror",
+ "x509-cert 0.3.0",
+ "x509-tsp",
+]
+
+[[package]]
+name = "sigis-pades-sign"
+version = "0.0.1"
+dependencies = [
+ "sigis-pdf",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+]
+
+[[package]]
+name = "sigis-pdf"
+version = "0.0.1"
+dependencies = [
+ "aes 0.9.4",
+ "aes-gcm",
+ "aes-kw",
+ "cms 0.3.0-rc.1",
+ "crypto-bigint 0.7.11",
+ "curve25519-dalek 5.0.0",
+ "der 0.8.3",
+ "des 0.9.0",
+ "flate2",
+ "getrandom 0.3.4",
+ "getrandom 0.4.3",
+ "hkdf 0.13.0",
+ "hmac 0.13.0",
+ "indexmap",
+ "log",
+ "lopdf 0.47.0",
+ "md-5 0.11.0",
+ "p12",
+ "p256 0.14.0",
+ "p384 0.14.0",
+ "p521 0.14.0",
+ "pkcs5",
+ "pkcs8 0.11.0",
+ "quick-xml",
+ "rand_core 0.10.1",
+ "rc2",
+ "rsa 0.10.0-rc.21",
+ "sha1 0.11.0",
+ "sha2 0.11.1",
+ "sha3 0.10.9",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+ "stringprep",
+ "thiserror",
+ "x509-cert 0.3.0",
+]
+
+[[package]]
+name = "sigis-pdf-diff"
+version = "0.0.1"
+dependencies = [
+ "lopdf 0.47.0",
+ "quick-xml",
+ "serde_json",
+ "sigis-pdf",
+ "sigis-pki-core",
+ "sigis-testdata",
+]
+
+[[package]]
+name = "sigis-pki-certvalidator"
+version = "0.0.1"
+dependencies = [
+ "base64 0.22.1",
+ "certval",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "regex",
+ "serde_json",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+ "thiserror",
+ "unicode-normalization",
+ "x509-cert 0.3.0",
+ "x509-ocsp",
+]
+
+[[package]]
+name = "sigis-pki-core"
+version = "0.0.1"
+dependencies = [
+ "base64ct",
+ "cms 0.3.0-rc.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "dsa",
+ "ecdsa 0.17.0",
+ "ed25519-dalek 3.0.0",
+ "ed448-goldilocks",
+ "md-5 0.11.0",
+ "p256 0.14.0",
+ "p384 0.14.0",
+ "p521 0.14.0",
+ "rsa 0.10.0-rc.21",
+ "sha1 0.11.0",
+ "sha2 0.11.1",
+ "sha3 0.11.0",
+ "signature 3.0.0",
+ "spki 0.8.1",
+ "thiserror",
+ "x509-cert 0.3.0",
+ "x509-ocsp",
+ "x509-tsp",
+]
+
+[[package]]
+name = "sigis-pki-fetch"
+version = "0.0.1"
+dependencies = [
+ "base64 0.22.1",
+ "const-oid 0.10.3",
+ "der 0.8.3",
+ "getrandom 0.3.4",
+ "reqwest",
+ "serde_json",
+ "sigis-cms",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-testdata",
+ "spki 0.8.1",
+ "thiserror",
+ "x509-cert 0.3.0",
+ "x509-ocsp",
+ "x509-tsp",
+]
+
+[[package]]
+name = "sigis-sign"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-hanko",
+ "sigis-pki-core",
+ "sigis-xsig",
+]
+
+[[package]]
+name = "sigis-testdata"
+version = "0.0.1"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "sigis-xades"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-pki-certvalidator",
+ "sigis-pki-core",
+ "sigis-xmldsig",
+]
+
+[[package]]
+name = "sigis-xmldsig"
+version = "0.0.1"
+dependencies = [
+ "sigis-pki-core",
+]
+
+[[package]]
+name = "sigis-xsig"
+version = "0.0.1"
+dependencies = [
+ "sigis-ades-model",
+ "sigis-asic",
+ "sigis-eutl",
+ "sigis-odf",
+ "sigis-ooxml",
+ "sigis-xades",
+ "sigis-xmldsig",
 ]
 
 [[package]]

@@ -1,0 +1,19 @@
+[package]
+name = "sigis-asic"
+description = "ASiC: associated signature containers (ASiC-S, ASiC-E) with CAdES or XAdES (layer L2)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+sigis-ades-model = { workspace = true }
+sigis-cades = { workspace = true }
+sigis-xades = { workspace = true }
+
+[dev-dependencies]
+

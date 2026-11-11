@@ -1,0 +1,15 @@
+[package]
+name = "sigis-xmldsig"
+description = "XML Signature (XMLDSig) verification and signing with a security policy (layer L1)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+sigis-pki-core = { workspace = true }
+
+[dev-dependencies]
+
