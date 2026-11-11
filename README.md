@@ -26,6 +26,10 @@ The default address is `127.0.0.1:38882`. Set `SIGIS_LISTEN` to change it. Set `
 
 Maximum PDF size is 20 MiB and maximum PKCS#12 size is 2 MiB. The uploaded private key is used only to sign the requested document; the service does not store uploads.
 
+## Design
+
+- [Storage design](docs/storage.md)
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
