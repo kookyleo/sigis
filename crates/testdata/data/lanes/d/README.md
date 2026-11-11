@@ -41,3 +41,9 @@ python -I crates/hanko-sign/oracle/export_revinfo.py \
 Layout: `<arch>/<YYYY-MM-DD>/ocsp-<cert label>.der` (no nonce) and
 `crl-<repo label>.der`. The Rust tests serve them through fake OCSP / CRL
 fetchers (`tests/support/services.rs`). RSA signatures are deterministic.
+
+## `encrypted/`
+
+Encrypted inputs that pyHanko's `test_sign_encrypted.py` builds with its own
+writer, produced by `crates/hanko-sign/oracle/gen_encrypted.py` (see the
+script for passwords). File IDs and salts are random per run.

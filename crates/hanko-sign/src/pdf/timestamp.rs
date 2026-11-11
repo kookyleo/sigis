@@ -145,6 +145,8 @@ pub struct TimestampOptions<'a> {
     /// Extra DSS content to put into the timestamp's revision
     /// (`TOGETHER_WITH_NEXT_TS`).
     pub dss_with_ts: Option<(Option<Vec<u8>>, ValidationInfo)>,
+    /// Password of an encrypted document (`file_credential`).
+    pub password: Option<Vec<u8>>,
 }
 
 impl<'a> TimestampOptions<'a> {
@@ -159,6 +161,7 @@ impl<'a> TimestampOptions<'a> {
             tight_size_estimates: false,
             embed_roots: true,
             dss_with_ts: None,
+            password: None,
         }
     }
 }
@@ -243,7 +246,7 @@ fn timestamp_pdf_full(
     opts: &TimestampOptions<'_>,
 ) -> Result<Vec<u8>> {
     {
-        let mut update = PdfUpdate::new(pdf)?;
+        let mut update = PdfUpdate::open_with(pdf, opts.password.as_deref())?;
         ensure_esic_ext(&mut update)?;
         let md = opts.md_algorithm;
         let mut vinfo = opts.validation_info.clone().unwrap_or_default();
@@ -325,7 +328,7 @@ fn timestamp_pdf_full(
         let out = prepared.fill_with_cms(&token)?;
         if opts.validation_context.is_some() && !opts.dss_settings.update_before_ts {
             let vri = opts.dss_settings.include_vri.then_some(sig_contents.as_slice());
-            return add_dss(
+            return crate::pdf::dss::add_dss_with_password(
                 &out,
                 &DssContent {
                     sig_contents: vri,
@@ -336,6 +339,7 @@ fn timestamp_pdf_full(
                     ..Default::default()
                 },
                 !opts.dss_settings.skip_if_unneeded,
+                opts.password.as_deref(),
             );
         }
         Ok(out)

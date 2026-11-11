@@ -200,7 +200,17 @@ pub fn supply_dss_in_writer(update: &mut PdfUpdate, content: &DssContent<'_>) ->
 /// (`DocumentSecurityStore.add_dss`). Returns the input unchanged if the
 /// DSS did not change and `force_write` is false.
 pub fn add_dss(pdf: &[u8], content: &DssContent<'_>, force_write: bool) -> Result<Vec<u8>> {
-    let mut update = PdfUpdate::new(pdf)?;
+    add_dss_with_password(pdf, content, force_write, None)
+}
+
+/// [`add_dss`] for an encrypted document (`file_credential`).
+pub fn add_dss_with_password(
+    pdf: &[u8],
+    content: &DssContent<'_>,
+    force_write: bool,
+    password: Option<&[u8]>,
+) -> Result<Vec<u8>> {
+    let mut update = PdfUpdate::open_with(pdf, password)?;
     let modified = supply_dss_in_writer(&mut update, content)?;
     if modified || force_write {
         // pyHanko refreshes the document metadata on every write

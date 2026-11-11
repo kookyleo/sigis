@@ -37,7 +37,7 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 | `test_seed_values.py` | 36 | 34 | 1 | 1 |
 | `test_pkcs11.py` | 36 | 0 | 0 | 36 |
 | `test_csc.py` | 17 | 0 | 0 | 17 |
-| `test_sign_encrypted.py` | 11 | 0 | 0 | 11 |
+| `test_sign_encrypted.py` | 11 | 8 | 0 | 3 |
 | `test_stamp.py` | 25 | 0 | 0 | 25 |
 | `test_text.py` | 15 | 0 | 0 | 15 |
 | `test_images.py` | 2 | 0 | 0 | 2 |
@@ -87,6 +87,18 @@ L1); see the README there.
 - `test_seed_values.py` skipped (1): `test_sign_with_sv_missing_cert`
   (`ExternalSigner(signing_cert=None)`, see above); pending (1):
   `test_sv_timestamp_url` (HTTP TSA client from the seed value URL, lane A).
+
+### `test_sign_encrypted.py` details
+
+- Standard security handler (RC4, AES-256; user and owner passwords):
+  `PdfUpdate::with_password` decrypts with `lopdf` and encrypts every object
+  the update writes with the file key (`lopdf::encryption::encrypt_object`);
+  `/Contents` stays unencrypted, as pyHanko does.
+- Pending (3): `test_sign_crypt_pubkey_aes256`, `test_sign_crypt_pubkey_rc4`,
+  `test_copy_file_with_mdp_signature_and_backref` (public-key security
+  handler, lane B `crypt/pubkey.py`).
+- `test_copy_encrypted_signed_file` rewrites the decrypted document with
+  `lopdf` in place of `copy_into_new_writer`.
 
 ### `test_pades.py` details
 
@@ -149,4 +161,5 @@ L1); see the README there.
    object get/put/add, a way to locate placeholder offsets in the output
    (or a hook to serialize one object with placeholders), xref-stream
    output when the previous revision used one, and encryption of new
-   objects for signing encrypted documents (`test_sign_encrypted.py`).
+   objects (standard handler done on `lopdf` in lane D; the public-key
+   handler is missing for `test_sign_encrypted.py`).

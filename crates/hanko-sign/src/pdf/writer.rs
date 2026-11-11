@@ -66,6 +66,8 @@ pub struct PdfUpdate {
     placeholders: BTreeMap<ObjectId, usize>,
     fresh: bool,
     strict: bool,
+    crypt: Option<lopdf::EncryptionState>,
+    encrypt_ref: Option<ObjectId>,
 }
 
 /// Find the offset after the last `startxref` keyword.
@@ -86,8 +88,29 @@ fn last_startxref(bytes: &[u8]) -> Option<usize> {
 impl PdfUpdate {
     /// Start an update of `bytes`.
     pub fn new(bytes: &[u8]) -> Result<Self> {
-        let doc = lopdf::Document::load_mem(bytes)
-            .map_err(|e| malformed(format!("could not parse PDF: {e}")))?;
+        Self::open(bytes, None)
+    }
+
+    /// Start an update of an encrypted document, authenticating with the
+    /// user or owner `password` (`IncrementalPdfFileWriter.encrypt`).
+    /// Objects written by the update are encrypted with the file's key.
+    pub fn with_password(bytes: &[u8], password: &[u8]) -> Result<Self> {
+        Self::open(bytes, Some(password))
+    }
+
+    fn open(bytes: &[u8], password: Option<&[u8]>) -> Result<Self> {
+        let raw_encrypted = has_encrypt_entry(bytes);
+        let doc = match password {
+            Some(p) => {
+                let p = std::str::from_utf8(p)
+                    .map_err(|_| malformed("password is not valid UTF-8"))?;
+                lopdf::Document::load_mem_with_options(bytes, lopdf::LoadOptions::with_password(p))
+            }
+            None => lopdf::Document::load_mem(bytes),
+        }
+        .map_err(|e| malformed(format!("could not parse PDF: {e}")))?;
+        let crypt = doc.encryption_state.clone();
+        let encrypt_ref = crypt.as_ref().and_then(|c| c.encrypt_object_id());
         let prev_startxref =
             last_startxref(bytes).ok_or_else(|| malformed("no startxref found"))?;
         // An xref stream starts with "N G obj"; a table with "xref".
@@ -101,7 +124,7 @@ impl PdfUpdate {
         let stream_xrefs = at_xref.first().is_some_and(u8::is_ascii_digit);
         let trailer = &doc.trailer;
         let hybrid = trailer.get(b"XRefStm").is_ok() || has_hybrid_trailer(bytes);
-        let encrypted = trailer.get(b"Encrypt").is_ok();
+        let encrypted = raw_encrypted || trailer.get(b"Encrypt").is_ok() || crypt.is_some();
         let root_id = trailer
             .get(b"Root")
             .and_then(Object::as_reference)
@@ -140,7 +163,14 @@ impl PdfUpdate {
             placeholders: BTreeMap::new(),
             fresh: false,
             strict: true,
+            crypt,
+            encrypt_ref,
         })
+    }
+
+    /// [`PdfUpdate::new`] or [`PdfUpdate::with_password`].
+    pub fn open_with(bytes: &[u8], password: Option<&[u8]>) -> Result<Self> {
+        Self::open(bytes, password)
     }
 
     /// Start a new document with the contents of `bytes` instead of an
@@ -431,9 +461,12 @@ impl PdfUpdate {
     /// Serialize the original file followed by the update. Returns the
     /// output and the placeholder offsets of registered signature objects.
     pub fn write(&self) -> Result<(Vec<u8>, BTreeMap<ObjectId, PlaceholderOffsets>)> {
-        if self.encrypted {
-            return Err(HankoError::Unsupported(
-                "incremental updates of encrypted documents are not supported yet".into(),
+        let crypt = if self.fresh { None } else { self.crypt.as_ref() };
+        if self.encrypted && !self.fresh && (crypt.is_none() || self.encrypt_ref.is_none()) {
+            return Err(HankoError::Signing(
+                "Cannot update this document without encryption credentials from the original. \
+                 Authenticate with the password of the original file."
+                    .into(),
             ));
         }
         let mut all: BTreeMap<ObjectId, &Object> = BTreeMap::new();
@@ -474,7 +507,17 @@ impl PdfUpdate {
         let mut contents_at: Option<usize> = None;
         let mut byte_range_at: Option<usize> = None;
         for (&id, obj) in &all {
-            let obj: &Object = obj;
+            let encrypted_copy;
+            let obj: &Object = match crypt {
+                Some(state) if Some(id) != self.encrypt_ref => {
+                    let mut o = (*obj).clone();
+                    lopdf::encryption::encrypt_object(state, id, &mut o)
+                        .map_err(|e| HankoError::Signing(format!("encrypt object: {e}")))?;
+                    encrypted_copy = o;
+                    &encrypted_copy
+                }
+                _ => obj,
+            };
             positions.insert(id, out.len());
             let _ = writeln!(out, "{} {} obj", id.0, id.1);
             let start = out.len();
@@ -511,8 +554,12 @@ impl PdfUpdate {
         if let Some(info) = self.info_id {
             trailer.set("Info", Object::Reference(info));
         }
-        if let Ok(enc) = self.doc.trailer.get(b"Encrypt") {
-            trailer.set("Encrypt", enc.clone());
+        if !self.fresh {
+            if let Some(r) = self.encrypt_ref {
+                trailer.set("Encrypt", Object::Reference(r));
+            } else if let Ok(enc) = self.doc.trailer.get(b"Encrypt") {
+                trailer.set("Encrypt", enc.clone());
+            }
         }
         trailer.set(
             "ID",
@@ -592,6 +639,12 @@ impl PdfUpdate {
         let _ = write!(out, "\nstartxref\n{xref_location}\n%%EOF\n");
         Ok((out, offsets))
     }
+}
+
+/// `true` if the file declares encryption in a trailer or xref stream.
+fn has_encrypt_entry(bytes: &[u8]) -> bool {
+    let tail = &bytes[bytes.len().saturating_sub(64 * 1024)..];
+    find(tail, b"/Encrypt").is_some()
 }
 
 /// `true` if any classic trailer of the file points to an xref stream

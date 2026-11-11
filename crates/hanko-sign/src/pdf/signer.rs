@@ -151,6 +151,8 @@ pub struct SignOptions {
     /// Write a new single-revision document instead of an incremental
     /// update (signing the output of `copy_into_new_writer`).
     pub fresh_document: bool,
+    /// Password of an encrypted document (user or owner).
+    pub password: Option<Vec<u8>>,
 }
 
 impl Default for SignOptions {
@@ -160,6 +162,7 @@ impl Default for SignOptions {
             bytes_reserved: None,
             strict: true,
             fresh_document: false,
+            password: None,
         }
     }
 }
@@ -584,6 +587,8 @@ pub struct PostSignInstructions {
     pub tight_size_estimates: bool,
     /// Embed trust anchors in the DSS.
     pub embed_roots: bool,
+    /// Password of an encrypted document (`file_credential`).
+    pub file_password: Option<Vec<u8>>,
 }
 
 /// A document in its final pre-signing state (`PdfTBSDocument`).
@@ -631,7 +636,7 @@ pub fn post_signature_processing(
     psi: &PostSignInstructions,
     validation_context: Option<&hanko_certvalidator::ValidationContext>,
 ) -> Result<Vec<u8>> {
-    use crate::pdf::dss::{add_dss, DssContent};
+    use crate::pdf::dss::{add_dss_with_password, DssContent};
     let info = &psi.validation_info;
     let dss_settings = psi.dss_settings;
     let vri = dss_settings.include_vri.then_some(sig_contents);
@@ -642,7 +647,7 @@ pub fn post_signature_processing(
     };
     let mut out = signed;
     if separate {
-        out = add_dss(
+        out = add_dss_with_password(
             &out,
             &DssContent {
                 sig_contents: vri,
@@ -653,6 +658,7 @@ pub fn post_signature_processing(
                 ..Default::default()
             },
             !dss_settings.skip_if_unneeded,
+            psi.file_password.as_deref(),
         )?;
     }
     if let Some(ts) = &psi.timestamper {
@@ -662,6 +668,7 @@ pub fn post_signature_processing(
         opts.dss_settings = dss_settings.settings_for_ts();
         opts.tight_size_estimates = psi.tight_size_estimates;
         opts.embed_roots = psi.embed_roots;
+        opts.password = psi.file_password.clone();
         if dss_settings.placement == SigDssPlacement::TogetherWithNextTs {
             opts.dss_with_ts = Some((vri.map(<[u8]>::to_vec), info.clone()));
         }
@@ -758,7 +765,7 @@ impl PdfSigner {
         let mut update = if opts.fresh_document {
             PdfUpdate::fresh(pdf)?
         } else {
-            PdfUpdate::new(pdf)?
+            PdfUpdate::open_with(pdf, opts.password.as_deref())?
         };
         update.set_strict(opts.strict);
         let (prepared, session) = self.prepare(&mut update, opts)?;
@@ -775,6 +782,7 @@ impl PdfSigner {
                 dss_settings: meta.dss_settings,
                 tight_size_estimates: meta.tight_size_estimates,
                 embed_roots: self.cms_options.embed_roots,
+                file_password: opts.password.clone(),
             })
         } else {
             None
