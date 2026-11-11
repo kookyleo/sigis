@@ -41,8 +41,10 @@ md-5 = "0.11"
 hmac = "0.13"
 getrandom = "0.3"
 flate2 = "1"
-# ML-DSA (FIPS 204) signing
+# ML-DSA (FIPS 204), Ed448 and SHA-3 signing
 ml-dsa = "0.1"
+ed448-goldilocks = { version = "0.14.0-pre.15", default-features = false, features = ["signing", "pkcs8"] }
+sha3 = { version = "0.11", default-features = false, features = ["oid"] }
 # Key providers: PKCS#11 tokens and CSC remote signing services.
 cryptoki = "0.12.1"
 reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "json", "rustls-tls"] }

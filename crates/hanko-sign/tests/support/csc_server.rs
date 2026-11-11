@@ -377,6 +377,7 @@ fn sign_prehashed(key: &PrivateKey, mech: &SignatureMechanism, digest: &[u8]) ->
                 Sha256 => rsa::Pkcs1v15Sign::new::<sha2::Sha256>(),
                 Sha384 => rsa::Pkcs1v15Sign::new::<sha2::Sha384>(),
                 Sha512 => rsa::Pkcs1v15Sign::new::<sha2::Sha512>(),
+                _ => return None,
             };
             k.sign(scheme, digest).ok()
         }
@@ -391,6 +392,7 @@ fn sign_prehashed(key: &PrivateKey, mech: &SignatureMechanism, digest: &[u8]) ->
                 Sha256 => k.sign(rsa::Pss::<sha2::Sha256>::new_with_salt(s), digest),
                 Sha384 => k.sign(rsa::Pss::<sha2::Sha384>::new_with_salt(s), digest),
                 Sha512 => k.sign(rsa::Pss::<sha2::Sha512>::new_with_salt(s), digest),
+                _ => return None,
             }
             .ok()
         }

@@ -104,6 +104,53 @@ pub fn as_number(o: &Object) -> Option<f64> {
     }
 }
 
+/// Resolution of indirect objects, so that dictionary readers (seed
+/// values, field locks) work on any PDF representation: the signing
+/// writer ([`crate::pdf::writer::PdfUpdate`]) or a parsed
+/// [`lopdf::Document`] (for validators).
+pub trait ObjectResolver {
+    /// Follow references (bounded).
+    fn resolve_obj<'a>(&'a self, obj: &'a Object) -> hanko_core::errors::Result<&'a Object>;
+
+    /// Resolve `dict[key]`, if present.
+    fn get_resolved<'a>(
+        &'a self,
+        dict: &'a lopdf::Dictionary,
+        key: &[u8],
+    ) -> hanko_core::errors::Result<Option<&'a Object>> {
+        match dict.get(key) {
+            Ok(o) => Ok(Some(self.resolve_obj(o)?)),
+            Err(_) => Ok(None),
+        }
+    }
+}
+
+impl ObjectResolver for crate::pdf::writer::PdfUpdate {
+    fn resolve_obj<'a>(&'a self, obj: &'a Object) -> hanko_core::errors::Result<&'a Object> {
+        self.resolve(obj)
+    }
+}
+
+impl ObjectResolver for lopdf::Document {
+    fn resolve_obj<'a>(&'a self, obj: &'a Object) -> hanko_core::errors::Result<&'a Object> {
+        let mut cur = obj;
+        for _ in 0..32 {
+            match cur {
+                Object::Reference(id) => {
+                    cur = self.get_object(*id).map_err(|e| {
+                        hanko_core::errors::HankoError::Malformed(format!(
+                            "object {} {}: {e}",
+                            id.0, id.1
+                        ))
+                    })?
+                }
+                other => return Ok(other),
+            }
+        }
+        Err(hanko_core::errors::HankoError::Malformed("reference chain too long".into()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

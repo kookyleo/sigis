@@ -31,7 +31,7 @@ use crate::attributes::{
     ADOBE_REVOCATION_INFO_ARCHIVAL, CONTENT_TIME_STAMP, ID_DATA, ID_SIGNED_DATA,
     SIGNER_ATTRIBUTES_V2,
 };
-use crate::signer::{digest_algorithm_id, implied_digest};
+use crate::signer::implied_digest;
 
 fn signing_error(msg: impl Into<String>) -> HankoError {
     HankoError::Signing(msg.into())
@@ -195,7 +195,7 @@ impl CmsSigner<'_> {
             attrs.push(attributes::simple_attribute(
                 attributes::CMS_ALGORITHM_PROTECTION,
                 &CmsAlgorithmProtection {
-                    digest_algorithm: digest_algorithm_id(digest),
+                    digest_algorithm: crate::signer::digest_algorithm_id_for(digest, &mech),
                     signature_algorithm: Some(mech),
                     mac_algorithm: None,
                 },
@@ -268,7 +268,7 @@ impl CmsSigner<'_> {
             issuer: strict.tbs_certificate().issuer().clone(),
             serial_number: strict.tbs_certificate().serial_number().clone(),
         });
-        let digest_alg = digest_algorithm_id(digest);
+        let digest_alg = crate::signer::digest_algorithm_id_for(digest, &mech);
         let signer_info = SignerInfo {
             version: CmsVersion::V1,
             sid,

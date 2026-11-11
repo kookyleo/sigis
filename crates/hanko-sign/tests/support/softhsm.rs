@@ -270,6 +270,9 @@ fn import_key(
                 .create_object(&ec(oids::SECP521R1, k.to_bytes().to_vec()))
                 .map_err(|e| e.to_string())?;
         }
+        PrivateKey::Ed448(_) => {
+            return Err("Ed448 keys are not imported into SoftHSM 2.6".into());
+        }
         PrivateKey::MlDsa44(_) | PrivateKey::MlDsa65(_) | PrivateKey::MlDsa87(_) => {
             return Err("SoftHSM 2.6 does not support ML-DSA keys".into());
         }

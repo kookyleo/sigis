@@ -555,6 +555,20 @@ pub fn ensure_esic_ext(update: &mut PdfUpdate) -> Result<()> {
     Ok(())
 }
 
+/// ISO 32001 (SHA-3 / SHAKE256) extension (`_ensure_iso32001_ext`).
+pub fn ensure_iso32001_ext(update: &mut PdfUpdate) -> Result<()> {
+    ensure_output_version(update, (2, 0))?;
+    register_extension(
+        update,
+        "ISO_",
+        32001,
+        true,
+        "2.0",
+        Some(":2022"),
+        Some("https://www.iso.org/standard/45874.html"),
+    )
+}
+
 /// ISO 32002 (EdDSA / additional curves) extension (`_ensure_iso32002_ext`).
 pub fn ensure_iso32002_ext(update: &mut PdfUpdate) -> Result<()> {
     ensure_output_version(update, (2, 0))?;
@@ -933,8 +947,26 @@ impl PdfSigner {
                     ]
                     .contains(&c)
                 });
-        if mech.oid == hanko_core::asn1::oids::ED25519 || ec_iso_curve {
+        // `register_extensions`
+        if mech.oid == hanko_core::asn1::oids::ED25519 {
             ensure_iso32002_ext(update)?;
+        } else if mech.oid == hanko_core::asn1::oids::ED448 {
+            ensure_iso32001_ext(update)?;
+            ensure_iso32002_ext(update)?;
+        } else {
+            if matches!(
+                md,
+                DigestAlgorithm::Sha3_224
+                    | DigestAlgorithm::Sha3_256
+                    | DigestAlgorithm::Sha3_384
+                    | DigestAlgorithm::Sha3_512
+                    | DigestAlgorithm::Shake256
+            ) {
+                ensure_iso32001_ext(update)?;
+            }
+            if ec_iso_curve {
+                ensure_iso32002_ext(update)?;
+            }
         }
         if sv_spec.as_ref().is_some_and(|s| s.timestamp_required) && self.timestamper.is_none() {
             return Err(HankoError::Unsupported(
@@ -1307,6 +1339,11 @@ pub fn digest_from_name(n: &str) -> Option<DigestAlgorithm> {
         "sha256" => DigestAlgorithm::Sha256,
         "sha384" => DigestAlgorithm::Sha384,
         "sha512" => DigestAlgorithm::Sha512,
+        "sha3_224" => DigestAlgorithm::Sha3_224,
+        "sha3_256" => DigestAlgorithm::Sha3_256,
+        "sha3_384" => DigestAlgorithm::Sha3_384,
+        "sha3_512" => DigestAlgorithm::Sha3_512,
+        "shake256" => DigestAlgorithm::Shake256,
         _ => return None,
     })
 }

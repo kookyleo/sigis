@@ -36,7 +36,7 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | 78 | 63 | 9 | 6 |
+| `test_signing.py` | 78 | 68 | 9 | 1 |
 | `test_pades.py` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | 27 | 27 | 0 | 0 |
 | `test_seed_values.py` | 36 | 34 | 1 | 1 |
@@ -78,10 +78,11 @@ L1); see the README there.
   `test_qr_sign_enforce_url_param`, `test_no_email`,
   `test_sign_appearance_noop`, `test_sign_visible_with_separate_annot`) are in
   `tests/test_signing_appearance.rs`.
-- Pending (6): `test_embed_signed_attachment`
-  (embedded files, lane B); `test_ed448`, `test_ed448_trust`,
-  `test_ed448_invalid_hash_algo`, `test_ecdsa_with_sha3`, `test_rsa_with_sha3`
-  (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448, lane A).
+- Pending (1): `test_embed_signed_attachment` (embedded files, lane B).
+- SHA-3, SHAKE256 (`id-shake256-len` for Ed448, RFC 8419) and Ed448 sign
+  with lane A's new `DigestAlgorithm` variants, `sha3` and
+  `ed448-goldilocks`; ISO 32001 / 32002 extensions as pyHanko registers
+  them.
 - ML-DSA (`test_mldsa44`) signs with the `ml-dsa` crate; the Rust-side
   signature check is skipped for it (lane A's verifier lacks ML-DSA), the
   oracle verifies.
@@ -204,11 +205,10 @@ is required first.
    fixtures are not found. Lane D resolves paths at run time from the test
    process's `CARGO_MANIFEST_DIR`. Suggest the same in `hanko-testdata`
    (or a `HANKO_TESTDATA` override).
-3. **Lane A (`hanko-core::algorithms`):** `DigestAlgorithm` lacks SHA3-256/384/512
-   and SHAKE256; needed for `test_ecdsa_with_sha3`, `test_rsa_with_sha3`,
-   Ed448 (`shake256_len`). Signing support for Ed448 and DSA would need RustCrypto
-   `ed448-goldilocks` / `dsa`. ML-DSA signing is done in `hanko-sign` with the
-   `ml-dsa` crate; `validate_signature` in `hanko-core` cannot verify ML-DSA yet.
+3. **Lane A (`hanko-core::algorithms`):** done on `main` (SHA-3, SHAKE256,
+   Ed448, DSA); lane D signs SHA-3 / SHAKE256 / Ed448 / ML-DSA now.
+   `validate_signature` cannot verify ML-DSA yet (Rust-side test check skipped
+   for it; the oracle verifies).
 4. **Lane A (`hanko-certvalidator`):** a getter for the CRLs / OCSP responses
    supplied to a `ValidationContext` (pyHanko embeds `vc.ocsps` / `vc.crls`,
    e.g. `dummy_ocsp_vc` in `test_ocsp_embed`, `test_pades_revinfo_dummydata`).
@@ -220,3 +220,29 @@ is required first.
    handler is missing for `test_sign_encrypted.py`).
 6. **hanko-core:** a `HankoError::Layout` (and ideally `Configuration`,
    `FormFilling`) variant, to replace the message-prefix workaround.
+## Requests from other lanes (relayed by the lead, 2026-11-12)
+
+When rebasing onto `main`, keep this section in your version of this file.
+
+- **D-1 (from lane E).** Seed value validation in `hanko-validate` is pending
+  on `SigSeedValueSpec` (pyHanko `sign/fields.py`). Please expose the seed
+  value model with parsing from a PDF dictionary
+  (`SigSeedValueSpec::from_pdf_object`, including `/MDP`, `/LockDocument`,
+  `/Cert` constraints, `/Reasons`, `/SubFilter`, `/DigestMethod`, `/TimeStamp`,
+  `/AppearanceFilter`, `/Ff`) as public API of `hanko-sign`. `hanko-validate`
+  may depend on `hanko-sign` (no cycle: `hanko-sign` must not depend on
+  `hanko-validate`; dev-dependencies may).
+  *Lane D answer:* done. `SigSeedValueSpec::from_pdf_object`,
+  `SigCertConstraints::from_pdf_object` and `FieldMdpSpec::from_pdf_object`
+  take any `hanko_sign::pdf::util::ObjectResolver`, implemented for
+  `lopdf::Document` and for the signing writer; `SigCertConstraints::satisfied_by`
+  checks a certificate. `hanko-sign` does not depend on `hanko-validate`.
+- **D-2 (from the lead).** `crates/hanko-sign/tests/support/mod.rs` uses
+  `env!("CARGO_MANIFEST_DIR")`; switch to `hanko_testdata::manifest_dir()` /
+  `hanko_testdata::data_dir()` (run-time paths, see `docs/hanko-lanes.md`
+  §5.2).
+  *Lane D answer:* done (`tests/support` uses `hanko_testdata::data_dir()`).
+- **Lead answers to your requests:** 1 approved (recorded in
+  `docs/hanko-lanes.md` §8). 2 done on `main` (run-time fixture paths).
+  3 and 4 relayed to lane A (A-5, A-6). 5 relayed to lane B (B-4). The
+  standard oracle venv is `/tmp/pyhanko-oracle/venv`.

@@ -1005,3 +1005,71 @@ fn test_mldsa44() {
         }
     }
 }
+
+fn ed448_signer() -> SimpleSigner {
+    pki("testing-ca-ed448").signer("signer1")
+}
+
+#[test]
+fn test_ed448() {
+    let out = sign(&minimal(), meta("Sig1"), ed448_signer(), T_2020_11_01);
+    if let Some(s) = val_untrusted(&out, 0, T_2020_11_01, false) {
+        assert_eq!(s["md_algorithm"], "shake256_len", "{s}");
+    }
+    let mut levels = extensions_levels(&out);
+    levels.sort();
+    assert_eq!(levels, vec![32001, 32002]);
+    // the document digest is SHAKE256 with 64 bytes of output
+    let sig = &embedded_signatures(&out)[0];
+    let sd = hanko_sign::cms::decode_signed_data(&cms_bytes(sig)).unwrap();
+    let si = sd.signer_infos.0.iter().next().unwrap();
+    let md = si.signed_attrs.as_ref().unwrap().iter().find(|a| a.oid == hanko_core::asn1::oids::MESSAGE_DIGEST).unwrap();
+    let d: der::asn1::OctetString = md.values.iter().next().unwrap().decode_as().unwrap();
+    assert_eq!(d.as_bytes().len(), 64);
+}
+
+#[test]
+fn test_ed448_trust() {
+    let out = sign(&minimal(), meta("Sig1"), ed448_signer(), T_2020_11_01);
+    val_trusted(&out, 0, &pki("testing-ca-ed448"), T_2020_11_01, false);
+}
+
+#[test]
+fn test_ed448_invalid_hash_algo() {
+    let mut m = meta("Sig1");
+    m.md_algorithm = Some(DigestAlgorithm::Sha256);
+    let err = sign_err(&minimal(), m, ed448_signer());
+    assert!(err.contains("specifies") && err.contains("shake256"), "{err}");
+}
+
+#[test]
+fn test_ecdsa_with_sha3() {
+    let mut m = meta("Sig1");
+    m.md_algorithm = Some(DigestAlgorithm::Sha3_256);
+    let out = sign(&minimal(), m, pki("testing-ca-ecdsa").signer("signer1"), T_2020_11_01);
+    if let Some(s) = val_untrusted(&out, 0, T_2020_11_01, false) {
+        assert_eq!(s["md_algorithm"], "sha3_256", "{s}");
+    }
+    let mut levels = extensions_levels(&out);
+    levels.sort();
+    assert_eq!(levels, vec![32001, 32002]);
+}
+
+#[test]
+fn test_rsa_with_sha3() {
+    // the generic rsaEncryption mechanism, as pyHanko's test uses
+    let base = from_ca();
+    let signer = SimpleSigner::new(base.key().clone(), base.signing_cert().clone(), base.cert_chain().to_vec())
+        .unwrap()
+        .with_signature_mechanism(spki::AlgorithmIdentifierOwned {
+            oid: hanko_core::asn1::oids::RSA_ENCRYPTION,
+            parameters: Some(der::Any::encode_from(&der::asn1::Null).unwrap()),
+        });
+    let mut m = meta("Sig1");
+    m.md_algorithm = Some(DigestAlgorithm::Sha3_256);
+    let out = sign(&minimal(), m, signer, T_2020_11_01);
+    if let Some(s) = val_untrusted(&out, 0, T_2020_11_01, false) {
+        assert_eq!(s["md_algorithm"], "sha3_256", "{s}");
+    }
+    assert_eq!(extensions_levels(&out), vec![32001]);
+}

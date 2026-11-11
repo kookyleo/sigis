@@ -12,6 +12,7 @@ use hanko_pdf::MdpPerm;
 use lopdf::{Dictionary, Object, ObjectId};
 
 use crate::pdf::seed::SigSeedValueSpec;
+use crate::pdf::util::{ObjectResolver};
 use crate::pdf::util::{as_number, decode_text_string, name, number, text_string};
 use crate::pdf::writer::PdfUpdate;
 
@@ -79,8 +80,8 @@ impl FieldMdpSpec {
     }
 
     /// Read from a PDF dictionary (`from_pdf_object`).
-    pub fn from_pdf_object(update: &PdfUpdate, d: &Dictionary) -> Result<Self> {
-        let action = match update.dict_get(d, b"Action")? {
+    pub fn from_pdf_object(update: &dyn ObjectResolver, d: &Dictionary) -> Result<Self> {
+        let action = match update.get_resolved(d, b"Action")? {
             Some(Object::Name(n)) => match n.as_slice() {
                 b"All" => FieldMdpAction::All,
                 b"Include" => FieldMdpAction::Include,
@@ -97,10 +98,10 @@ impl FieldMdpSpec {
         let fields = if action == FieldMdpAction::All {
             Vec::new()
         } else {
-            match update.dict_get(d, b"Fields")? {
+            match update.get_resolved(d, b"Fields")? {
                 Some(Object::Array(a)) => a
                     .iter()
-                    .filter_map(|o| update.resolve(o).ok())
+                    .filter_map(|o| update.resolve_obj(o).ok())
                     .filter_map(|o| o.as_str().ok().map(decode_text_string))
                     .collect(),
                 _ => {

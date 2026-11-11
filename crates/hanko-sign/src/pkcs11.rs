@@ -609,6 +609,9 @@ pub enum Pkcs11Mechanism {
     Other(u64),
 }
 
+/// Placeholder `CKM_*` value for digests without a PKCS#11 mechanism.
+const CKM_INVALID: u64 = u64::MAX;
+
 impl Pkcs11Mechanism {
     /// The `CKM_*` value.
     pub fn mechanism_type(&self) -> u64 {
@@ -622,6 +625,11 @@ impl Pkcs11Mechanism {
                 Sha256 => t(MechanismType::SHA256_RSA_PKCS),
                 Sha384 => t(MechanismType::SHA384_RSA_PKCS),
                 Sha512 => t(MechanismType::SHA512_RSA_PKCS),
+                Sha3_224 => 0x66,
+                Sha3_256 => 0x60,
+                Sha3_384 => 0x61,
+                Sha3_512 => 0x62,
+                Md5 | Shake256 => CKM_INVALID,
             },
             Self::ShaRsaPkcsPss { digest, .. } => match digest {
                 Sha1 => t(MechanismType::SHA1_RSA_PKCS_PSS),
@@ -629,6 +637,11 @@ impl Pkcs11Mechanism {
                 Sha256 => t(MechanismType::SHA256_RSA_PKCS_PSS),
                 Sha384 => t(MechanismType::SHA384_RSA_PKCS_PSS),
                 Sha512 => t(MechanismType::SHA512_RSA_PKCS_PSS),
+                Sha3_224 => 0x67,
+                Sha3_256 => 0x63,
+                Sha3_384 => 0x64,
+                Sha3_512 => 0x65,
+                Md5 | Shake256 => CKM_INVALID,
             },
             Self::Dsa => ckm::DSA,
             Self::DsaSha(d) => match d {
@@ -637,6 +650,11 @@ impl Pkcs11Mechanism {
                 Sha256 => ckm::DSA_SHA256,
                 Sha384 => ckm::DSA_SHA384,
                 Sha512 => ckm::DSA_SHA512,
+                Sha3_224 => 0x18,
+                Sha3_256 => 0x19,
+                Sha3_384 => 0x1a,
+                Sha3_512 => 0x1b,
+                Md5 | Shake256 => CKM_INVALID,
             },
             Self::Ecdsa => t(MechanismType::ECDSA),
             Self::EcdsaSha(d) => match d {
@@ -645,6 +663,11 @@ impl Pkcs11Mechanism {
                 Sha256 => t(MechanismType::ECDSA_SHA256),
                 Sha384 => t(MechanismType::ECDSA_SHA384),
                 Sha512 => t(MechanismType::ECDSA_SHA512),
+                Sha3_224 => 0x1047,
+                Sha3_256 => 0x1048,
+                Sha3_384 => 0x1049,
+                Sha3_512 => 0x104a,
+                Md5 | Shake256 => CKM_INVALID,
             },
             Self::Eddsa | Self::EddsaEd448 => t(MechanismType::EDDSA),
             Self::MlDsa => ckm::ML_DSA,
@@ -662,24 +685,26 @@ impl Pkcs11Mechanism {
         )
     }
 
-    fn digest_mech(d: DigestAlgorithm) -> MechanismType {
-        match d {
+    fn digest_mech(&self, d: DigestAlgorithm) -> std::result::Result<MechanismType, Pkcs11Error> {
+        Ok(match d {
             DigestAlgorithm::Sha1 => MechanismType::SHA1,
             DigestAlgorithm::Sha224 => MechanismType::SHA224,
             DigestAlgorithm::Sha256 => MechanismType::SHA256,
             DigestAlgorithm::Sha384 => MechanismType::SHA384,
             DigestAlgorithm::Sha512 => MechanismType::SHA512,
-        }
+            _ => return Err(self.unsupported()),
+        })
     }
 
-    fn mgf(d: DigestAlgorithm) -> PkcsMgfType {
-        match d {
+    fn mgf(&self, d: DigestAlgorithm) -> std::result::Result<PkcsMgfType, Pkcs11Error> {
+        Ok(match d {
             DigestAlgorithm::Sha1 => PkcsMgfType::MGF1_SHA1,
             DigestAlgorithm::Sha224 => PkcsMgfType::MGF1_SHA224,
             DigestAlgorithm::Sha256 => PkcsMgfType::MGF1_SHA256,
             DigestAlgorithm::Sha384 => PkcsMgfType::MGF1_SHA384,
             DigestAlgorithm::Sha512 => PkcsMgfType::MGF1_SHA512,
-        }
+            _ => return Err(self.unsupported()),
+        })
     }
 
     /// Build the `cryptoki` mechanism; `pss` holds the PSS parameters for
@@ -702,8 +727,8 @@ impl Pkcs11Mechanism {
                 salt_len,
             } => {
                 let params = PkcsPssParams {
-                    hash_alg: Self::digest_mech(*digest),
-                    mgf: Self::mgf(*mgf_digest),
+                    hash_alg: self.digest_mech(*digest)?,
+                    mgf: self.mgf(*mgf_digest)?,
                     s_len: (*salt_len).into(),
                 };
                 match digest {
@@ -717,6 +742,7 @@ impl Pkcs11Mechanism {
                             .map_err(|_| self.unsupported())?;
                         Mechanism::VendorDefined(VendorDefinedMechanism::new(ty, Some(&*stored)))
                     }
+                    _ => return Err(self.unsupported()),
                 }
             }
             Self::Ecdsa => Mechanism::Ecdsa,
@@ -727,6 +753,7 @@ impl Pkcs11Mechanism {
             Self::EcdsaSha(Sha512) => Mechanism::EcdsaSha512,
             Self::Eddsa => Mechanism::Eddsa(EddsaParams::new(EddsaSignatureScheme::Pure)),
             Self::EddsaEd448 => Mechanism::Eddsa(EddsaParams::new(EddsaSignatureScheme::Ed448(&[]))),
+            Self::ShaRsaPkcs(_) | Self::EcdsaSha(_) => return Err(self.unsupported()),
             Self::MlDsa | Self::Dsa | Self::DsaSha(_) | Self::Other(_) => {
                 let v = self.mechanism_type();
                 let ty = if v >= ckm::VENDOR_DEFINED {
@@ -1284,6 +1311,16 @@ pub fn signature_mechanism_for_key(
             DigestAlgorithm::Sha256 => "2.16.840.1.101.3.4.3.2",
             DigestAlgorithm::Sha384 => "2.16.840.1.101.3.4.3.3",
             DigestAlgorithm::Sha512 => "2.16.840.1.101.3.4.3.4",
+            DigestAlgorithm::Sha3_224 => "2.16.840.1.101.3.4.3.5",
+            DigestAlgorithm::Sha3_256 => "2.16.840.1.101.3.4.3.6",
+            DigestAlgorithm::Sha3_384 => "2.16.840.1.101.3.4.3.7",
+            DigestAlgorithm::Sha3_512 => "2.16.840.1.101.3.4.3.8",
+            other => {
+                return Err(HankoError::Signing(format!(
+                    "No DSA signature algorithm identifier for {}",
+                    other.name()
+                )))
+            }
         };
         return Ok(AlgorithmIdentifierOwned {
             oid: der::asn1::ObjectIdentifier::new(oid)

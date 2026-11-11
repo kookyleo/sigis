@@ -155,6 +155,14 @@ pub fn default_signature_mechanism(
                 DigestAlgorithm::Sha256 => oids::SHA256_WITH_RSA,
                 DigestAlgorithm::Sha384 => oids::SHA384_WITH_RSA,
                 DigestAlgorithm::Sha512 => oids::SHA512_WITH_RSA,
+                // like asn1crypto, no RSA-with-SHA3 identifiers; use
+                // `rsaEncryption` explicitly (as pyHanko's tests do)
+                other => {
+                    return Err(signing_error(format!(
+                        "No RSA PKCS#1 v1.5 signature algorithm identifier for {}",
+                        other.name()
+                    )))
+                }
             },
             null(),
         ),
@@ -166,10 +174,21 @@ pub fn default_signature_mechanism(
                 DigestAlgorithm::Sha256 => oids::ECDSA_WITH_SHA256,
                 DigestAlgorithm::Sha384 => oids::ECDSA_WITH_SHA384,
                 DigestAlgorithm::Sha512 => oids::ECDSA_WITH_SHA512,
+                DigestAlgorithm::Sha3_224 => oids::ECDSA_WITH_SHA3_224,
+                DigestAlgorithm::Sha3_256 => oids::ECDSA_WITH_SHA3_256,
+                DigestAlgorithm::Sha3_384 => oids::ECDSA_WITH_SHA3_384,
+                DigestAlgorithm::Sha3_512 => oids::ECDSA_WITH_SHA3_512,
+                other => {
+                    return Err(signing_error(format!(
+                        "No ECDSA signature algorithm identifier for {}",
+                        other.name()
+                    )))
+                }
             },
             None,
         ),
         oids::ED25519 => (oids::ED25519, None),
+        oids::ED448 => (oids::ED448, None),
         oid @ (oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87) => (oid, None),
         other => {
             return Err(signing_error(format!(
@@ -208,10 +227,33 @@ pub fn optimal_pss_params(
 /// A digest `AlgorithmIdentifier` encoded as asn1crypto does (with explicit
 /// NULL parameters).
 pub fn digest_algorithm_id(digest: DigestAlgorithm) -> AlgorithmIdentifierOwned {
+    if digest == DigestAlgorithm::Shake256 {
+        // RFC 8419: SHAKE256 identifiers have no parameters
+        return AlgorithmIdentifierOwned {
+            oid: digest.oid(),
+            parameters: None,
+        };
+    }
     AlgorithmIdentifierOwned {
         oid: digest.oid(),
         parameters: Any::encode_from(&der::asn1::Null).ok(),
     }
+}
+
+/// The digest `AlgorithmIdentifier` for a signer info: for Ed448 with
+/// SHAKE256, `id-shake256-len` with a length of 512 (RFC 8419), as pyHanko
+/// writes it.
+pub fn digest_algorithm_id_for(
+    digest: DigestAlgorithm,
+    mech: &AlgorithmIdentifierOwned,
+) -> AlgorithmIdentifierOwned {
+    if digest == DigestAlgorithm::Shake256 && mech.oid == oids::ED448 {
+        return AlgorithmIdentifierOwned {
+            oid: oids::SHAKE256_LEN,
+            parameters: Any::encode_from(&512u32).ok(),
+        };
+    }
+    digest_algorithm_id(digest)
 }
 
 /// The digest that the `messageDigest` attribute must use for a mechanism
@@ -220,6 +262,9 @@ pub fn digest_algorithm_id(digest: DigestAlgorithm) -> AlgorithmIdentifierOwned 
 pub fn implied_digest(mech: &AlgorithmIdentifierOwned) -> Option<DigestAlgorithm> {
     if mech.oid == oids::ED25519 {
         return Some(DigestAlgorithm::Sha512);
+    }
+    if mech.oid == oids::ED448 {
+        return Some(DigestAlgorithm::Shake256);
     }
     SignatureMechanism::from_algorithm_identifier(mech, None)
         .ok()
@@ -259,6 +304,7 @@ pub fn select_suitable_signing_md(spki: &SubjectPublicKeyInfoOwned) -> DigestAlg
             )
         }
         oids::ED25519 => DigestAlgorithm::Sha512,
+        oids::ED448 => DigestAlgorithm::Shake256,
         _ => DigestAlgorithm::Sha256,
     }
 }
@@ -283,6 +329,8 @@ pub fn sign_with_key(
     }
     let resolved = if mech.oid == oids::ED25519 {
         SignatureMechanism::Ed25519
+    } else if mech.oid == oids::ED448 {
+        SignatureMechanism::Ed448
     } else {
         SignatureMechanism::from_algorithm_identifier(mech, Some(digest))
             .map_err(|e| signing_error(e.to_string()))?
@@ -302,6 +350,11 @@ pub fn sign_with_key(
                 DigestAlgorithm::Sha256 => rsa::Pkcs1v15Sign::new::<sha2::Sha256>(),
                 DigestAlgorithm::Sha384 => rsa::Pkcs1v15Sign::new::<sha2::Sha384>(),
                 DigestAlgorithm::Sha512 => rsa::Pkcs1v15Sign::new::<sha2::Sha512>(),
+                DigestAlgorithm::Sha3_224 => rsa::Pkcs1v15Sign::new::<sha3::Sha3_224>(),
+                DigestAlgorithm::Sha3_256 => rsa::Pkcs1v15Sign::new::<sha3::Sha3_256>(),
+                DigestAlgorithm::Sha3_384 => rsa::Pkcs1v15Sign::new::<sha3::Sha3_384>(),
+                DigestAlgorithm::Sha3_512 => rsa::Pkcs1v15Sign::new::<sha3::Sha3_512>(),
+                DigestAlgorithm::Md5 | DigestAlgorithm::Shake256 => return Err(mismatch()),
             };
             k.sign(scheme, &hashed)
                 .map_err(|e| signing_error(format!("RSA signing failed: {e}")))
@@ -329,6 +382,19 @@ pub fn sign_with_key(
                 DigestAlgorithm::Sha512 => {
                     k.sign(rsa::Pss::<sha2::Sha512>::new_with_salt(salt), &hashed)
                 }
+                DigestAlgorithm::Sha3_224 => {
+                    k.sign(rsa::Pss::<sha3::Sha3_224>::new_with_salt(salt), &hashed)
+                }
+                DigestAlgorithm::Sha3_256 => {
+                    k.sign(rsa::Pss::<sha3::Sha3_256>::new_with_salt(salt), &hashed)
+                }
+                DigestAlgorithm::Sha3_384 => {
+                    k.sign(rsa::Pss::<sha3::Sha3_384>::new_with_salt(salt), &hashed)
+                }
+                DigestAlgorithm::Sha3_512 => {
+                    k.sign(rsa::Pss::<sha3::Sha3_512>::new_with_salt(salt), &hashed)
+                }
+                DigestAlgorithm::Md5 | DigestAlgorithm::Shake256 => return Err(mismatch()),
             };
             res.map_err(|e| signing_error(format!("RSA-PSS signing failed: {e}")))
         }
@@ -355,6 +421,11 @@ pub fn sign_with_key(
         (SignatureMechanism::Ed25519, PrivateKey::Ed25519(k)) => {
             use ed25519_dalek::Signer;
             Ok(k.sign(data).to_bytes().to_vec())
+        }
+        (SignatureMechanism::Ed448, PrivateKey::Ed448(k)) => {
+            use signature::Signer;
+            let sig: ed448_goldilocks::Signature = k.sign(data);
+            Ok(sig.to_bytes().to_vec())
         }
         _ => Err(mismatch()),
     }

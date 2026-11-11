@@ -19,17 +19,10 @@ use hanko_core::time::Moment;
 use hanko_sign::keys::{load_private_key_from_pemder_data, PrivateKey};
 use hanko_sign::{DummyTimeStamper, SimpleSigner};
 
-/// The fixture root `crates/hanko-testdata/data` of *this* checkout.
-///
-/// Resolved at run time from `CARGO_MANIFEST_DIR` (set by cargo for the test
-/// process): with a target directory shared between git worktrees, the
-/// compile-time path baked into `hanko_testdata` may point at another
-/// worktree, which lacks this lane's fixtures.
+/// The fixture root `crates/hanko-testdata/data` of this checkout
+/// (resolved at run time by `hanko_testdata`).
 pub fn data_dir() -> PathBuf {
-    let manifest = std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")));
-    manifest.join("../hanko-testdata/data")
+    hanko_testdata::data_dir()
 }
 
 pub fn data_path(parts: &[&str]) -> PathBuf {

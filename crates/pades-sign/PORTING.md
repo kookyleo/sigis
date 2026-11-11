@@ -8,7 +8,7 @@ counts: `docs/lanes/d.md`.
 
 | pyHanko module | Rust file | Status |
 | --- | --- | --- |
-| `keys/pemder.py`, `keys/internal.py` | `src/keys.rs` | ported (RSA, ECDSA P-256/384/521, Ed25519, ML-DSA; PKCS#8 incl. PBES1/PBES2, PKCS#1/SEC1 with legacy PEM encryption) |
+| `keys/pemder.py`, `keys/internal.py` | `src/keys.rs` | ported (RSA, ECDSA P-256/384/521, Ed25519, Ed448, ML-DSA; PKCS#8 incl. PBES1/PBES2, PKCS#1/SEC1 with legacy PEM encryption) |
 | PKCS#12 loading (`cryptography` `pkcs12`, used by `SimpleSigner.load_pkcs12_data`) | `src/pkcs12.rs` | ported (no maintained crate for the RustCrypto 0.8/0.11 stack) |
 | `sign/signers/pdf_cms.py` (`Signer`, `SimpleSigner`, `ExternalSigner`, attribute provider specs, `select_suitable_signing_md`) | `src/signer.rs`, `src/cms.rs` | ported; containers built from `cms` crate types (the `cms` builder needs an in-process key) |
 | `sign/general.py` (signing parts: ESS helpers, `optimal_pss_params`, `get_cms_hash_algo_for_mechanism`) | `src/attributes.rs`, `src/signer.rs` | ported |
@@ -38,7 +38,7 @@ counts: `docs/lanes/d.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | `tests/test_signing.rs`, `tests/test_signing_appearance.rs` | 78 | 63 | 9 | 6 |
+| `test_signing.py` | `tests/test_signing.rs`, `tests/test_signing_appearance.rs` | 78 | 68 | 9 | 1 |
 | `test_pades.py` | `tests/test_pades.rs` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | `tests/test_fields.rs` | 27 | 27 | 0 | 0 |
 | `test_seed_values.py` | `tests/test_seed_values.rs` | 36 | 34 | 1 | 1 |

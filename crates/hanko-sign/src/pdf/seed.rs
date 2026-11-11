@@ -11,6 +11,7 @@ use hanko_core::errors::{HankoError, Result};
 use hanko_pdf::MdpPerm;
 use lopdf::{Dictionary, Object, StringFormat};
 
+use crate::pdf::util::{ObjectResolver};
 use crate::pdf::util::{decode_text_string, name, text_string};
 use crate::pdf::writer::PdfUpdate;
 use crate::signer::directory_string;
@@ -302,20 +303,20 @@ impl SigCertConstraints {
     }
 
     /// Read from PDF (`from_pdf_object`).
-    pub fn from_pdf_object(update: &PdfUpdate, d: &Dictionary) -> Result<Self> {
+    pub fn from_pdf_object(update: &dyn ObjectResolver, d: &Dictionary) -> Result<Self> {
         let mut out = Self::new();
         out.flags = SigCertConstraintFlags(
             update
-                .dict_get(d, b"Ff")?
+                .get_resolved(d, b"Ff")?
                 .and_then(|o| o.as_i64().ok())
                 .and_then(|i| u32::try_from(i).ok())
                 .unwrap_or(0),
         );
         let read_certs = |key: &[u8]| -> Result<Vec<Cert>> {
             let mut v = Vec::new();
-            if let Some(Object::Array(a)) = update.dict_get(d, key)? {
+            if let Some(Object::Array(a)) = update.get_resolved(d, key)? {
                 for o in a {
-                    if let Object::String(b, _) = update.resolve(o)? {
+                    if let Object::String(b, _) = update.resolve_obj(o)? {
                         v.push(Cert::from_der(b)?);
                     }
                 }
@@ -327,16 +328,16 @@ impl SigCertConstraints {
         out.subjects = (!subjects.is_empty()).then_some(subjects);
         out.issuers = (!issuers.is_empty()).then_some(issuers);
         let mut dn = Vec::new();
-        if let Some(Object::Array(a)) = update.dict_get(d, b"SubjectDN")? {
+        if let Some(Object::Array(a)) = update.get_resolved(d, b"SubjectDN")? {
             for entry in a {
-                if let Object::Dictionary(e) = update.resolve(entry)? {
+                if let Object::Dictionary(e) = update.resolve_obj(entry)? {
                     for (k, v) in e.iter() {
                         let key = String::from_utf8_lossy(k).to_string();
                         let oid = NAME_ABBREVS
                             .iter()
                             .find(|(_, a)| a.eq_ignore_ascii_case(&key))
                             .map_or(key.clone(), |(o, _)| (*o).to_owned());
-                        if let Object::String(s, _) = update.resolve(v)? {
+                        if let Object::String(s, _) = update.resolve_obj(v)? {
                             dn.push((oid, decode_text_string(s)));
                         }
                     }
@@ -344,21 +345,21 @@ impl SigCertConstraints {
             }
         }
         out.subject_dn = (!dn.is_empty()).then_some(dn);
-        if let Some(Object::Array(a)) = update.dict_get(d, b"KeyUsage")? {
+        if let Some(Object::Array(a)) = update.get_resolved(d, b"KeyUsage")? {
             let mut kus = Vec::new();
             for o in a {
-                if let Object::String(s, _) = update.resolve(o)? {
+                if let Object::String(s, _) = update.resolve_obj(o)? {
                     kus.push(SigCertKeyUsage::read_from_sv_string(&decode_text_string(s)));
                 }
             }
             out.key_usage = Some(kus);
         }
-        let url = match update.dict_get(d, b"URL")? {
+        let url = match update.get_resolved(d, b"URL")? {
             Some(Object::String(s, _)) => Some(decode_text_string(s)),
             _ => None,
         };
         if url.is_some() {
-            if let Some(Object::Name(n)) = update.dict_get(d, b"URLType")? {
+            if let Some(Object::Name(n)) = update.get_resolved(d, b"URLType")? {
                 out.url_type = String::from_utf8_lossy(n).into_owned();
             }
         }
@@ -546,15 +547,15 @@ impl SigSeedValueSpec {
     }
 
     /// Read a seed value dictionary (`from_pdf_object`).
-    pub fn from_pdf_object(update: &PdfUpdate, d: &Dictionary) -> Result<Self> {
+    pub fn from_pdf_object(update: &dyn ObjectResolver, d: &Dictionary) -> Result<Self> {
         let mut out = Self::default();
         let int = |o: Option<&Object>| o.and_then(|o| o.as_i64().ok());
         out.flags = SigSeedValFlags(
-            int(update.dict_get(d, b"Ff")?)
+            int(update.get_resolved(d, b"Ff")?)
                 .and_then(|i| u32::try_from(i).ok())
                 .unwrap_or(0),
         );
-        if let Some(Object::Name(f)) = update.dict_get(d, b"Filter")? {
+        if let Some(Object::Name(f)) = update.get_resolved(d, b"Filter")? {
             if out.flags.contains(SigSeedValFlags::FILTER) && f != b"Adobe.PPKLite" {
                 return Err(signing_error(format!(
                     "Signature handler '/{}' is not available, only the default /Adobe.PPKLite is supported.",
@@ -562,7 +563,7 @@ impl SigSeedValueSpec {
                 )));
             }
         }
-        if let Some(v) = int(update.dict_get(d, b"V")?) {
+        if let Some(v) = int(update.get_resolved(d, b"V")?) {
             if out.flags.contains(SigSeedValFlags::V) && v > SeedValueDictVersion::Pdf20 as i64 {
                 return Err(signing_error(format!(
                     "Seed value dictionary version {v} not supported."
@@ -570,13 +571,13 @@ impl SigSeedValueSpec {
             }
             out.sv_dict_version = u32::try_from(v).ok();
         }
-        if let Some(o) = update.dict_get(d, b"AddRevInfo")? {
+        if let Some(o) = update.get_resolved(d, b"AddRevInfo")? {
             out.add_rev_info = Some(matches!(o, Object::Boolean(true)));
         }
-        if let Some(Object::Array(a)) = update.dict_get(d, b"SubFilter")? {
+        if let Some(Object::Array(a)) = update.get_resolved(d, b"SubFilter")? {
             out.subfilters = Some(
                 a.iter()
-                    .filter_map(|o| update.resolve(o).ok())
+                    .filter_map(|o| update.resolve_obj(o).ok())
                     .filter_map(|o| o.as_name().ok())
                     .filter_map(SigSeedSubFilter::from_name)
                     .collect(),
@@ -586,7 +587,7 @@ impl SigSeedValueSpec {
             match o {
                 Some(Object::Array(a)) => Some(
                     a.iter()
-                        .filter_map(|x| update.resolve(x).ok())
+                        .filter_map(|x| update.resolve_obj(x).ok())
                         .filter_map(|x| match x {
                             Object::String(s, _) => Some(decode_text_string(s)),
                             Object::Name(n) => Some(String::from_utf8_lossy(n).into_owned()),
@@ -597,18 +598,18 @@ impl SigSeedValueSpec {
                 _ => None,
             }
         };
-        out.digest_methods = strings(update.dict_get(d, b"DigestMethod")?)
+        out.digest_methods = strings(update.get_resolved(d, b"DigestMethod")?)
             .map(|v| v.into_iter().map(|s| s.to_lowercase()).collect());
-        out.reasons = strings(update.dict_get(d, b"Reasons")?);
-        out.legal_attestations = strings(update.dict_get(d, b"LegalAttestation")?);
-        if let Some(mdp) = update.dict_get(d, b"MDP")? {
+        out.reasons = strings(update.get_resolved(d, b"Reasons")?);
+        out.legal_attestations = strings(update.get_resolved(d, b"LegalAttestation")?);
+        if let Some(mdp) = update.get_resolved(d, b"MDP")? {
             let bad = || {
                 signing_error("/MDP entry in seed value dictionary is not correctly formatted.")
             };
             let Object::Dictionary(mdp) = mdp else {
                 return Err(bad());
             };
-            let p = int(update.dict_get(mdp, b"P")?).ok_or_else(bad)?;
+            let p = int(update.get_resolved(mdp, b"P")?).ok_or_else(bad)?;
             out.seed_signature_type = Some(match p {
                 0 => None,
                 1 => Some(MdpPerm::NoChanges),
@@ -617,7 +618,7 @@ impl SigSeedValueSpec {
                 _ => return Err(bad()),
             });
         }
-        if let Some(o) = update.dict_get(d, b"LockDocument")? {
+        if let Some(o) = update.get_resolved(d, b"LockDocument")? {
             out.lock_document = Some(match o {
                 Object::Name(n) if n == b"true" => SeedLockDocument::Lock,
                 Object::Name(n) if n == b"false" => SeedLockDocument::DoNotLock,
@@ -625,16 +626,16 @@ impl SigSeedValueSpec {
                 _ => return Err(signing_error("/LockDocument entry is invalid.")),
             });
         }
-        if let Some(Object::String(s, _)) = update.dict_get(d, b"AppearanceFilter")? {
+        if let Some(Object::String(s, _)) = update.get_resolved(d, b"AppearanceFilter")? {
             out.appearance = Some(decode_text_string(s));
         }
-        if let Some(Object::Dictionary(ts)) = update.dict_get(d, b"TimeStamp")? {
-            if let Some(Object::String(s, _)) = update.dict_get(ts, b"URL")? {
+        if let Some(Object::Dictionary(ts)) = update.get_resolved(d, b"TimeStamp")? {
+            if let Some(Object::String(s, _)) = update.get_resolved(ts, b"URL")? {
                 out.timestamp_server_url = Some(decode_text_string(s));
             }
-            out.timestamp_required = int(update.dict_get(ts, b"Ff")?).unwrap_or(0) != 0;
+            out.timestamp_required = int(update.get_resolved(ts, b"Ff")?).unwrap_or(0) != 0;
         }
-        if let Some(Object::Dictionary(c)) = update.dict_get(d, b"Cert")? {
+        if let Some(Object::Dictionary(c)) = update.get_resolved(d, b"Cert")? {
             out.cert = Some(SigCertConstraints::from_pdf_object(update, c)?);
         }
         Ok(out)

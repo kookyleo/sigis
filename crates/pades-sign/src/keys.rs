@@ -37,6 +37,8 @@ pub enum PrivateKey {
     P521(Box<p521::ecdsa::SigningKey>),
     /// Ed25519.
     Ed25519(Box<ed25519_dalek::SigningKey>),
+    /// Ed448.
+    Ed448(Box<ed448_goldilocks::SigningKey>),
     /// ML-DSA-44 (FIPS 204).
     MlDsa44(Box<ml_dsa::SigningKey<ml_dsa::MlDsa44>>),
     /// ML-DSA-65.
@@ -53,6 +55,7 @@ impl std::fmt::Debug for PrivateKey {
             Self::P384(_) => "PrivateKey::P384(..)",
             Self::P521(_) => "PrivateKey::P521(..)",
             Self::Ed25519(_) => "PrivateKey::Ed25519(..)",
+            Self::Ed448(_) => "PrivateKey::Ed448(..)",
             Self::MlDsa44(_) => "PrivateKey::MlDsa44(..)",
             Self::MlDsa65(_) => "PrivateKey::MlDsa65(..)",
             Self::MlDsa87(_) => "PrivateKey::MlDsa87(..)",
@@ -96,7 +99,12 @@ impl PrivateKey {
                     &seed,
                 ))))
             }
-            oids::ED448 => Err(unsupported("Ed448 private keys are not supported")),
+            oids::ED448 => {
+                use pkcs8::DecodePrivateKey;
+                let k = ed448_goldilocks::SigningKey::from_pkcs8_der(der)
+                    .map_err(|e| malformed(format!("Ed448 private key: {e}")))?;
+                Ok(Self::Ed448(Box::new(k)))
+            }
             oids::DSA => Err(unsupported("DSA private keys are not supported")),
             oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87 => {
                 use pkcs8::DecodePrivateKey;
@@ -181,6 +189,16 @@ impl PrivateKey {
                 )?,
             }
             .to_der()?,
+            Self::Ed448(k) => SubjectPublicKeyInfoOwned {
+                algorithm: AlgorithmIdentifierOwned {
+                    oid: oids::ED448,
+                    parameters: None,
+                },
+                subject_public_key: der::asn1::BitString::from_bytes(
+                    k.verifying_key().to_bytes().as_slice(),
+                )?,
+            }
+            .to_der()?,
             Self::MlDsa44(k) => mldsa_spki(k.as_ref())?,
             Self::MlDsa65(k) => mldsa_spki(k.as_ref())?,
             Self::MlDsa87(k) => mldsa_spki(k.as_ref())?,
@@ -195,6 +213,7 @@ impl PrivateKey {
             Self::Rsa(_) => "rsa",
             Self::P256(_) | Self::P384(_) | Self::P521(_) => "ec",
             Self::Ed25519(_) => "ed25519",
+            Self::Ed448(_) => "ed448",
             Self::MlDsa44(_) => "mldsa44",
             Self::MlDsa65(_) => "mldsa65",
             Self::MlDsa87(_) => "mldsa87",

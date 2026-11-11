@@ -18,7 +18,7 @@ use support::*;
 
 #[test]
 fn load_all_keysets() {
-    for arch in ["testing-ca", "testing-ca-ecdsa", "testing-ca-ed25519"] {
+    for arch in ["testing-ca", "testing-ca-ecdsa", "testing-ca-ed25519", "testing-ca-ed448"] {
         let p = pki(arch);
         for label in ["root", "interm", "signer1", "signer2", "tsa", "interm-ocsp"] {
             let key = p.key(&p.key_label_of(label));
@@ -33,12 +33,11 @@ fn load_all_keysets() {
 
 #[test]
 fn unsupported_key_types_are_reported() {
-    for (arch, label) in [("testing-ca-ed448", "signer1"), ("testing-ca-dsa", "signer1")] {
-        let p = pki(arch);
-        let entry = p.key_label_of(label);
-        let r = std::panic::catch_unwind(|| p.key(&entry));
-        assert!(r.is_err(), "{arch} keys should be unsupported");
-    }
+    // DSA signing is not supported (pyHanko supports it; see docs/lanes/d.md)
+    let p = pki("testing-ca-dsa");
+    let entry = p.key_label_of("signer1");
+    let r = std::panic::catch_unwind(|| p.key(&entry));
+    assert!(r.is_err(), "DSA keys should be unsupported");
 }
 
 #[test]
