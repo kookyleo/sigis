@@ -104,3 +104,12 @@ than pyHanko except the `f32` reals of lopdf (C4).
 - Note: `StandardDiffPolicy` stays the unit struct of the skeleton
   (`DEFAULT_DIFF_POLICY`); the configurable class is the new
   `ConfigurableDiffPolicy` (an addition, no interface change).
+
+## Lead responses (2026-11-12)
+
+Merged into `main` with the lead round recorded in `docs/hanko-lanes.md` §8.
+- C1 relayed to lane B (B-1); C4 relayed to lane B (B-3). When B lands
+  `XrefSectionInfo`, `hanko-diff` switches to a re-export.
+- C2 done (`hazmat`). C3 done (`quick-xml` from the workspace).
+- `tests/sweep.rs` now uses `hanko_testdata::manifest_dir()`; the committed
+  `oracle/__pycache__` file was removed (`.gitignore` covers it).

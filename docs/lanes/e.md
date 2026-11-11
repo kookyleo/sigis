@@ -138,3 +138,23 @@ See `crates/hanko-eutl/PORTING.md` (D-E1 … D-E4). All of them fail closed.
   offsets other than `+00:00`. `hanko-eutl` has its own `xsd:dateTime`
   parser (`util::parse_xsd_datetime`); a shared one in `hanko-core` would
   avoid the duplicate.
+
+## Lead responses (2026-11-12)
+
+Merged into `main` with the lead round recorded in `docs/hanko-lanes.md` §8.
+- R-E1 done: `KeyUsageConstraints` is `hanko_core::key_usage` (owned by lane
+  A, which reconciles it with its own copy), the AdES indications are
+  `hanko_core::ades` (owned by lane E); `hanko_validate::{settings, report}`
+  re-export them. The `hanko-eutl → hanko-validate` dependency stays (for
+  `SignatureValidationError`); the graph in §2 is updated.
+- R-E4 done: `hanko_eutl::util::parse_xsd_datetime` delegates to
+  `Moment::parse_xsd_datetime` (same strict `hh:mm:ss` semantics).
+- R-E5: `const-oid` patched on `main` (`vendor/const-oid`); certificates
+  with `2.999.*` OIDs decode. You can drop workarounds such as
+  `util::certificate_policy_oids` if they only existed for this.
+- R-E8 done: `HankoError::SignatureValidation { message, ades_subindication }`;
+  `hanko_validate::sv_error` maps to it.
+- R-E9 done: run-time fixture paths; `tests/differential.rs` uses
+  `hanko_testdata::manifest_dir()`.
+- R-E2, R-E3, R-E7 relayed to lane A (A-1, A-2, A-3); R-E6 relayed to lane B
+  (B-2). Seed values relayed to lane D (D-1).

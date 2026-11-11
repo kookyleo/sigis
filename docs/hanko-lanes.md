@@ -1,6 +1,7 @@
 # sigis-hanko: parallel port of pyHanko
 
-Status: lane plan, 2026-11-11. Owner of this file: the lead.
+Status: lane plan, 2026-11-11; updated 2026-11-12 (lanes C and E merged,
+see §8). Owner of this file: the lead.
 
 Goal: functional parity with **pyHanko 0.38.1** and **pyhanko-certvalidator
 0.33.0**, with their test suites as the acceptance baseline. Upstream source
@@ -37,12 +38,12 @@ to other paths are requested from the lead (see §6).
 
 | Path | Owner | Content |
 | --- | --- | --- |
-| `Cargo.toml` (root), `Cargo.lock`*, `crates/hanko/` (facade `sigis-hanko`), `crates/hanko-core/` except `algorithms.rs` and `asn1/`, `crates/hanko-testdata/src/`, `crates/hanko-testdata/data/{pyhanko,pyhanko-certvalidator,sigis-generated,pyhanko-pki}/`, `tools/`, `docs/hanko-lanes.md`, `src/`, `web/`, `vendor/` | Lead | Workspace, shared types and traits, shared fixtures, service |
-| `crates/hanko-core/src/algorithms.rs`, `crates/hanko-core/src/asn1/`, `crates/hanko-certvalidator/`, `crates/hanko-cms/`, `crates/hanko-fetch/` | Lane A | Certificate validation, CMS / TSP validation, fetchers |
+| `Cargo.toml` (root), `Cargo.lock`*, `crates/hanko/` (facade `sigis-hanko`), `crates/hanko-core/` except `algorithms.rs`, `asn1/`, `key_usage.rs` and `ades.rs`, `crates/hanko-testdata/src/`, `crates/hanko-testdata/data/{pyhanko,pyhanko-certvalidator,sigis-generated,pyhanko-pki}/`, `tools/`, `docs/hanko-lanes.md`, `src/`, `web/`, `vendor/` | Lead | Workspace, shared types and traits, shared fixtures, service |
+| `crates/hanko-core/src/algorithms.rs`, `crates/hanko-core/src/asn1/`, `crates/hanko-core/src/key_usage.rs`, `crates/hanko-certvalidator/`, `crates/hanko-cms/`, `crates/hanko-fetch/` | Lane A | Certificate validation, CMS / TSP validation, fetchers |
 | `crates/hanko-pdf/` (incl. `fuzz/`) | Lane B | PDF layer, encryption, metadata |
 | `crates/hanko-diff/` | Lane C | DocMDP / FieldMDP analysis |
 | `crates/hanko-sign/` | Lane D | Signers, fields, appearances, key providers |
-| `crates/hanko-validate/`, `crates/hanko-ades/`, `crates/hanko-eutl/` | Lane E | PDF validation, AdES, reports, trusted lists |
+| `crates/hanko-validate/`, `crates/hanko-ades/`, `crates/hanko-eutl/`, `crates/hanko-core/src/ades.rs` | Lane E | PDF validation, AdES, reports, trusted lists |
 | `crates/hanko-testdata/data/lanes/<lane>/`, `docs/lanes/<lane>.md` | That lane | Lane fixtures; lane status and interface requests |
 
 \* Any lane may change `Cargo.lock` as a side effect of adding a dependency
@@ -51,18 +52,30 @@ to its own crate. On a rebase conflict, take `main`'s `Cargo.lock` and run
 `Cargo.toml` with explicit versions; the lead hoists shared ones into
 `[workspace.dependencies]`.
 
-Dependency graph (arrows point to dependencies):
+Dependency graph (normal dependencies, as merged on 2026-11-12):
 
-```
-hanko-core ◀── hanko-certvalidator ◀── hanko-cms ◀──┬── hanko-validate ◀── hanko-ades
-     ▲                ▲                     ▲          │        ▲
-     │                └── hanko-fetch       │          │        │
-     ├── hanko-pdf ◀── hanko-diff ◀─────────┼──────────┘        │
-     │       ▲                              │                   │
-     │       └──────── hanko-sign ──────────┘ (+ certvalidator) │
-     └── hanko-eutl ────────────────────────────────────────────┘ (later)
-sigis-hanko (facade) re-exports all of them.
-```
+| Crate | Depends on (hanko-*) |
+| --- | --- |
+| `hanko-core` | — |
+| `hanko-certvalidator` | core |
+| `hanko-cms` | core, certvalidator |
+| `hanko-fetch` | core |
+| `hanko-pdf` | core |
+| `hanko-diff` | core, pdf |
+| `hanko-sign` | core, certvalidator, pdf (+ cms) |
+| `hanko-validate` | core, certvalidator, cms, pdf, diff |
+| `hanko-eutl` | core, certvalidator, validate |
+| `hanko-ades` | core, certvalidator, cms, pdf, validate, eutl |
+| `sigis-hanko` (facade) | all |
+
+No crate may depend on a crate that depends on it. Dev-dependencies may
+point "upwards" (for example `hanko-sign` tests may use `hanko-validate`).
+
+Patched dependencies (root `[patch.crates-io]`, lead-owned):
+`underskrift` (B-T timestamps, to be removed when lane D replaces it) and
+`const-oid` (second arcs above 39 under first arc 2, needed for pyHanko's
+`2.999.*` test policy OIDs; upstream text in
+`vendor/const-oid.UPSTREAM.md`).
 
 ## 3. Lanes
 
@@ -85,10 +98,14 @@ All functions and types below exist on `main` and compile. Stubs return
 `HankoError::NotImplemented(...)` and never panic. Signatures may only change
 through the lead.
 
-- **`hanko-core`** (lead; `algorithms` and `asn1` lane A):
-  - `errors::{HankoError, Result, ValidationError, SignatureError, FetchError, FetchErrorKind, not_implemented}`.
+- **`hanko-core`** (lead; `algorithms`, `asn1`, `key_usage` lane A; `ades` lane E):
+  - `errors::{HankoError, Result, ValidationError, SignatureError, FetchError, FetchErrorKind, not_implemented}`;
+    `HankoError::SignatureValidation { message, ades_subindication: Option<ades::AdesSubIndic> }`
+    for signature validation failures (pyHanko `SignatureValidationError`).
+  - `ades::{AdesStatus, AdesSubIndic, AdesPassed, AdesFailure, AdesIndeterminate}` (moved from `hanko-validate`, re-exported as `hanko_validate::report`).
+  - `key_usage::KeyUsageConstraints` and helpers (moved from `hanko-validate`, re-exported as `hanko_validate::settings`; `hanko-cms` must use this one).
   - `cert::Cert` (parsed certificate plus exact DER).
-  - `time::Moment`.
+  - `time::Moment` (`parse_rfc3339` with offsets, strict `parse_xsd_datetime`).
   - `algorithms::{DigestAlgorithm, SignatureMechanism, validate_signature, AlgorithmUsagePolicy, DisallowWeakAlgorithmsPolicy}`.
   - `asn1::{ess, sig_policy, commitment, oids}`.
   - `fetch::{OcspFetcher, CrlFetcher, CertificateFetcher, Fetchers}`: synchronous traits; async callers use a blocking task.
@@ -184,6 +201,12 @@ implementation lands, and switches to the real implementation afterwards.
 
 ### 5.2 Fixtures
 
+- **Locate fixtures at run time.** Use `hanko_testdata::{data_dir, path,
+  read, certvalidator, pyhanko}` for fixtures and
+  `hanko_testdata::manifest_dir()` for files of your own crate (oracle
+  scripts). Never use `env!("CARGO_MANIFEST_DIR")` in tests: all worktrees
+  share one target directory, so a compile-time path can point into another
+  worktree. `$HANKO_TESTDATA` overrides the fixture directory.
 - Shared pyHanko fixtures are in `crates/hanko-testdata/data/` (lead-owned),
   copied from the release tags with their licenses:
   - `pyhanko/`: test PKI configuration and public test keys, PDFs, XML,
@@ -220,8 +243,16 @@ implementation lands, and switches to the real implementation afterwards.
 
 ### 5.4 Differential harness (pyHanko oracle)
 
-- `tools/pyhanko-oracle/setup.sh` creates a venv in `/tmp/pyhanko-oracle` with
-  pyHanko 0.38.1 and pyhanko-certvalidator 0.33.0, plus the source tags.
+- The standard oracle is the venv `/tmp/pyhanko-oracle/venv`, built by
+  `tools/pyhanko-oracle/setup.sh` from the pinned
+  `tools/pyhanko-oracle/requirements.txt` (pyHanko 0.38.1,
+  pyhanko-certvalidator 0.33.0, certomancer 0.16.0, pyHanko's test utilities
+  at tag v0.38.1, signxml, xsdata, pytest; the union of the lane venvs). It
+  also checks out the source tags under `/tmp/pyhanko-oracle/src`.
+  `hanko_testdata::oracle` uses it by default; `$HANKO_ORACLE` overrides
+  the interpreter. Lane-local venvs (`/tmp/lane-a`, `/tmp/c-diff-oracle`,
+  ...) are no longer needed; add missing packages to `requirements.txt`
+  through the lead.
 - Fixture generators run pyHanko (and Certomancer for the test PKI) and write
   inputs plus pyHanko's verdicts as JSON. Their outputs are committed, so
   normal test runs need no Python.
@@ -229,8 +260,7 @@ implementation lands, and switches to the real implementation afterwards.
   compare pyHanko's verdict with the Rust verdict on the same input. They skip
   with a message when the oracle is not installed, and fail if pyHanko's
   verdict is stricter than the port's.
-- Lead open item **L1**: install the oracle (PyPI is reachable only
-  intermittently from this host), record collected-case counts in §5.1, and
+- Lead open item **L1**: record collected-case counts in §5.1, and
   export the Certomancer test PKI (`crypto/certomancer.yml`, arch
   `testing-ca` and the others the tests use) to
   `crates/hanko-testdata/data/pyhanko-pki/` at a pinned time. Lanes that need
@@ -253,7 +283,7 @@ module → Rust file → status table.
 3. Never edit files owned by another lane or by the lead. Interface or
    shared-file changes are requested in `docs/lanes/<lane>.md` under
    "Requests to the lead". The lead applies them on `main`, and lanes rebase.
-4. A phase ends with a green gate for the whole workspace: `cargo build`,
+4. A phase ends with `cargo fmt --all` on your crates and a green gate for the whole workspace: `cargo build`,
    `cargo test`, `cargo clippy --all-targets` (no warnings), and
    `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps`. Then update the crate's
    `PORTING.md` and `NOTICE`, update `docs/lanes/<lane>.md`, and make an
@@ -501,3 +531,36 @@ include §1–§6 by reference.
 > reason; differential verdicts never more lenient than pyHanko; gate green
 > per phase; per-suite counts reported. When `validate_pdf_signature` works,
 > tell the lead so `/api/verify` can expose it behind a flag.
+
+## 8. Integration log
+
+### 2026-11-12 (lead round 1)
+
+Merged into `main` (fast-forward after rebase): lane C (`hanko/c-diff`,
+2 commits) and lane E (`hanko/e-validate`, 9 commits). Lead changes on
+`main`:
+
+- Fixtures resolve at run time (R-E9, A-R4, D-2); see §5.2.
+- `hanko-core`: `x509-cert` feature `hazmat` (C2, A-R3, B-1);
+  `Moment::parse_rfc3339` offsets and `parse_xsd_datetime` (R-E4);
+  `key_usage` and `ades` modules moved from `hanko-validate` (R-E1);
+  `HankoError::SignatureValidation` (R-E8, A-R2).
+- `quick-xml` 0.38.4 in `[workspace.dependencies]`, used by `hanko-diff` and
+  `hanko-ades` (C3).
+- `const-oid` patched for `2.999.*` OIDs (R-E5); upstream issue and patch
+  prepared in `vendor/const-oid.UPSTREAM.md`, not yet submitted.
+- Standard oracle venv and `requirements.txt` (§5.4).
+- The merged C and E code was formatted with rustfmt (separate commit).
+
+Interface decisions:
+
+- Approved (additive or not yet consumed on `main`): lane A R5 (new
+  `SignatureStatus` / `StandardCmsSignatureStatus` fields, `HttpFetchers::new`,
+  `HttpTimeStamper::new`), lane D 1 (`PdfSignatureMetadata::md_algorithm` and
+  `subfilter` as `Option`, new metadata and signer fields,
+  `hanko_sign::signer`), lane C `ConfigurableDiffPolicy`, lane E
+  `PdfSignatureStatus::{docmdp_ok, bottom_line}`.
+- Lane A R1 approved: lane A adds `md-5`, `sha3`, `dsa` and
+  `ed448-goldilocks` to `crates/hanko-core/Cargo.toml` `[dependencies]` in the
+  same commit as the code that uses them (a one-time exception to §2, so the
+  gate has no unused-dependency warning).
