@@ -489,6 +489,43 @@ fn test_page_import_no_media_box() {
 }
 
 #[test]
+fn test_page_tree_import() {
+    for (stream_xrefs, with_objstreams, encrypt) in [
+        (false, false, true),
+        (false, false, false),
+        (true, false, false),
+        (true, true, false),
+        (true, true, true),
+    ] {
+        let r = read(&pdf("scribble.pdf"));
+        let mut w = PdfFileWriter::new(stream_xrefs, true).unwrap();
+        if encrypt {
+            w.encrypt("secret", None).unwrap();
+        }
+        let objstream = with_objstreams.then(|| w.prepare_object_stream(true).unwrap());
+        let pages = r.root().unwrap().get(b"Pages").unwrap().clone();
+        let new_page_tree = w.import_object(&r, &pages, objstream).unwrap();
+        let mut root = w.root().unwrap();
+        root.set("Pages", new_page_tree);
+        w.set_root(root);
+        let out = w.write().unwrap();
+        let r = read(&out);
+        if encrypt {
+            r.decrypt("secret").unwrap();
+        }
+        let (_, page) = first_page(&r);
+        let resources = r.get_dict(&page, b"Resources").unwrap().unwrap();
+        assert!(resources.has(b"ExtGState"));
+        let Some(Object::Stream(contents)) = r.get(&page, b"Contents").unwrap() else { panic!() };
+        let data = r.stream_data(&contents).unwrap();
+        assert!(data.windows(15).any(|w| w == b"0 1 0 rg /a0 gs"));
+        if with_objstreams {
+            assert_eq!(r.xrefs().object_streams_used_in(0).len(), 1);
+        }
+    }
+}
+
+#[test]
 fn test_page_import_with_fonts() {
     for inherit in [true, false] {
         let input = read(&pdf("fontembed.pdf"));
