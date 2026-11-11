@@ -313,6 +313,8 @@ mod tests {
             validation_path: path.then(|| {
                 ValidationPath::new(hanko_certvalidator::TrustAnchor::new(cert), vec![], None)
             }),
+
+            ..Default::default()
         }
     }
 

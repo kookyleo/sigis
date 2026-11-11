@@ -307,6 +307,13 @@ fn verify_signature_value(
                 DigestAlgorithm::Sha384 => oids::SHA384_WITH_RSA,
                 DigestAlgorithm::Sha512 => oids::SHA512_WITH_RSA,
                 DigestAlgorithm::Sha1 => oids::SHA1_WITH_RSA,
+                // XML-DSig here uses SHA-1 / SHA-2 only.
+                other => {
+                    return Err(invalid(format!(
+                        "unsupported digest algorithm {}",
+                        other.name()
+                    )))
+                }
             };
             (
                 raw_sig.to_vec(),
@@ -349,6 +356,13 @@ fn verify_signature_value(
                 DigestAlgorithm::Sha384 => oids::ECDSA_WITH_SHA384,
                 DigestAlgorithm::Sha512 => oids::ECDSA_WITH_SHA512,
                 DigestAlgorithm::Sha1 => oids::ECDSA_WITH_SHA1,
+                // XML-DSig here uses SHA-1 / SHA-2 only.
+                other => {
+                    return Err(invalid(format!(
+                        "unsupported digest algorithm {}",
+                        other.name()
+                    )))
+                }
             };
             (
                 ecdsa_raw_to_der(raw_sig, bits)?,

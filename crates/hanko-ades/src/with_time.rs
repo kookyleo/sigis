@@ -299,6 +299,8 @@ mod tests {
                 vec![],
                 Some(c),
             )),
+
+            ..Default::default()
         }
     }
 
@@ -315,6 +317,8 @@ mod tests {
             signer_reported_dt: None,
             timestamp_validity: tst.map(ts),
             content_timestamp_validity: None,
+
+            ..Default::default()
         }
     }
 

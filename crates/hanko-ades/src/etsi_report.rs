@@ -174,15 +174,27 @@ pub struct ReportInput {
     pub validation_objects: Vec<ValidationObject>,
 }
 
-/// XML Signature URI of a digest algorithm (`_digest_algo_uri`).
-pub fn digest_algo_uri(algo: DigestAlgorithm) -> &'static str {
+/// XML Signature URI of a digest algorithm (`DIGEST_ALGO_URIS`); `None`
+/// where pyHanko's `_digest_algo_uri` raises `NotImplementedError`.
+pub fn digest_algo_uri(algo: DigestAlgorithm) -> Option<&'static str> {
     match algo {
-        DigestAlgorithm::Sha1 => "http://www.w3.org/2000/09/xmldsig#sha1",
-        DigestAlgorithm::Sha224 => "http://www.w3.org/2001/04/xmldsig-more#sha224",
-        DigestAlgorithm::Sha256 => "http://www.w3.org/2001/04/xmlenc#sha256",
-        DigestAlgorithm::Sha384 => "http://www.w3.org/2001/04/xmldsig-more#sha384",
-        DigestAlgorithm::Sha512 => "http://www.w3.org/2001/04/xmlenc#sha512",
+        DigestAlgorithm::Sha1 => Some("http://www.w3.org/2000/09/xmldsig#sha1"),
+        DigestAlgorithm::Sha224 => Some("http://www.w3.org/2001/04/xmldsig-more#sha224"),
+        DigestAlgorithm::Sha256 => Some("http://www.w3.org/2001/04/xmlenc#sha256"),
+        DigestAlgorithm::Sha384 => Some("http://www.w3.org/2001/04/xmldsig-more#sha384"),
+        DigestAlgorithm::Sha512 => Some("http://www.w3.org/2001/04/xmlenc#sha512"),
+        _ => None,
     }
+}
+
+/// [`digest_algo_uri`] or pyHanko's error for digests without XML syntax.
+fn digest_uri(algo: DigestAlgorithm) -> Result<&'static str, quick_xml::Error> {
+    digest_algo_uri(algo).ok_or_else(|| {
+        quick_xml::Error::Io(std::sync::Arc::new(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            format!("No XML signature syntax available for digest algo '{}'", algo.name()),
+        )))
+    })
 }
 
 /// Main indication URI.
@@ -245,7 +257,7 @@ impl W {
 
     fn digest(&mut self, wrapper: &str, algo: DigestAlgorithm, value: &[u8]) -> XmlResult {
         self.start(wrapper, &[])?;
-        self.empty("ds:DigestMethod", &[("Algorithm", digest_algo_uri(algo))])?;
+        self.empty("ds:DigestMethod", &[("Algorithm", digest_uri(algo)?)])?;
         self.leaf("ds:DigestValue", &[], &b64(value))?;
         self.end(wrapper)
     }
@@ -265,7 +277,7 @@ fn write_attributes(w: &mut W, a: &SignatureAttributes) -> XmlResult {
             w.start("vr:CertID", &[])?;
             w.empty(
                 "ds:DigestMethod",
-                &[("Algorithm", digest_algo_uri(id.digest_algorithm))],
+                &[("Algorithm", digest_uri(id.digest_algorithm)?)],
             )?;
             w.leaf("ds:DigestValue", &[], &b64(&id.digest))?;
             if let Some(is) = &id.issuer_serial {
