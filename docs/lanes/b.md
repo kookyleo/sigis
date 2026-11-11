@@ -70,6 +70,19 @@ lane D: `test_internal_utils.py::{test_box_constraint_*,
 test_resource_add_test, test_duplicate_resource}` (`layout.py`,
 `content.py`).
 
+## Fuzzing
+
+Targets in `crates/hanko-pdf/fuzz` (see its README). Budget: 15 minutes per
+target, single process each, seeds from pyHanko's test PDFs/XML, on
+2026-11-12 (machine load ~60). Final run: all six clean —
+`parse_pdf` 305,620 runs, `parse_object` 5,786,728, `xref_stream` 367,360,
+`object_stream` 367,769, `incremental_roundtrip` 3,409,534, `xmp`
+4,151,324. Earlier runs found four issues, all fixed or pinned with
+regression inputs (`tests/fuzz_regressions.rs`): an integer overflow on
+object stream offsets, large reals that did not reparse, update numbering
+below objects the file uses, and catalog/xref-stream number sharing (pyHanko
+parity, excluded from the round-trip invariant).
+
 ## Known divergences
 
 See `crates/hanko-pdf/PORTING.md` ("Known divergences"). All fail closed.
