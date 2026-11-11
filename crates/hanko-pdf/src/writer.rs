@@ -33,6 +33,16 @@ pub trait Encryptor: std::fmt::Debug {
     /// Encrypt stream data belonging to object `container` (not called for
     /// streams with an explicit `/Crypt` filter).
     fn encrypt_stream(&self, dict: &Dictionary, data: &[u8], container: ObjectId) -> PdfResult<Vec<u8>>;
+    /// The crypt filter for embedded files (name without slash), if it
+    /// differs from the default stream filter; embedded file streams then
+    /// get an explicit `/Crypt` filter.
+    fn embedded_file_filter_name(&self) -> Option<Vec<u8>> {
+        None
+    }
+    /// Crypt filters for explicit `/Crypt` stream filters.
+    fn crypt_filters(&self) -> Option<&dyn crate::stream::CryptFilterDecode> {
+        None
+    }
 }
 
 /// Serialise an object, encrypting strings and streams with `enc` as
@@ -195,6 +205,9 @@ pub struct PdfWriter {
     meta: DocumentMetadata,
     encrypt: Option<ObjectId>,
     encryptor: Option<Box<dyn Encryptor>>,
+    /// Whether metadata streams are encrypted (`encrypt_metadata` of the
+    /// security handler); only relevant with encryption.
+    pub encrypt_metadata: bool,
     base: Base,
     /// Run the metadata update (`_update_meta`) on write (default `true`).
     pub update_meta_on_write: bool,
@@ -234,6 +247,7 @@ impl PdfWriter {
             meta: DocumentMetadata::default(),
             encrypt: None,
             encryptor: None,
+            encrypt_metadata: true,
             base,
             update_meta_on_write: true,
             fixed_time: None,
@@ -263,13 +277,7 @@ impl PdfWriter {
     /// Metadata view (`document_meta_view`).
     pub fn document_meta_view(&self) -> PdfResult<DocumentMetadata> {
         let base = match (&self.base, self.info) {
-            (Base::Incremental { prev, .. }, _) => match prev.trailer_view().get(b"Info") {
-                Ok(i) => match prev.resolve(i)? {
-                    Object::Dictionary(d) => view_from_info_dict(prev, &d, prev.strict()),
-                    _ => DocumentMetadata::default(),
-                },
-                Err(_) => DocumentMetadata::default(),
-            },
+            (Base::Incremental { prev, .. }, _) => prev.document_meta_view()?,
             (Base::Fresh { .. }, Some(info)) => match self.get_object(info)? {
                 Object::Dictionary(d) => view_from_info_dict(self, &d, true),
                 _ => DocumentMetadata::default(),
@@ -491,6 +499,24 @@ impl PdfWriter {
         self.encryptor = Some(encryptor);
     }
 
+    /// The embedded-file crypt filter to add to new embedded file streams.
+    pub fn embedded_file_crypt_filter(&self) -> Option<Vec<u8>> {
+        self.encryptor.as_ref().and_then(|e| e.embedded_file_filter_name())
+    }
+
+    /// Encode a stream, applying explicit `/Crypt` filters with this
+    /// writer's encryption settings.
+    pub fn encode_with_crypt_filters(&self, s: &DecodedStream) -> PdfResult<Stream> {
+        let cf = self.encryptor.as_ref().and_then(|e| e.crypt_filters());
+        let content = crate::stream::encode_stream_data(&s.dict, &s.data, &crate::stream::no_deref, cf)?;
+        Ok(Stream {
+            dict: s.dict.clone(),
+            content,
+            allows_compression: false,
+            start_position: None,
+        })
+    }
+
     /// The `/Encrypt` reference, if any.
     pub fn encrypt_ref(&self) -> Option<ObjectId> {
         self.encrypt
@@ -528,13 +554,12 @@ impl PdfWriter {
         self.fixed_time.unwrap_or_else(now_utc)
     }
 
-    /// Update the Info dictionary before writing (`_update_meta`).
-    ///
-    /// XMP metadata streams are not updated yet; when the document needs
-    /// XMP, only existing Info entries are updated (as pyHanko does).
+    /// Update the Info dictionary and XMP metadata before writing
+    /// (`_update_meta`).
     pub fn update_meta(&mut self) -> PdfResult<()> {
         let root = self.root()?;
         let need_xmp = self.meta.xmp_unmanaged
+            || !self.meta.xmp_extra.is_empty()
             || self.output_version >= (2, 0)
             || root.has(b"Metadata");
         self.meta.last_modified = Some(crate::metadata::model::MetaDate::Now);
@@ -558,7 +583,58 @@ impl PdfWriter {
             }
             None => {}
         }
+        if !need_xmp {
+            return Ok(());
+        }
+        use crate::metadata::xmp_xml;
+        let mut updated = false;
+        if root.has(b"Metadata") {
+            // `root['/Metadata']` as a metadata stream
+            if let (Ok(Object::Reference(mref)), Some(Object::Stream(s))) =
+                (root.get(b"Metadata").cloned(), self.get(&root, b"Metadata")?)
+            {
+                let new = xmp_xml::update_metadata_stream(self, &s, &meta, now)?;
+                let new = self.encode_metadata_stream(new)?;
+                self.update_object(mref, Object::Stream(new));
+                updated = true;
+            } else if let Some(Object::Stream(s)) = self.get(&root, b"Metadata")? {
+                // direct metadata stream in the catalog
+                let new = xmp_xml::update_metadata_stream(self, &s, &meta, now)?;
+                let new = self.encode_metadata_stream(new)?;
+                let mut root = self.root()?;
+                root.set("Metadata", Object::Stream(new));
+                self.set_root(root);
+                updated = true;
+            }
+        }
+        if !updated {
+            let ds = xmp_xml::metadata_stream_from_xmp(&xmp_xml::update_xmp_with_meta(&meta, &[], now));
+            let ds = self.prepare_new_metadata_stream(ds)?;
+            let id = self.add_object(Object::Stream(ds))?;
+            let mut root = self.root()?;
+            root.set("Metadata", Object::Reference(id));
+            self.set_root(root);
+        }
+        self.update_root()?;
         Ok(())
+    }
+
+    /// Encode an updated metadata stream with its existing filters.
+    fn encode_metadata_stream(&self, ds: DecodedStream) -> PdfResult<Stream> {
+        ds.to_stream()
+    }
+
+    /// Prepare a new metadata stream for output: with an encrypted output
+    /// that does not encrypt metadata, an identity crypt filter is added
+    /// (`add_crypt_filter`).
+    fn prepare_new_metadata_stream(&self, mut ds: DecodedStream) -> PdfResult<Stream> {
+        if self.encryptor.is_some() && !self.encrypt_metadata {
+            let mut params = Dictionary::new();
+            params.set("Type", Object::Name(b"CryptFilterDecodeParms".to_vec()));
+            params.set("Name", Object::Name(b"Identity".to_vec()));
+            ds.apply_filter("Crypt", Some(params), crate::stream::DuplicateFilter::Allow)?;
+        }
+        ds.to_stream()
     }
 
     fn populate_trailer(&self, trailer: &mut Dictionary) -> PdfResult<()> {

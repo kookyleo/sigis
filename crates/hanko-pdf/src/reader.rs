@@ -693,6 +693,36 @@ impl PdfFile {
         lock(&self.inner.decode_ctx).remaining_budget()
     }
 
+    /// The XMP metadata view (`_xmp_meta_view`): `None` unless the catalog's
+    /// `/Metadata` is a stream.
+    pub fn xmp_meta_view(&self) -> PdfResult<Option<crate::metadata::model::DocumentMetadata>> {
+        let root = self.root()?;
+        match self.get(&root, b"Metadata")? {
+            Some(Object::Stream(s)) => {
+                let xmp = crate::metadata::xmp_xml::stream_xmp(self, &s)?;
+                Ok(Some(crate::metadata::xmp_xml::meta_from_xmp(&xmp)?))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// Document metadata: from XMP if present, else from the Info
+    /// dictionary (`document_meta_view`).
+    pub fn document_meta_view(&self) -> PdfResult<crate::metadata::model::DocumentMetadata> {
+        if let Some(m) = self.xmp_meta_view()? {
+            return Ok(m);
+        }
+        let tv = self.trailer_view();
+        match self.get(&tv, b"Info")? {
+            Some(Object::Dictionary(info)) => Ok(crate::metadata::info::view_from_info_dict(
+                self,
+                &info,
+                self.inner.strict,
+            )),
+            _ => Ok(crate::metadata::model::DocumentMetadata::default()),
+        }
+    }
+
     /// Snapshot of the reader's decoding context (`decode_context`).
     pub fn decode_context(&self) -> DecodeContext {
         lock(&self.inner.decode_ctx).clone()
@@ -967,6 +997,20 @@ impl HistoricalResolver {
     /// `true` if both resolvers share their state (pyHanko: `is`).
     pub fn same_view(&self, other: &HistoricalResolver) -> bool {
         Arc::ptr_eq(&self.state, &other.state)
+    }
+
+    /// Document metadata from the Info dictionary of this revision
+    /// (`document_meta_view`; XMP is not consulted, as in pyHanko).
+    pub fn document_meta_view(&self) -> PdfResult<crate::metadata::model::DocumentMetadata> {
+        let tv = self.state.trailer.clone();
+        match self.get(&tv, b"Info")? {
+            Some(Object::Dictionary(info)) => Ok(crate::metadata::info::view_from_info_dict(
+                self,
+                &info,
+                self.reader.inner.strict,
+            )),
+            _ => Ok(crate::metadata::model::DocumentMetadata::default()),
+        }
     }
 
     /// Snapshot of the decoding context of this view (`decode_context`).

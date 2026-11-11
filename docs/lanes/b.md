@@ -12,9 +12,10 @@ base/new-file/incremental writer, signature field enumeration, embedded
 signature discovery, DSS reading. All §4 `hanko-pdf` interface functions are
 implemented (no `NotImplemented` stubs left).
 
-Next: `test_internal_utils.py`, `test_decode_limits.py`, content stream
-parser, extensions, embedded files, XMP metadata, encryption, PDF MAC,
-fuzz targets.
+Phase 2 landed: developer extensions, page import, XMP metadata
+(read/update/serialise), embedded files, content stream parser.
+In progress: encryption and PDF MAC (on helper branch
+`hanko/b-pdf-crypt`, to be merged into `hanko/b-pdf`), then fuzz targets.
 
 Notes for lanes C, D, E:
 
@@ -42,10 +43,10 @@ Notes for lanes C, D, E:
 | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | 60 | 59 | 1 | 0 |
 | `test_internal_utils.py` | 127 | 110 | 16 | 1 |
-| `test_decode_limits.py` | 29 | 25 | 0 | 4 |
-| `test_content_stream_parser.py` | 8 | 0 | 0 | 8 |
-| `test_embed.py` | 9 | 0 | 0 | 9 |
-| `test_meta.py` | 39 | 0 | 0 | 39 |
+| `test_decode_limits.py` | 29 | 26 | 0 | 3 |
+| `test_content_stream_parser.py` | 8 | 8 | 0 | 0 |
+| `test_embed.py` | 9 | 4 | 0 | 5 |
+| `test_meta.py` | 39 | 37 | 0 | 2 |
 | `test_crypt.py` | 84 | 0 | 0 | 84 |
 | `test_pdfmac.py` | 50 | 0 | 0 | 50 |
 
@@ -71,5 +72,8 @@ See `crates/hanko-pdf/PORTING.md` ("Known divergences"). All fail closed.
    unification with `certval`. Please add `features = ["hazmat"]` to
    hanko-core's `x509-cert` dependency (or to the workspace entry). Lane B
    runs its checks with `--workspace` meanwhile.
-2. pyHanko oracle (L1): not installed yet on this host; lane B has no
-   differential tests so far.
+2. pyHanko oracle (L1): PyPI became reachable on 2026-11-11 evening; lane B
+   installed a lane-local venv at `/tmp/hanko-b/venv` (certomancer,
+   pyhanko 0.38.1, pyhanko-certvalidator 0.33.0) to export the certificates
+   it needs (§5.4 allows a lane-local export). `/tmp/pyhanko-oracle` was not
+   touched.

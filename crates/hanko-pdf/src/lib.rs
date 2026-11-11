@@ -27,7 +27,9 @@
     warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod content_stream_parser;
 pub mod decode_limits;
+pub mod embed;
 pub mod error;
 pub mod extensions;
 pub mod filters;

@@ -17,6 +17,12 @@ Plan and test assignment: `docs/hanko-lanes.md`.
   recovery, hybrid files, free/reuse generation rules), so `reader.py`,
   `xref.py` and the parsing half of `generic.py` are ported directly on top
   of the lopdf types. lopdf is used for the object model only.
+- **XML (XMP)**: `quick-xml` (namespace-aware reader) builds a minimal
+  element tree that mirrors what pyHanko uses of lxml. `roxmltree` was
+  evaluated first and rejected: it refuses elements with the predefined
+  `xml:` prefix (e.g. `<xml:lang>` qualifiers), which XMP uses. DTDs and
+  non-predefined entities are rejected (pyHanko rejects entities; a DTD
+  without entities is rejected here as well, which is stricter).
 - **Filters**: `flate2` for Flate; ASCIIHex/ASCII85 are small and ported.
   As in pyHanko, LZW, RunLength and image filters are not supported
   (`NotImplemented`), so files pyHanko rejects are rejected here too.
@@ -34,12 +40,13 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | `pdf_utils/rw_common.py` | `src/rw_common.rs` | ported |
 | `pdf_utils/writer.py` | `src/writer.rs` | ported (encryption setup pending: `encrypt`, `encrypt_pubkey`) |
 | `pdf_utils/incremental_writer.py` | `src/writer.rs` (`IncrementalWriter`) | ported (encryption updates pending) |
-| `pdf_utils/metadata/info.py`, `model.py` (subset) | `src/metadata/` | ported in part (XMP pending) |
+| `pdf_utils/metadata/info.py`, `model.py` | `src/metadata/{info,model}.rs` | ported |
+| `pdf_utils/metadata/xmp_xml.py` | `src/metadata/xmp_xml.rs` | ported (XML via `quick-xml`, see Decisions) |
 | `pdf_utils/form_tools.py` (`enumerate_fields_in`) | `src/signatures.rs` | ported in part |
 | `sign/validation/pdf_embedded.py` (discovery), `dss.py` (`read_dss`) | `src/signatures.rs` | ported (structural part) |
-| `pdf_utils/metadata/xmp_xml.py` | — | pending |
 | `pdf_utils/extensions.py` | `src/extensions.rs` | ported |
-| `pdf_utils/embed.py`, `content_stream_parser.py` | — | pending |
+| `pdf_utils/content_stream_parser.py` | `src/content_stream_parser.rs` | ported |
+| `pdf_utils/embed.py` | `src/embed.rs` | ported (`wrap_encrypted_payload` with the crypt module) |
 | `pdf_utils/crypt/` | — | pending |
 
 ## Test mapping
@@ -48,10 +55,10 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | `tests/xref.rs` | 60 | 59 | 1 | 0 |
 | `test_internal_utils.py` | `tests/internal_utils.rs` | 127 | 110 | 16 | 1 |
-| `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 25 | 0 | 4 |
-| `test_content_stream_parser.py` | — | 8 | 0 | 0 | 8 |
-| `test_embed.py` | — | 9 | 0 | 0 | 9 |
-| `test_meta.py` | — | 39 | 0 | 0 | 39 |
+| `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 26 | 0 | 3 |
+| `test_content_stream_parser.py` | `tests/content_stream_parser.rs` | 8 | 8 | 0 | 0 |
+| `test_embed.py` | `tests/embed.rs` | 9 | 4 | 0 | 5 |
+| `test_meta.py` | `tests/meta.rs` | 39 | 37 | 0 | 2 |
 | `test_crypt.py` | — | 84 | 0 | 0 | 84 |
 | `test_pdfmac.py` | — | 50 | 0 | 0 | 50 |
 
@@ -78,9 +85,14 @@ Skipped tests:
 
 Pending tests:
 
+- `test_meta.py::{test_encrypt_skipping_managed_metadata,
+  test_encrypt_with_managed_metadata}`, `test_embed.py::{test_encrypt_efs,
+  test_decrypt_ef_without_explicit_crypt_filter,
+  test_wrapper_doc_underspecified, test_wrapper_doc, test_wrapper_doc_pubkey}`
+  (need the crypt module).
+
 - `test_internal_utils.py::test_page_tree_import` (needs encryption).
-- `test_decode_limits.py::test_purpose_applied` (the `xmp` case needs the XMP
-  module), `test_post_sign_reopen_keeps_limits`,
+- `test_decode_limits.py::test_post_sign_reopen_keeps_limits`,
   `test_archival_timestamp_update_keeps_limits`, `test_add_dss_keeps_limits`
   (need lane D signing / DSS updates).
 
@@ -106,5 +118,10 @@ All fail closed (the port never accepts what pyHanko rejects):
   the data offset recorded in `Stream::start_position`), like pyHanko's
   per-object cache; streams parsed from a file therefore carry
   `start_position`, so compare streams by `dict` and `content`.
+- `wrap_encrypted_payload`'s explanation page uses a plain standard-14
+  Courier font resource (pyHanko uses lane D's font engine, which adds
+  `/Widths` and a font descriptor).
+- XMP: an XML declaration with an `encoding` attribute after the xpacket
+  header is rejected (lxml refuses such decoded text, as pyHanko does).
 - Producer string: `sigis-hanko <version>` instead of `pyHanko <version>`;
   modification dates are written in UTC (pyHanko: local time zone).

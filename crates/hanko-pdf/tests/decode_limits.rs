@@ -408,9 +408,27 @@ fn read_dss(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
     Ok(())
 }
 
+const EMPTY_XMP: &[u8] = b"<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"></rdf:RDF></x:xmpmeta>";
+
+fn read_xmp(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
+    let (out, ids) = pdf_with_streams(vec![make_stream(
+        flate_compress(EMPTY_XMP),
+        &["FlateDecode"],
+        &[
+            ("Type", hanko_pdf::generic::pdf_name("Metadata")),
+            ("Subtype", hanko_pdf::generic::pdf_name("XML")),
+        ],
+    )]);
+    let r = open(&out, limits);
+    let xmp = hanko_pdf::metadata::xmp_xml::stream_xmp(&r, &stream_of(&r, ids[0]))?;
+    assert!(xmp.is_empty());
+    Ok(())
+}
+
 #[test]
 fn test_purpose_applied() {
-    // the 'xmp' case is ported with the XMP metadata module (see PORTING.md)
+    read_xmp(None).unwrap();
+    assert!(is_limit(&read_xmp(Some(tiny_limit(DecodePurpose::XmpMetadata))).unwrap_err()));
     read_objstm(None).unwrap();
     assert!(is_limit(&read_objstm(Some(tiny_limit(DecodePurpose::ObjectStream))).unwrap_err()));
     read_dss(None).unwrap();

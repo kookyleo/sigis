@@ -16,9 +16,12 @@ der = { workspace = true }
 cms = { workspace = true }
 sha1 = { workspace = true }
 sha2 = { workspace = true }
+md5 = { package = "md-5", version = "0.11" }
 flate2 = "1.1"
 log = "0.4"
 getrandom = "0.3"
+quick-xml = "0.38"
+indexmap = "2"
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }
