@@ -85,13 +85,56 @@ async def run(a):
         if a.password is not None:
             r.decrypt(a.password.encode())
         out = []
-        for sig in r.embedded_signatures:
-            vc = ValidationContext(
-                trust_roots=[] if a.no_trust else [load_cert_from_pemder(p) for p in a.trust],
-                other_certs=[load_cert_from_pemder(p) for p in a.other],
-                allow_fetching=bool(a.live),
-                revocation_mode=a.revocation_mode,
-            )
+        try:
+            if a.from_fields:
+                from pyhanko.sign import fields as _fields
+                from pyhanko.sign.validation import EmbeddedPdfSignature
+
+                sigs = [
+                    EmbeddedPdfSignature(r, sig_field, fq_name)
+                    for fq_name, _v, sig_field in _fields.enumerate_sig_fields(
+                        r, filled_status=True
+                    )
+                ]
+            else:
+                sigs = list(r.embedded_signatures)
+        except Exception as e:
+            return [{'reader_error': f'{e.__class__.__name__}: {e}'}]
+        if a.count_only:
+            return [{'count': len(sigs)}]
+        for sig in sigs:
+            roots = [] if a.no_trust else [load_cert_from_pemder(p) for p in a.trust]
+            if a.ts_anchor:
+                from pyhanko_certvalidator.authority import (
+                    CertTrustAnchor,
+                    TrustedServiceType,
+                    TrustQualifiers,
+                )
+                from pyhanko_certvalidator.registry import SimpleTrustManager
+
+                anchors = list(roots)
+                for spec in a.ts_anchor:
+                    path, _, kind = spec.partition(':')
+                    cert = load_cert_from_pemder(path)
+                    if kind:
+                        anchors.append(CertTrustAnchor(
+                            cert,
+                            TrustQualifiers(trusted_service_type=TrustedServiceType[kind]),
+                        ))
+                    else:
+                        anchors.append(cert)
+                vc = ValidationContext(
+                    trust_manager=SimpleTrustManager.build(anchors),
+                    allow_fetching=bool(a.live),
+                    revocation_mode=a.revocation_mode,
+                )
+            else:
+                vc = ValidationContext(
+                    trust_roots=roots,
+                    other_certs=[load_cert_from_pemder(p) for p in a.other],
+                    allow_fetching=bool(a.live),
+                    revocation_mode=a.revocation_mode,
+                )
             entry = {
                 'field': sig.field_name,
                 'type': sig.sig_object_type,
@@ -133,13 +176,21 @@ async def run(a):
                         entry.update(status_json(ades.api_status))
                     out.append(entry)
                     continue
-                if sig.sig_object_type == '/DocTimeStamp':
+                if a.as_timestamp or sig.sig_object_type == '/DocTimeStamp':
                     st = await async_validate_pdf_timestamp(sig, validation_context=vc)
                 else:
+                    kwargs = {}
+                    if a.diff_policy == 'no-changes':
+                        from pyhanko.sign.diff_analysis import NO_CHANGES_DIFF_POLICY
+
+                        kwargs['diff_policy'] = NO_CHANGES_DIFF_POLICY
                     st = await async_validate_pdf_signature(
                         sig, vc, skip_diff=not a.extd,
                         ac_validation_context=vc if a.ac_vc else None,
+                        **kwargs,
                     )
+                    entry['revoked'] = getattr(st, 'revoked', None)
+                    entry['diff_result_is_none'] = sig.diff_result is None
                 entry.update(status_json(st))
             except Exception as e:  # report pyHanko's rejection class
                 entry['error'] = f'{e.__class__.__name__}: {e}'
@@ -174,6 +225,11 @@ def main():
     ap.add_argument('--ades-lta', action='store_true')
     ap.add_argument('--norev', action='store_true')
     ap.add_argument('--ac-vc', action='store_true')
+    ap.add_argument('--as-timestamp', action='store_true')
+    ap.add_argument('--from-fields', action='store_true')
+    ap.add_argument('--count-only', action='store_true')
+    ap.add_argument('--diff-policy')
+    ap.add_argument('--ts-anchor', action='append', default=[])
     ap.add_argument('--live', action='append', default=[])
     ap.add_argument('--lenient', action='store_true')
     ap.add_argument('--revocation-mode', default='soft-fail')

@@ -99,7 +99,7 @@ impl PdfUpdate {
             .unwrap_or_default();
         let stream_xrefs = at_xref.first().is_some_and(u8::is_ascii_digit);
         let trailer = &doc.trailer;
-        let hybrid = trailer.get(b"XRefStm").is_ok();
+        let hybrid = trailer.get(b"XRefStm").is_ok() || has_hybrid_trailer(bytes);
         let encrypted = trailer.get(b"Encrypt").is_ok();
         let root_id = trailer
             .get(b"Root")
@@ -454,6 +454,12 @@ impl PdfUpdate {
         }
         let mut positions: BTreeMap<ObjectId, usize> = BTreeMap::new();
         let mut offsets = BTreeMap::new();
+        // The placeholders normally sit in the registered signature
+        // dictionary, but may live in another object (e.g. an indirect
+        // `/Contents`); patch them wherever they are written.
+        let reserved = self.placeholders.values().next().copied();
+        let mut contents_at: Option<usize> = None;
+        let mut byte_range_at: Option<usize> = None;
         for (&id, obj) in &all {
             let obj: &Object = obj;
             positions.insert(id, out.len());
@@ -462,20 +468,30 @@ impl PdfUpdate {
             let mut body = Vec::new();
             lopdf::Writer::write_object(&mut body, obj)
                 .map_err(|e| HankoError::Signing(format!("serialize object: {e}")))?;
-            if let Some(&reserved) = self.placeholders.get(&id) {
-                let (patched, contents_off, br_off) = patch_placeholders(&body, reserved)?;
-                offsets.insert(
-                    id,
-                    PlaceholderOffsets {
-                        contents_start: start + contents_off,
-                        contents_end: start + contents_off + reserved + 2,
-                        byte_range_at: start + br_off,
-                    },
-                );
+            if let Some(reserved) = reserved {
+                let (patched, c_off, b_off) = patch_placeholders(&body, reserved);
+                if let Some(c) = c_off {
+                    contents_at = Some(start + c);
+                }
+                if let Some(b) = b_off {
+                    byte_range_at = Some(start + b);
+                }
                 body = patched;
             }
             out.extend_from_slice(&body);
             out.extend_from_slice(b"\nendobj\n");
+        }
+        if let (Some(reserved), Some(c), Some(b)) = (reserved, contents_at, byte_range_at) {
+            for id in self.placeholders.keys() {
+                offsets.insert(
+                    *id,
+                    PlaceholderOffsets {
+                        contents_start: c,
+                        contents_end: c + reserved + 2,
+                        byte_range_at: b,
+                    },
+                );
+            }
         }
         let mut trailer = Dictionary::new();
         trailer.set("Root", Object::Reference(self.root_id));
@@ -565,6 +581,23 @@ impl PdfUpdate {
     }
 }
 
+/// `true` if any classic trailer of the file points to an xref stream
+/// (`/XRefStm`), i.e. the file uses hybrid cross-references.
+fn has_hybrid_trailer(bytes: &[u8]) -> bool {
+    let mut from = 0;
+    while let Some(p) = find(&bytes[from..], b"trailer") {
+        let start = from + p + 7;
+        let end = (start + 4096).min(bytes.len());
+        let window = &bytes[start..end];
+        let stop = find(window, b"startxref").unwrap_or(window.len());
+        if find(&window[..stop], b"/XRefStm").is_some() {
+            return true;
+        }
+        from = start;
+    }
+    false
+}
+
 fn contiguous_chunks(positions: &BTreeMap<ObjectId, usize>) -> Vec<(u32, Vec<(usize, u16)>)> {
     let mut chunks: Vec<(u32, Vec<(usize, u16)>)> = Vec::new();
     let mut prev: Option<u32> = None;
@@ -582,31 +615,34 @@ fn find(hay: &[u8], needle: &[u8]) -> Option<usize> {
     hay.windows(needle.len()).position(|w| w == needle)
 }
 
-/// Replace the placeholder names in a serialized signature dictionary.
-/// Returns the patched bytes and the offsets of `<` and of the `/ByteRange`
-/// array within them.
-fn patch_placeholders(body: &[u8], reserved: usize) -> Result<(Vec<u8>, usize, usize)> {
+/// Replace the placeholder names in a serialized object. Returns the
+/// patched bytes and the offsets of `<` and of the `/ByteRange` array
+/// within them, for the placeholders the object contains.
+fn patch_placeholders(body: &[u8], reserved: usize) -> (Vec<u8>, Option<usize>, Option<usize>) {
     let mut out = body.to_vec();
     let c_tok: Vec<u8> = [b"/".as_slice(), CONTENTS_TOKEN].concat();
     let b_tok: Vec<u8> = [b"/".as_slice(), BYTE_RANGE_TOKEN].concat();
-    let c_pos = find(&out, &c_tok).ok_or_else(|| malformed("contents placeholder missing"))?;
-    let mut contents = Vec::with_capacity(reserved + 2);
-    contents.push(b'<');
-    contents.extend(std::iter::repeat_n(b'0', reserved));
-    contents.push(b'>');
-    out.splice(c_pos..c_pos + c_tok.len(), contents);
-    let b_pos = find(&out, &b_tok).ok_or_else(|| malformed("byte range placeholder missing"))?;
-    let mut br = b"[]".to_vec();
-    br.extend(std::iter::repeat_n(b' ', BYTE_RANGE_PLACEHOLDER_LEN - 2));
-    out.splice(b_pos..b_pos + b_tok.len(), br);
-    // the byte range comes after or before the contents; recompute the
-    // contents offset if the byte range preceded it
-    let c_pos = if b_pos < c_pos {
-        c_pos + BYTE_RANGE_PLACEHOLDER_LEN - b_tok.len()
-    } else {
-        c_pos
-    };
-    Ok((out, c_pos, b_pos))
+    let mut c_pos = find(&out, &c_tok);
+    if let Some(p) = c_pos {
+        let mut contents = Vec::with_capacity(reserved + 2);
+        contents.push(b'<');
+        contents.extend(std::iter::repeat_n(b'0', reserved));
+        contents.push(b'>');
+        out.splice(p..p + c_tok.len(), contents);
+    }
+    let b_pos = find(&out, &b_tok);
+    if let Some(p) = b_pos {
+        let mut br = b"[]".to_vec();
+        br.extend(std::iter::repeat_n(b' ', BYTE_RANGE_PLACEHOLDER_LEN - 2));
+        out.splice(p..p + b_tok.len(), br);
+        // the contents placeholder moves if the byte range preceded it
+        if let Some(c) = c_pos.as_mut() {
+            if p < *c {
+                *c = *c + BYTE_RANGE_PLACEHOLDER_LEN - b_tok.len();
+            }
+        }
+    }
+    (out, c_pos, b_pos)
 }
 
 /// Fill the `/ByteRange` placeholder and return the byte range.

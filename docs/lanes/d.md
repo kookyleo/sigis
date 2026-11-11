@@ -31,7 +31,7 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_signing.py` | 78 | 14 | 0 | 64 |
+| `test_signing.py` | 78 | 57 | 9 | 12 |
 | `test_pades.py` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | 27 | 0 | 0 | 27 |
 | `test_seed_values.py` | 36 | 0 | 0 | 36 |
@@ -57,6 +57,27 @@ the lane venv, and skip differential checks when none imports pyHanko.
 Lane D exported the Certomancer PKI and revocation data locally into
 `crates/hanko-testdata/data/lanes/d/{pki,revinfo}` (§5.4 allows this before
 L1); see the README there.
+
+### `test_signing.py` details
+
+- Skipped (9): `test_default_validation_context_deprecated` (deprecation
+  warning of pyHanko's validator API; no counterpart);
+  `test_sign_reject_econtent_if_detached` (validates a fixture only; no
+  signing code involved, lane E); seven tests that sign with
+  `ExternalSigner(signing_cert=None)`: `test_interrupted_with_delayed_signing_cert_mech`,
+  `..._cert_directly_specify_md`, `test_interrupted_could_not_determine_digest_algo`,
+  `test_interrupted_no_estimation`, `test_interrupted_with_delayed_signing_no_prevalidation`,
+  `test_determine_mechanism_no_signing_cert`, `test_signer_info_no_signing_cert`
+  (the `KeySigner` interface always has a signing certificate).
+- Pending (12): five appearance tests (`test_simple_qr_sign`,
+  `test_qr_sign_enforce_url_param`, `test_no_email`,
+  `test_sign_appearance_noop`, `test_sign_visible_with_separate_annot`;
+  appearances sub-slice in progress); `test_embed_signed_attachment`
+  (embedded files, lane B); `test_mldsa44`, `test_ed448`, `test_ed448_trust`,
+  `test_ed448_invalid_hash_algo`, `test_ecdsa_with_sha3`, `test_rsa_with_sha3`
+  (SHA-3 / SHAKE256 in `DigestAlgorithm`, Ed448 / ML-DSA, lane A).
+- `test_sign_prescribed_attrs` uses the local TSA instead of pyHanko's HTTP
+  timestamp client against the mocked TSA (HTTP client: lane A).
 
 ### `test_pades.py` details
 

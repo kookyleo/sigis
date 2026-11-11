@@ -349,7 +349,7 @@ impl SignatureObjectSpec {
             d.set("Prop_AuthTime", Object::Integer(t));
         }
         if let Some(t) = self.prop_auth_type {
-            d.set("Prop_AuthType", Object::Name(t.as_str().as_bytes().to_vec()));
+            d.set("Prop_AuthType", text_string(t.as_str()));
         }
         if let Some(b) = &self.app_build_props {
             let mut pb = Dictionary::new();
