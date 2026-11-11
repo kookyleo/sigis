@@ -19,7 +19,7 @@ const PROVENANCE_ERR: &str =
     "Unable to verify OCSP response since response signing certificate could not be validated";
 
 /// Outcome of matching a response's `CertID` against the certificate.
-enum CertIdMatch {
+pub(crate) enum CertIdMatch {
     Match,
     /// Not about this certificate at all.
     Unrelated,
@@ -27,7 +27,7 @@ enum CertIdMatch {
     Failure(&'static str),
 }
 
-fn match_cert_id(
+pub(crate) fn match_cert_id(
     container: &OcspContainer,
     subject: &Subject<'_>,
 ) -> Result<CertIdMatch, ValidationError> {
@@ -58,7 +58,7 @@ fn match_cert_id(
 
 /// Find the certificate that signed the response, preferring certificates
 /// embedded in the response.
-fn identify_responder(
+pub(crate) fn identify_responder(
     ctx: &ValidationContext,
     container: &OcspContainer,
     subject: &Subject<'_>,

@@ -33,7 +33,10 @@ See `docs/hanko-lanes.md`.
   soft-fail), AIA issuer fetching in path building, qualified policies
   (RFC 9618 §5.5), `point_in_time_validation`. NIST PKITS: 243/246 agree.
 
-Next: `ltv` (POE, time slide, past validation), attribute certificate
+- Phase 3b: `ltv` filled: `PoeManager`, `time_slide`, `past_validate`
+  (lane E can use them now).
+
+Next: attribute certificate
 validation, registry and trust anchor qualifiers (`test_registry.py`,
 `test_policy_proc.py`), decision on `test_name_trees.py` /
 `test_policy_graph.py`.
@@ -43,7 +46,7 @@ validation, registry and trust anchor qualifiers (`test_registry.py`,
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `test_ac_validate.py` | 27 | 0 | 0 | 27 |
-| `test_ades_time_slide.py` | 13 | 0 | 0 | 13 |
+| `test_ades_time_slide.py` | 13 | 13 | 0 | 0 |
 | `test_certificate_validator.py` | 2 | 2 | 0 | 0 |
 | `test_common_utils.py` | 15 | 15 | 0 | 0 |
 | `test_fetch_limits.py` | 11 | 11 | 0 | 0 |
@@ -59,7 +62,7 @@ validation, registry and trust anchor qualifiers (`test_registry.py`,
 | `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 8 | 2 | 0 |
 | `test_tsa_fetcher_requests.py` | 4 | 4 | 0 | 0 |
-| **Total** | **271** | **129** | **20** | **122** |
+| **Total** | **271** | **142** | **20** | **109** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
 `crates/hanko-cms/PORTING.md`.
@@ -113,12 +116,22 @@ accepts); the tests assert this.
   binary's `CARGO_MANIFEST_DIR` (`<crate>/../hanko-testdata/data`), falling
   back to the compile-time path. Lane A's tests do this locally
   (`tests/common/mod.rs::lane_data`).
+- **R6 — `ValidationError` variants for LTV.** pyhanko-certvalidator has
+  `InsufficientPOEError` and `TimeSlideFailure`. `hanko_certvalidator::ltv`
+  reports them through its own `LtvError`; the §4 functions
+  (`time_slide`, `past_validate`) map them to
+  `ValidationError::PathValidation` with the message. If lane E needs to
+  tell them apart through `HankoError`, please add
+  `ValidationError::InsufficientPoe(String)` (a `PathValidationError`
+  subclass in pyHanko).
 - **R5 — additive interface changes in `hanko-cms` and `hanko-fetch` (for approval).** Kept
   every §4 item; added fields to `SignatureStatus` (`trust_problem_indic`,
   `pkcs7_signature_mechanism`, `md_algorithm_name`, `revocation_details`,
   `error_time_horizon`, `validation_time`) and to
   `StandardCmsSignatureStatus` (`cades_signer_attrs`, `ac_attrs`,
-  `ac_validation_errs`). `TrustProblem::KeyUsage` also carries the
+  `ac_validation_errs`). In `hanko-certvalidator::ltv`, `PoeType` gained
+  `Policy`, `PoeManager` gained `with_current_time`, `poe_time`,
+  `register_by_digest`, `iter`, `merge`. `TrustProblem::KeyUsage` also carries the
   self-signed `InvalidCertificateError`. In `hanko-fetch`, `FetchLimits`
   gained `max_requests`, `max_cert_requests`, `max_aia_urls_per_object`
   (pyhanko-certvalidator 0.33 `FetchLimits`), `HttpFetchers` is now built

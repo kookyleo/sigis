@@ -78,6 +78,8 @@ pub struct OcspContainer {
     pub(crate) basic: Arc<BasicOcspResponse>,
     pub(crate) tbs: Arc<[u8]>,
     pub(crate) index: usize,
+    /// DER of the whole `OCSPResponse`.
+    pub(crate) der: Arc<[u8]>,
 }
 
 impl OcspContainer {
@@ -99,11 +101,13 @@ impl OcspContainer {
         let basic_der = bytes.response.as_bytes();
         let basic = Arc::new(decode_lenient::<BasicOcspResponse>(basic_der).map_err(malformed)?);
         let tbs: Arc<[u8]> = signed_part(basic_der).map_err(malformed)?.into();
+        let whole: Arc<[u8]> = der.into();
         Ok((0..basic.tbs_response_data.responses.len())
             .map(|index| Self {
                 basic: basic.clone(),
                 tbs: tbs.clone(),
                 index,
+                der: whole.clone(),
             })
             .collect())
     }

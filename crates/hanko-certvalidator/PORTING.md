@@ -30,7 +30,10 @@ Nothing is wired into the Sigis service yet.
 | `policy_graph.py`, `name_trees.py` | — (`certval`) | Replaced by certval (RFC 5280, RFC 9618 policy graph) |
 | `fetchers/` | `hanko-fetch` | Ported there; used through `hanko_core::fetch` traits |
 | asn1crypto name handling (`Name.human_friendly`, string preparation) | `src/names.rs`, `src/stringprep_tables.rs` | Ported: names failing RFC 4518 preparation make validation fail as in pyHanko |
-| `ltv/` (POE, time slide, past validation) | — | Pending (AdES phase) |
+| `ltv/poe.py` | `src/ltv/poe.rs` | Ported (`POEManager` with the "now" default of `__getitem__`, by-digest registration, merge) |
+| `ltv/time_slide.py` (+ `collect_relevant_crls_with_paths`, `collect_relevant_responses_with_paths`) | `src/ltv/time_slide.rs` | Ported; the algorithm policy can be switched off (`algo_usage_policy=None`) with `TimeSlideOptions` |
+| `ltv/ades_past.py` | `src/ltv/mod.rs` (`past_validate`) | Ported, including the validity-intersection pre-check |
+| `ltv/errors.py` | `src/ltv/mod.rs` (`LtvError`) | Ported (`InsufficientPOEError`, `TimeSlideFailure`, `PastValidatePrecheckFailure`) |
 | ASN.1 from `asn1crypto` and `pyhanko/sign/ades/*_asn1.py` | `hanko-core/src/asn1/` | ESS `SigningCertificate(V2)`, `SignaturePolicyIdentifier`, `CommitmentTypeIndication` defined here; CMS/X.509/OCSP/TSP from RustCrypto |
 
 ## Test mapping
@@ -48,7 +51,7 @@ PKITS cases).
 | `test_certificate_validator.py` (2) | `tests/certificate_validator.rs` | Ported 2/2 (including the qualified policy assertions) |
 | `test_freshness.py` (6) | `tests/freshness.rs` | Ported 6/6 |
 | `test_validate.py` (21) | `tests/validate.rs`, `tests/pkits.rs`, `tests/openssl_ocsp.rs` | Ported 21/21 |
-| `test_ades_time_slide.py` (13) | — | Pending (lane A: `ltv`) |
+| `test_ades_time_slide.py` (13) | `tests/ades_time_slide.rs` | Ported 13/13 |
 | `test_policy_proc.py` (13) | — | Pending (lane A: trust anchor qualifiers) |
 | `test_registry.py` (9) | — | Pending (lane A: registry, AIA disambiguation) |
 | `test_ac_validate.py` (27) | — | Pending (lane A: attribute certificate validation) |

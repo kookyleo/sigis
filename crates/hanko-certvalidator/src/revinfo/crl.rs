@@ -62,7 +62,7 @@ fn crl_extension<'a>(
     find_extension(crl.crl.tbs_cert_list.crl_extensions.as_ref(), oid)
 }
 
-fn is_delta(crl: &CrlContainer) -> bool {
+pub(crate) fn is_delta(crl: &CrlContainer) -> bool {
     crl_extension(crl, &oids::CE_DELTA_CRL_INDICATOR).is_some()
 }
 
@@ -92,7 +92,7 @@ fn parse_idp(crl: &CrlContainer) -> Result<Option<IssuingDistributionPoint>, Val
         .transpose()
 }
 
-fn signed_by(crl: &CrlContainer, signer: &Cert) -> bool {
+pub(crate) fn signed_by(crl: &CrlContainer, signer: &Cert) -> bool {
     let alg: &AlgorithmIdentifierOwned = &crl.crl.signature_algorithm;
     validate_signature(
         crl.crl.signature.raw_bytes(),
@@ -210,13 +210,13 @@ fn match_dps_idp_names(
     matched || !has_idp_name || !has_dp_name
 }
 
-fn is_indirect(crl: &CrlContainer) -> Result<bool, ValidationError> {
+pub(crate) fn is_indirect(crl: &CrlContainer) -> Result<bool, ValidationError> {
     Ok(parse_idp(crl)?.is_some_and(|idp| idp.indirect_crl))
 }
 
 /// Errors gathered while processing the CRLs for one certificate (`_CRLErrs`).
 #[derive(Default)]
-struct CrlErrs {
+pub(crate) struct CrlErrs {
     failures: Failures,
     issuer_failures: usize,
 }
@@ -228,14 +228,24 @@ enum IssuerSearch {
     Error(String),
 }
 
-/// `_find_candidate_crl_issuer_certs` + `_find_candidate_crl_paths` +
-/// `_find_crl_issuer`.
-fn find_crl_issuer(
+/// Counters of `_CRLIssuerSearchErrs`.
+#[derive(Default)]
+pub(crate) struct CandidateCounts {
+    pub(crate) total: usize,
+    pub(crate) skipped: usize,
+    pub(crate) unauthorized: usize,
+    pub(crate) path_failures: usize,
+}
+
+/// `_find_candidate_crl_issuer_certs` + `_find_candidate_crl_paths`: the
+/// certificates that may have issued `crl` for the subject, each with a
+/// provisional path (not validated).
+pub(crate) fn candidate_crl_paths(
     ctx: &ValidationContext,
     crl: &CrlContainer,
     subject: &Subject<'_>,
     indirect: bool,
-) -> IssuerSearch {
+) -> (Vec<(Cert, ValidationPath)>, CandidateCounts) {
     let crl_issuer_name = &crl.crl.tbs_cert_list.issuer;
     let cert_issuer = subject.issuer;
     let mut candidates: Vec<Cert> = Vec::new();
@@ -247,27 +257,45 @@ fn find_crl_issuer(
             candidates.push(c.clone());
         }
     }
-    let n = candidates.len();
-    let (mut skipped, mut unauthorized, mut path_failures, mut sig_failures) = (0, 0, 0, 0);
-    let mut explicit: Vec<String> = Vec::new();
+    let mut counts = CandidateCounts {
+        total: candidates.len(),
+        ..CandidateCounts::default()
+    };
     let mut paths: Vec<(Cert, ValidationPath)> = Vec::new();
     for cand in candidates {
         let direct = certval::compare_names(cand.subject(), subject.cert.issuer());
         let indirect_issuer =
             certval::compare_names(cand.issuer(), subject.cert.issuer()) && &cand != subject.cert;
         if !direct && !indirect_issuer && !indirect {
-            skipped += 1;
+            counts.skipped += 1;
             continue;
         }
         if cand.key_usage().is_some_and(|ku| !ku.crl_sign()) {
-            unauthorized += 1;
+            counts.unauthorized += 1;
             continue;
         }
         match subject.path.truncate_to_issuer_and_append(&cand) {
             Some(p) => paths.push((cand, p)),
-            None => path_failures += 1,
+            None => counts.path_failures += 1,
         }
     }
+    (paths, counts)
+}
+
+/// `_find_candidate_crl_issuer_certs` + `_find_candidate_crl_paths` +
+/// `_find_crl_issuer`.
+fn find_crl_issuer(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    subject: &Subject<'_>,
+    indirect: bool,
+) -> IssuerSearch {
+    let (paths, counts) = candidate_crl_paths(ctx, crl, subject, indirect);
+    let n = counts.total;
+    let (skipped, unauthorized, path_failures) =
+        (counts.skipped, counts.unauthorized, counts.path_failures);
+    let mut sig_failures = 0;
+    let mut explicit: Vec<String> = Vec::new();
     for (cand, path) in paths {
         // A CRL issuer whose own path is being validated further up
         // (`check_path_verif_recursion`) is accepted as is.
@@ -322,7 +350,7 @@ fn find_crl_issuer(
 
 /// `_get_crl_scope_assuming_authority`: the reasons the CRL covers for the
 /// certificate, or `None` if it does not apply.
-fn crl_scope(
+pub(crate) fn crl_scope(
     crl: &CrlContainer,
     crl_issuer: &Cert,
     subject: &Subject<'_>,
@@ -440,7 +468,7 @@ fn find_cert_in_list(
 }
 
 /// `_check_cert_on_crl_and_delta`.
-fn check_cert_on_crl_and_delta(
+pub(crate) fn check_cert_on_crl_and_delta(
     crl_issuer: &Cert,
     subject: &Subject<'_>,
     crl: &CrlContainer,
@@ -457,8 +485,8 @@ fn check_cert_on_crl_and_delta(
 }
 
 /// `_maybe_get_delta_crl`. `Err(msg)` means a required delta is missing.
-fn maybe_get_delta<'a>(
-    ctx: &ValidationContext,
+pub(crate) fn maybe_get_delta<'a>(
+    ctx: Option<&ValidationContext>,
     crl: &CrlContainer,
     crl_issuer: &Cert,
     deltas: &[&'a CrlContainer],
@@ -499,8 +527,12 @@ fn maybe_get_delta<'a>(
         );
         return Ok(Ok(None));
     }
-    if !fresh(ctx, delta, "Delta CRL", &mut errs.failures) {
-        return Ok(Ok(None));
+    // Freshness is only checked when a context (validation timing) is given
+    // (`_maybe_get_delta_crl` without `timing_params` skips it).
+    if let Some(ctx) = ctx {
+        if !fresh(ctx, delta, "Delta CRL", &mut errs.failures) {
+            return Ok(Ok(None));
+        }
     }
     Ok(Ok(Some(delta)))
 }
@@ -532,7 +564,7 @@ fn handle_single_crl(
     if !fresh(ctx, crl, "CRL", &mut errs.failures) {
         return Ok(None);
     }
-    let delta = match maybe_get_delta(ctx, crl, &crl_issuer, deltas, errs)? {
+    let delta = match maybe_get_delta(Some(ctx), crl, &crl_issuer, deltas, errs)? {
         Ok(d) => d,
         Err(msg) => {
             errs.failures.push(msg);
