@@ -43,6 +43,21 @@ pub trait Encryptor: std::fmt::Debug {
     fn crypt_filters(&self) -> Option<&dyn crate::stream::CryptFilterDecode> {
         None
     }
+    /// `security_handler.is_authenticated()`: updates of encrypted files
+    /// are refused without credentials.
+    fn is_authenticated(&self) -> bool {
+        true
+    }
+    /// The `/AuthCode` trailer entry of a standalone PDF MAC (ISO 32004),
+    /// if the output needs one (`_need_mac_on_write`).
+    fn standalone_mac_placeholder(&self) -> PdfResult<Option<Object>> {
+        Ok(None)
+    }
+    /// Fill the placeholder announced by [`Self::standalone_mac_placeholder`]
+    /// in the complete output (`add_standalone_mac`).
+    fn fill_standalone_mac(&self, _out: &mut [u8]) -> PdfResult<()> {
+        Ok(())
+    }
 }
 
 /// Serialise an object, encrypting strings and streams with `enc` as
@@ -215,6 +230,9 @@ pub struct PdfWriter {
     pub fixed_time: Option<PdfDate>,
     /// Write an incremental update even if no objects changed.
     pub force_write_when_empty: bool,
+    /// Skip the standalone PDF MAC on write (`digest_aware_write`; set by
+    /// signers, which attach the MAC to the signature).
+    pub digest_aware_write: bool,
     init_error: Option<PdfError>,
 }
 
@@ -252,6 +270,7 @@ impl PdfWriter {
             update_meta_on_write: true,
             fixed_time: None,
             force_write_when_empty: false,
+            digest_aware_write: false,
             init_error: None,
         }
     }
@@ -668,7 +687,7 @@ impl PdfWriter {
         );
         if let Base::Incremental { prev, .. } = &self.base {
             trailer.set("Prev", Object::Integer(prev.last_startxref()));
-            if prev.encrypted() && self.encryptor.is_none() {
+            if prev.encrypted() && !self.encryptor.as_ref().is_some_and(|e| e.is_authenticated()) {
                 return Err(PdfError::write(
                     "Cannot update this document without encryption credentials from the original. Please call encrypt() with the password of the original file before calling write().",
                 ));
@@ -795,7 +814,14 @@ impl PdfWriter {
             // offsets are relative to the full file
             out.extend_from_slice(prev.bytes());
         }
+        let mac_placeholder = match &self.encryptor {
+            Some(e) if !self.digest_aware_write => e.standalone_mac_placeholder()?,
+            _ => None,
+        };
         self.populate_trailer(&mut trailer)?;
+        if let Some(p) = &mac_placeholder {
+            trailer.set("AuthCode", p.clone());
+        }
         self.write_objects(out, &mut positions)?;
         let xref_location;
         if self.stream_xrefs {
@@ -819,6 +845,11 @@ impl PdfWriter {
             generic::write_dictionary(out, &trailer);
         }
         out.extend_from_slice(format!("\nstartxref\n{xref_location}\n%%EOF\n").as_bytes());
+        if mac_placeholder.is_some() {
+            if let Some(e) = &self.encryptor {
+                e.fill_standalone_mac(out)?;
+            }
+        }
         Ok(())
     }
 
@@ -1462,6 +1493,8 @@ impl IncrementalWriter {
         let size = size.max(highest_used);
         let stream_xrefs = base.has_xref_stream();
         let input_version = base.input_version();
+        // updates of encrypted files reuse the reader's security handler
+        let encryption = crate::crypt::encryptor_for_update(&base)?;
         let mut w = PdfWriter::with_base(
             Base::Incremental {
                 prev: base,
@@ -1475,6 +1508,9 @@ impl IncrementalWriter {
         w.document_id = (id1, random_id());
         if let (Some(i), Base::Incremental { trailer, .. }) = (info_ref, &mut w.base) {
             trailer.set(b"Info", Object::Reference(i));
+        }
+        if let Some((r, enc)) = encryption {
+            w.set_existing_encryption(r, enc);
         }
         w.output_version = w.output_version.max(input_version);
         w.ensure_output_version((1, 7))?;

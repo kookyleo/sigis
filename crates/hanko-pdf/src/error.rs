@@ -10,6 +10,7 @@
 //! |--------------------------|------------------------------------|
 //! | `PdfError`               | [`PdfError::Generic`]              |
 //! | `PdfReadError`           | [`PdfError::Read`]                 |
+//! | `PdfKeyNotAvailableError`| [`PdfError::KeyNotAvailable`]      |
 //! | `PdfStrictReadError`     | [`PdfError::StrictRead`]           |
 //! | `IndirectObjectExpected` | [`PdfError::IndirectObjectExpected`] |
 //! | `PdfWriteError`          | [`PdfError::Write`]                |
@@ -33,6 +34,10 @@ pub enum PdfError {
     /// Error while reading a PDF (`PdfReadError`).
     #[error("{0}")]
     Read(String),
+    /// No decryption key is available (`PdfKeyNotAvailableError`, a
+    /// `PdfReadError`).
+    #[error("{0}")]
+    KeyNotAvailable(String),
     /// Error that only occurs in strict mode (`PdfStrictReadError`).
     #[error("{0}")]
     StrictRead(String),
@@ -65,6 +70,7 @@ impl PdfError {
         matches!(
             self,
             Self::Read(_)
+                | Self::KeyNotAvailable(_)
                 | Self::StrictRead(_)
                 | Self::IndirectObjectExpected(_)
                 | Self::Stream(_)
@@ -92,6 +98,7 @@ impl PdfError {
         match self {
             Self::Generic(m)
             | Self::Read(m)
+            | Self::KeyNotAvailable(m)
             | Self::StrictRead(m)
             | Self::IndirectObjectExpected(m)
             | Self::Write(m)
@@ -108,6 +115,7 @@ impl PdfError {
         match self {
             Self::Generic(_) => "PdfError",
             Self::Read(_) => "PdfReadError",
+            Self::KeyNotAvailable(_) => "PdfKeyNotAvailableError",
             Self::StrictRead(_) => "PdfStrictReadError",
             Self::IndirectObjectExpected(_) => "IndirectObjectExpected",
             Self::Write(_) => "PdfWriteError",

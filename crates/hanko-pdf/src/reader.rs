@@ -182,6 +182,11 @@ pub trait Decryptor: Send + Sync + std::fmt::Debug {
     fn decrypt_object(&self, obj: Object, id: ObjectId) -> PdfResult<Object>;
     /// Crypt filters for explicit `/Crypt` stream filters.
     fn crypt_filters(&self) -> Option<&dyn CryptFilterDecode>;
+    /// The concrete decryptor, for downcasting (the `crypt` module's
+    /// `SecurityHandler`).
+    fn as_any(&self) -> Option<&dyn std::any::Any> {
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -466,19 +471,11 @@ impl PdfFile {
         if never_decrypt || in_objstm || !self.encrypted() {
             return Ok(raw);
         }
-        let Some(dec) = self.decryptor() else {
-            return match raw {
-                // primitives are never proxied in pyHanko
-                Object::Null
-                | Object::Boolean(_)
-                | Object::Integer(_)
-                | Object::Real(_)
-                | Object::Name(_)
-                | Object::Reference(_) => Ok(raw),
-                _ => Err(PdfError::Generic(
-                    "Document is encrypted; authenticate before accessing objects".into(),
-                )),
-            };
+        let dec = match self.decryptor() {
+            Some(d) => d,
+            // build the security handler on first use (pyHanko's lazy
+            // `security_handler`)
+            None => crate::crypt::default_decryptor(self)?,
         };
         dec.decrypt_object(raw, id)
     }

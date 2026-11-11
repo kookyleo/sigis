@@ -127,3 +127,5 @@ pub fn first_page(h: &dyn PdfHandler) -> (hanko_pdf::lopdf::ObjectId, Dictionary
     let Object::Reference(r) = kids[0] else { panic!() };
     (r, as_dict(h.get_object(r).unwrap()))
 }
+
+pub mod crypt;

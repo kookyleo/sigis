@@ -16,12 +16,41 @@ der = { workspace = true }
 cms = { workspace = true }
 sha1 = { workspace = true }
 sha2 = { workspace = true }
-md5 = { package = "md-5", version = "0.11" }
 flate2 = "1.1"
 log = "0.4"
 getrandom = "0.3"
 quick-xml = "0.38"
 indexmap = "2"
+# crypt/: symmetric primitives (cipher 0.5 / digest 0.11 generation)
+aes = "0.9"
+des = "0.9"
+aes-gcm = { version = "0.11", default-features = false, features = ["aes", "alloc"] }
+aes-kw = "0.3"
+md-5 = { version = "0.11", default-features = false }
+hmac = "0.13"
+hkdf = "0.13"
+# RC2 only exists for cipher 0.4; used for legacy envelope decryption only
+rc2 = "0.8"
+# SHA-3 / SHAKE for PDF MAC digests (digest 0.10; no 0.11 release offline)
+sha3 = { version = "0.10", default-features = false }
+stringprep = "0.1.5"
+# crypt/pubkey.rs: key transport and key agreement
+rsa = { workspace = true, features = ["std"] }
+p256 = { workspace = true, features = ["ecdh", "pkcs8"] }
+p384 = { workspace = true, features = ["ecdh", "pkcs8"] }
+p521 = { workspace = true, features = ["ecdh", "pkcs8"] }
+curve25519-dalek = { version = "5", default-features = false }
+# X448 field arithmetic (no X448 crate available offline)
+crypto-bigint = { version = "0.7", default-features = false }
+x509-cert = { workspace = true }
+spki = { workspace = true }
+const-oid = { workspace = true }
+pkcs8 = { version = "0.11", features = ["encryption", "pem", "std", "3des"] }
+# PBES2 with the default HMAC-SHA1 PRF (encrypted PKCS#8 test keys)
+pkcs5 = { version = "0.8", features = ["sha1-insecure"] }
+p12 = "0.6.3"
+rand_core = { version = "0.10", default-features = false }
+getrandom04 = { package = "getrandom", version = "0.4", features = ["sys_rng"] }
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }

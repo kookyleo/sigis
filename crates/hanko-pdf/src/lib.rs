@@ -28,6 +28,7 @@
 )]
 
 pub mod content_stream_parser;
+pub mod crypt;
 pub mod decode_limits;
 pub mod embed;
 pub mod error;
