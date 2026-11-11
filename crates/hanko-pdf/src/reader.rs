@@ -136,6 +136,46 @@ fn read_header_version(data: &[u8]) -> PdfResult<(u32, u32)> {
     Err(PdfError::read("Illegal PDF header"))
 }
 
+/// Decoded stream data, keyed by a digest of the stream dictionary and
+/// encoded data: like pyHanko's per-object `_data` cache, decoding the same
+/// stream again through the same handler returns the cached data and does not
+/// charge the decoding budget again.
+#[derive(Debug, Default)]
+pub(crate) struct DecodedCache(Mutex<HashMap<[u8; 32], Arc<Vec<u8>>>>);
+
+impl DecodedCache {
+    fn key(stream: &Stream) -> [u8; 32] {
+        use sha2::{Digest, Sha256};
+        let mut h = Sha256::new();
+        match stream.start_position {
+            Some(p) => {
+                h.update([1u8]);
+                h.update((p as u64).to_be_bytes());
+            }
+            None => h.update([0u8]),
+        }
+        h.update(generic::object_to_bytes(&Object::Dictionary(stream.dict.clone())));
+        h.update([0u8]);
+        h.update(&stream.content);
+        h.finalize().into()
+    }
+
+    pub(crate) fn get_or_decode(
+        &self,
+        stream: &Stream,
+        decode: impl FnOnce() -> PdfResult<Vec<u8>>,
+    ) -> PdfResult<Vec<u8>> {
+        let key = Self::key(stream);
+        let cached = lock(&self.0).get(&key).cloned();
+        if let Some(d) = cached {
+            return Ok(d.as_ref().clone());
+        }
+        let data = decode()?;
+        lock(&self.0).insert(key, Arc::new(data.clone()));
+        Ok(data)
+    }
+}
+
 /// Security state of an encrypted document (filled by the `crypt` module).
 pub trait Decryptor: Send + Sync + std::fmt::Debug {
     /// Decrypt an object read from `id` (`DecryptedObjectProxy.decrypted`).
@@ -156,6 +196,8 @@ pub(crate) struct ReaderInner {
     cache: Mutex<HashMap<ObjectId, Object>>,
     objstm_cache: Mutex<HashMap<u32, Arc<Vec<u8>>>>,
     decode_ctx: Mutex<DecodeContext>,
+    decoded: DecodedCache,
+    hist_states: Mutex<HashMap<usize, Arc<HistState>>>,
     pub(crate) decryptor: Mutex<Option<Arc<dyn Decryptor>>>,
     pub(crate) embedded_signatures: OnceLock<Vec<crate::signatures::EmbeddedSignature>>,
 }
@@ -248,6 +290,8 @@ impl PdfFile {
             cache: Mutex::new(HashMap::new()),
             objstm_cache: Mutex::new(HashMap::new()),
             decode_ctx: Mutex::new(ctx),
+            decoded: DecodedCache::default(),
+            hist_states: Mutex::new(HashMap::new()),
             decryptor: Mutex::new(None),
             embedded_signatures: OnceLock::new(),
         };
@@ -629,22 +673,29 @@ impl PdfFile {
     ) -> PdfResult<Vec<u8>> {
         let dec = self.decryptor();
         let cf = dec.as_ref().and_then(|d| d.crypt_filters());
-        with_decode_ctx(&self.inner.decode_ctx, |ctx| {
-            decode_stream_data(
-                &stream.dict,
-                &stream.content,
-                ctx,
-                purpose,
-                expected_size,
-                &|o| self.resolve(o),
-                cf,
-            )
+        self.inner.decoded.get_or_decode(stream, || {
+            with_decode_ctx(&self.inner.decode_ctx, |ctx| {
+                decode_stream_data(
+                    &stream.dict,
+                    &stream.content,
+                    ctx,
+                    purpose,
+                    expected_size,
+                    &|o| self.resolve(o),
+                    cf,
+                )
+            })
         })
     }
 
     /// Remaining document decoding budget.
     pub fn remaining_decode_budget(&self) -> Option<i64> {
         lock(&self.inner.decode_ctx).remaining_budget()
+    }
+
+    /// Snapshot of the reader's decoding context (`decode_context`).
+    pub fn decode_context(&self) -> DecodeContext {
+        lock(&self.inner.decode_ctx).clone()
     }
 }
 
@@ -829,8 +880,16 @@ impl RawPdfPath {
 pub struct HistoricalResolver {
     reader: PdfFile,
     revision: usize,
+    state: Arc<HistState>,
+}
+
+/// Per-revision state shared by all [`HistoricalResolver`]s of a reader for
+/// the same revision (pyHanko caches the resolver itself).
+#[derive(Debug)]
+pub(crate) struct HistState {
     cache: Mutex<HashMap<ObjectId, Object>>,
     decode_ctx: Mutex<DecodeContext>,
+    decoded: DecodedCache,
     trailer: Dictionary,
     access_cache: OnceLock<PdfResult<BTreeMap<ObjectId, BTreeSet<RawPdfPath>>>>,
 }
@@ -886,16 +945,33 @@ impl<T: Clone + PartialEq> Cons<T> {
 
 impl HistoricalResolver {
     fn new(reader: PdfFile, revision: usize) -> Self {
-        let ctx = lock(&reader.inner.decode_ctx).fresh();
-        let trailer = reader.inner.trailer.flatten(Some(revision));
+        let state = lock(&reader.inner.hist_states)
+            .entry(revision)
+            .or_insert_with(|| {
+                Arc::new(HistState {
+                    cache: Mutex::new(HashMap::new()),
+                    decode_ctx: Mutex::new(lock(&reader.inner.decode_ctx).fresh()),
+                    decoded: DecodedCache::default(),
+                    trailer: reader.inner.trailer.flatten(Some(revision)),
+                    access_cache: OnceLock::new(),
+                })
+            })
+            .clone();
         Self {
             reader,
             revision,
-            cache: Mutex::new(HashMap::new()),
-            decode_ctx: Mutex::new(ctx),
-            trailer,
-            access_cache: OnceLock::new(),
+            state,
         }
+    }
+
+    /// `true` if both resolvers share their state (pyHanko: `is`).
+    pub fn same_view(&self, other: &HistoricalResolver) -> bool {
+        Arc::ptr_eq(&self.state, &other.state)
+    }
+
+    /// Snapshot of the decoding context of this view (`decode_context`).
+    pub fn decode_context(&self) -> DecodeContext {
+        lock(&self.state.decode_ctx).clone()
     }
 
     /// The underlying reader.
@@ -946,7 +1022,7 @@ impl HistoricalResolver {
 
     /// The document ID as of this revision.
     pub fn document_id(&self) -> PdfResult<(Vec<u8>, Vec<u8>)> {
-        let id = self.get_required(&self.trailer, b"ID")?;
+        let id = self.get_required(&self.state.trailer, b"ID")?;
         document_id_from(&id)
     }
 
@@ -1010,7 +1086,7 @@ impl HistoricalResolver {
     /// All paths from the trailer to `id` (`_get_usages_of_ref`), after
     /// loading the reverse index (`_load_reverse_xref_cache`).
     pub fn usages_of_ref(&self, id: ObjectId) -> PdfResult<BTreeSet<RawPdfPath>> {
-        let cache = self.access_cache.get_or_init(|| self.load_reverse_xref_cache());
+        let cache = self.state.access_cache.get_or_init(|| self.load_reverse_xref_cache());
         match cache {
             Ok(c) => Ok(c.get(&id).cloned().unwrap_or_default()),
             Err(e) => Err(e.clone()),
@@ -1019,7 +1095,7 @@ impl HistoricalResolver {
 
     /// The full reverse index (`_indirect_object_access_cache`).
     pub fn reverse_xref_cache(&self) -> PdfResult<&BTreeMap<ObjectId, BTreeSet<RawPdfPath>>> {
-        let cache = self.access_cache.get_or_init(|| self.load_reverse_xref_cache());
+        let cache = self.state.access_cache.get_or_init(|| self.load_reverse_xref_cache());
         cache.as_ref().map_err(Clone::clone)
     }
 
@@ -1109,7 +1185,7 @@ impl HistoricalResolver {
             }
         }
         let mut collected: BTreeMap<ObjectId, BTreeSet<RawPdfPath>> = BTreeMap::new();
-        let trailer = Object::Dictionary(self.trailer.clone());
+        let trailer = Object::Dictionary(self.state.trailer.clone());
         let root_key = PathElem::Key(b"Root".to_vec());
         let str_key = PathElem::Key(b"StructTreeRoot".to_vec());
         let k_key = PathElem::Key(b"K".to_vec());
@@ -1211,7 +1287,7 @@ impl HistoricalResolver {
 
 impl PdfHandler for HistoricalResolver {
     fn get_object(&self, id: ObjectId) -> PdfResult<Object> {
-        if let Some(o) = lock(&self.cache).get(&id).cloned() {
+        if let Some(o) = lock(&self.state.cache).get(&id).cloned() {
             return Ok(o);
         }
         let reader = &self.reader;
@@ -1226,12 +1302,12 @@ impl PdfHandler for HistoricalResolver {
                 reader.get_object_opts(id, Some(self.revision), never_decrypt)?
             }
         };
-        lock(&self.cache).insert(id, obj.clone());
+        lock(&self.state.cache).insert(id, obj.clone());
         Ok(obj)
     }
 
     fn trailer_view(&self) -> PdfResult<Dictionary> {
-        Ok(self.trailer.clone())
+        Ok(self.state.trailer.clone())
     }
 
     fn root_ref(&self) -> PdfResult<ObjectId> {
@@ -1249,16 +1325,18 @@ impl PdfHandler for HistoricalResolver {
     fn decode_stream(&self, stream: &Stream, purpose: DecodePurpose) -> PdfResult<Vec<u8>> {
         let dec = self.reader.decryptor();
         let cf = dec.as_ref().and_then(|d| d.crypt_filters());
-        with_decode_ctx(&self.decode_ctx, |ctx| {
-            decode_stream_data(
-                &stream.dict,
-                &stream.content,
-                ctx,
-                purpose,
-                None,
-                &|o| self.resolve(o),
-                cf,
-            )
+        self.state.decoded.get_or_decode(stream, || {
+            with_decode_ctx(&self.state.decode_ctx, |ctx| {
+                decode_stream_data(
+                    &stream.dict,
+                    &stream.content,
+                    ctx,
+                    purpose,
+                    None,
+                    &|o| self.resolve(o),
+                    cf,
+                )
+            })
         })
     }
 }

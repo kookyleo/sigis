@@ -228,6 +228,14 @@ fn int_array(obj: Option<&Object>) -> Option<Vec<i64>> {
     }
 }
 
+/// Expected decoded size of an xref stream from its `/Index` and `/W`
+/// (`_expected_xref_stream_size`); `None` if they are malformed.
+pub fn expected_xref_stream_size_of(index: &Object, w: Option<&Object>) -> Option<i64> {
+    let idx = int_array(Some(index))?;
+    let w = int_array(w)?;
+    expected_xref_stream_size(&idx, &w)
+}
+
 fn expected_xref_stream_size(idx_pairs: &[i64], entry_sizes: &[i64]) -> Option<i64> {
     if !idx_pairs.len().is_multiple_of(2) {
         return None;

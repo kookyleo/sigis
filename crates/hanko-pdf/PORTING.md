@@ -32,13 +32,14 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | `pdf_utils/xref.py` | `src/xref.rs` | ported |
 | `pdf_utils/reader.py` | `src/reader.rs` | ported (encryption hooks: see `crypt/`) |
 | `pdf_utils/rw_common.py` | `src/rw_common.rs` | ported |
-| `pdf_utils/writer.py` | `src/writer.rs` | ported in part: base writer, `PdfFileWriter`, object streams, page insertion, resources, import, `copy_into_new_writer`; pending: `register_extension`, `import_page_as_xobject`, encryption setup |
+| `pdf_utils/writer.py` | `src/writer.rs` | ported (encryption setup pending: `encrypt`, `encrypt_pubkey`) |
 | `pdf_utils/incremental_writer.py` | `src/writer.rs` (`IncrementalWriter`) | ported (encryption updates pending) |
 | `pdf_utils/metadata/info.py`, `model.py` (subset) | `src/metadata/` | ported in part (XMP pending) |
 | `pdf_utils/form_tools.py` (`enumerate_fields_in`) | `src/signatures.rs` | ported in part |
 | `sign/validation/pdf_embedded.py` (discovery), `dss.py` (`read_dss`) | `src/signatures.rs` | ported (structural part) |
 | `pdf_utils/metadata/xmp_xml.py` | — | pending |
-| `pdf_utils/embed.py`, `extensions.py`, `content_stream_parser.py` | — | pending |
+| `pdf_utils/extensions.py` | `src/extensions.rs` | ported |
+| `pdf_utils/embed.py`, `content_stream_parser.py` | — | pending |
 | `pdf_utils/crypt/` | — | pending |
 
 ## Test mapping
@@ -46,8 +47,8 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | `tests/xref.rs` | 60 | 59 | 1 | 0 |
-| `test_internal_utils.py` | — | 127 | 0 | 0 | 127 |
-| `test_decode_limits.py` | — | 29 | 0 | 0 | 29 |
+| `test_internal_utils.py` | `tests/internal_utils.rs` | 127 | 110 | 16 | 1 |
+| `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 25 | 0 | 4 |
 | `test_content_stream_parser.py` | — | 8 | 0 | 0 | 8 |
 | `test_embed.py` | — | 9 | 0 | 0 | 9 |
 | `test_meta.py` | — | 39 | 0 | 0 | 39 |
@@ -56,10 +57,32 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 Skipped tests:
 
+- `test_internal_utils.py`, tests of lane D modules (`layout.py`,
+  `content.py`; lane D ports those modules): `test_box_constraint_over_underspecify`,
+  `test_box_constraint_recalc`, `test_resource_add_test`,
+  `test_duplicate_resource`.
+- `test_internal_utils.py`, tests of Python object-model behaviour with no
+  Rust counterpart (dunder methods, hashing, runtime type guards, enum
+  helpers): `test_bool_dunders`, `test_ordered_enum`, `test_version_enum`,
+  `test_name_encode_fail` (names never carry the slash in Rust),
+  `test_pdfstring_typing`, `test_text_string_no_bytes_available` (strings
+  always keep their bytes), `test_stream_pathological_encode_decode`
+  (streams always have data), `test_dictionary_setvalue_guard`,
+  `test_all_nulls_same_hash`, `test_unbound_reference`,
+  `test_assign_non_name_to_dict`, `test_operator_literal_hash`.
+
 - `test_xref.py::test_trailer_refs`: exercises `container_ref` /
   `TrailerReference`, internals of pyHanko's mutable object model that have no
   Rust counterpart (objects are values; updates go through
   `PdfWriter::update_object`).
+
+Pending tests:
+
+- `test_internal_utils.py::test_page_tree_import` (needs encryption).
+- `test_decode_limits.py::test_purpose_applied` (the `xmp` case needs the XMP
+  module), `test_post_sign_reopen_keeps_limits`,
+  `test_archival_timestamp_update_keeps_limits`, `test_add_dss_keeps_limits`
+  (need lane D signing / DSS updates).
 
 ## Known divergences
 
@@ -77,5 +100,11 @@ All fail closed (the port never accepts what pyHanko rejects):
   beyond 16 bits are rejected (pyHanko has arbitrary-precision integers).
 - Nesting of arrays/dictionaries is limited to 256 levels and reference
   chains to 64 (pyHanko: Python recursion limit).
+- Text vs. byte strings are classified by their bytes (`pdf_string`), not
+  by object class: a byte string whose bytes decode as text counts as text.
+- Decoded stream data is cached per handler and stream object (identified by
+  the data offset recorded in `Stream::start_position`), like pyHanko's
+  per-object cache; streams parsed from a file therefore carry
+  `start_position`, so compare streams by `dict` and `content`.
 - Producer string: `sigis-hanko <version>` instead of `pyHanko <version>`;
   modification dates are written in UTC (pyHanko: local time zone).

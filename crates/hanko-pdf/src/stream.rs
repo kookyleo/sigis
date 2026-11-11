@@ -290,15 +290,34 @@ impl DecodedStream {
         })
     }
 
-    /// Decode an existing (encoded) stream without limits.
+    /// Decode an existing (encoded) stream that is not tied to a document,
+    /// with the default limits (`DEFAULT_DECODE_CONTEXT`).
     pub fn from_stream(s: &Stream) -> PdfResult<Self> {
-        let mut ctx = DecodeContext::new(crate::decode_limits::DecodeLimits::for_trusted_input(), None);
+        let mut ctx = DecodeContext::default();
         let data = decode_stream_data(&s.dict, &s.content, &mut ctx, DecodePurpose::Generic, None, &no_deref, None)?;
         Ok(Self {
             dict: s.dict.clone(),
             data,
         })
     }
+}
+
+/// Prepend a filter to an encoded stream (`StreamObject.apply_filter`):
+/// the stream is decoded and re-encoded unless the request is ignored as a
+/// duplicate, in which case it is returned unchanged.
+pub fn apply_filter_to_stream(
+    s: &Stream,
+    filter_name: &str,
+    params: Option<Dictionary>,
+    allow_duplicates: DuplicateFilter,
+) -> PdfResult<Stream> {
+    let mut ds = DecodedStream::from_stream(s)?;
+    let before = ds.dict.clone();
+    ds.apply_filter(filter_name, params, allow_duplicates)?;
+    if ds.dict == before {
+        return Ok(s.clone());
+    }
+    ds.to_stream()
 }
 
 /// A stream object with encoded content (`StreamObject(d, encoded_data=..)`).

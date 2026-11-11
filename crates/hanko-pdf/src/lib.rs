@@ -29,6 +29,7 @@
 
 pub mod decode_limits;
 pub mod error;
+pub mod extensions;
 pub mod filters;
 pub mod generic;
 pub mod metadata;

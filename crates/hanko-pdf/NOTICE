@@ -19,7 +19,10 @@ Derived files:
 - src/signatures.rs: pyhanko/pdf_utils/form_tools.py, pyhanko/sign/fields.py,
   pyhanko/sign/validation/{pdf_embedded,dss}.py
 - tests/common/mod.rs: pyhanko_testing_commons/test_data/samples.py
+- src/extensions.rs: pyhanko/pdf_utils/extensions.py
 - tests/xref.rs: pkgs/pyhanko/tests/test_xref.py
+- tests/internal_utils.rs: pkgs/pyhanko/tests/test_internal_utils.py
+- tests/decode_limits.rs: pkgs/pyhanko/tests/test_decode_limits.py
 
 PyPDF2 code is distributed under the BSD-3-Clause license, reproduced in
 LICENSE-PyPDF2 (copied from pyhanko/pdf_utils/LICENSE.PyPDF2 at v0.38.1).

@@ -30,6 +30,8 @@ Notes for lanes C, D, E:
   `update_object(id, obj)` (pyHanko's `mark_update`/`update_container`).
   `IncrementalWriter` derefs to `PdfWriter`. Set `fixed_time` and
   `set_document_id` for reproducible output.
+- Streams parsed from a file carry `Stream::start_position` (data offset);
+  compare streams by `dict` and `content`, not with `==` on `Stream`.
 - `RevisionInfo::end_offset` is the end of the `%%EOF` line that follows
   the `startxref` pointing at the revision's xref section (linearized
   originals: both sections end at the first `%%EOF` after the main xref).
@@ -39,16 +41,22 @@ Notes for lanes C, D, E:
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | 60 | 59 | 1 | 0 |
-| `test_internal_utils.py` | 127 | 0 | 0 | 127 |
-| `test_decode_limits.py` | 29 | 0 | 0 | 29 |
+| `test_internal_utils.py` | 127 | 110 | 16 | 1 |
+| `test_decode_limits.py` | 29 | 25 | 0 | 4 |
 | `test_content_stream_parser.py` | 8 | 0 | 0 | 8 |
 | `test_embed.py` | 9 | 0 | 0 | 9 |
 | `test_meta.py` | 39 | 0 | 0 | 39 |
 | `test_crypt.py` | 84 | 0 | 0 | 84 |
 | `test_pdfmac.py` | 50 | 0 | 0 | 50 |
 
-Skipped: `test_xref.py::test_trailer_refs` (Python `container_ref`
-internals; see `crates/hanko-pdf/PORTING.md`).
+Skipped and pending tests are listed with reasons in
+`crates/hanko-pdf/PORTING.md`. Pending tests that depend on other lanes:
+`test_decode_limits.py::{test_post_sign_reopen_keeps_limits,
+test_archival_timestamp_update_keeps_limits, test_add_dss_keeps_limits}`
+(lane D signing and DSS updates). Skipped because the module belongs to
+lane D: `test_internal_utils.py::{test_box_constraint_*,
+test_resource_add_test, test_duplicate_resource}` (`layout.py`,
+`content.py`).
 
 ## Known divergences
 

@@ -452,6 +452,20 @@ impl PdfWriter {
         Ok((idnum, 0))
     }
 
+    /// Move an already added object into an object stream (pyHanko tests do
+    /// this by editing `objects` and `objs_in_streams` directly).
+    pub fn move_to_object_stream(&mut self, id: ObjectId, handle: ObjectStreamHandle) -> PdfResult<()> {
+        let Some(obj) = self.objects.remove(&(id.1, id.0)) else {
+            return Err(PdfError::write("No such object in this writer"));
+        };
+        let Some(stm) = self.object_streams.get_mut(handle.0) else {
+            return Err(PdfError::write("Stream is unknown to this PDF writer."));
+        };
+        stm.add_object(id.0, obj.clone())?;
+        self.objs_in_streams.insert(id.0, obj);
+        Ok(())
+    }
+
     /// Prepare an object stream (`prepare_object_stream`).
     pub fn prepare_object_stream(&mut self, compress: bool) -> PdfResult<ObjectStreamHandle> {
         if !self.stream_xrefs {
@@ -936,6 +950,172 @@ impl PdfWriter {
         Ok(page_ref)
     }
 
+    /// Register a developer extension in the catalog (`register_extension`).
+    pub fn register_extension(&mut self, ext: &crate::extensions::DeveloperExtension) -> PdfResult<()> {
+        use crate::extensions::DevExtensionMultivalued as Mv;
+        let root = self.root()?;
+        // where /Extensions lives: an indirect object, or directly in the root
+        let (extensions, ext_ref) = match root.get(b"Extensions").cloned() {
+            Ok(Object::Reference(r)) => match self.resolve(&Object::Reference(r))? {
+                Object::Dictionary(d) => (d, Some(r)),
+                Object::Null => (Dictionary::new(), None),
+                _ => return Err(PdfError::read("/Extensions must be a dictionary")),
+            },
+            Ok(Object::Dictionary(d)) => (d, None),
+            _ => (Dictionary::new(), None),
+        };
+        let prefix = ext.prefix_name.clone();
+        // the current value, and where it lives if it is an indirect array
+        let (cur, cur_ref) = match extensions.get(&prefix).cloned() {
+            Ok(Object::Reference(r)) => (self.resolve(&Object::Reference(r))?, Some(r)),
+            Ok(o) => (o, None),
+            Err(_) => (Object::Null, None),
+        };
+        let (ext_dicts, old_multivalued): (Vec<Object>, bool) = match &cur {
+            Object::Dictionary(_) => (vec![cur.clone()], false),
+            Object::Array(a) => (a.clone(), true),
+            Object::Null => (Vec::new(), false),
+            other => {
+                return Err(PdfError::read(format!(
+                    "PDF extension value is of type {}, expected (direct) PDF dictionary or array.",
+                    generic::type_name(other)
+                )))
+            }
+        };
+        let write_back = |w: &mut Self, mut extensions: Dictionary, value: Option<Object>, arr: Option<Vec<Object>>| -> PdfResult<()> {
+            if let Some(a) = arr {
+                match cur_ref {
+                    Some(r) => w.update_object(r, Object::Array(a)),
+                    None => extensions.set(prefix.clone(), Object::Array(a)),
+                }
+            }
+            if let Some(v) = value {
+                extensions.set(prefix.clone(), v);
+            }
+            match ext_ref {
+                Some(r) => w.update_object(r, Object::Dictionary(extensions)),
+                None => {
+                    let mut root = w.root()?;
+                    root.set("Extensions", Object::Dictionary(extensions));
+                    w.set_root(root);
+                }
+            }
+            Ok(())
+        };
+        for (ix, ext_dict) in ext_dicts.iter().enumerate() {
+            let Object::Dictionary(ed) = ext_dict else {
+                return Err(PdfError::read(format!(
+                    "PDF extension array entry is of type {}, expected (direct) PDF dictionary",
+                    generic::type_name(ext_dict)
+                )));
+            };
+            let lvl = match ed.get(b"ExtensionLevel") {
+                Ok(Object::Integer(i)) => *i,
+                Ok(Object::Real(r)) => *r as i64,
+                _ => return Err(PdfError::read("Could not read developer extension level")),
+            };
+            if lvl == ext.extension_level {
+                return Ok(());
+            }
+            let (old_applies, replace_old) = if ext.compare_by_level {
+                let applies = lvl >= ext.extension_level;
+                (applies, !applies)
+            } else {
+                (ext.subsumed_by.contains(&lvl), ext.subsumes.contains(&lvl))
+            };
+            if old_applies {
+                return Ok(());
+            } else if replace_old {
+                let new = Object::Dictionary(ext.as_pdf_object());
+                if old_multivalued {
+                    let mut arr = ext_dicts.clone();
+                    arr[ix] = new;
+                    return write_back(self, extensions, None, Some(arr));
+                } else if ext.multivalued == Mv::Always {
+                    return write_back(self, extensions, Some(Object::Array(vec![new])), None);
+                }
+                return write_back(self, extensions, Some(new), None);
+            } else if ext.multivalued == Mv::Never {
+                return Err(PdfError::write(format!(
+                    "Could not register extension with prefix /{} and level {}; file contains extension with same prefix and extension level {lvl}. If this extension level is safe to override, mark it as subsumed.",
+                    String::from_utf8_lossy(&prefix),
+                    ext.extension_level
+                )));
+            }
+        }
+        let new = Object::Dictionary(ext.as_pdf_object());
+        if matches!(cur, Object::Null) {
+            let v = if ext.multivalued == Mv::Always {
+                Object::Array(vec![new])
+            } else {
+                new
+            };
+            write_back(self, extensions, Some(v), None)
+        } else if old_multivalued {
+            let mut arr = ext_dicts;
+            arr.push(new);
+            write_back(self, extensions, None, Some(arr))
+        } else {
+            write_back(self, extensions, Some(Object::Array(vec![cur, new])), None)
+        }
+    }
+
+    /// Import a page of `other` as a form XObject (`import_page_as_xobject`).
+    pub fn import_page_as_xobject(
+        &mut self,
+        other: &dyn PdfHandler,
+        page_ix: i64,
+        inherit_filters: bool,
+    ) -> PdfResult<ObjectId> {
+        let (page_ref, resources) = other.find_page_for_modification(page_ix)?;
+        let page = match other.get_object(page_ref)? {
+            Object::Dictionary(d) => d,
+            _ => return Err(PdfError::read("Page must be a dictionary")),
+        };
+        let Some(mb) = other.find_inherited_value(&page, b"MediaBox", b"Parent")? else {
+            return Err(PdfError::read(format!("Page {page_ix} does not have a /MediaBox")));
+        };
+        let mut stream_dict = Dictionary::new();
+        stream_dict.set("BBox", mb);
+        stream_dict.set("Resources", self.import_object(other, &resources, None)?);
+        stream_dict.set("Type", Object::Name(b"XObject".to_vec()));
+        stream_dict.set("Subtype", Object::Name(b"Form".to_vec()));
+        let mut command_stream = other.get_required(&page, b"Contents")?;
+        if let Object::Array(parts) = &command_stream {
+            if parts.len() == 1 && inherit_filters {
+                command_stream = other.resolve(&parts[0])?;
+            } else {
+                let mut data = Vec::new();
+                for p in parts {
+                    match other.resolve(p)? {
+                        Object::Stream(s) => data.extend(other.stream_data(&s)?),
+                        _ => return Err(PdfError::read("Content stream must be a stream")),
+                    }
+                }
+                let mut ds = DecodedStream::new(stream_dict, data);
+                ds.compress()?;
+                return self.add_object(Object::Stream(ds.to_stream()?));
+            }
+        }
+        let Object::Stream(cs) = command_stream else {
+            return Err(PdfError::read("Page /Contents must be a stream"));
+        };
+        let filters = if inherit_filters { other.get(&cs.dict, b"Filter")? } else { None };
+        let result = match filters {
+            Some(f) => {
+                stream_dict.set("Filter", self.import_object(other, &f, None)?);
+                Stream {
+                    dict: stream_dict,
+                    content: cs.content.clone(),
+                    allows_compression: false,
+                    start_position: None,
+                }
+            }
+            None => DecodedStream::new(stream_dict, other.stream_data(&cs)?).to_stream()?,
+        };
+        self.add_object(Object::Stream(result))
+    }
+
     /// Deep-copy an object from `source` into this writer (`import_object`).
     pub fn import_object(
         &mut self,
@@ -1264,7 +1444,13 @@ impl DerefMut for IncrementalWriter {
 
 /// Copy a document into a new writer (`copy_into_new_writer`).
 pub fn copy_into_new_writer(input: &dyn PdfHandler) -> PdfResult<PdfFileWriter> {
-    let mut w = PdfFileWriter::new(false, false)?;
+    copy_into_new_writer_with(input, false)
+}
+
+/// [`copy_into_new_writer`] with an explicit `stream_xrefs` setting
+/// (`writer_kwargs={'stream_xrefs': ...}`).
+pub fn copy_into_new_writer_with(input: &dyn PdfHandler, stream_xrefs: bool) -> PdfResult<PdfFileWriter> {
+    let mut w = PdfFileWriter::new(stream_xrefs, false)?;
     let input_root = input.root_ref()?;
     let out_root = w.root;
     let mut importer = ObjectImporter::new(BTreeMap::from([(input_root, out_root)]), None);

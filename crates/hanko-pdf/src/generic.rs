@@ -574,7 +574,7 @@ fn maybe_read_stream_payload(
     stream: &mut Cursor<'_>,
     data: &Dictionary,
     ctx: &ParseContext<'_>,
-) -> PdfResult<Option<Vec<u8>>> {
+) -> PdfResult<Option<(Vec<u8>, usize)>> {
     let pos = stream.tell();
     let s = read_non_whitespace(stream, false, true)?;
     if s == Some(b's') && stream.read(5) == b"tream" {
@@ -608,6 +608,7 @@ fn maybe_read_stream_payload(
         };
         let length = usize::try_from(length)
             .map_err(|_| PdfError::read(format!("Negative stream length {length}")))?;
+        let data_start = stream.tell();
         let mut stream_data = stream.read(length).to_vec();
         let e = read_non_ws(stream)?;
         let ndstream = stream.read(8);
@@ -625,7 +626,7 @@ fn maybe_read_stream_payload(
                 )));
             }
         }
-        Ok(Some(stream_data))
+        Ok(Some((stream_data, data_start)))
     } else {
         stream.seek(pos);
         Ok(None)
@@ -686,11 +687,13 @@ pub fn read_dictionary(
         maybe_read_stream_payload(stream, &data, ctx)?
     };
     Ok(match payload {
-        Some(content) => Object::Stream(Stream {
+        // `start_position` records where the data starts in the buffer; it
+        // identifies the stream object for decoded-data caching
+        Some((content, start)) => Object::Stream(Stream {
             dict: data,
             content,
             allows_compression: true,
-            start_position: None,
+            start_position: Some(start),
         }),
         None => Object::Dictionary(data),
     })
@@ -1096,6 +1099,22 @@ pub fn pdf_date(d: &PdfDate) -> String {
         }
     }
     s
+}
+
+/// Parse a PDF date from an object, which must be a text string
+/// (`parse_pdf_date` on a PDF object).
+pub fn parse_pdf_date_obj(obj: &Object, strict: bool) -> PdfResult<PdfDate> {
+    let text = match obj {
+        Object::String(s, _) => decode_text(s),
+        _ => None,
+    };
+    match text {
+        Some(t) => parse_pdf_date(&t, strict),
+        None => Err(PdfError::read(format!(
+            "Date string must be a text string, got {}",
+            type_name(obj)
+        ))),
+    }
 }
 
 /// Parse a PDF date string (`parse_pdf_date`).
