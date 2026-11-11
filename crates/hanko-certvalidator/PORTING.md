@@ -16,8 +16,9 @@ Nothing is wired into the Sigis service yet.
 | --- | --- | --- |
 | `errors.py` | `hanko-core/src/errors.rs` | Ported (class names and `isinstance` hierarchy via `ValidationError::is_instance_of`) |
 | `sig_validate.py`, `util.py` (PSS) | `hanko-core/src/algorithms.rs` | Ported: RSA PKCS#1 v1.5, RSASSA-PSS, ECDSA P-256/384/521, Ed25519. DSA, Ed448 and ML-DSA return `AlgorithmNotSupported` |
-| `policy_decl.py` | `src/policy.rs`, `hanko-core/src/algorithms.rs` | Ported: revocation checking rules and policies, freshness types, `CertRevTrustPolicy`, `PKIXValidationParams`, `DisallowWeakAlgorithmsPolicy`, `NonRevokedStatusAssertion` |
-| `authority.py` | `hanko-core/src/cert.rs` (`Cert`), `src/authority.rs` (`TrustAnchor`) | Partly: certificate trust anchors (with or without enforced validity). Name+key anchors and derived qualifiers pending |
+| `policy_decl.py` | `src/policy.rs`, `hanko-core/src/algorithms.rs` | Ported: revocation checking rules and policies, freshness types, `CertRevTrustPolicy`, `PKIXValidationParams` (initial name subtrees, `max_policy_graph_nodes`, `merge`), `DisallowWeakAlgorithmsPolicy`, `NonRevokedStatusAssertion` |
+| `authority.py` | `hanko-core/src/cert.rs` (`Cert`), `src/authority.rs` | Ported: `TrustAnchor` with `TrustQualifiers` (standard parameters, path lengths, `TrustedServiceType`), `derive_quals_from_cert`, name-and-key anchors (`from_name_and_key`, carried by an unsigned synthetic certificate), `Authority` equality |
+| `registry.py` (`SimpleCertificateStore`, `CertificateRegistry`, `LayeredCertificateStore`, trust manager service-type filter) | `src/registry.rs`, `src/validate.rs` | Ported (lookups by name, key hash, key identifier, issuer and serial; AKI-based issuer disambiguation also used in path building) |
 | `context.py` | `src/context.rs` | Partly: trust roots, other certificates, CRLs, OCSP responses, fetchers, moment (with `point_in_time_validation`), best signature time, time tolerance, policies, assertions, `retrieve_crls` |
 | `path.py` | `src/path.rs` | Ported: `ValidationPath` (`find_issuing_authority`, `truncate_to_issuer_and_append`, `copy_and_drop_leaf`, `copy_and_append`, `pkix_len`), `QualifiedPolicy` |
 | `policy_graph.py` (`user_constrained_policies`) | `src/validate.rs` (`qualified_policies`) | Ported over certval's final policy graph (edges reconstructed from expected policy sets) |
@@ -27,7 +28,7 @@ Nothing is wired into the Sigis service yet.
 | `revinfo/validate_crl.py` (`verify_crl`) | `src/revinfo/crl.rs` | Ported: candidate CRL issuer search (direct, indirect, `cRLIssuer`), issuer path validation with the recursion guard, IDP scoping, reason coverage across CRLs (`onlySomeReasons`), delta CRLs, `certificateIssuer` entries, fetching more CRLs when the supplied ones do not suffice. CRL issuer AIA fetching is not supported (the fetch trait only fetches certificate issuers) |
 | `revinfo/validate_ocsp.py` | `src/revinfo/ocsp.rs` | Ported: CertID matching, responder lookup (name, key hash, SKI), issuer and delegated responders with full path validation (revocation included unless `ocsp-nocheck`), fetched responses replace supplied ones for certificates with an OCSP URL |
 | `path` building (`registry.py`, `CertificationPathBuilder`) | `src/validate.rs::build_paths` | Ported (name chaining with key identifiers, AIA issuer fetching when no issuer is known) |
-| `policy_graph.py`, `name_trees.py` | — (`certval`) | Replaced by certval (RFC 5280, RFC 9618 policy graph) |
+| `policy_graph.py`, `name_trees.py` | — (`certval`) | Replaced by certval (RFC 5280 name constraints, RFC 9618 policy graph), plus the pyHanko-specific parts in `src/validate.rs`: permitted subtrees of anchor and caller intersected, excluded subtrees matched case-insensitively and without trailing dots, the policy graph size limit, and pyHanko's permitted/excluded failure messages |
 | `fetchers/` | `hanko-fetch` | Ported there; used through `hanko_core::fetch` traits |
 | asn1crypto name handling (`Name.human_friendly`, string preparation) | `src/names.rs`, `src/stringprep_tables.rs` | Ported: names failing RFC 4518 preparation make validation fail as in pyHanko |
 | `validate.py` (`async_validate_ac`, `check_ac_holder_match`, `_candidate_ac_issuers`, `validate_aa_usage`, `_check_ac_signature`, `_validate_ac_targeting`, `_check_aa_controls`), `path.py` (`aa_attr_in_scope`), `asn1_types.py` (`AAControls`) | `src/ac.rs` | Ported: RFC 5755 AC parsing (both tagging styles of `baseCertificateID`), holder matching, AA search by name / issuer-serial / AKI, AA usage, AA path with aaControls and AA path length, signature, validity, targeting, revocation of the AC through the CRL/OCSP code (`revinfo::Target`) |
@@ -54,12 +55,12 @@ PKITS cases).
 | `test_freshness.py` (6) | `tests/freshness.rs` | Ported 6/6 |
 | `test_validate.py` (21) | `tests/validate.rs`, `tests/pkits.rs`, `tests/openssl_ocsp.rs` | Ported 21/21 |
 | `test_ades_time_slide.py` (13) | `tests/ades_time_slide.rs` | Ported 13/13 |
-| `test_policy_proc.py` (13) | — | Pending (lane A: trust anchor qualifiers) |
-| `test_registry.py` (9) | — | Pending (lane A: registry, AIA disambiguation) |
+| `test_policy_proc.py` (13) | `tests/policy_proc.rs` | Ported 13/13 |
+| `test_registry.py` (9) | `tests/registry.rs` | Ported 7; skipped 2: `test_system_trust_fallback_deprecated` and `test_extra_trust_roots_deprecated` test deprecated Python entry points (operating-system trust store fallback, `extra_trust_roots`) that this port does not have |
 | `test_ac_validate.py` (27) | `tests/ac_validate.rs` | Ported 27/27 |
 | `test_common_utils.py` (15), `test_fetch_limits.py` (11), `test_fetcher_lifecycle.py` (16) | — | Pending (lane A: `hanko-fetch`, tested against a local fake server) |
-| `test_name_trees.py` (6) | — | Proposed skip: pyHanko-internal name constraint trees; certval implements name constraints (PKITS 4.13 passes). Lane A to confirm or port as behaviour tests |
-| `test_policy_graph.py` (33) | — | Proposed skip: pyHanko-internal policy graph; certval implements RFC 9618 (PKITS 4.8–4.12 pass). Lane A to confirm or port as behaviour tests |
+| `test_name_trees.py` (6) | — | Skipped: they test the containment predicates of pyHanko's internal `name_trees` module, which this port replaces by certval. Equivalent coverage: all 38 NIST PKITS name-constraint cases (4.13) agree, and `tests/policy_proc.rs` covers the pyHanko-specific behaviour (case-insensitive DNS / mail / URI matching, trailing dots, local parts staying case-sensitive, no over-matching, merged permitted and excluded subtrees) |
+| `test_policy_graph.py` (33) | — | Skipped: they test pyHanko's internal `PolicyGraph` class (RFC 9618 figures 4–7, pruning, duplicates, the exponential blow-up guard). certval implements the same RFC 9618 graph and caps its size (`MAX_POLICY_POOL_NODES`, fail closed). Equivalent coverage: NIST PKITS policy cases 4.8–4.12 agree, the user notice and CPS qualifier tests and the policy graph size limit tests pass |
 
 `test_crl_fetch_races.py` exists only after the release (on pyHanko `main`) and
 is not part of the baseline.

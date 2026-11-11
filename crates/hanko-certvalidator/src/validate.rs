@@ -54,8 +54,98 @@ fn settings(
             let set: ObjectIdentifierSet = p.user_initial_policy_set.iter().copied().collect();
             cps.set_initial_policy_set_from_oid_set(set);
         }
+        if let Some(subtrees) = &p.initial_permitted_subtrees {
+            let _ = cps.set_initial_permitted_subtrees_from_set(&name_constraints_set(subtrees));
+        }
+        if let Some(subtrees) = &p.initial_excluded_subtrees {
+            let _ = cps.set_initial_excluded_subtrees_from_set(&name_constraints_set(subtrees));
+        }
     }
     cps
+}
+
+/// pyhanko-certvalidator compares DNS names, mail domains and URI hosts
+/// case-insensitively and without a trailing dot; certval does not. Find
+/// the first certificate with a SAN name that an excluded subtree covers
+/// under that normalization.
+fn excluded_by_normalized_names(
+    issued: &[(&Cert, &Cert)],
+    excluded: &[x509_cert::ext::pkix::constraints::name::GeneralSubtree],
+) -> Option<usize> {
+    use x509_cert::ext::pkix::name::GeneralName as G;
+    use x509_cert::ext::pkix::SubjectAltName;
+    fn norm(s: &str) -> String {
+        s.trim_end_matches('.').to_ascii_lowercase()
+    }
+    fn domain_match(base: &str, host: &str) -> bool {
+        let (b, h) = (norm(base), norm(host));
+        match b.strip_prefix('.') {
+            Some(suffix) => h.ends_with(&format!(".{suffix}")),
+            None => h == b || h.ends_with(&format!(".{b}")),
+        }
+    }
+    fn host_match(base: &str, host: &str) -> bool {
+        let (b, h) = (norm(base), norm(host));
+        match b.strip_prefix('.') {
+            Some(suffix) => h.ends_with(&format!(".{suffix}")),
+            None => h == b,
+        }
+    }
+    fn uri_host(uri: &str) -> Option<&str> {
+        let rest = uri.split_once("://")?.1;
+        let authority = rest.split(['/', '?', '#']).next()?;
+        let host = authority.rsplit('@').next()?;
+        Some(host.split(':').next().unwrap_or(host))
+    }
+    fn mail_match(base: &str, mailbox: &str) -> bool {
+        let Some((local, host)) = mailbox.rsplit_once('@') else {
+            return false;
+        };
+        match base.rsplit_once('@') {
+            Some((bl, bh)) => bl == local && norm(bh) == norm(host),
+            None => host_match(base, host),
+        }
+    }
+    for (index, (cert, _)) in issued.iter().enumerate() {
+        let Ok(Some((_, san))) = cert.extension::<SubjectAltName>() else {
+            continue;
+        };
+        for name in &san.0 {
+            for st in excluded {
+                let hit = match (&st.base, name) {
+                    (G::DnsName(b), G::DnsName(n)) => domain_match(b.as_str(), n.as_str()),
+                    (G::Rfc822Name(b), G::Rfc822Name(n)) => mail_match(b.as_str(), n.as_str()),
+                    (G::UniformResourceIdentifier(b), G::UniformResourceIdentifier(n)) => {
+                        uri_host(n.as_str()).is_some_and(|h| host_match(b.as_str(), h))
+                    }
+                    _ => false,
+                };
+                if hit {
+                    return Some(index);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Sort subtrees by name type into certval's representation.
+fn name_constraints_set(
+    subtrees: &[x509_cert::ext::pkix::constraints::name::GeneralSubtree],
+) -> certval::NameConstraintsSet {
+    use x509_cert::ext::pkix::name::GeneralName as G;
+    let mut set = certval::NameConstraintsSet::default();
+    for st in subtrees {
+        match &st.base {
+            G::Rfc822Name(_) => set.rfc822_name.push(st.clone()),
+            G::DnsName(_) => set.dns_name.push(st.clone()),
+            G::DirectoryName(_) => set.directory_name.push(st.clone()),
+            G::UniformResourceIdentifier(_) => set.uniform_resource_identifier.push(st.clone()),
+            G::IpAddress(_) => set.ip_address.push(st.clone()),
+            _ => set.not_supported.push(st.clone()),
+        }
+    }
+    set
 }
 
 fn environment(ctx: &ValidationContext) -> Result<PkiEnvironment, ValidationError> {
@@ -100,6 +190,9 @@ pub(crate) fn subject_key_id(cert: &Cert) -> Option<Vec<u8>> {
 /// Could `issuer` have issued `cert`? Names must chain (RFC 5280 name
 /// comparison); if both key identifiers are present they must agree.
 fn may_have_issued(issuer: &Cert, cert: &Cert) -> bool {
+    if !crate::registry::potential_issuer(issuer, cert) {
+        return false;
+    }
     if !certval::compare_names(issuer.subject(), cert.issuer()) {
         return false;
     }
@@ -168,7 +261,7 @@ impl PathSearch<'_> {
         }
         self.fetch_missing(current);
         for anchor in &self.ctx.trust_anchors {
-            if anchor.cert() != current && may_have_issued(anchor.cert(), current) {
+            if anchor.can_issue() && anchor.cert() != current && may_have_issued(anchor.cert(), current) {
                 let intermediates = chain.iter().rev().cloned().collect();
                 out.push(ValidationPath::new(
                     anchor.clone(),
@@ -666,6 +759,43 @@ fn validate_path_in_stack(
         .to_der_datetime()
         .map(TimeOfInterest)
         .ok_or_else(|| fail(ValidationError::Malformed("time of interest out of range".into())))?;
+    // The anchor's qualifiers combine with the caller's parameters.
+    // Permitted subtrees must be intersected: certval gets one list, and
+    // every further list is checked by another certval run below.
+    let anchor_params = anchor.qualifiers().standard_parameters.as_ref();
+    let mut permitted_sets: Vec<Vec<x509_cert::ext::pkix::constraints::name::GeneralSubtree>> =
+        params
+            .and_then(|p| p.initial_permitted_subtrees.clone())
+            .into_iter()
+            .chain(anchor_params.and_then(|a| a.initial_permitted_subtrees.clone()))
+            .collect();
+    let mut combined = match (params, anchor_params) {
+        (Some(p), Some(a)) => Some(p.combine_with_anchor(a)),
+        (Some(p), None) => Some(p.clone()),
+        (None, Some(a)) => Some(a.clone()),
+        (None, None) => None,
+    };
+    if let Some(c) = combined.as_mut() {
+        c.initial_permitted_subtrees = permitted_sets.first().cloned();
+    }
+    let extra_permitted = if permitted_sets.len() > 1 {
+        permitted_sets.split_off(1)
+    } else {
+        Vec::new()
+    };
+    let params = combined.as_ref();
+    if let Some(max) = anchor.qualifiers().max_path_length {
+        let intermediates = issued
+            .iter()
+            .take(total.saturating_sub(1))
+            .filter(|(c, _)| !c.is_self_issued())
+            .count();
+        if intermediates > max {
+            return Err(fail(ValidationError::PathValidation(
+                "The path could not be validated because it exceeds the maximum path length".into(),
+            )));
+        }
+    }
     let cps = settings(ctx, toi, anchor.enforce_validity(), params);
     let pe = environment(ctx).map_err(fail)?;
 
@@ -707,10 +837,69 @@ fn validate_path_in_stack(
     let cv_path = CertificationPath::new(ta, chain, target);
     let mut results = CertificationPathResults::new();
     results.set_processed_extensions(SUPPORTED_EXTENSIONS.iter().copied().collect());
-    match validate_path_rfc5280(&pe, &cps, &cv_path, &mut results) {
+    let mut outcome = validate_path_rfc5280(&pe, &cps, &cv_path, &mut results);
+    if outcome.is_ok() {
+        for extra in &extra_permitted {
+            let mut p = params.cloned().unwrap_or_default();
+            p.initial_permitted_subtrees = Some(extra.clone());
+            let cps_extra = settings(ctx, toi, anchor.enforce_validity(), Some(&p));
+            let mut r = CertificationPathResults::new();
+            r.set_processed_extensions(SUPPORTED_EXTENSIONS.iter().copied().collect());
+            if let Err(e) = validate_path_rfc5280(&pe, &cps_extra, &cv_path, &mut r) {
+                outcome = Err(e);
+                break;
+            }
+        }
+    }
+    if outcome.is_ok() {
+        if let Some(excluded) = params.and_then(|p| p.initial_excluded_subtrees.as_ref()) {
+            if let Some(who) = excluded_by_normalized_names(&issued, excluded) {
+                return Err(fail(ValidationError::PathValidation(format!(
+                    "The path could not be validated because some names of {} are excluded from the namespace of the issuing authority. ",
+                    path.describe(who, total)
+                ))));
+            }
+        }
+    }
+    match outcome {
         Ok(()) => {}
+        Err(certval::Error::PathValidation(PathValidationStatus::NameConstraintsViolation)) => {
+            // certval does not say which constraint failed; retry without
+            // excluded subtrees to tell an exclusion from a permission
+            // failure, as pyhanko-certvalidator's messages do.
+            let mut relaxed = params.cloned().unwrap_or_default();
+            relaxed.initial_excluded_subtrees = None;
+            let cps2 = settings(ctx, toi, anchor.enforce_validity(), Some(&relaxed));
+            let mut r2 = CertificationPathResults::new();
+            r2.set_processed_extensions(SUPPORTED_EXTENSIONS.iter().copied().collect());
+            let excluded = validate_path_rfc5280(&pe, &cps2, &cv_path, &mut r2).is_ok();
+            let who = path.describe(total - 1, total);
+            return Err(fail(ValidationError::PathValidation(if excluded {
+                format!(
+                    "The path could not be validated because some names of {who} are excluded from the namespace of the issuing authority. "
+                )
+            } else {
+                format!(
+                    "The path could not be validated because not all names of {who} are in the permitted namespace of the issuing authority. "
+                )
+            })));
+        }
         Err(certval::Error::PathValidation(status)) => return Err(fail(map_status(status))),
         Err(e) => return Err(fail(cv_err("The path could not be validated", e))),
+    }
+
+    // `max_policy_graph_nodes`, checked on the final graph.
+    if let Some(limit) = params.and_then(|p| p.max_policy_graph_nodes) {
+        let nodes: usize = results
+            .get_final_valid_policy_graph()
+            .map(|g| g.iter().map(Vec::len).sum())
+            .unwrap_or(0);
+        if nodes > limit {
+            return Err(fail(ValidationError::PathValidation(format!(
+                "The path could not be validated because policy processing for {} exceeds the size limit on the policy graph",
+                path.describe(total - 1, total)
+            ))));
+        }
     }
 
     // Algorithm usage policy on every certificate signature in the path.

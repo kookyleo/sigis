@@ -40,9 +40,13 @@ See `docs/hanko-lanes.md`.
   used by `hanko-cms` for certified signer attributes; pyHanko's list of
   supported critical extensions enforced.
 
-Next: registry and trust anchor qualifiers (`test_registry.py`,
-`test_policy_proc.py`), decision on `test_name_trees.py` /
-`test_policy_graph.py`.
+- Phase 3d: certificate registry and trust anchor qualifiers
+  (`test_registry.py`, `test_policy_proc.py`); `test_name_trees.py` and
+  `test_policy_graph.py` skipped with equivalent coverage (see
+  `crates/hanko-certvalidator/PORTING.md`).
+
+Remaining: 15 `test_cms.py` functions wait on request R1 (algorithms);
+`test_embed_ac_revinfo_adobe_style` waits on lane E (`ades_lta_validation`).
 
 ## Per-suite counts
 
@@ -55,17 +59,17 @@ Next: registry and trust anchor qualifiers (`test_registry.py`,
 | `test_fetch_limits.py` | 11 | 11 | 0 | 0 |
 | `test_fetcher_lifecycle.py` | 16 | 0 | 16 | 0 |
 | `test_freshness.py` | 6 | 6 | 0 | 0 |
-| `test_name_trees.py` | 6 | 0 | 0 | 6 |
-| `test_policy_graph.py` | 33 | 0 | 0 | 33 |
-| `test_policy_proc.py` | 13 | 0 | 0 | 13 |
-| `test_registry.py` | 9 | 0 | 0 | 9 |
+| `test_name_trees.py` | 6 | 0 | 6 | 0 |
+| `test_policy_graph.py` | 33 | 0 | 33 | 0 |
+| `test_policy_proc.py` | 13 | 13 | 0 | 0 |
+| `test_registry.py` | 9 | 7 | 2 | 0 |
 | `test_sig_validate.py` | 3 | 3 | 0 | 0 |
 | `test_validate.py` | 21 | 21 | 0 | 0 |
 | `test_cms.py` | 78 | 60 | 2 | 16 |
 | `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 8 | 2 | 0 |
 | `test_tsa_fetcher_requests.py` | 4 | 4 | 0 | 0 |
-| **Total** | **271** | **174** | **20** | **77** |
+| **Total** | **271** | **194** | **61** | **16** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
 `crates/hanko-cms/PORTING.md`.
@@ -134,7 +138,11 @@ accepts); the tests assert this.
   `StandardCmsSignatureStatus` (`cades_signer_attrs`, `ac_attrs`,
   `ac_validation_errs`). In `hanko-certvalidator::ltv`, `PoeType` gained
   `Policy`, `PoeManager` gained `with_current_time`, `poe_time`,
-  `register_by_digest`, `iter`, `merge`. `TrustProblem::KeyUsage` also carries the
+  `register_by_digest`, `iter`, `merge`. `PkixValidationParams` (§4
+  `policy::*`) gained `initial_permitted_subtrees`,
+  `initial_excluded_subtrees` and `max_policy_graph_nodes` (struct
+  literals need `..Default::default()`); `TrustAnchor` gained qualifiers.
+  `TrustProblem::KeyUsage` also carries the
   self-signed `InvalidCertificateError`. In `hanko-fetch`, `FetchLimits`
   gained `max_requests`, `max_cert_requests`, `max_aia_urls_per_object`
   (pyhanko-certvalidator 0.33 `FetchLimits`), `HttpFetchers` is now built

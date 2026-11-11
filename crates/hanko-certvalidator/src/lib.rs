@@ -28,6 +28,7 @@ pub mod ltv;
 pub mod names;
 pub mod path;
 pub mod policy;
+pub mod registry;
 pub mod revinfo;
 mod stringprep_tables;
 pub mod validate;

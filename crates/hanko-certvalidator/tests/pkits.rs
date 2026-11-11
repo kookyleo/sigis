@@ -67,6 +67,7 @@ fn params(v: &Value) -> Option<PkixValidationParams> {
         initial_policy_mapping_inhibit: flag("initial_policy_mapping_inhibit"),
         initial_explicit_policy: flag("initial_explicit_policy"),
         initial_any_policy_inhibit: flag("initial_any_policy_inhibit"),
+        ..PkixValidationParams::default()
     })
 }
 
