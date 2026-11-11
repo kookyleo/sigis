@@ -15,7 +15,7 @@ Nothing is wired into the Sigis service yet.
 | pyhanko-certvalidator | sigis-hanko | Status |
 | --- | --- | --- |
 | `errors.py` | `hanko-core/src/errors.rs` | Ported (class names and `isinstance` hierarchy via `ValidationError::is_instance_of`) |
-| `sig_validate.py`, `util.py` (PSS) | `hanko-core/src/algorithms.rs` | Ported: RSA PKCS#1 v1.5, RSASSA-PSS, ECDSA P-256/384/521, Ed25519. DSA, Ed448 and ML-DSA return `AlgorithmNotSupported` |
+| `sig_validate.py`, `util.py` (PSS) | `hanko-core/src/algorithms.rs` | Ported: RSA PKCS#1 v1.5 (MD5, SHA-1, SHA-2, SHA-3), RSASSA-PSS, ECDSA P-256/384/521 (the ECDSA-with-SHA3 OIDs take the digest from context, as asn1crypto has no digest for them), DSA (FIPS 186 sizes only; parameter inheritance in paths as in `validate.py`), Ed25519, Ed448; `DisallowWeakAlgorithmsPolicy` with the RSA and DSA key size thresholds. ML-DSA returns `AlgorithmNotSupported`. certval verifies certificate signatures through this code for the algorithms it does not support itself |
 | `policy_decl.py` | `src/policy.rs`, `hanko-core/src/algorithms.rs` | Ported: revocation checking rules and policies, freshness types, `CertRevTrustPolicy`, `PKIXValidationParams` (initial name subtrees, `max_policy_graph_nodes`, `merge`), `DisallowWeakAlgorithmsPolicy`, `NonRevokedStatusAssertion` |
 | `authority.py` | `hanko-core/src/cert.rs` (`Cert`), `src/authority.rs` | Ported: `TrustAnchor` with `TrustQualifiers` (standard parameters, path lengths, validity period, `TrustedServiceType`), the `TrustManager` interface (`as_trust_anchor`, `find_potential_issuers`), `derive_quals_from_cert`, name-and-key anchors (`from_name_and_key`, carried by an unsigned synthetic certificate), `Authority` equality |
 | `registry.py` (`SimpleCertificateStore`, `CertificateRegistry`, `LayeredCertificateStore`, trust manager service-type filter) | `src/registry.rs`, `src/validate.rs` | Ported (lookups by name, key hash, key identifier, issuer and serial; AKI-based issuer disambiguation also used in path building) |
@@ -71,26 +71,25 @@ is not part of the baseline.
 | Upstream test | Status |
 | --- | --- |
 | `test_rsassa_pss`, `test_rsassa_pss_exclusive`, `test_ed25519` | Ported |
-| `test_ed448` | Ported as a **known divergence**: Ed448 is not supported, the port asserts a clean `PathValidationError` |
+| `test_ed448` | Ported |
 | `test_assert_no_revinfo_needed_by_fiat` | Ported (extended: also shows that the intermediate needs its own assertion) |
 | `test_multitasking_ocsp` | Ported |
 | `test_openssl_ocsp` (29 cases) | Ported: **29/29 agree**, including messages |
-| `test_nist_pkits` (246 cases) | Ported: **243/246 agree**; 3 known divergences (below) |
+| `test_nist_pkits` (246 cases) | Ported: **245/246 agree**; 1 known divergence (below) |
 | `test_fail_validation_if_required_delta_crl_not_available` | Ported |
 | `test_root_time_bound`, `test_root_expired`, `test_root_not_yet_valid`, `test_basic_certificate_validator_root_expiration_unquestioned` (3 cases), `test_extreme_not_after` | Ported |
 | `test_nist_pkits_user_notice`, `test_408020_cps_pointer_qualifier_test20` | Ported |
 | `test_nist_pkits_with_simulated_crl_downloads` | Ported (in `tests/pkits.rs`); same known divergences |
 | `test_building_trust_path_fetched_in_different_orders`, `test_do_not_fetch_crl_if_cache_sufficient`, `test_41503_invalid_deltacrl_test3_combine_cache_with_fetched`, `test_context_retrieve_all_crls` | Ported with in-memory fake fetchers |
 
-### NIST PKITS known divergences (3)
+### NIST PKITS known divergence (1)
 
-All of them fail closed: the port rejects where pyhanko-certvalidator
-accepts. The test asserts that no divergence is fail-open and that the list
-is exact.
+It fails closed: the port rejects where pyhanko-certvalidator accepts.
+The test asserts that no divergence is fail-open and that the list is
+exact.
 
 | Cases | Reason |
 | --- | --- |
-| 4.1.4, 4.1.5 | DSA signatures not supported (request R1) |
 | 4.2.3 | `UTCTime` year 1950 cannot be decoded by the `der` crate |
 
 Error classes agree for all other cases. Messages match pyHanko's for the

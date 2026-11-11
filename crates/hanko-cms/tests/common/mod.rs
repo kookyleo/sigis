@@ -143,6 +143,15 @@ impl AlgorithmUsagePolicy for CustomPolicy {
             (Some(p), false) => p.signature_algorithm_allowed(algorithm, moment, public_key),
         }
     }
+
+    fn digest_combination(
+        &self,
+        signature_algorithm: &AlgorithmIdentifierOwned,
+        message_digest_algorithm: &AlgorithmIdentifierOwned,
+        moment: Option<Moment>,
+    ) -> Option<AlgorithmUsageConstraint> {
+        Some(self.digest_combination_allowed(signature_algorithm, message_digest_algorithm, moment))
+    }
 }
 
 impl CmsAlgorithmUsagePolicy for CustomPolicy {
@@ -174,6 +183,7 @@ pub fn base_policy(v: &Value) -> Arc<dyn AlgorithmUsagePolicy> {
             weak_hash_algos: str_list(&v["weak_hash_algos"]),
             weak_signature_algos: str_list(&v["weak_signature_algos"]),
             rsa_key_size_threshold: v["rsa_key_size_threshold"].as_u64().unwrap() as usize,
+            dsa_key_size_threshold: v["dsa_key_size_threshold"].as_u64().unwrap() as usize,
         }),
         "_DefaultPolicyMixin" => base_policy(&v["inner"]),
         other => cms_policy(v).map_or_else(
@@ -437,15 +447,7 @@ pub fn replay(h: &Harvest, call: &Value) -> Replayed {
             let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
             let md = inputs["md_algorithm"].as_str().unwrap();
             let digest = unhex(inputs["document_digest"].as_str().unwrap());
-            let Some(algorithm) = [
-                DigestAlgorithm::Sha1,
-                DigestAlgorithm::Sha224,
-                DigestAlgorithm::Sha256,
-                DigestAlgorithm::Sha384,
-                DigestAlgorithm::Sha512,
-            ]
-            .into_iter()
-            .find(|d| d.name() == md) else {
+            let Some(algorithm) = DigestAlgorithm::from_name(md) else {
                 return Err(CmsError::validation_generic(format!(
                     "Unknown hash function '{md}'"
                 )));

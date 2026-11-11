@@ -50,8 +50,16 @@ See `docs/hanko-lanes.md`.
   fixtures resolve at run time. `ValidationContext` gained a trust manager
   hook (A-2), `crls()` / `ocsps()` (A-6) and `with_revinfo` (A-3).
 
-Remaining: 15 `test_cms.py` functions wait on R1 (algorithms, see R8);
-`test_embed_ac_revinfo_adobe_style` waits on lane E (`ades_lta_validation`).
+- R1 (last commit of the branch): MD5, SHA-3 and SHAKE256 digests, DSA
+  (with parameter inheritance in paths) and Ed448 verification, the DSA key
+  size threshold of `DisallowWeakAlgorithmsPolicy`, and CMS policies passed
+  through the validation context (`AlgorithmUsagePolicy::digest_combination`).
+  certval verifies certificate signatures through `hanko-core` for the
+  algorithms it lacks. All 161 recorded `test_cms.py` calls and 245/246
+  PKITS cases agree. This commit needs R8 in lane E code.
+
+Remaining: `test_embed_ac_revinfo_adobe_style` waits on lane E
+(`ades_lta_validation`).
 
 ## Per-suite counts
 
@@ -70,11 +78,11 @@ Remaining: 15 `test_cms.py` functions wait on R1 (algorithms, see R8);
 | `test_registry.py` | 9 | 7 | 2 | 0 |
 | `test_sig_validate.py` | 3 | 3 | 0 | 0 |
 | `test_validate.py` | 21 | 21 | 0 | 0 |
-| `test_cms.py` | 78 | 60 | 2 | 16 |
+| `test_cms.py` | 78 | 75 | 2 | 1 |
 | `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 8 | 2 | 0 |
 | `test_tsa_fetcher_requests.py` | 4 | 4 | 0 | 0 |
-| **Total** | **271** | **194** | **61** | **16** |
+| **Total** | **271** | **209** | **61** | **1** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
 `crates/hanko-cms/PORTING.md`.
@@ -84,11 +92,12 @@ Remaining: 15 `test_cms.py` functions wait on R1 (algorithms, see R8);
 All fail closed (the port rejects or reports less trust where pyHanko
 accepts); the tests assert this.
 
-- NIST PKITS: 3 cases (DSA, UTCTime 1950), see
+- NIST PKITS: 1 case (4.2.3, UTCTime 1950 not decodable), see
   `crates/hanko-certvalidator/PORTING.md`.
-- `test_cms.py` recorded calls: 17 of 161 differ, all listed in
-  `crates/hanko-cms/tests/test_cms.rs` (`KNOWN`): MD5, SHA-3, DSA, Ed448
-  (request R1).
+- `test_cms.py` recorded calls: all 161 agree.
+- DSA: only the FIPS 186 key sizes (1024/160, 2048/224, 2048/256,
+  3072/256) verify (RustCrypto `dsa`); pyca accepts other sizes.
+- ML-DSA verification is not supported (`AlgorithmNotSupported`).
 - Without a validation context, nothing is trusted (pyHanko uses the OS
   trust store).
 
@@ -120,10 +129,12 @@ and R5 done or approved.
   `DigestAlgorithm` variants (`Md5`, `Sha3_224`, `Sha3_256`, `Sha3_384`,
   `Sha3_512`, `Shake256`) break three exhaustive `match`es in lane E code
   that did not exist when R1 was written:
-  `crates/hanko-eutl/src/xml/dsig.rs:308` and `:350` (digest to
+  `crates/hanko-eutl/src/xml/dsig.rs:304` and `:346` (digest to
   RSA / ECDSA signature OID) and
-  `crates/hanko-ades/src/etsi_report.rs:184` (digest to XML URI). Lane A
-  keeps the R1 work in a separate commit at the end of this branch. Each
+  `crates/hanko-ades/src/etsi_report.rs:179` (digest to XML URI). Lane A
+  keeps the R1 work in a separate commit at the end of this branch
+  ("Verify MD5, SHA-3, SHAKE256, DSA and Ed448 signatures"); every lane A
+  crate is green with it, `hanko-eutl` and `hanko-ades` need the arms. Each
   match needs an arm for the new variants: in `dsig.rs`, an "unsupported
   algorithm" error (XML-DSig there only uses SHA-1/SHA-2), and in
   `etsi_report.rs`, the XML Signature URIs
@@ -172,8 +183,11 @@ Status of the relayed items:
   exactly: `1.2.840.113583.1.1.5` is `adobe_authentic_documents_trust` (was
   `pdf_signing`), and `0.4.0.2231.3.0` has no name in asn1crypto (was
   `tsl_signing`; now its dotted OID). No lane E code uses either name.
-- **A-5 (lane D): see R8.** SHA-3 / SHAKE256 digests, DSA and Ed448
-  verification. Signing (Ed448, DSA, ML-DSA) is lane D's; the crates are
+- **A-5 (lane D): done in the R1 commit (merge needs R8).**
+  `DigestAlgorithm::{Md5, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+  Shake256}` (SHAKE256 with 64-byte output; `id-shake256-len` maps to it),
+  `DigestAlgorithm::ALL` / `from_name`, `SignatureMechanism::{Dsa, Ed448}`;
+  DSA and Ed448 verification. Signing (Ed448, DSA, ML-DSA) is lane D's; the crates are
   then available in `hanko-core`.
 - **A-6 (lane D): done.** `ValidationContext::crls()` and `ocsps()` return
   the supplied DER encodings.

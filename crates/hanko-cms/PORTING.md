@@ -32,7 +32,7 @@ Rust test replays the calls of its upstream function, asserts the upstream
 assertions on the hanko-cms result, and compares the outcome with pyHanko's
 field by field (`tests/common/mod.rs`). Unlisted differences fail the test,
 listed ones (`KNOWN`) must still differ, and every difference must fail
-closed. 144 of 161 recorded calls agree; the rest wait on request R1.
+closed. All 161 recorded calls agree (`KNOWN` is empty).
 
 Skipped (signing side, lane D):
 
@@ -44,13 +44,6 @@ is lane D), `test_direct_pdfcmsembedder_usage` (DSS half is lanes B/E).
 
 Pending:
 
-- 15 functions on algorithms that need new hanko-core dependencies
-  (request R1): MD5 (`test_sign_weak_digest`, the 7 digest-mismatch / weak
-  digest tests), SHA-3 (the 2 multiple-signature-timestamp tests), DSA
-  (`test_sign_with_dsa_trust`, `test_sign_with_explicit_dsa_implied_hash`),
-  Ed448 / SHAKE256 (`test_ed448_no_length`,
-  `test_ed448_invalid_hash_algo_validation`). They are replayed and fail
-  closed today (signature reported invalid or "Unknown hash function").
 - `test_embed_ac_revinfo_adobe_style`: its assertions are on
   `ades_lta_validation` (lane E); the integrity checks it makes are
   replayed and agree.

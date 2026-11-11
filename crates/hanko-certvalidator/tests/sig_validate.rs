@@ -122,12 +122,15 @@ fn ed25519_chain_signatures_verify() {
 }
 
 #[test]
-fn ed448_is_reported_as_unsupported() {
+fn ed448_chain_signatures_verify() {
     let root = load_cert(&["testing-ca-ed448", "root.cert.pem"]);
     let interm = load_cert(&["testing-ca-ed448", "interm.cert.pem"]);
+    check_issued(&root, &interm).expect("interm");
+    // A signature by another key fails.
+    let signer = load_cert(&["testing-ca-ed448", "signer.cert.pem"]);
     assert!(matches!(
-        check_issued(&root, &interm),
-        Err(SignatureError::AlgorithmNotSupported(_))
+        check_issued(&root, &signer),
+        Err(SignatureError::InvalidSignature)
     ));
 }
 

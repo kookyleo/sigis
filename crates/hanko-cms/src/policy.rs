@@ -56,9 +56,31 @@ impl AlgorithmUsagePolicy for LiftedPolicy {
     fn min_rsa_key_size(&self) -> usize {
         self.0.min_rsa_key_size()
     }
+
+    fn digest_combination(
+        &self,
+        signature_algorithm: &AlgorithmIdentifierOwned,
+        message_digest_algorithm: &AlgorithmIdentifierOwned,
+        moment: Option<Moment>,
+    ) -> Option<AlgorithmUsageConstraint> {
+        Some(self.digest_combination_allowed(signature_algorithm, message_digest_algorithm, moment))
+    }
 }
 
-impl CmsAlgorithmUsagePolicy for LiftedPolicy {}
+impl CmsAlgorithmUsagePolicy for LiftedPolicy {
+    /// A base policy that is itself a CMS policy keeps its own rule, as in
+    /// pyHanko, where such a policy is used without lifting.
+    fn digest_combination_allowed(
+        &self,
+        signature_algorithm: &AlgorithmIdentifierOwned,
+        message_digest_algorithm: &AlgorithmIdentifierOwned,
+        moment: Option<Moment>,
+    ) -> AlgorithmUsageConstraint {
+        self.0
+            .digest_combination(signature_algorithm, message_digest_algorithm, moment)
+            .unwrap_or_else(|| ensure_digest_match(signature_algorithm, message_digest_algorithm))
+    }
+}
 
 /// Lift a base policy (`lift_policy`).
 pub fn lift_policy(policy: Arc<dyn AlgorithmUsagePolicy>) -> Arc<dyn CmsAlgorithmUsagePolicy> {
@@ -75,8 +97,8 @@ pub fn signature_algorithm_name(oid: &ObjectIdentifier) -> String {
     match *oid {
         oids::RSA_ENCRYPTION => "rsassa_pkcs1v15",
         oids::MD2_WITH_RSA => "md2_rsa",
-        oids::MD5_WITH_RSA => "md5_rsa",
-        oids::SHA1_WITH_RSA => "sha1_rsa",
+        oids::MD5_WITH_RSA | oids::MD5_WITH_RSA_OIW => "md5_rsa",
+        oids::SHA1_WITH_RSA | oids::SHA1_WITH_RSA_OIW => "sha1_rsa",
         oids::SHA224_WITH_RSA => "sha224_rsa",
         oids::SHA256_WITH_RSA => "sha256_rsa",
         oids::SHA384_WITH_RSA => "sha384_rsa",
@@ -88,8 +110,12 @@ pub fn signature_algorithm_name(oid: &ObjectIdentifier) -> String {
         oids::ECDSA_WITH_SHA256 => "sha256_ecdsa",
         oids::ECDSA_WITH_SHA384 => "sha384_ecdsa",
         oids::ECDSA_WITH_SHA512 => "sha512_ecdsa",
+        oids::ECDSA_WITH_SHA3_224 => "sha3_224_ecdsa",
+        oids::ECDSA_WITH_SHA3_256 => "sha3_256_ecdsa",
+        oids::ECDSA_WITH_SHA3_384 => "sha3_384_ecdsa",
+        oids::ECDSA_WITH_SHA3_512 => "sha3_512_ecdsa",
         oids::DSA => "dsa",
-        oids::DSA_WITH_SHA1 => "sha1_dsa",
+        oids::DSA_WITH_SHA1 | oids::DSA_WITH_SHA_OIW | oids::DSA_WITH_SHA1_OIW => "sha1_dsa",
         oids::DSA_WITH_SHA224 => "sha224_dsa",
         oids::DSA_WITH_SHA256 => "sha256_dsa",
         oids::ED25519 => "ed25519",
@@ -104,18 +130,7 @@ pub fn signature_algorithm_name(oid: &ObjectIdentifier) -> String {
 
 /// The asn1crypto name of a digest algorithm OID.
 pub fn digest_name(oid: &ObjectIdentifier) -> String {
-    digest_algorithm_name(oid).map_or_else(
-        || match *oid {
-            oids::SHA3_224 => "sha3_224".to_owned(),
-            oids::SHA3_384 => "sha3_384".to_owned(),
-            oids::SHA3_512 => "sha3_512".to_owned(),
-            oids::SHAKE128 => "shake128".to_owned(),
-            oids::SHAKE256 => "shake256".to_owned(),
-            oids::SHAKE256_LEN => "shake256_len".to_owned(),
-            _ => oid.to_string(),
-        },
-        str::to_owned,
-    )
+    digest_algorithm_name(oid).map_or_else(|| oid.to_string(), str::to_owned)
 }
 
 /// The digest implied by a signature algorithm (`SignedDigestAlgorithm.hash_algo`),
@@ -124,8 +139,13 @@ fn implied_hash(sig: &AlgorithmIdentifierOwned) -> Option<String> {
     Some(
         match sig.oid {
             oids::MD2_WITH_RSA => "md2",
-            oids::MD5_WITH_RSA => "md5",
-            oids::SHA1_WITH_RSA | oids::ECDSA_WITH_SHA1 | oids::DSA_WITH_SHA1 => "sha1",
+            oids::MD5_WITH_RSA | oids::MD5_WITH_RSA_OIW => "md5",
+            oids::SHA1_WITH_RSA
+            | oids::SHA1_WITH_RSA_OIW
+            | oids::ECDSA_WITH_SHA1
+            | oids::DSA_WITH_SHA1
+            | oids::DSA_WITH_SHA_OIW
+            | oids::DSA_WITH_SHA1_OIW => "sha1",
             oids::SHA224_WITH_RSA | oids::ECDSA_WITH_SHA224 | oids::DSA_WITH_SHA224 => "sha224",
             oids::SHA256_WITH_RSA | oids::ECDSA_WITH_SHA256 | oids::DSA_WITH_SHA256 => "sha256",
             oids::SHA384_WITH_RSA | oids::ECDSA_WITH_SHA384 => "sha384",

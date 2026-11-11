@@ -67,19 +67,15 @@ fn test_ed25519() {
     .expect("valid");
 }
 
-/// pyHanko validates Ed448 paths. Neither certval nor this crate supports
-/// Ed448 yet, so the port asserts a clean validation failure instead (see
-/// PORTING.md).
 #[test]
-fn test_ed448_known_divergence() {
-    let err = three_cert_path(
+fn test_ed448() {
+    three_cert_path(
         "testing-ca-ed448",
         "signer.cert.pem",
         "2020-11-01T00:00:00Z",
         "soft-fail",
     )
-    .expect_err("Ed448 is not supported");
-    assert!(err.is_path_validation_error(), "{err:?}");
+    .expect("valid");
 }
 
 #[test]

@@ -27,17 +27,10 @@ use serde_json::Value;
 /// Every entry fails closed: this port rejects (or reports insufficient
 /// revocation information) where pyhanko-certvalidator accepts or reports
 /// revocation. No entry accepts a path that pyhanko-certvalidator rejects.
-const KNOWN_DIVERGENCES: &[(&str, &str)] = &[
-    ("40104", "DSA signatures are not supported"),
-    (
-        "40105",
-        "DSA signatures (with parameter inheritance) are not supported",
-    ),
-    (
-        "40203",
-        "UTCTime before 1970 (here 1950) cannot be decoded by the der crate",
-    ),
-];
+const KNOWN_DIVERGENCES: &[(&str, &str)] = &[(
+    "40203",
+    "UTCTime before 1970 (here 1950) cannot be decoded by the der crate",
+)];
 
 struct Case {
     id: String,
@@ -85,9 +78,10 @@ fn run_case(case: &Case) -> (String, Option<ValidationError>) {
         } else {
             "hard-fail"
         })
-        .algorithm_policy(Arc::new(
-            DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["md2", "md5"]),
-        ));
+        .algorithm_policy(Arc::new(DisallowWeakAlgorithmsPolicy {
+            dsa_key_size_threshold: 1024,
+            ..DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["md2", "md5"])
+        }));
     for crl in strings(v, "crls") {
         builder = builder.crl(load_nist_crl(&crl));
     }
@@ -173,9 +167,10 @@ fn test_nist_pkits_with_simulated_crl_downloads() {
                 ee_certificate_rule: RevocationCheckingRule::CrlRequired,
                 intermediate_ca_cert_rule: RevocationCheckingRule::CrlRequired,
             }))
-            .algorithm_policy(Arc::new(
-                DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["md2", "md5"]),
-            ));
+            .algorithm_policy(Arc::new(DisallowWeakAlgorithmsPolicy {
+                dsa_key_size_threshold: 1024,
+                ..DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["md2", "md5"])
+            }));
         let mut load_failed = false;
         for cert in strings(v, "other_certs") {
             match try_load(&cert) {

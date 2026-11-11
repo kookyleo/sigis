@@ -3,9 +3,10 @@
 
 //! Digest and signature algorithms.
 //!
-//! - [`DigestAlgorithm`]: SHA-1 and SHA-2 digests.
+//! - [`DigestAlgorithm`]: MD5, SHA-1, SHA-2, SHA-3 and SHAKE256 digests.
 //! - [`SignatureMechanism`]: an `AlgorithmIdentifier` resolved to a concrete
-//!   mechanism (RSA PKCS#1 v1.5, RSASSA-PSS, ECDSA, Ed25519), including the
+//!   mechanism (RSA PKCS#1 v1.5, RSASSA-PSS, ECDSA, DSA, Ed25519, Ed448),
+//!   including the
 //!   CMS convention where `rsaEncryption` or `id-ecPublicKey` appears as the
 //!   signature algorithm and the digest comes from context.
 //! - [`validate_signature`]: verify a raw signature, the equivalent of
@@ -26,6 +27,8 @@ use crate::time::Moment;
 /// A supported digest algorithm.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum DigestAlgorithm {
+    /// MD5 (weak; only to report legacy material).
+    Md5,
     /// SHA-1 (weak; only for legacy material).
     Sha1,
     /// SHA-224.
@@ -36,9 +39,40 @@ pub enum DigestAlgorithm {
     Sha384,
     /// SHA-512.
     Sha512,
+    /// SHA3-224.
+    Sha3_224,
+    /// SHA3-256.
+    Sha3_256,
+    /// SHA3-384.
+    Sha3_384,
+    /// SHA3-512.
+    Sha3_512,
+    /// SHAKE256 with a 512-bit output (RFC 8419; `id-shake256-len` with
+    /// any length parameter is treated the same way, as pyHanko does).
+    Shake256,
 }
 
 impl DigestAlgorithm {
+    /// Every supported digest algorithm.
+    pub const ALL: [Self; 11] = [
+        Self::Md5,
+        Self::Sha1,
+        Self::Sha224,
+        Self::Sha256,
+        Self::Sha384,
+        Self::Sha512,
+        Self::Sha3_224,
+        Self::Sha3_256,
+        Self::Sha3_384,
+        Self::Sha3_512,
+        Self::Shake256,
+    ];
+
+    /// Resolve an asn1crypto digest name (`sha256`, `sha3_256`, ...).
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|d| d.name() == name)
+    }
+
     /// Resolve a digest algorithm OID.
     pub fn from_oid(oid: &ObjectIdentifier) -> Option<Self> {
         Some(match *oid {
@@ -47,6 +81,12 @@ impl DigestAlgorithm {
             oids::SHA256 => Self::Sha256,
             oids::SHA384 => Self::Sha384,
             oids::SHA512 => Self::Sha512,
+            oids::MD5 => Self::Md5,
+            oids::SHA3_224 => Self::Sha3_224,
+            oids::SHA3_256 => Self::Sha3_256,
+            oids::SHA3_384 => Self::Sha3_384,
+            oids::SHA3_512 => Self::Sha3_512,
+            oids::SHAKE256 | oids::SHAKE256_LEN => Self::Shake256,
             _ => return None,
         })
     }
@@ -59,6 +99,12 @@ impl DigestAlgorithm {
             Self::Sha256 => oids::SHA256,
             Self::Sha384 => oids::SHA384,
             Self::Sha512 => oids::SHA512,
+            Self::Md5 => oids::MD5,
+            Self::Sha3_224 => oids::SHA3_224,
+            Self::Sha3_256 => oids::SHA3_256,
+            Self::Sha3_384 => oids::SHA3_384,
+            Self::Sha3_512 => oids::SHA3_512,
+            Self::Shake256 => oids::SHAKE256,
         }
     }
 
@@ -70,6 +116,12 @@ impl DigestAlgorithm {
             Self::Sha256 => "sha256",
             Self::Sha384 => "sha384",
             Self::Sha512 => "sha512",
+            Self::Md5 => "md5",
+            Self::Sha3_224 => "sha3_224",
+            Self::Sha3_256 => "sha3_256",
+            Self::Sha3_384 => "sha3_384",
+            Self::Sha3_512 => "sha3_512",
+            Self::Shake256 => "shake256",
         }
     }
 
@@ -88,7 +140,11 @@ impl DigestAlgorithm {
             Self::Sha224 => 28,
             Self::Sha256 => 32,
             Self::Sha384 => 48,
-            Self::Sha512 => 64,
+            Self::Sha512 | Self::Sha3_512 | Self::Shake256 => 64,
+            Self::Md5 => 16,
+            Self::Sha3_224 => 28,
+            Self::Sha3_256 => 32,
+            Self::Sha3_384 => 48,
         }
     }
 
@@ -100,20 +156,41 @@ impl DigestAlgorithm {
             Self::Sha256 => sha2::Sha256::digest(data).to_vec(),
             Self::Sha384 => sha2::Sha384::digest(data).to_vec(),
             Self::Sha512 => sha2::Sha512::digest(data).to_vec(),
+            Self::Md5 => md5::Md5::digest(data).to_vec(),
+            Self::Sha3_224 => sha3::Sha3_224::digest(data).to_vec(),
+            Self::Sha3_256 => sha3::Sha3_256::digest(data).to_vec(),
+            Self::Sha3_384 => sha3::Sha3_384::digest(data).to_vec(),
+            Self::Sha3_512 => sha3::Sha3_512::digest(data).to_vec(),
+            Self::Shake256 => {
+                use sha3::digest::{ExtendableOutput, Update, XofReader};
+                let mut hasher = sha3::Shake256::default();
+                hasher.update(data);
+                let mut out = vec![0u8; 64];
+                hasher.finalize_xof().read(&mut out);
+                out
+            }
         }
+    }
+
+    /// Whether the algorithm is SHA-1 or a SHA-2 digest (asn1crypto encodes
+    /// these with explicit NULL parameters).
+    pub fn is_sha1_or_sha2(self) -> bool {
+        matches!(
+            self,
+            Self::Sha1 | Self::Sha224 | Self::Sha256 | Self::Sha384 | Self::Sha512
+        )
     }
 }
 
-/// Name of a digest algorithm OID, including ones we do not implement.
+/// asn1crypto name of a digest algorithm OID, including ones we do not
+/// implement.
 pub fn digest_algorithm_name(oid: &ObjectIdentifier) -> Option<&'static str> {
-    DigestAlgorithm::from_oid(oid)
-        .map(DigestAlgorithm::name)
-        .or(match *oid {
-            oids::MD2 => Some("md2"),
-            oids::MD5 => Some("md5"),
-            oids::SHA3_256 => Some("sha3_256"),
-            _ => None,
-        })
+    match *oid {
+        oids::MD2 => Some("md2"),
+        oids::SHAKE128 => Some("shake128"),
+        oids::SHAKE256_LEN => Some("shake256_len"),
+        _ => DigestAlgorithm::from_oid(oid).map(DigestAlgorithm::name),
+    }
 }
 
 /// `RSASSA-PSS-params` (RFC 4055). Absent fields take the ASN.1 defaults
@@ -150,7 +227,10 @@ impl PssParameters {
     pub fn from_asn1(params: &RsaPssParams) -> Result<Self, SignatureError> {
         let unsupported = |what: String| SignatureError::AlgorithmNotSupported(what);
         let digest_oid = params.hash_algorithm.as_ref().map_or(oids::SHA1, |a| a.oid);
+        // SHAKE256 is an extendable-output function; pyca/cryptography does
+        // not accept it for PSS.
         let digest = DigestAlgorithm::from_oid(&digest_oid)
+            .filter(|d| *d != DigestAlgorithm::Shake256)
             .ok_or_else(|| unsupported(format!("PSS digest {digest_oid}")))?;
         let mgf1_digest = match &params.mask_gen_algorithm {
             None => DigestAlgorithm::Sha1,
@@ -162,6 +242,7 @@ impl PssParameters {
                     .decode_as::<AlgorithmIdentifierOwned>()
                     .map_err(|e| SignatureError::Malformed(format!("MGF1 parameters: {e}")))?;
                 DigestAlgorithm::from_oid(&inner.oid)
+                    .filter(|d| *d != DigestAlgorithm::Shake256)
                     .ok_or_else(|| unsupported(format!("MGF1 digest {}", inner.oid)))?
             }
             Some(mgf) => return Err(unsupported(format!("mask generation function {}", mgf.oid))),
@@ -188,8 +269,13 @@ pub enum SignatureMechanism {
     RsaPss(PssParameters),
     /// ECDSA with the given digest; the curve comes from the public key.
     Ecdsa(DigestAlgorithm),
+    /// DSA with the given digest; the domain parameters come from the
+    /// public key.
+    Dsa(DigestAlgorithm),
     /// Ed25519 (pure).
     Ed25519,
+    /// Ed448 (pure, empty context).
+    Ed448,
 }
 
 impl SignatureMechanism {
@@ -199,16 +285,18 @@ impl SignatureMechanism {
             Self::RsaPkcs1v15(_) => "rsassa_pkcs1v15",
             Self::RsaPss(_) => "rsassa_pss",
             Self::Ecdsa(_) => "ecdsa",
+            Self::Dsa(_) => "dsa",
             Self::Ed25519 => "ed25519",
+            Self::Ed448 => "ed448",
         }
     }
 
     /// The digest the mechanism applies to the message, if any.
     pub fn digest(&self) -> Option<DigestAlgorithm> {
         match self {
-            Self::RsaPkcs1v15(d) | Self::Ecdsa(d) => Some(*d),
+            Self::RsaPkcs1v15(d) | Self::Ecdsa(d) | Self::Dsa(d) => Some(*d),
             Self::RsaPss(p) => Some(p.digest),
-            Self::Ed25519 => None,
+            Self::Ed25519 | Self::Ed448 => None,
         }
     }
 
@@ -229,7 +317,8 @@ impl SignatureMechanism {
             })
         };
         Ok(match algorithm.oid {
-            oids::SHA1_WITH_RSA => Self::RsaPkcs1v15(Sha1),
+            oids::MD5_WITH_RSA | oids::MD5_WITH_RSA_OIW => Self::RsaPkcs1v15(Md5),
+            oids::SHA1_WITH_RSA | oids::SHA1_WITH_RSA_OIW => Self::RsaPkcs1v15(Sha1),
             oids::SHA224_WITH_RSA => Self::RsaPkcs1v15(Sha224),
             oids::SHA256_WITH_RSA => Self::RsaPkcs1v15(Sha256),
             oids::SHA384_WITH_RSA => Self::RsaPkcs1v15(Sha384),
@@ -249,19 +338,26 @@ impl SignatureMechanism {
             oids::ECDSA_WITH_SHA256 => Self::Ecdsa(Sha256),
             oids::ECDSA_WITH_SHA384 => Self::Ecdsa(Sha384),
             oids::ECDSA_WITH_SHA512 => Self::Ecdsa(Sha512),
-            oids::EC_PUBLIC_KEY | oids::ECDSA_GENERIC => Self::Ecdsa(contextual()?),
+            // asn1crypto knows no digest for the ECDSA-with-SHA3 OIDs, so
+            // pyhanko-certvalidator takes the digest from context for them.
+            oids::EC_PUBLIC_KEY
+            | oids::ECDSA_GENERIC
+            | oids::ECDSA_WITH_SHA3_224
+            | oids::ECDSA_WITH_SHA3_256
+            | oids::ECDSA_WITH_SHA3_384
+            | oids::ECDSA_WITH_SHA3_512 => Self::Ecdsa(contextual()?),
+            oids::DSA_WITH_SHA1 | oids::DSA_WITH_SHA_OIW | oids::DSA_WITH_SHA1_OIW => {
+                Self::Dsa(Sha1)
+            }
+            oids::DSA_WITH_SHA224 => Self::Dsa(Sha224),
+            oids::DSA_WITH_SHA256 => Self::Dsa(Sha256),
+            oids::DSA => Self::Dsa(contextual()?),
             oids::ED25519 => Self::Ed25519,
+            oids::ED448 => Self::Ed448,
             other => {
                 let name = match other {
-                    oids::ED448 => "ed448".to_owned(),
-                    oids::DSA
-                    | oids::DSA_WITH_SHA1
-                    | oids::DSA_WITH_SHA224
-                    | oids::DSA_WITH_SHA256 => "dsa".to_owned(),
                     oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87 => "ml-dsa".to_owned(),
-                    oids::MD2_WITH_RSA | oids::MD5_WITH_RSA => {
-                        "rsassa_pkcs1v15 with md2/md5".to_owned()
-                    }
+                    oids::MD2_WITH_RSA => "rsassa_pkcs1v15 with md2".to_owned(),
                     _ => other.to_string(),
                 };
                 return Err(SignatureError::AlgorithmNotSupported(format!(
@@ -295,16 +391,12 @@ pub fn validate_signature(
     context: &SignatureValidationContext,
 ) -> Result<(), SignatureError> {
     let key_oid = public_key.algorithm.oid;
-    if key_oid == oids::DSA {
-        if public_key.algorithm.parameters.is_none() {
-            return Err(SignatureError::DsaParametersUnavailable);
-        }
-        return Err(SignatureError::AlgorithmNotSupported(
-            "Signature mechanism dsa is not supported.".into(),
-        ));
-    }
     let mechanism =
         SignatureMechanism::from_algorithm_identifier(algorithm, context.contextual_digest)?;
+    if matches!(mechanism, SignatureMechanism::Dsa(_)) && public_key.algorithm.parameters.is_none()
+    {
+        return Err(SignatureError::DsaParametersUnavailable);
+    }
 
     // An id-RSASSA-PSS key may restrict its parameters; they must then match
     // the parameters on the signature.
@@ -318,13 +410,24 @@ pub fn validate_signature(
         }
     }
 
-    let prehash = |digest: DigestAlgorithm| -> Vec<u8> {
+    let prehash = |digest: DigestAlgorithm| -> Result<Vec<u8>, SignatureError> {
         if context.prehashed {
-            signed_data.to_vec()
+            if signed_data.len() != digest.output_len() {
+                return Err(SignatureError::InvalidSignature);
+            }
+            Ok(signed_data.to_vec())
         } else {
-            digest.digest(signed_data)
+            Ok(digest.digest(signed_data))
         }
     };
+    // pyca/cryptography accepts no extendable-output function for RSA,
+    // ECDSA or DSA.
+    if mechanism.digest() == Some(DigestAlgorithm::Shake256) {
+        return Err(SignatureError::AlgorithmNotSupported(format!(
+            "Signature mechanism {} with shake256 is not supported.",
+            mechanism.name()
+        )));
+    }
     let key_bits = public_key.subject_public_key.raw_bytes();
     let invalid = |_| SignatureError::InvalidSignature;
 
@@ -332,33 +435,31 @@ pub fn validate_signature(
         SignatureMechanism::RsaPkcs1v15(digest) => {
             let key = rsa_key(key_oid, key_bits)?;
             let sig = rsa::pkcs1v15::Signature::try_from(signature).map_err(invalid)?;
-            let hash = prehash(digest);
+            let hash = prehash(digest)?;
             match digest {
-                DigestAlgorithm::Sha1 => {
-                    rsa::pkcs1v15::VerifyingKey::<sha1::Sha1>::new(key).verify_prehash(&hash, &sig)
-                }
-                DigestAlgorithm::Sha224 => rsa::pkcs1v15::VerifyingKey::<sha2::Sha224>::new(key)
-                    .verify_prehash(&hash, &sig),
-                DigestAlgorithm::Sha256 => rsa::pkcs1v15::VerifyingKey::<sha2::Sha256>::new(key)
-                    .verify_prehash(&hash, &sig),
-                DigestAlgorithm::Sha384 => rsa::pkcs1v15::VerifyingKey::<sha2::Sha384>::new(key)
-                    .verify_prehash(&hash, &sig),
-                DigestAlgorithm::Sha512 => rsa::pkcs1v15::VerifyingKey::<sha2::Sha512>::new(key)
-                    .verify_prehash(&hash, &sig),
+                DigestAlgorithm::Md5 => pkcs1_verify::<md5::Md5>(key, &hash, &sig),
+                DigestAlgorithm::Sha1 => pkcs1_verify::<sha1::Sha1>(key, &hash, &sig),
+                DigestAlgorithm::Sha224 => pkcs1_verify::<sha2::Sha224>(key, &hash, &sig),
+                DigestAlgorithm::Sha256 => pkcs1_verify::<sha2::Sha256>(key, &hash, &sig),
+                DigestAlgorithm::Sha384 => pkcs1_verify::<sha2::Sha384>(key, &hash, &sig),
+                DigestAlgorithm::Sha512 => pkcs1_verify::<sha2::Sha512>(key, &hash, &sig),
+                DigestAlgorithm::Sha3_224 => pkcs1_verify::<sha3::Sha3_224>(key, &hash, &sig),
+                DigestAlgorithm::Sha3_256 => pkcs1_verify::<sha3::Sha3_256>(key, &hash, &sig),
+                DigestAlgorithm::Sha3_384 => pkcs1_verify::<sha3::Sha3_384>(key, &hash, &sig),
+                DigestAlgorithm::Sha3_512 => pkcs1_verify::<sha3::Sha3_512>(key, &hash, &sig),
+                DigestAlgorithm::Shake256 => Err(signature::Error::new()),
             }
             .map_err(invalid)
         }
         SignatureMechanism::RsaPss(params) => {
-            if params.mgf1_digest != params.digest {
+            let key = rsa_key(key_oid, key_bits)?;
+            let hash = prehash(params.digest)?;
+            if params.mgf1_digest != params.digest || !params.digest.is_sha1_or_sha2() {
                 // The rsa crate ties MGF1 to the message digest; verify the
                 // encoding directly (RFC 8017 §9.1.2), as pyca does.
-                let key = rsa_key(key_oid, key_bits)?;
-                let hash = prehash(params.digest);
                 return pss_verify_any(&key, signature, &hash, &params);
             }
-            let key = rsa_key(key_oid, key_bits)?;
             let sig = rsa::pss::Signature::try_from(signature).map_err(invalid)?;
-            let hash = prehash(params.digest);
             let salt = params.salt_length;
             match params.digest {
                 DigestAlgorithm::Sha1 => {
@@ -381,6 +482,7 @@ pub fn validate_signature(
                     rsa::pss::VerifyingKey::<sha2::Sha512>::new_with_salt_len(key, salt)
                         .verify_prehash(&hash, &sig)
                 }
+                _ => return pss_verify_any(&key, signature, &hash, &params),
             }
             .map_err(invalid)
         }
@@ -396,7 +498,7 @@ pub fn validate_signature(
                 .as_ref()
                 .and_then(|p| p.decode_as::<ObjectIdentifier>().ok())
                 .ok_or_else(|| SignatureError::Malformed("EC key without named curve".into()))?;
-            let hash = prehash(digest);
+            let hash = prehash(digest)?;
             match curve {
                 oids::SECP256R1 => {
                     ecdsa_verify::verify::<p256::NistP256>(key_bits, signature, &hash)
@@ -431,7 +533,60 @@ pub fn validate_signature(
             let sig = ed25519_dalek::Signature::from_slice(signature).map_err(invalid)?;
             signature::Verifier::verify(&key, signed_data, &sig).map_err(invalid)
         }
+        SignatureMechanism::Ed448 => {
+            if key_oid != oids::ED448 {
+                return Err(SignatureError::KeyMismatch(format!(
+                    "Ed448 signature with {key_oid} key"
+                )));
+            }
+            if context.prehashed {
+                return Err(SignatureError::AlgorithmNotSupported(
+                    "prehashed Ed448".into(),
+                ));
+            }
+            let key_bytes: &[u8; 57] = key_bits
+                .try_into()
+                .map_err(|_| SignatureError::Malformed("Ed448 key length".into()))?;
+            let key = ed448_goldilocks::VerifyingKey::from_bytes(key_bytes)
+                .map_err(|e| SignatureError::Malformed(format!("Ed448 key: {e}")))?;
+            let sig = ed448_goldilocks::Signature::from_slice(signature).map_err(invalid)?;
+            key.verify_raw(&sig, signed_data)
+                .map_err(|_| SignatureError::InvalidSignature)
+        }
+        SignatureMechanism::Dsa(digest) => {
+            if key_oid != oids::DSA {
+                return Err(SignatureError::KeyMismatch(format!(
+                    "DSA signature with {key_oid} key"
+                )));
+            }
+            let spki_der = public_key
+                .to_der()
+                .map_err(|e| SignatureError::Malformed(format!("DSA key: {e}")))?;
+            let spki = spki::SubjectPublicKeyInfoRef::from_der(&spki_der)
+                .map_err(|e| SignatureError::Malformed(format!("DSA key: {e}")))?;
+            // Only the FIPS 186 sizes (L, N) = (1024, 160), (2048, 224),
+            // (2048, 256), (3072, 256) are accepted.
+            let key = dsa::VerifyingKey::try_from(spki)
+                .map_err(|e| SignatureError::Malformed(format!("DSA key: {e}")))?;
+            let sig = dsa::Signature::from_der(signature)
+                .map_err(|_| SignatureError::InvalidSignature)?;
+            let hash = prehash(digest)?;
+            key.verify_prehash(&hash, &sig).map_err(invalid)
+        }
     }
+}
+
+/// RSASSA-PKCS1-v1_5 verification of a message digest with `D`'s
+/// `DigestInfo` prefix.
+fn pkcs1_verify<D>(
+    key: rsa::RsaPublicKey,
+    hash: &[u8],
+    sig: &rsa::pkcs1v15::Signature,
+) -> Result<(), signature::Error>
+where
+    D: Digest + const_oid::AssociatedOid,
+{
+    rsa::pkcs1v15::VerifyingKey::<D>::new(key).verify_prehash(hash, sig)
 }
 
 /// RSASSA-PSS verification for any combination of message digest and MGF1
@@ -576,6 +731,20 @@ pub fn rsa_key_size(public_key: &SubjectPublicKeyInfoOwned) -> Option<usize> {
         .map(|k| k.n().bit_width() as usize)
 }
 
+/// Size in bits of a DSA public key (the bit length of `p`), or `None` for
+/// other key types or unreadable parameters.
+pub fn dsa_key_size(public_key: &SubjectPublicKeyInfoOwned) -> Option<usize> {
+    if public_key.algorithm.oid != oids::DSA {
+        return None;
+    }
+    let params = public_key.algorithm.parameters.as_ref()?;
+    let mut reader = der::SliceReader::new(params.value()).ok()?;
+    let p = der::asn1::UintRef::decode(&mut reader).ok()?;
+    let bytes = p.as_bytes();
+    let first = *bytes.first()?;
+    Some(bytes.len() * 8 - first.leading_zeros() as usize)
+}
+
 /// Whether an algorithm may be used, with a reason if not
 /// (`AlgorithmUsageConstraint` in pyhanko-certvalidator).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -626,6 +795,20 @@ pub trait AlgorithmUsagePolicy: Send + Sync + std::fmt::Debug {
     fn min_rsa_key_size(&self) -> usize {
         2048
     }
+
+    /// For CMS policies (pyHanko `CMSAlgorithmUsagePolicy`): whether the
+    /// message digest algorithm may be combined with the signature
+    /// algorithm. `None` (the default) means the policy is not a CMS
+    /// policy; CMS validation then applies the default rule (the digest
+    /// implied by the signature algorithm, RFC 8933).
+    fn digest_combination(
+        &self,
+        _signature_algorithm: &AlgorithmIdentifierOwned,
+        _message_digest_algorithm: &AlgorithmIdentifierOwned,
+        _moment: Option<Moment>,
+    ) -> Option<AlgorithmUsageConstraint> {
+        None
+    }
 }
 
 /// Deny-list policy (`DisallowWeakAlgorithmsPolicy` in pyhanko-certvalidator).
@@ -637,6 +820,9 @@ pub struct DisallowWeakAlgorithmsPolicy {
     pub weak_signature_algos: Vec<String>,
     /// Minimum RSA key size in bits.
     pub rsa_key_size_threshold: usize,
+    /// Minimum DSA key size in bits (size of `p`; pyHanko's default is
+    /// 3192).
+    pub dsa_key_size_threshold: usize,
 }
 
 /// pyhanko-certvalidator's `DEFAULT_WEAK_HASH_ALGOS`.
@@ -651,6 +837,7 @@ impl Default for DisallowWeakAlgorithmsPolicy {
                 .collect(),
             weak_signature_algos: Vec::new(),
             rsa_key_size_threshold: 2048,
+            dsa_key_size_threshold: 3192,
         }
     }
 }
@@ -692,7 +879,6 @@ impl AlgorithmUsagePolicy for DisallowWeakAlgorithmsPolicy {
     ) -> AlgorithmUsageConstraint {
         let digest = match algorithm.oid {
             oids::MD2_WITH_RSA => Some("md2"),
-            oids::MD5_WITH_RSA => Some("md5"),
             _ => SignatureMechanism::from_algorithm_identifier(algorithm, None)
                 .ok()
                 .and_then(|m| m.digest())
@@ -710,13 +896,21 @@ impl AlgorithmUsagePolicy for DisallowWeakAlgorithmsPolicy {
                 "Signature algorithm {mech_name} is banned"
             ));
         }
-        if let Some(size) = public_key.and_then(rsa_key_size) {
-            if size < self.rsa_key_size_threshold {
-                return AlgorithmUsageConstraint::denied(format!(
-                    "Key size {size} for algorithm {mech_name} is considered too small; policy mandates >= {}",
-                    self.rsa_key_size_threshold
-                ));
-            }
+        let sized = if mech_name.starts_with("rsa") {
+            public_key
+                .and_then(rsa_key_size)
+                .map(|size| (size, self.rsa_key_size_threshold))
+        } else if mech_name == "dsa" {
+            public_key
+                .and_then(dsa_key_size)
+                .map(|size| (size, self.dsa_key_size_threshold))
+        } else {
+            None
+        };
+        if let Some((size, threshold)) = sized.filter(|(size, threshold)| size < threshold) {
+            return AlgorithmUsageConstraint::denied(format!(
+                "Key size {size} for algorithm {mech_name} is considered too small; policy mandates >= {threshold}"
+            ));
         }
         AlgorithmUsageConstraint::allowed()
     }
@@ -737,16 +931,137 @@ mod tests {
 
     #[test]
     fn digest_oids_round_trip() {
-        for d in [
-            DigestAlgorithm::Sha1,
-            DigestAlgorithm::Sha224,
-            DigestAlgorithm::Sha256,
-            DigestAlgorithm::Sha384,
-            DigestAlgorithm::Sha512,
-        ] {
+        for d in DigestAlgorithm::ALL {
             assert_eq!(DigestAlgorithm::from_oid(&d.oid()), Some(d));
+            assert_eq!(DigestAlgorithm::from_name(d.name()), Some(d));
             assert_eq!(d.digest(b"abc").len(), d.output_len());
+            assert_eq!(digest_algorithm_name(&d.oid()), Some(d.name()));
         }
+        assert_eq!(
+            DigestAlgorithm::from_oid(&oids::SHAKE256_LEN),
+            Some(DigestAlgorithm::Shake256)
+        );
+        assert_eq!(
+            digest_algorithm_name(&oids::SHAKE256_LEN),
+            Some("shake256_len")
+        );
+    }
+
+    fn hex(bytes: &[u8]) -> String {
+        bytes.iter().map(|b| format!("{b:02x}")).collect()
+    }
+
+    #[test]
+    fn new_digests_known_answers() {
+        assert_eq!(
+            hex(&DigestAlgorithm::Md5.digest(b"abc")),
+            "900150983cd24fb0d6963f7d28e17f72"
+        );
+        assert_eq!(
+            hex(&DigestAlgorithm::Sha3_256.digest(b"abc")),
+            "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"
+        );
+        assert_eq!(
+            hex(&DigestAlgorithm::Shake256.digest(b"abc")),
+            "483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739\
+             d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4feb06bd8801e751e4"
+        );
+    }
+
+    #[test]
+    fn sha3_ecdsa_takes_the_digest_from_context() {
+        let alg = AlgorithmIdentifierOwned {
+            oid: oids::ECDSA_WITH_SHA3_256,
+            parameters: None,
+        };
+        assert!(SignatureMechanism::from_algorithm_identifier(&alg, None).is_err());
+        assert_eq!(
+            SignatureMechanism::from_algorithm_identifier(&alg, Some(DigestAlgorithm::Sha256))
+                .expect("mechanism"),
+            SignatureMechanism::Ecdsa(DigestAlgorithm::Sha256)
+        );
+    }
+
+    #[test]
+    fn shake256_is_rejected_outside_eddsa() {
+        let key = SubjectPublicKeyInfoOwned {
+            algorithm: AlgorithmIdentifierOwned {
+                oid: oids::RSA_ENCRYPTION,
+                parameters: None,
+            },
+            subject_public_key: der::asn1::BitString::from_bytes(&[0]).expect("bits"),
+        };
+        let alg = AlgorithmIdentifierOwned {
+            oid: oids::RSA_ENCRYPTION,
+            parameters: None,
+        };
+        let ctx = SignatureValidationContext {
+            contextual_digest: Some(DigestAlgorithm::Shake256),
+            prehashed: false,
+        };
+        assert!(matches!(
+            validate_signature(b"sig", b"data", &key, &alg, &ctx),
+            Err(SignatureError::AlgorithmNotSupported(_))
+        ));
+    }
+
+    #[test]
+    fn prehashed_input_must_have_the_digest_length() {
+        let key = SubjectPublicKeyInfoOwned {
+            algorithm: AlgorithmIdentifierOwned {
+                oid: oids::EC_PUBLIC_KEY,
+                parameters: Some(der::Any::from(&oids::SECP256R1)),
+            },
+            subject_public_key: der::asn1::BitString::from_bytes(&[4; 65]).expect("bits"),
+        };
+        let alg = AlgorithmIdentifierOwned {
+            oid: oids::ECDSA_WITH_SHA256,
+            parameters: None,
+        };
+        let ctx = SignatureValidationContext {
+            contextual_digest: None,
+            prehashed: true,
+        };
+        assert!(matches!(
+            validate_signature(b"sig", b"short", &key, &alg, &ctx),
+            Err(SignatureError::InvalidSignature)
+        ));
+    }
+
+    #[test]
+    fn dsa_key_size_threshold() {
+        // The PKITS DSA CA key has a 1024-bit p.
+        // Run-time manifest directory: the target directory is shared
+        // between worktrees (see hanko_testdata::manifest_dir).
+        let dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
+        let path = std::path::Path::new(&dir)
+            .join("../hanko-testdata/data/pyhanko-certvalidator/nist_pkits/certs/DSACACert.crt");
+        let der = std::fs::read(&path).expect("PKITS DSA CA certificate");
+        let cert = crate::cert::Cert::from_der(&der).expect("cert");
+        let key = cert.public_key();
+        assert_eq!(dsa_key_size(&key), Some(1024));
+        let alg = AlgorithmIdentifierOwned {
+            oid: oids::DSA_WITH_SHA1,
+            parameters: None,
+        };
+        let policy = DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&[]);
+        let c = policy.signature_algorithm_allowed(&alg, None, Some(&key));
+        assert!(!c.allowed);
+        assert_eq!(
+            c.failure_reason.as_deref(),
+            Some(
+                "Key size 1024 for algorithm dsa is considered too small; policy mandates >= 3192"
+            )
+        );
+        let lenient = DisallowWeakAlgorithmsPolicy {
+            dsa_key_size_threshold: 1024,
+            ..policy
+        };
+        assert!(
+            lenient
+                .signature_algorithm_allowed(&alg, None, Some(&key))
+                .allowed
+        );
     }
 
     #[test]

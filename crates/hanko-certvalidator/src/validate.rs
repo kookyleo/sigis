@@ -151,9 +151,22 @@ fn name_constraints_set(
 fn environment(
     ctx: &ValidationContext,
     path_anchor: &TrustAnchor,
+    issued: &[(&Cert, &Cert)],
 ) -> Result<PkiEnvironment, ValidationError> {
     let mut pe = PkiEnvironment::default();
     pe.populate_5280_pki_environment();
+    // Algorithms certval does not verify itself (DSA, Ed448, MD5 RSA, ...)
+    // go through the same verifier as the rest of the port.
+    let inherited = std::sync::Arc::new(dsa_inherited_parameters(path_anchor.cert(), issued));
+    pe.add_verify_signature_message_callback(
+        move |pe: &PkiEnvironment,
+              message: &[u8],
+              signature: &der::asn1::BitString,
+              algorithm: &spki::AlgorithmIdentifierOwned,
+              public_key: &spki::SubjectPublicKeyInfoOwned| {
+            verify_with_hanko_core(pe, message, signature, algorithm, public_key, &inherited)
+        },
+    );
     let mut tas = TaSource::new();
     let extra = (!ctx
         .trust_anchors
@@ -169,6 +182,75 @@ fn environment(
     tas.initialize().map_err(|e| cv_err("trust anchors", e))?;
     pe.add_trust_anchor_source(Box::new(tas));
     Ok(pe)
+}
+
+/// DSA keys without domain parameters in `issued` that inherit them from
+/// the working public key (RFC 5280 §6.1.4 (f), as pyhanko-certvalidator
+/// does): the DER of each such key and the inherited parameters.
+fn dsa_inherited_parameters(anchor: &Cert, issued: &[(&Cert, &Cert)]) -> Vec<(Vec<u8>, der::Any)> {
+    use der::Encode;
+    use hanko_core::asn1::oids::DSA;
+    let mut out = Vec::new();
+    let mut working = anchor.public_key();
+    for (cert, _) in issued {
+        let mut key = cert.public_key();
+        if key.algorithm.oid == DSA && key.algorithm.parameters.is_none() {
+            if let (DSA, Some(params)) = (working.algorithm.oid, &working.algorithm.parameters) {
+                if let Ok(der) = key.to_der() {
+                    out.push((der, params.clone()));
+                }
+                key.algorithm.parameters = Some(params.clone());
+            }
+        }
+        working = key;
+    }
+    out
+}
+
+/// certval signature callback backed by
+/// [`hanko_core::algorithms::validate_signature`]. Unsupported algorithms
+/// are `Unrecognized`, so that certval reports them as it does for its own.
+/// DSA keys without parameters get the inherited ones, if any.
+fn verify_with_hanko_core(
+    _pe: &PkiEnvironment,
+    message: &[u8],
+    signature: &der::asn1::BitString,
+    algorithm: &spki::AlgorithmIdentifierOwned,
+    public_key: &spki::SubjectPublicKeyInfoOwned,
+    inherited: &[(Vec<u8>, der::Any)],
+) -> certval::Result<()> {
+    use der::Encode;
+    use hanko_core::algorithms::{validate_signature, SignatureValidationContext};
+    use hanko_core::errors::SignatureError;
+    let completed;
+    let mut public_key = public_key;
+    if public_key.algorithm.parameters.is_none() {
+        let der = public_key.to_der().ok();
+        if let Some((_, params)) = inherited.iter().find(|(k, _)| Some(k) == der.as_ref()) {
+            let mut key = public_key.clone();
+            key.algorithm.parameters = Some(params.clone());
+            completed = key;
+            public_key = &completed;
+        }
+    }
+    let Some(signature) = signature.as_bytes() else {
+        return Err(certval::Error::PathValidation(
+            PathValidationStatus::SignatureVerificationFailure,
+        ));
+    };
+    match validate_signature(
+        signature,
+        message,
+        public_key,
+        algorithm,
+        &SignatureValidationContext::default(),
+    ) {
+        Ok(()) => Ok(()),
+        Err(SignatureError::AlgorithmNotSupported(_)) => Err(certval::Error::Unrecognized),
+        Err(_) => Err(certval::Error::PathValidation(
+            PathValidationStatus::SignatureVerificationFailure,
+        )),
+    }
 }
 
 fn pdv_cert(cert: &Cert) -> Result<PDVCertificate, ValidationError> {
@@ -844,7 +926,7 @@ fn validate_path_in_stack(
         }
     }
     let cps = settings(ctx, toi, anchor.enforce_validity(), params);
-    let pe = environment(ctx, anchor).map_err(fail)?;
+    let pe = environment(ctx, anchor, &issued).map_err(fail)?;
 
     let ta = PDVTrustAnchorChoice::try_from(anchor.cert().der())
         .map_err(|e| fail(ValidationError::Malformed(format!("trust anchor: {e}"))))?;

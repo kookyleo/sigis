@@ -22,57 +22,7 @@ const MODULE: &str = "test_cms";
 
 /// Recorded calls on which hanko-cms is known to diverge from pyHanko. Every
 /// divergence fails closed (asserted by `common::check`).
-const KNOWN: &[(&str, usize, &str)] = &[
-    // R1: SHA-3 digests need the `sha3` crate in hanko-core.
-    (
-        "test_detached_cms_with_multiple_signature_timestamps",
-        0,
-        "R1: sha3_256 TST",
-    ),
-    (
-        "test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha3_256]",
-        0,
-        "R1: sha3_256 TST",
-    ),
-    (
-        "test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha512]",
-        0,
-        "R1: sha3_256 TST",
-    ),
-    // R1: MD5 needs the `md-5` crate in hanko-core.
-    ("test_sign_weak_digest", 1, "R1: md5"),
-    ("test_sign_weak_digest", 2, "R1: md5"),
-    ("test_sign_weak_sig_digest_mismatch", 1, "R1: md5"),
-    ("test_sign_weak_sig_digest_mismatch_allowed", 1, "R1: md5"),
-    (
-        "test_sign_digest_mismatch_allowed_but_inner_banned",
-        1,
-        "R1: md5",
-    ),
-    (
-        "test_sign_digest_mismatch_allowed_but_outer_banned",
-        1,
-        "R1: md5",
-    ),
-    (
-        "test_sign_digest_mismatch_allowed_passed_through_context",
-        1,
-        "R1: md5",
-    ),
-    ("test_sign_weak_sig_digest", 1, "R1: md5"),
-    ("test_sign_weak_sig_digest_allowed", 1, "R1: md5"),
-    (
-        "test_sign_weak_sig_digest_disallowed_by_custom_policy",
-        1,
-        "R1: md5",
-    ),
-    // R1: DSA needs the `dsa` crate in hanko-core.
-    ("test_sign_with_dsa_trust", 1, "R1: DSA"),
-    ("test_sign_with_explicit_dsa_implied_hash", 1, "R1: DSA"),
-    // R1: Ed448 / SHAKE256 need `ed448-goldilocks` and `sha3`.
-    ("test_ed448_no_length", 1, "R1: Ed448"),
-    ("test_ed448_invalid_hash_algo_validation", 1, "R1: Ed448"),
-];
+const KNOWN: &[(&str, usize, &str)] = &[];
 
 fn run(test: &str) -> Vec<Replayed> {
     check(MODULE, test, KNOWN)

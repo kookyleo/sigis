@@ -25,6 +25,10 @@ ed25519-dalek = { workspace = true }
 signature = { workspace = true }
 sha2 = { workspace = true }
 sha1 = { workspace = true }
+md-5 = { version = "0.11", default-features = false, features = ["oid"] }
+sha3 = { version = "0.11", default-features = false, features = ["oid"] }
+dsa = { version = "0.7", default-features = false, features = ["pkcs8"] }
+ed448-goldilocks = { version = "0.14.0-pre.15", default-features = false, features = ["signing"] }
 base64ct = { workspace = true }
 thiserror = { workspace = true }
 

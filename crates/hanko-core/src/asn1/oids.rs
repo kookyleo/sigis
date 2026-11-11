@@ -64,6 +64,10 @@ oids! {
     SHA512_WITH_RSA = "1.2.840.113549.1.1.13";
     /// sha224WithRSAEncryption.
     SHA224_WITH_RSA = "1.2.840.113549.1.1.14";
+    /// md5WithRSA (OIW secsig; asn1crypto `md5_rsa`).
+    MD5_WITH_RSA_OIW = "1.3.14.3.2.3";
+    /// sha1WithRSA (OIW secsig; asn1crypto `sha1_rsa`).
+    SHA1_WITH_RSA_OIW = "1.3.14.3.2.29";
 
     // Elliptic curves.
     /// id-ecPublicKey.
@@ -86,6 +90,14 @@ oids! {
     ECDSA_WITH_SHA384 = "1.2.840.10045.4.3.3";
     /// ecdsa-with-SHA512.
     ECDSA_WITH_SHA512 = "1.2.840.10045.4.3.4";
+    /// id-ecdsa-with-sha3-224.
+    ECDSA_WITH_SHA3_224 = "2.16.840.1.101.3.4.3.9";
+    /// id-ecdsa-with-sha3-256.
+    ECDSA_WITH_SHA3_256 = "2.16.840.1.101.3.4.3.10";
+    /// id-ecdsa-with-sha3-384.
+    ECDSA_WITH_SHA3_384 = "2.16.840.1.101.3.4.3.11";
+    /// id-ecdsa-with-sha3-512.
+    ECDSA_WITH_SHA3_512 = "2.16.840.1.101.3.4.3.12";
 
     // EdDSA.
     /// id-Ed25519.
@@ -98,6 +110,10 @@ oids! {
     DSA = "1.2.840.10040.4.1";
     /// dsa-with-sha1.
     DSA_WITH_SHA1 = "1.2.840.10040.4.3";
+    /// dsaWithSHA (OIW secsig; asn1crypto `sha1_dsa`).
+    DSA_WITH_SHA_OIW = "1.3.14.3.2.13";
+    /// dsaWithSHA1 (OIW secsig; asn1crypto `sha1_dsa`).
+    DSA_WITH_SHA1_OIW = "1.3.14.3.2.27";
     /// dsa-with-sha224.
     DSA_WITH_SHA224 = "2.16.840.1.101.3.4.3.1";
     /// dsa-with-sha256.
