@@ -1,0 +1,5112 @@
+{
+ "00bb0649c8fef2363a048d72": {
+  "lenient": [],
+  "strict": []
+ },
+ "00be9cc13fd1a82f98ba9c55": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ]
+ },
+ "0360713577af73af441eecab": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Annotations {Reference(idnum=7, generation=0)} were deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Annotations {Reference(idnum=7, generation=0)} were deleted."
+   }
+  ]
+ },
+ "0370bb972f5d7baa02cc2ff2": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   }
+  ]
+ },
+ "04718a968c8c1a1fa462d8bf": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "064380406b2cba26b4cf0256": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=91299, generation=0) not found in the current context. This is an error in strict mode."
+   }
+  ]
+ },
+ "069bfc79e713a6f04090e03a": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=91299, generation=0) not found in the current context. This is an error in strict mode."
+   }
+  ]
+ },
+ "0729b55578736efba1049d5d": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "07642ae9bc1c3cca5a9cc2a8": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Partial names must not contain periods"
+   },
+   {
+    "suspicious": "Partial names must not contain periods"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Partial names must not contain periods"
+   },
+   {
+    "suspicious": "Partial names must not contain periods"
+   }
+  ]
+ },
+ "099aa9d9337e66f0a12485fc": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ]
+ },
+ "0b27ab436d9dbaa6e4850ddf": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "/Metadata should be an indirect reference"
+   },
+   {
+    "suspicious": "/Metadata should be an indirect reference"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "/Metadata should be an indirect reference"
+   },
+   {
+    "suspicious": "/Metadata should be an indirect reference"
+   }
+  ]
+ },
+ "0cbeed6be74f8d5beebdcefe": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "AP entry should point to a dictionary"
+   },
+   {
+    "suspicious": "AP entry should point to a dictionary"
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=8, generation=0).\nSome objects from revision 3 were replaced in revision 4 without precise justification:\n - Reference(idnum=8, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[1]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[1]')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "AP entry should point to a dictionary"
+   },
+   {
+    "suspicious": "AP entry should point to a dictionary"
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=8, generation=0).\nSome objects from revision 3 were replaced in revision 4 without precise justification:\n - Reference(idnum=8, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[1]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[1]')) in the prior revision."
+   }
+  ]
+ },
+ "0e536e34a14a54f25e84735b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "142580ada35f819922e19973": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ]
+ },
+ "18718f7b475b02f947c75192": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification., line 4, column 37'))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification., line 4, column 37'))"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification., line 4, column 37'))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Maximum entity amplification factor exceeded, see xmlCtxtSetMaxAmplification., line 4, column 37'))"
+   }
+  ]
+ },
+ "19769eaccd8f7bc434484cf9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "1bcc687b128520a8d5cc20f0": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "1c0810f8ff4623120f276488": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "1c1151257afa7d1141b56d75": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Duplicate field name"
+   },
+   {
+    "suspicious": "Duplicate field name"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Duplicate field name"
+   },
+   {
+    "suspicious": "Duplicate field name"
+   }
+  ]
+ },
+ "1e86eae60e9a19897b642d96": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "1f4384a755d9ce5454e987f9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 2: Reference(idnum=12, generation=0), Reference(idnum=13, generation=0), Reference(idnum=3, generation=0), Reference(idnum=11, generation=0).\nSome objects from revision 1 were replaced in revision 2 without precise justification:\n - Reference(idnum=3, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0].P')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0]')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 2: Reference(idnum=12, generation=0), Reference(idnum=13, generation=0), Reference(idnum=3, generation=0), Reference(idnum=11, generation=0).\nSome objects from revision 1 were replaced in revision 2 without precise justification:\n - Reference(idnum=3, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0].P')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0]')) in the prior revision."
+   }
+  ]
+ },
+ "1f449834ae3945d63a9d5a15": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "1f9cde6052ee45403e75fe61": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "/Metadata should be a reference to a stream object"
+   },
+   {
+    "suspicious": "/Metadata should be a reference to a stream object"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "/Metadata should be a reference to a stream object"
+   },
+   {
+    "suspicious": "/Metadata should be a reference to a stream object"
+   }
+  ]
+ },
+ "2054355f477a2dff9e475f80": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "232db8480c5d8577061fe29e": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ]
+ },
+ "23f432d1e3ec093a3fae89aa": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "29dd685057e3fe692693c17d": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   }
+  ]
+ },
+ "2a774f52d11087558c1d8679": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "No /Kids in /Pages entry"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "No /Kids in /Pages entry"
+   }
+  ]
+ },
+ "2c9ffac8856147580b1332dc": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   },
+   {
+    "suspicious": "Metadata does not look like XMP"
+   }
+  ]
+ },
+ "2d8f60afe99db4dc91a42fdb": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "2dd9cd12d2444e7cdcbbbe3b": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "2ef1b801c4d168d0deb5904f": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "changed_form_fields": [
+     "Signature3"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=12, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "changed_form_fields": [
+     "Signature3"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "3494e34afc6d9a0dea098250": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "361f7f9d9a1adf1f7934b513": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Fields must be dictionary objects"
+   },
+   {
+    "suspicious": "Fields must be dictionary objects"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Fields must be dictionary objects"
+   },
+   {
+    "suspicious": "Fields must be dictionary objects"
+   }
+  ]
+ },
+ "36d7d7a71bc485f01b0dd61b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Names must be strings"
+   },
+   {
+    "suspicious": "Names must be strings"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Names must be strings"
+   },
+   {
+    "suspicious": "Names must be strings"
+   }
+  ]
+ },
+ "36d9735370e19b0aca00f60b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 1 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 2 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 3 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 1 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 2 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=7, generation=0).\nSome objects from revision 3 were replaced in revision 4 without precise justification:\n - Reference(idnum=7, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0]')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0].Annots[0]')) in the prior revision."
+   }
+  ]
+ },
+ "37772d19233ffb5663337a51": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "VRI entries should be dictionaries"
+   },
+   {
+    "suspicious": "VRI entries should be dictionaries"
+   },
+   {
+    "suspicious": "VRI key /4F424C953B743C3248BB727FCD795D41852FE02C was modified or deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "VRI entries should be dictionaries"
+   },
+   {
+    "suspicious": "VRI entries should be dictionaries"
+   },
+   {
+    "suspicious": "VRI key /4F424C953B743C3248BB727FCD795D41852FE02C was modified or deleted."
+   }
+  ]
+ },
+ "37f09a87b8e8affa05735061": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "3822af48f548ccb58ef0824f": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'OtherField'}."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'OtherField'}."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'OtherField'}."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'OtherField'}."
+   }
+  ]
+ },
+ "3cd6223da1fb632e7a1d1ab2": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "3f263aabd682a1bc1c4ed1de": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Blah', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=9, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.Blah')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Blah', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=9, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.Blah')) in the prior revision."
+   }
+  ]
+ },
+ "40d97d83fd0d0177b859b01e": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ]
+ },
+ "41a12795f108c83c594c041a": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "43d53b7ee3a22189ed0f5729": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   }
+  ]
+ },
+ "446e261866b429d6c2b8c529": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Values for dict key /SigFlags differ:1 changed to 3"
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Values for dict key /SigFlags differ:1 changed to 3"
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "4666a4850ab5903bdc29f2e2": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "4737544a5e8578ac94145fd4": {
+  "lenient": [
+   {
+    "suspicious": "There are unexplained xrefs in revision 1: Reference(idnum=9, generation=0).\nSome objects from revision 0 were replaced in revision 1 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.FooBar')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "There are unexplained xrefs in revision 1: Reference(idnum=9, generation=0).\nSome objects from revision 0 were replaced in revision 1 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.FooBar')) in the prior revision."
+   }
+  ]
+ },
+ "47a4f1e4aa42362232e1ad8c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "480050288252524cd8eb2d42": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "48328a8196b3aad7dba4705b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "48e50be712781e6c63b64074": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "4b29b7e5277f377cf89e098b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "EvilSig",
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 4 is Reference(idnum=10, generation=0), which references an existing object in revision 2"
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 4 is Reference(idnum=10, generation=0), which references an existing object in revision 3"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "EvilSig",
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 4 is Reference(idnum=10, generation=0), which references an existing object in revision 2"
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 4 is Reference(idnum=10, generation=0), which references an existing object in revision 3"
+   }
+  ]
+ },
+ "4e3efb407777c374a023ed97": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Rect', '/T', '/Subtype', '/Kids', '/FT'} vs. {'/FT', '/Rect', '/T', '/Subtype'}."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Rect', '/T', '/Subtype', '/Kids', '/FT'} vs. {'/FT', '/Rect', '/T', '/Subtype'}."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Rect', '/T', '/Subtype', '/Kids', '/FT'} vs. {'/FT', '/Rect', '/T', '/Subtype'}."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Rect', '/T', '/Subtype', '/Kids', '/FT'} vs. {'/FT', '/Rect', '/T', '/Subtype'}."
+   }
+  ]
+ },
+ "4e756ee208d8d0ec42af1e79": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   },
+   {
+    "suspicious": "/VRI is not a dictionary"
+   }
+  ]
+ },
+ "507f375f300deab4cdd5a73e": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "50b584c41b4f7cde4fecc45b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "50f122f996d24a8ce429b1bc": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "55af159ab0f203715b131309": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "5a46937d32823b3b09c1dc56": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "NewSigs.NewSig1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "NewSigs.NewSig1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "5c539512951745886ef1e2ab": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "5f8bdc0ed7661b93ab5ec02c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 7: Reference(idnum=44, generation=0)."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 7: Reference(idnum=44, generation=0)."
+   }
+  ]
+ },
+ "60af85e584e4dded529ff680": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "6253360b410a3e269752a733": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "65a4cff350f0fda31b1ff599": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "6a8e2b853ecdcffad77b9535": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "6f34e4650fe2d63df7897fbe": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "70ebf487a1a48e97f7ea0c07": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "suspicious": "/Type of form field set to something other than /Annot"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field deleted"
+   },
+   {
+    "suspicious": "/Type of form field set to something other than /Annot"
+   }
+  ]
+ },
+ "730f7e148c9b9b3d69101be0": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=100, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=100, generation=0) not found in the current context. This is an error in strict mode."
+   }
+  ]
+ },
+ "78750cbab2a5985886ca6fc9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   },
+   {
+    "suspicious": "VRI key /BCE265949742CDE9933218432AD17E95EE7205E6 was modified or deleted."
+   }
+  ]
+ },
+ "78efac71c9704717d20ef4da": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "7a920ba79f6ffe91b2ea4425": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "7d62c73900357a74bbf49bb7": {
+  "lenient": [],
+  "strict": []
+ },
+ "7f0ad675150ceb65365a92b8": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "EvilSig",
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 3 is Reference(idnum=11, generation=0), which references an existing object in revision 2"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "EvilSig",
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Value of signature field EvilSig in revision 3 is Reference(idnum=11, generation=0), which references an existing object in revision 2"
+   }
+  ]
+ },
+ "7fd6211b69c9bc9204801d70": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "8081bf728415af7e255bb2bf": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ]
+ },
+ "839256a0e8ebcb7cb34daad1": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "83b78e785b32bbb3dccda54c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=9, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.Foo')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=9, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=9, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.Foo')) in the prior revision."
+   }
+  ]
+ },
+ "84bdbfcd44eb5f9744eba65a": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "85c1a7bda77c0142592a466c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Fields must be indirect objects"
+   },
+   {
+    "suspicious": "Fields must be indirect objects"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Fields must be indirect objects"
+   },
+   {
+    "suspicious": "Fields must be indirect objects"
+   }
+  ]
+ },
+ "864b5b778f0b392989931e3e": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "87393d35812d6b0e499b6fcc": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Signature10"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Signature10"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "87d2ac89fab2607104e71538": {
+  "lenient": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=<pyhanko.pdf_utils.generic.TrailerReference object at 0x74e90867b200>, relative_path=PathInRevision('.FooBar')), RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP'))}."
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=<pyhanko.pdf_utils.generic.TrailerReference object at 0x74e908549590>, relative_path=PathInRevision('.FooBar')), RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP'))}."
+   }
+  ]
+ },
+ "8932f2d459756dd2eaed4789": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "895bc596df66ae58732a93f5": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in structure tree in mapping stage"
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in structure tree in mapping stage"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in structure tree in mapping stage"
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in structure tree in mapping stage"
+   }
+  ]
+ },
+ "896f7fdf86b2b7fd1d6ad0d4": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=10, generation=0) in an unexpected way."
+   },
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=10, generation=0) in an unexpected way."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=10, generation=0) in an unexpected way."
+   },
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=10, generation=0) in an unexpected way."
+   }
+  ]
+ },
+ "8a758ed1c1c3aa8c36cfc0e2": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "8ad76cfbd9a5ce9a4a25ef44": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "8b0f89090dc941dd58af79cb": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "8d0afeebb0a089faa65e47cb": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "8d57ee3fedd925a714e5c492": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "8ff1595ad44c6e7043cd0ab9": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "92ad73a0d0cb019cd8179bed": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /VRI was deleted from dictionary"
+   }
+  ]
+ },
+ "95987cc4ef10240168480b4b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "967636c65f83678599ae5f85": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "SigNew"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "97c0068ce9c3dabb1c580fce": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   },
+   {
+    "suspicious": "Key /DSS was deleted from dictionary"
+   }
+  ]
+ },
+ "980f4ad9f55aed1c48b66e89": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   },
+   {
+    "suspicious": "XML entities found in XMP metadata"
+   }
+  ]
+ },
+ "9953f6b7100f49fe2a1820b8": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "9aad3553e8ffdf0674eef661": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "9bc53662eff86d33c0d2eb01": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "9e07ab9ca8ff2b5ebd8fdd75": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/Foo', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "9e22354ac5f9e7bbfdacde65": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/ViewerPreferences', '/Type', '/Pages', '/StructTreeRoot'} vs. {'/Type', '/StructTreeRoot', '/Pages', '/ViewerPreferences'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "9e839295e5bd2d79da4183cc": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "a55f188ba85dac9e5eed4f6f": {
+  "lenient": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "a569e73add5ec27fa549408c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Field list is not an array."
+   },
+   {
+    "suspicious": "Field list is not an array."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Field list is not an array."
+   },
+   {
+    "suspicious": "Field list is not an array."
+   }
+  ]
+ },
+ "a5bf08b20f64fde47d84fbc6": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "a8b73ac1bcb9c15e7d9b62da": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected change to page tree structure."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected change to page tree structure."
+   }
+  ]
+ },
+ "aa4c67e72ff09ae1e41d138d": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Annotations {Reference(idnum=9, generation=0)} were deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Annotations {Reference(idnum=9, generation=0)} were deleted."
+   }
+  ]
+ },
+ "add9b18abf46c9d46687015c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "VRI key /Bleh is not formatted correctly."
+   },
+   {
+    "suspicious": "VRI key /Bleh is not formatted correctly."
+   },
+   {
+    "suspicious": "VRI key /0138FE51A7847BFE06A7E94B3C0F7BC2DE63E5D1 was modified or deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "VRI key /Bleh is not formatted correctly."
+   },
+   {
+    "suspicious": "VRI key /Bleh is not formatted correctly."
+   },
+   {
+    "suspicious": "VRI key /0138FE51A7847BFE06A7E94B3C0F7BC2DE63E5D1 was modified or deleted."
+   }
+  ]
+ },
+ "afa0e5c14d675b1d9c565eec": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "b101c5aa6912cd162d19bf73": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Detected an entity reference loop, line 1, column 8'))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Detected an entity reference loop, line 1, column 8'))"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Detected an entity reference loop, line 1, column 8'))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError('Detected an entity reference loop, line 1, column 8'))"
+   }
+  ]
+ },
+ "b2edaa505542606d377f90e9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 2: Reference(idnum=3, generation=0).\nSome objects from revision 1 were replaced in revision 2 without precise justification:\n - Reference(idnum=3, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0].P')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0]')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 2: Reference(idnum=3, generation=0).\nSome objects from revision 1 were replaced in revision 2 without precise justification:\n - Reference(idnum=3, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.AcroForm.Fields[0].P')), AbsoluteContext(path=PathInRevision('.Root.Pages.Kids[0]')) in the prior revision."
+   }
+  ]
+ },
+ "b5d54aa43f4a8fe649529fde": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Array contains direct objects"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Array contains direct objects"
+   }
+  ]
+ },
+ "b749770c920d21ac79b06664": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field altered"
+   },
+   {
+    "suspicious": "/Type of form field altered"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/Type of form field altered"
+   },
+   {
+    "suspicious": "/Type of form field altered"
+   }
+  ]
+ },
+ "b7ac270c96e4c87f4cff1292": {
+  "lenient": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP')), RelativeContext(anchor=Reference(idnum=1, generation=0), relative_path=PathInRevision('.FooBar'))}."
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP')), RelativeContext(anchor=Reference(idnum=1, generation=0), relative_path=PathInRevision('.FooBar'))}."
+   }
+  ]
+ },
+ "ba365f00034b018b3a39e0f1": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "bb302e871c8c768f639b3a32": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "bd52314005e38c22f6185ba9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "be59322da8b598b218f48ebe": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   },
+   {
+    "suspicious": "Unexpected keys in DSS: {'/Blah'}."
+   }
+  ]
+ },
+ "bffb4e9691d0c7ae4fa84392": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   },
+   {
+    "suspicious": "('/Metadata XML syntax could not be validated', XMLSyntaxError(\"Start tag expected, '<' not found, line 1, column 1\"))"
+   }
+  ]
+ },
+ "c10cf86d5951f1b3f9a9daeb": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "c1f6013bd522f7c8f5050302": {
+  "lenient": [
+   {
+    "suspicious": "Dict keys differ: {'/SigFlags'} vs. set()."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=100, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=100, generation=0) not found in the current context. This is an error in strict mode."
+   }
+  ]
+ },
+ "c39c3d22ae894d1f498604c8": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Blah', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Blah', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   }
+  ]
+ },
+ "c43541b71a51ebfdd6f15c46": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected change to page tree structure."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected change to page tree structure."
+   }
+  ]
+ },
+ "c523cc46f57f113f79fff8a9": {
+  "lenient": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "c91d4fae34b129ced5c1e4af": {
+  "lenient": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP')), RelativeContext(anchor=Reference(idnum=1, generation=0), relative_path=PathInRevision('.FooBar'))}."
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Attempted to update an appearance stream in an annotation appearance dictionary, but that appearance dictionary is used in multiple contexts: {RelativeContext(anchor=Reference(idnum=8, generation=0), relative_path=PathInRevision('.AP')), RelativeContext(anchor=Reference(idnum=1, generation=0), relative_path=PathInRevision('.FooBar'))}."
+   }
+  ]
+ },
+ "cbc290a010cebe039133dc34": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=9, generation=0)."
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Expected object ID (9 0) does not match actual (1 0)."
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Expected object ID (9 0) does not match actual (1 0)."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 4: Reference(idnum=9, generation=0)."
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Expected object ID (9 0) does not match actual (1 0)."
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Expected object ID (9 0) does not match actual (1 0)."
+   }
+  ]
+ },
+ "ccc42808d431b2214aee2183": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in page tree in mapping stage"
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in page tree in mapping stage"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in page tree in mapping stage"
+   },
+   {
+    "error": "PdfReadError",
+    "message": "Circular reference in page tree in mapping stage"
+   }
+  ]
+ },
+ "d0bc13d63d2e2a3e8acdd216": {
+  "lenient": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "d180551e2b370e940a8c7f9f": {
+  "lenient": [
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=4, generation=0) in an unexpected way."
+   },
+   {
+    "suspicious": "Unexpected stream encountered at Reference(idnum=4, generation=0)!"
+   },
+   {
+    "suspicious": "Unexpected stream encountered at Reference(idnum=4, generation=0)!"
+   }
+  ],
+  "strict": [
+   {
+    "suspicious": "Update clobbers or reuses Reference(idnum=4, generation=0) in an unexpected way."
+   },
+   {
+    "suspicious": "Unexpected stream encountered at Reference(idnum=4, generation=0)!"
+   },
+   {
+    "suspicious": "Unexpected stream encountered at Reference(idnum=4, generation=0)!"
+   }
+  ]
+ },
+ "d26d19cef443dcf7f6f926ec": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Update changed field type of TextField1"
+   },
+   {
+    "suspicious": "Update changed field type of TextField1"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "suspicious": "Update changed field type of TextField1"
+   },
+   {
+    "suspicious": "Update changed field type of TextField1"
+   }
+  ]
+ },
+ "d2b3f28e2732c40fd6741e0d": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "Field type of terminal field 'Blah' could not be determined"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "Field type of terminal field 'Blah' could not be determined"
+   }
+  ]
+ },
+ "d4d097b6e58925383e6f8eba": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Expected contents of '/OCSP' in VRI to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/OCSP' in VRI to be an array of stream references."
+   },
+   {
+    "suspicious": "VRI key /6754961709A7AA1422D730CEC422A7A78400136F was modified or deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Expected contents of '/OCSP' in VRI to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/OCSP' in VRI to be an array of stream references."
+   },
+   {
+    "suspicious": "VRI key /6754961709A7AA1422D730CEC422A7A78400136F was modified or deleted."
+   }
+  ]
+ },
+ "d56c7d95cb61da89d9792241": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "d82b1b6c2a04d0b19b7b28cb": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "dbe50ca4cce8febe8ed9cf61": {
+  "lenient": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "dc9ba3cac944ccbb4b654e18": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "dd18392bfa1d48b37b33f2ee": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "decadef6dfc739dd749e0909": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Not an array object"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Not an array object"
+   }
+  ]
+ },
+ "e495f94833076bc28a09fd8e": {
+  "lenient": [
+   {
+    "error": "AssertionError",
+    "message": ""
+   },
+   {
+    "changed_form_fields": [
+     "Signature3"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=10, generation=0) not found in the current context. This is an error in strict mode."
+   },
+   {
+    "changed_form_fields": [
+     "Signature3"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "e616e2fda542b34001351c20": {
+  "lenient": [],
+  "strict": []
+ },
+ "eab91111e4abc711066adc30": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   },
+   {
+    "suspicious": "Expected contents of '/Certs' in DSS to be an array of stream references."
+   }
+  ]
+ },
+ "ebb2f2df4769be8e7140ec19": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "Values for dict key /Kids differ:[IndirectObject(10, 0)] changed to [IndirectObject(10, 0), IndirectObject(16, 0)]"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "Values for dict key /Kids differ:[IndirectObject(10, 0)] changed to [IndirectObject(10, 0), IndirectObject(16, 0)]"
+   }
+  ]
+ },
+ "ec218112979c4cef5c7e0443": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   },
+   {
+    "suspicious": "/DSS is not a dictionary"
+   }
+  ]
+ },
+ "ecdec977a530bb5c31f0736c": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected keys in VRI dictionary: {'/Bleh'}."
+   },
+   {
+    "suspicious": "Unexpected keys in VRI dictionary: {'/Bleh'}."
+   },
+   {
+    "suspicious": "VRI key /61670960A63A01155361C4C071B5CFA2BCBE7138 was modified or deleted."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Unexpected keys in VRI dictionary: {'/Bleh'}."
+   },
+   {
+    "suspicious": "Unexpected keys in VRI dictionary: {'/Bleh'}."
+   },
+   {
+    "suspicious": "VRI key /61670960A63A01155361C4C071B5CFA2BCBE7138 was modified or deleted."
+   }
+  ]
+ },
+ "edf64d77822cc610930846c7": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "eff3f83ff2263c4377b45213": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "f087fc1e9e29f32303c802cf": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "f2d124ab8d562cc4ffde1223": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "f388e855fc2e278ba4e30055": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "f3adac887926be6f4af6a8c6": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextField1'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextField1"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "f3fd0bfbe87591753635c2f8": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "More form fields added than expected: expected only set(), but found new fields named {'TextInput.TextField2', 'TextInput.TextField1', 'TextInput'}."
+   },
+   {
+    "changed_form_fields": [
+     "SigNew",
+     "TextInput.TextField1",
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "TextInput.TextField2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "fa0908a399f3717ef852b0dc": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Perms', '/Type', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   }
+  ]
+ },
+ "faa675eb604006191b28f03b": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/DontOverrideMe', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=10, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=10, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.DontOverrideMe')) in the prior revision."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "Dict keys differ: {'/Type', '/DontOverrideMe', '/Pages'} vs. {'/Type', '/Pages'}."
+   },
+   {
+    "suspicious": "There are unexplained xrefs in revision 3: Reference(idnum=10, generation=0).\nSome objects from revision 2 were replaced in revision 3 without precise justification:\n - Reference(idnum=10, generation=0) is also used in AbsoluteContext(path=PathInRevision('.Root.DontOverrideMe')) in the prior revision."
+   }
+  ]
+ },
+ "facbb1aa192044b875609907": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "fbff303d2471239af1dccce9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "changed_form_fields": [
+     "Sig1",
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [
+     "Sig2"
+    ],
+    "level": 2
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   },
+   {
+    "changed_form_fields": [],
+    "level": 1
+   }
+  ]
+ },
+ "feafec67e9334f1cacebd2a9": {
+  "lenient": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   }
+  ],
+  "strict": [
+   {
+    "error": "PdfReadError",
+    "message": "Encountered unexpected non-dictionary object in prior revision."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   },
+   {
+    "suspicious": "The refs {Reference(idnum=9, generation=0)} were freed in the revision provided. The configured difference analysis policy does not allow object freeing."
+   }
+  ]
+ }
+}

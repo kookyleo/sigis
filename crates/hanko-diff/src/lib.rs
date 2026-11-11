@@ -1,7 +1,21 @@
-// Interfaces derived from pyHanko `sign/diff_analysis/` (MIT, see LICENSE-pyHanko).
+// Derived from pyHanko `sign/diff_analysis/` (`__init__.py`, `policy_api.py`,
+// `policies.py`) and `sign/fields.py` (`FieldMDPSpec.is_locked`) (MIT, see
+// LICENSE-pyHanko).
 
 //! Modification analysis between PDF revisions: DocMDP / FieldMDP
 //! (`pyhanko.sign.diff_analysis`).
+//!
+//! pyHanko reviews the changes that incremental updates made after a signed
+//! revision by *whitelisting*: rules clear the objects that each revision
+//! wrote, and every object that no rule clears makes the revision
+//! suspicious. The highest level at which all objects are cleared is the
+//! [`ModificationLevel`] of the revision.
+//!
+//! - [`StandardDiffPolicy`] is pyHanko's `DEFAULT_DIFF_POLICY`;
+//!   [`ConfigurableDiffPolicy`] is the configurable `StandardDiffPolicy`
+//!   class (custom rules, `NO_CHANGES_DIFF_POLICY`).
+//! - Documents are read through [`RevisionSource`]; [`PdfFileSource`] adapts
+//!   [`hanko_pdf::PdfFile`].
 //!
 //! Owned by lane C (see `docs/hanko-lanes.md`); consumed by lane E.
 
@@ -14,9 +28,32 @@
 
 use std::collections::BTreeSet;
 
-use hanko_core::errors::{not_implemented, Result};
+use hanko_core::errors::Result;
 pub use hanko_pdf::MdpPerm;
 use hanko_pdf::PdfFile;
+
+mod commons;
+mod context;
+mod error;
+mod form;
+mod history;
+mod object;
+mod path;
+mod pdf_source;
+mod policy;
+pub mod rules;
+
+pub use commons::{
+    ACROFORM_EXEMPT_STRICT_COMPARISON, FORMFIELD_ALWAYS_MODIFIABLE, ROOT_EXEMPT_STRICT_COMPARISON,
+    VALUE_UPDATE_KEYS,
+};
+pub use context::{ApprovalType, Context, FormUpdate, ReferenceUpdate};
+pub use error::{DiffError, DiffResultT};
+pub use form::{FieldComparisonContext, FieldComparisonSpec, FieldMdpRule, FormUpdatingRule};
+pub use history::{Anchor, Revision, RevisionSource, XrefSectionInfo, MAX_USAGE_PATHS};
+pub use path::{PathNode, RawPdfPath};
+pub use pdf_source::PdfFileSource;
+pub use policy::ConfigurableDiffPolicy;
 
 /// How far a document was modified after a revision (`ModificationLevel`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -42,6 +79,27 @@ pub enum FieldMdpAction {
     Include(Vec<String>),
     /// All fields except these are locked.
     Exclude(Vec<String>),
+}
+
+impl FieldMdpAction {
+    /// `FieldMDPSpec.is_locked`: whether the policy locks `field_name`. A
+    /// listed non-terminal field covers all fields below it.
+    pub fn is_locked(&self, field_name: &str) -> bool {
+        let (fields, lock_result) = match self {
+            FieldMdpAction::All => return true,
+            FieldMdpAction::Include(f) => (f, true),
+            FieldMdpAction::Exclude(f) => (f, false),
+        };
+        for scoped in fields {
+            let below = field_name
+                .strip_prefix(scoped.as_str())
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with('.'));
+            if below {
+                return lock_result;
+            }
+        }
+        !lock_result
+    }
 }
 
 /// Result of a successful review (`DiffResult`).
@@ -79,14 +137,60 @@ pub trait DiffPolicy: Send + Sync + std::fmt::Debug {
 #[derive(Clone, Debug, Default)]
 pub struct StandardDiffPolicy;
 
+impl StandardDiffPolicy {
+    /// Review all revisions after `base_revision` of any [`RevisionSource`].
+    pub fn review_source(
+        &self,
+        src: &dyn RevisionSource,
+        base_revision: usize,
+        field_mdp: Option<&FieldMdpAction>,
+        doc_mdp: Option<MdpPerm>,
+    ) -> Result<DiffOutcome> {
+        ConfigurableDiffPolicy::default().review_source(src, base_revision, field_mdp, doc_mdp)
+    }
+}
+
 impl DiffPolicy for StandardDiffPolicy {
     fn review_file(
         &self,
-        _file: &PdfFile,
-        _base_revision: usize,
-        _field_mdp: Option<&FieldMdpAction>,
-        _doc_mdp: Option<MdpPerm>,
+        file: &PdfFile,
+        base_revision: usize,
+        field_mdp: Option<&FieldMdpAction>,
+        doc_mdp: Option<MdpPerm>,
     ) -> Result<DiffOutcome> {
-        not_implemented("hanko_diff::StandardDiffPolicy::review_file")
+        ConfigurableDiffPolicy::default().review_file(file, base_revision, field_mdp, doc_mdp)
+    }
+}
+
+impl DiffPolicy for ConfigurableDiffPolicy {
+    fn review_file(
+        &self,
+        file: &PdfFile,
+        base_revision: usize,
+        field_mdp: Option<&FieldMdpAction>,
+        doc_mdp: Option<MdpPerm>,
+    ) -> Result<DiffOutcome> {
+        let src = PdfFileSource::new(file)?;
+        self.review_source(&src, base_revision, field_mdp, doc_mdp)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn field_mdp_locks() {
+        let inc = FieldMdpAction::Include(vec!["TextInput".into(), "Signature1".into()]);
+        assert!(inc.is_locked("TextInput"));
+        assert!(inc.is_locked("TextInput.TextField1"));
+        assert!(inc.is_locked("Signature1"));
+        // shared name prefix is not a parent
+        assert!(!inc.is_locked("Signature10"));
+        assert!(!inc.is_locked("Other"));
+        let exc = FieldMdpAction::Exclude(vec!["TextInput.TextField2".into()]);
+        assert!(exc.is_locked("TextInput.TextField1"));
+        assert!(!exc.is_locked("TextInput.TextField2"));
+        assert!(FieldMdpAction::All.is_locked("x"));
     }
 }

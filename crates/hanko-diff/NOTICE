@@ -5,4 +5,25 @@ Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
 (MIT, see LICENSE-pyHanko) are listed below with their upstream source; each
 also names its source in its header.
 
-Derived files:
+Derived from pyHanko 0.38.1 (pkgs/pyhanko/src/pyhanko/):
+  src/lib.rs                   sign/diff_analysis/__init__.py, policy_api.py,
+                               policies.py (DEFAULT_DIFF_POLICY), sign/fields.py
+                               (FieldMDPSpec.is_locked)
+  src/error.rs                 sign/diff_analysis/policy_api.py, pdf_utils/misc.py
+  src/policy.rs                sign/diff_analysis/policies.py
+  src/context.rs               sign/diff_analysis/rules_api.py, form_rules_api.py
+  src/commons.rs               sign/diff_analysis/commons.py, constants.py
+  src/form.rs                  sign/diff_analysis/form_rules_api.py
+  src/rules/mod.rs             sign/diff_analysis/rules_api.py
+  src/rules/file_structure.rs  sign/diff_analysis/rules/file_structure_rules.py
+  src/rules/metadata.rs        sign/diff_analysis/rules/metadata_rules.py
+  src/rules/form_fields.rs     sign/diff_analysis/rules/form_field_rules.py
+  src/rules/dss.rs             sign/diff_analysis/rules/form_field_rules.py
+  src/history.rs               pdf_utils/reader.py (HistoricalResolver), pdf_utils/xref.py
+  src/path.rs                  pdf_utils/reader.py (RawPdfPath)
+  src/object.rs                pdf_utils/generic.py, sign/diff_analysis/policies.py (_is_id)
+  src/pdf_source.rs            pdf_utils/xref.py (interfaces)
+  tests/support/mod.rs         pdf_utils/xref.py, pdf_utils/reader.py
+  tests/test_diff_analysis.rs  pkgs/pyhanko/tests/test_diff_analysis.py
+  tests/sweep.rs               (differential test against pyHanko)
+  oracle/capture_plugin.py     drives pkgs/pyhanko/tests/test_diff_analysis.py
