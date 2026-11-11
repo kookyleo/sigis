@@ -1,0 +1,10 @@
+[package]
+name = "sigis"
+version = "0.0.1"
+edition = "2021"
+description = "Signature Integrity Service: open-source PDF signing and verification"
+license = "Apache-2.0"
+repository = "https://github.com/kookyleo/sigis"
+readme = "README.md"
+keywords = ["pdf", "signature", "pades", "verification"]
+categories = ["cryptography"]
