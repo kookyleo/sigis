@@ -8,6 +8,7 @@ repository = "https://github.com/kookyleo/sigis"
 readme = "README.md"
 keywords = ["pdf", "signature", "pades", "verification"]
 categories = ["cryptography"]
+exclude = ["vendor/"]
 
 [dependencies]
 axum = { version = "0.8", features = ["multipart"] }
@@ -17,3 +18,8 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal
 underskrift = { version = "0.1.4", default-features = false, features = ["verify", "tsp"] }
 uuid = { version = "1", features = ["v4"] }
 zeroize = "1"
+
+# Vendored underskrift 0.1.4 with a minimal patch that embeds an RFC 3161
+# signature timestamp (PAdES B-T). See vendor/README.md.
+[patch.crates-io]
+underskrift = { path = "vendor/underskrift" }

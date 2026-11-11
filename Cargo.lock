@@ -2324,8 +2324,6 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 [[package]]
 name = "underskrift"
 version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "764c0fa840d08c1fbe9c97230019f1763c3d0ef7bc81219e5a0d49383358013e"
 dependencies = [
  "base64 0.22.1",
  "chrono",
