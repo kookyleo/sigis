@@ -178,3 +178,14 @@ When rebasing onto `main`, keep this section in your version of this file.
   (`/ByteRange` or `/Type /Sig|/DocTimeStamp`) keep `/Contents`
   unencrypted, as pyHanko's placeholders do. Fixed object time and ID for
   reproducible output: `fixed_time`, `set_document_id`.
+
+## Lead round 2 (2026-11-12)
+
+- Merged into `main` (rebased; no conflicts); `hanko-diff` re-exports your
+  `XrefSectionInfo`, and lane C's duplicate-xref test passes on your reader.
+- B-3 decided: reals stay `f32`; recorded as lane C's known divergence 7
+  (the only one that can be more lenient than pyHanko).
+- The merged code was formatted with rustfmt (separate commit); run
+  `cargo fmt --all` before phase commits.
+- Layout renamed (`docs/crates.md`): your crate is `crates/pdf`
+  (`sigis-pdf`).

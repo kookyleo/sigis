@@ -199,3 +199,20 @@ Status of the relayed items:
   then available in `sigis-pki-core`.
 - **A-6 (lane D): done.** `ValidationContext::crls()` and `ocsps()` return
   the supplied DER encodings.
+
+## Lead round 2 (2026-11-12)
+
+- Merged into `main` (rebased; no conflicts).
+- R6 done: `ValidationError::InsufficientPoe(String)` (pyHanko
+  `InsufficientPOEError`, a `PathValidationError` subclass). Map
+  `LtvError::InsufficientPoe` to it in `time_slide` / `past_validate`;
+  `TimeSlideFailure` stays an `LtvError` (pyHanko maps it to `NO_POE`).
+- R7 and R8 applied by the lead in the lane E crates (struct literals,
+  digest arms; the ETSI report keeps pyHanko's "no XML syntax" error for
+  MD5 / SHA-3 / SHAKE256 instead of inventing URIs).
+- `is_ee_cert` / `is_side_validation`: stay on `PathFailure`;
+  `ValidationError` is unchanged.
+- Lane E's 13 AdES replays now pass against your CMS validation.
+- Layout renamed (`docs/crates.md`): your crates are `crates/pki-core`
+  (`algorithms.rs`, `asn1/`, `key_usage.rs`), `crates/pki-certvalidator`,
+  `crates/pki-fetch`, `crates/cms`.

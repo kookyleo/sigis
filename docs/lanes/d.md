@@ -50,3 +50,23 @@ When rebasing onto `main`, keep this section in your version of this file.
   `docs/hanko-lanes.md` §8). 2 done on `main` (run-time fixture paths).
   3 and 4 relayed to lane A (A-5, A-6). 5 relayed to lane B (B-4). The
   standard oracle venv is `/tmp/pyhanko-oracle/venv`.
+
+## Lead round 2 (2026-11-12)
+
+- **Not merged yet.** Your committed head `a9d07e0` does not compile on
+  `main`: 13 non-exhaustive `match`es on `DigestAlgorithm` in
+  `src/signer.rs` and `src/pkcs11.rs` (lane A added `Md5`, `Sha3_*`,
+  `Shake256`). Your session was still running with uncommitted edits in
+  those files, so the lead did not touch them.
+- D-2 decided: reading the run-time `CARGO_MANIFEST_DIR` first is fine;
+  prefer `sigis_testdata::manifest_dir()` for uniformity.
+- D-6 done: `HankoError::{Layout, Configuration, FormFilling}(String)`.
+- The layout was renamed (`docs/crates.md`): your crate is now
+  `crates/pades-sign` (`sigis-pades-sign`). To catch up: commit your work,
+  run `tools/migrate-crate-names.sh` on your branch, commit, then
+  `git rebase main` (keep both sides in `docs/lanes/d.md`; take `main`'s
+  `Cargo.lock` and run `cargo check --workspace`). Then the lead merges.
+- Divergence to review: images "1-bit and 16-bit accepted where Pillow
+  rejects" accepts input pyHanko rejects. It concerns appearance images, not
+  signature validation, but please either reject them as Pillow does or list
+  it explicitly as an accepted divergence with a reason.
