@@ -25,8 +25,10 @@
 pub mod coverage;
 pub mod errors;
 pub mod integrity;
-pub mod report;
-pub mod settings;
+/// AdES indications; moved to [`hanko_core::ades`] (re-exported here).
+pub use hanko_core::ades as report;
+/// Key usage settings; moved to [`hanko_core::key_usage`] (re-exported here).
+pub use hanko_core::key_usage as settings;
 
 use hanko_certvalidator::ValidationContext;
 use hanko_cms::{SignedContent, StandardCmsSignatureStatus, TimestampSignatureStatus};
@@ -38,7 +40,9 @@ use hanko_pdf::{EmbeddedSignature, PdfFile, SignatureKind};
 
 use crate::coverage::{evaluate_signature_coverage, process_data_at_eof, XrefMeta};
 use crate::errors::SignatureValidationError;
-use crate::integrity::{docmdp_level, docmdp_ok, evaluate_modifications, fieldmdp, resolve, validate_subfilter};
+use crate::integrity::{
+    docmdp_level, docmdp_ok, evaluate_modifications, fieldmdp, resolve, validate_subfilter,
+};
 
 /// How much of the file a signature covers (`SignatureCoverageLevel`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -103,7 +107,10 @@ pub struct DocumentTimestampStatus {
 }
 
 fn sv_error(e: SignatureValidationError) -> HankoError {
-    HankoError::Malformed(e.to_string())
+    HankoError::SignatureValidation {
+        message: e.to_string(),
+        ades_subindication: Some(e.ades_subindication),
+    }
 }
 
 /// `startxref` and xref end of each revision.
@@ -129,13 +136,19 @@ pub fn xref_meta(file: &PdfFile) -> Result<Vec<XrefMeta>> {
 fn sig_dictionary(file: &PdfFile, sig: &EmbeddedSignature) -> Result<Dictionary> {
     match file.object_in_revision(sig.sig_object, sig.signed_revision)? {
         Some(Object::Dictionary(d)) => Ok(d),
-        _ => Err(HankoError::Malformed("signature object is not a dictionary".into())),
+        _ => Err(HankoError::Malformed(
+            "signature object is not a dictionary".into(),
+        )),
     }
 }
 
 /// Find the signature field whose `/V` is `sig_object` in the AcroForm of
 /// `revision` (fields are walked through `/Kids`).
-pub fn find_sig_field(file: &PdfFile, sig_object: ObjectId, revision: usize) -> Result<Option<Dictionary>> {
+pub fn find_sig_field(
+    file: &PdfFile,
+    sig_object: ObjectId,
+    revision: usize,
+) -> Result<Option<Dictionary>> {
     let trailer = file.trailer_in_revision(revision)?;
     let Ok(root) = trailer.get(b"Root") else {
         return Ok(None);
@@ -193,13 +206,21 @@ pub fn cms_from_contents(contents: &[u8]) -> Result<&[u8]> {
         if n == 0 || n > 4 || rest.len() < n {
             return Err(err());
         }
-        (rest[..n].iter().fold(0usize, |a, b| (a << 8) | usize::from(*b)), 2 + n)
+        (
+            rest[..n]
+                .iter()
+                .fold(0usize, |a, b| (a << 8) | usize::from(*b)),
+            2 + n,
+        )
     };
     contents.get(..hdr + len).ok_or_else(err)
 }
 
 /// Coverage of `signature` (`evaluate_signature_coverage`).
-pub fn signature_coverage(file: &PdfFile, signature: &EmbeddedSignature) -> Result<SignatureCoverageLevel> {
+pub fn signature_coverage(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+) -> Result<SignatureCoverageLevel> {
     let xrefs = xref_meta(file)?;
     Ok(evaluate_signature_coverage(
         file.bytes(),
@@ -242,7 +263,14 @@ pub fn validate_pdf_signature(
     let diff_result = match diff_policy {
         Some(policy) => {
             let fmdp = fieldmdp(file, &sig_dict, rev)?;
-            Some(evaluate_modifications(file, coverage, rev, policy, fmdp.as_ref(), docmdp)?)
+            Some(evaluate_modifications(
+                file,
+                coverage,
+                rev,
+                policy,
+                fmdp.as_ref(),
+                docmdp,
+            )?)
         }
         None => None,
     };
@@ -267,15 +295,21 @@ pub fn tst_imprint_algorithm(token: &[u8]) -> Result<DigestAlgorithm> {
     use der::Decode;
     let err = |m: String| HankoError::Malformed(format!("timestamp token: {m}"));
     let ci = cms::content_info::ContentInfo::from_der(token).map_err(|e| err(e.to_string()))?;
-    let sd: cms::signed_data::SignedData = ci.content.decode_as().map_err(|e: der::Error| err(e.to_string()))?;
+    let sd: cms::signed_data::SignedData = ci
+        .content
+        .decode_as()
+        .map_err(|e: der::Error| err(e.to_string()))?;
     let econtent = sd
         .encap_content_info
         .econtent
         .ok_or_else(|| err("no TSTInfo".into()))?;
-    let octets: der::asn1::OctetString = econtent.decode_as().map_err(|e: der::Error| err(e.to_string()))?;
+    let octets: der::asn1::OctetString = econtent
+        .decode_as()
+        .map_err(|e: der::Error| err(e.to_string()))?;
     let tst = x509_tsp::TstInfo::from_der(octets.as_bytes()).map_err(|e| err(e.to_string()))?;
     let oid = tst.message_imprint.hash_algorithm.oid;
-    DigestAlgorithm::from_oid(&oid).ok_or_else(|| err(format!("unsupported imprint algorithm {oid}")))
+    DigestAlgorithm::from_oid(&oid)
+        .ok_or_else(|| err(format!("unsupported imprint algorithm {oid}")))
 }
 
 /// Validate one document timestamp (`validate_pdf_timestamp`).

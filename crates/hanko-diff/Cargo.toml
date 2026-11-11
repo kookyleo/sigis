@@ -12,7 +12,7 @@ publish.workspace = true
 hanko-core = { workspace = true }
 hanko-pdf = { workspace = true }
 lopdf = { workspace = true }
-quick-xml = "0.38.4"
+quick-xml = { workspace = true }
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }

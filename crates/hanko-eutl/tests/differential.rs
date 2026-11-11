@@ -22,8 +22,15 @@ struct Case {
 
 fn pem(cert: &Cert) -> String {
     let b64 = base64::engine::general_purpose::STANDARD.encode(cert.der());
-    let lines: Vec<&str> = b64.as_bytes().chunks(64).map(|c| std::str::from_utf8(c).unwrap()).collect();
-    format!("-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----\n", lines.join("\n"))
+    let lines: Vec<&str> = b64
+        .as_bytes()
+        .chunks(64)
+        .map(|c| std::str::from_utf8(c).unwrap())
+        .collect();
+    format!(
+        "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----\n",
+        lines.join("\n")
+    )
 }
 
 fn rust_verdict(case: &Case) -> Value {
@@ -72,7 +79,10 @@ fn tampered(src: &Path, dir: &Path, name: &str, from: &str, to: &str) -> PathBuf
 fn differential_trusted_list_verdicts() {
     let tmp = TempDir::new();
     let latest = hanko_eutl::parse::latest_known_lotl_tlso_certs();
-    let pre_reanchor = hanko_eutl::util::load_certs_from_pemder(&std::fs::read(tl_path("pre-reanchor.cert.pem")).unwrap()).unwrap();
+    let pre_reanchor = hanko_eutl::util::load_certs_from_pemder(
+        &std::fs::read(tl_path("pre-reanchor.cert.pem")).unwrap(),
+    )
+    .unwrap();
     let lotl = tl_file(TEST_REAL_LOTL);
     let be_ref = parse::parse_lotl_unsafe(&lotl)
         .unwrap()
@@ -80,37 +90,139 @@ fn differential_trusted_list_verdicts() {
         .into_iter()
         .find(|r| r.territory == "BE")
         .unwrap();
-    let issued = |name: &str| parse::parse_lotl_unsafe(&tl_file(name)).unwrap().claimed_date_issued;
+    let issued = |name: &str| {
+        parse::parse_lotl_unsafe(&tl_file(name))
+            .unwrap()
+            .claimed_date_issued
+    };
     let root = pki_cert("testing-ca-qualified", "root");
     let gen_lotl = data(&["lanes", "e", "tl", "certomancer-lotl.xml"]);
     let gen_tl = data(&["lanes", "e", "tl", "certomancer-qualified-tl.xml"]);
     let t_be = moment("2025-06-01T00:05:00Z");
 
     let mut cases = vec![
-        Case { name: "be-old signed".into(), xml: tl_path(TEST_REAL_TL_BE_OLD), certs: vec![be_tlso_cert()], time: Some(t_be) },
-        Case { name: "be-old unsigned".into(), xml: tl_path(TEST_REAL_TL_BE_OLD), certs: vec![], time: None },
-        Case { name: "ee wrong signer".into(), xml: tl_path(TEST_REAL_TL_EE), certs: vec![be_tlso_cert()], time: Some(t_be) },
-        Case { name: "ee unsigned".into(), xml: tl_path(TEST_REAL_TL_EE), certs: vec![], time: None },
-        Case { name: "be-v6 via LOTL certs".into(), xml: tl_path(TEST_REAL_TL_BE), certs: be_ref.tlso_certs.clone(), time: Some(moment("2026-06-16T00:00:00Z")) },
-        Case { name: "lotl".into(), xml: tl_path(TEST_REAL_LOTL), certs: latest.clone(), time: Some(issued(TEST_REAL_LOTL)) },
-        Case { name: "lotl expired signer time".into(), xml: tl_path(TEST_REAL_LOTL), certs: latest.clone(), time: Some(moment("2050-01-01T00:00:00Z")) },
-        Case { name: "lotl old".into(), xml: tl_path(TEST_REAL_LOTL_OLD), certs: pre_reanchor.clone(), time: Some(issued(TEST_REAL_LOTL_OLD)) },
-        Case { name: "generated lotl".into(), xml: gen_lotl.clone(), certs: vec![root.clone()], time: None },
-        Case { name: "generated tl".into(), xml: gen_tl.clone(), certs: vec![root.clone()], time: None },
-        Case { name: "generated tl wrong signer".into(), xml: gen_tl.clone(), certs: vec![be_tlso_cert()], time: Some(t_be) },
+        Case {
+            name: "be-old signed".into(),
+            xml: tl_path(TEST_REAL_TL_BE_OLD),
+            certs: vec![be_tlso_cert()],
+            time: Some(t_be),
+        },
+        Case {
+            name: "be-old unsigned".into(),
+            xml: tl_path(TEST_REAL_TL_BE_OLD),
+            certs: vec![],
+            time: None,
+        },
+        Case {
+            name: "ee wrong signer".into(),
+            xml: tl_path(TEST_REAL_TL_EE),
+            certs: vec![be_tlso_cert()],
+            time: Some(t_be),
+        },
+        Case {
+            name: "ee unsigned".into(),
+            xml: tl_path(TEST_REAL_TL_EE),
+            certs: vec![],
+            time: None,
+        },
+        Case {
+            name: "be-v6 via LOTL certs".into(),
+            xml: tl_path(TEST_REAL_TL_BE),
+            certs: be_ref.tlso_certs.clone(),
+            time: Some(moment("2026-06-16T00:00:00Z")),
+        },
+        Case {
+            name: "lotl".into(),
+            xml: tl_path(TEST_REAL_LOTL),
+            certs: latest.clone(),
+            time: Some(issued(TEST_REAL_LOTL)),
+        },
+        Case {
+            name: "lotl expired signer time".into(),
+            xml: tl_path(TEST_REAL_LOTL),
+            certs: latest.clone(),
+            time: Some(moment("2050-01-01T00:00:00Z")),
+        },
+        Case {
+            name: "lotl old".into(),
+            xml: tl_path(TEST_REAL_LOTL_OLD),
+            certs: pre_reanchor.clone(),
+            time: Some(issued(TEST_REAL_LOTL_OLD)),
+        },
+        Case {
+            name: "generated lotl".into(),
+            xml: gen_lotl.clone(),
+            certs: vec![root.clone()],
+            time: None,
+        },
+        Case {
+            name: "generated tl".into(),
+            xml: gen_tl.clone(),
+            certs: vec![root.clone()],
+            time: None,
+        },
+        Case {
+            name: "generated tl wrong signer".into(),
+            xml: gen_tl.clone(),
+            certs: vec![be_tlso_cert()],
+            time: Some(t_be),
+        },
     ];
-    for p in ["eu-lotl-pivot-282.xml", "eu-lotl-pivot-300.xml", "eu-lotl-pivot-335.xml", "eu-lotl-pivot-341.xml"] {
+    for p in [
+        "eu-lotl-pivot-282.xml",
+        "eu-lotl-pivot-300.xml",
+        "eu-lotl-pivot-335.xml",
+        "eu-lotl-pivot-341.xml",
+    ] {
         let mut certs = hanko_eutl::parse::ojeu_bootstrap_lotl_tlso_certs(0);
         certs.extend(pre_reanchor.iter().cloned());
-        cases.push(Case { name: format!("pivot {p}"), xml: tl_path(p), certs, time: Some(issued(p)) });
+        cases.push(Case {
+            name: format!("pivot {p}"),
+            xml: tl_path(p),
+            certs,
+            time: Some(issued(p)),
+        });
     }
     // Tampered inputs: both implementations must reject them.
-    let t1 = tampered(&tl_path(TEST_REAL_TL_BE_OLD), tmp.path(), "be-tampered.xml", "<ServiceStatus>", "<ServiceStatus> ");
-    cases.push(Case { name: "be-old tampered content".into(), xml: t1, certs: vec![be_tlso_cert()], time: Some(t_be) });
-    let t2 = tampered(&gen_tl, tmp.path(), "gen-tampered.xml", "TSA tsa-qualified", "TSA tsa-qua1ified");
-    cases.push(Case { name: "generated tl tampered".into(), xml: t2, certs: vec![root.clone()], time: None });
-    let t3 = tampered(&gen_lotl, tmp.path(), "gen-lotl-sigval.xml", "<ds:SignatureValue>", "<ds:SignatureValue>AAAA");
-    cases.push(Case { name: "generated lotl bad signature value".into(), xml: t3, certs: vec![root.clone()], time: None });
+    let t1 = tampered(
+        &tl_path(TEST_REAL_TL_BE_OLD),
+        tmp.path(),
+        "be-tampered.xml",
+        "<ServiceStatus>",
+        "<ServiceStatus> ",
+    );
+    cases.push(Case {
+        name: "be-old tampered content".into(),
+        xml: t1,
+        certs: vec![be_tlso_cert()],
+        time: Some(t_be),
+    });
+    let t2 = tampered(
+        &gen_tl,
+        tmp.path(),
+        "gen-tampered.xml",
+        "TSA tsa-qualified",
+        "TSA tsa-qua1ified",
+    );
+    cases.push(Case {
+        name: "generated tl tampered".into(),
+        xml: t2,
+        certs: vec![root.clone()],
+        time: None,
+    });
+    let t3 = tampered(
+        &gen_lotl,
+        tmp.path(),
+        "gen-lotl-sigval.xml",
+        "<ds:SignatureValue>",
+        "<ds:SignatureValue>AAAA",
+    );
+    cases.push(Case {
+        name: "generated lotl bad signature value".into(),
+        xml: t3,
+        certs: vec![root.clone()],
+        time: None,
+    });
 
     // Write the case list for the oracle.
     let mut oracle_cases = Vec::new();
@@ -129,10 +241,11 @@ fn differential_trusted_list_verdicts() {
     }
     let cases_file = tmp.path().join("cases.json");
     std::fs::write(&cases_file, serde_json::to_string(&oracle_cases).unwrap()).unwrap();
-    let script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("oracle/tl_verdicts.py");
+    let script = hanko_testdata::manifest_dir().join("oracle/tl_verdicts.py");
 
     let rust: Vec<Value> = cases.iter().map(rust_verdict).collect();
-    let Some(oracle) = hanko_testdata::oracle::run_json(&script, &[cases_file.to_str().unwrap()]) else {
+    let Some(oracle) = hanko_testdata::oracle::run_json(&script, &[cases_file.to_str().unwrap()])
+    else {
         return;
     };
     if let Some(reason) = oracle.get("skip") {
@@ -145,7 +258,10 @@ fn differential_trusted_list_verdicts() {
     for ((case, ours), theirs) in cases.iter().zip(&rust).zip(oracle) {
         // Never accept what pyHanko rejects.
         if theirs["signature"] == "invalid" && ours["signature"] == "valid" {
-            failures.push(format!("FAIL-OPEN {}: pyHanko {theirs} vs port {ours}", case.name));
+            failures.push(format!(
+                "FAIL-OPEN {}: pyHanko {theirs} vs port {ours}",
+                case.name
+            ));
             continue;
         }
         let comparable = |v: &Value| {

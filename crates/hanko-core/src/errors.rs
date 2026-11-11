@@ -214,6 +214,15 @@ pub enum HankoError {
     /// A network retrieval failed.
     #[error(transparent)]
     Fetch(#[from] FetchError),
+    /// A signature failed validation (`SignatureValidationError` in pyHanko),
+    /// with the AdES sub-indication when one is known.
+    #[error("{message}")]
+    SignatureValidation {
+        /// Failure description.
+        message: String,
+        /// AdES sub-indication (EN 319 102-1 §5.1.3).
+        ades_subindication: Option<crate::ades::AdesSubIndic>,
+    },
     /// Signing failed (key provider, timestamping, embedding).
     #[error("signing failed: {0}")]
     Signing(String),

@@ -3,8 +3,9 @@
 //! AdES indications (ETSI EN 319 102-1, clause 5.1.3)
 //! (`pyhanko.sign.ades.report`).
 //!
-//! The enums live here rather than in `hanko-ades` because validation errors
-//! carry a sub-indication; `hanko-ades` re-exports them.
+//! The enums live in `hanko-core` because validation errors of several crates
+//! carry a sub-indication ([`crate::HankoError::SignatureValidation`]);
+//! `hanko_validate::report` and `hanko-ades` re-export them. Owned by lane E.
 
 use std::fmt;
 

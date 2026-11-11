@@ -1,10 +1,14 @@
 // Derived from pyHanko `sign/validation/settings.py` (MIT, see LICENSE-pyHanko).
 
-//! Validation settings (`pyhanko.sign.validation.settings`).
+//! Key usage constraints for signer certificates
+//! (`pyhanko.sign.validation.settings`).
+//!
+//! Shared by `hanko-cms` (lane A) and `hanko-validate` / `hanko-eutl` (lane E);
+//! owned by lane A. `hanko_validate::settings` re-exports this module.
 
 use std::collections::BTreeSet;
 
-use hanko_core::cert::Cert;
+use crate::cert::Cert;
 use x509_cert::ext::pkix::KeyUsages;
 
 /// Error raised when a certificate does not meet a key usage policy
@@ -91,11 +95,17 @@ const KEY_PURPOSE_NAMES: &[(&str, &str)] = &[
     ("1.3.6.1.4.1.311.10.3.7", "microsoft_oem_whql"),
     ("1.3.6.1.4.1.311.10.3.8", "microsoft_embedded_nt"),
     ("1.3.6.1.4.1.311.10.3.9", "microsoft_root_list_signer"),
-    ("1.3.6.1.4.1.311.10.3.10", "microsoft_qualified_subordination"),
+    (
+        "1.3.6.1.4.1.311.10.3.10",
+        "microsoft_qualified_subordination",
+    ),
     ("1.3.6.1.4.1.311.10.3.11", "microsoft_key_recovery"),
     ("1.3.6.1.4.1.311.10.3.12", "microsoft_document_signing"),
     ("1.3.6.1.4.1.311.10.3.13", "microsoft_lifetime_signing"),
-    ("1.3.6.1.4.1.311.10.3.14", "microsoft_mobile_device_software"),
+    (
+        "1.3.6.1.4.1.311.10.3.14",
+        "microsoft_mobile_device_software",
+    ),
     ("1.3.6.1.4.1.311.20.2.2", "microsoft_smart_card_logon"),
     ("2.16.840.1.113730.4.1", "netscape_server_gated_crypto"),
     ("1.3.6.1.5.5.8.2.2", "ike_intermediate"),
@@ -129,7 +139,9 @@ fn match_usages(required: &BTreeSet<String>, present: &BTreeSet<String>, need_al
 }
 
 fn rephrase<'a>(it: impl Iterator<Item = &'a String>) -> String {
-    it.map(|s| s.replace('_', " ")).collect::<Vec<_>>().join(", ")
+    it.map(|s| s.replace('_', " "))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Key usage requirements (`KeyUsageConstraints`).

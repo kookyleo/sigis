@@ -143,7 +143,7 @@ fn sweep_matches_live_oracle() {
     if !oracle_ready() {
         return;
     }
-    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("oracle/sweep.py");
+    let script = hanko_testdata::manifest_dir().join("oracle/sweep.py");
     let recorded = sweep();
     let shas: Vec<&String> = recorded.as_object().unwrap().keys().collect();
     let lane = lane_dir();

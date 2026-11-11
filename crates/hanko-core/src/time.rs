@@ -46,16 +46,17 @@ impl Moment {
     pub fn parse_rfc3339(s: &str) -> Option<Self> {
         let s = s.trim();
         if s.contains('T') {
-            parse_iso8601(s)
+            parse_iso8601(s, false)
         } else {
-            parse_iso8601(&format!("{s}T00:00:00"))
+            parse_iso8601(&format!("{s}T00:00:00"), false)
         }
     }
 
-    /// Parse an `xsd:dateTime` (`YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`).
-    /// A missing zone designator means UTC; fractional seconds are truncated.
+    /// Parse an `xsd:dateTime` (`YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`),
+    /// strictly: hours, minutes and seconds are required. A missing zone
+    /// designator means UTC; fractional seconds are truncated.
     pub fn parse_xsd_datetime(s: &str) -> Option<Self> {
-        parse_iso8601(s.trim())
+        parse_iso8601(s.trim(), true)
     }
 
     /// `self + d`, saturating.
@@ -80,8 +81,9 @@ impl Moment {
     }
 }
 
-/// `YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`, offsets up to 14 hours.
-fn parse_iso8601(s: &str) -> Option<Moment> {
+/// `YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`, offsets up to 14 hours. Without
+/// `require_seconds`, missing minutes and seconds count as zero.
+fn parse_iso8601(s: &str, require_seconds: bool) -> Option<Moment> {
     let (date, rest) = s.split_once('T')?;
     let (time, offset_secs) = if let Some(t) = rest.strip_suffix('Z') {
         (t, 0i64)
@@ -103,7 +105,11 @@ fn parse_iso8601(s: &str) -> Option<Moment> {
         return None;
     }
     let mut t = time.split(':');
-    let (h, mi, se) = (t.next()?, t.next().unwrap_or("0"), t.next().unwrap_or("0"));
+    let (h, mi, se) = if require_seconds {
+        (t.next()?, t.next()?, t.next()?)
+    } else {
+        (t.next()?, t.next().unwrap_or("0"), t.next().unwrap_or("0"))
+    };
     if t.next().is_some() {
         return None;
     }
@@ -116,7 +122,9 @@ fn parse_iso8601(s: &str) -> Option<Moment> {
         mi.parse().ok()?,
         se.parse().ok()?,
     )?;
-    Some(Moment::from_unix_secs(m.unix_secs().checked_sub(offset_secs)?))
+    Some(Moment::from_unix_secs(
+        m.unix_secs().checked_sub(offset_secs)?,
+    ))
 }
 
 fn duration_secs(d: Duration) -> i64 {
@@ -182,13 +190,17 @@ mod tests {
             Moment::parse_rfc3339("2012-10-11T19:00:00-05:00"),
             Moment::parse_rfc3339("2012-10-12T00:00:00Z")
         );
-        assert_eq!(Moment::parse_rfc3339("2012-10-12"), Moment::parse_rfc3339("2012-10-12T00:00:00Z"));
+        assert_eq!(
+            Moment::parse_rfc3339("2012-10-12"),
+            Moment::parse_rfc3339("2012-10-12T00:00:00Z")
+        );
         assert_eq!(Moment::parse_rfc3339("2012-10-12T00:00:00+15:00"), None);
         assert_eq!(
             Moment::parse_xsd_datetime("2016-06-01T00:00:00"),
             Moment::parse_rfc3339("2016-06-01T00:00:00Z")
         );
         assert_eq!(Moment::parse_xsd_datetime("2016-06-01"), None);
+        assert_eq!(Moment::parse_xsd_datetime("2016-06-01T00:00"), None);
         assert_eq!(Moment::parse_rfc3339("2021-02-30T00:00:00Z"), None);
     }
 }

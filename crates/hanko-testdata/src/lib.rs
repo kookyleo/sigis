@@ -40,7 +40,8 @@ fn find_data_dir(start: &Path) -> Option<PathBuf> {
             return Some(in_workspace);
         }
         let in_crate = dir.join("data");
-        (dir.file_name().is_some_and(|n| n == "hanko-testdata") && in_crate.is_dir()).then_some(in_crate)
+        (dir.file_name().is_some_and(|n| n == "hanko-testdata") && in_crate.is_dir())
+            .then_some(in_crate)
     })
 }
 
@@ -54,7 +55,9 @@ pub fn data_dir() -> PathBuf {
     if let Some(dir) = std::env::var_os(TESTDATA_ENV) {
         return PathBuf::from(dir);
     }
-    if let Some(dir) = std::env::var_os("CARGO_MANIFEST_DIR").and_then(|d| find_data_dir(Path::new(&d))) {
+    if let Some(dir) =
+        std::env::var_os("CARGO_MANIFEST_DIR").and_then(|d| find_data_dir(Path::new(&d)))
+    {
         return dir;
     }
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data")
@@ -143,7 +146,12 @@ mod tests {
         let dir = data_dir();
         assert!(dir.join("pyhanko").is_dir(), "{}", dir.display());
         let here = manifest_dir();
-        assert!(dir.starts_with(here.parent().and_then(Path::parent).unwrap_or(&here)), "{} vs {}", dir.display(), here.display());
+        assert!(
+            dir.starts_with(here.parent().and_then(Path::parent).unwrap_or(&here)),
+            "{} vs {}",
+            dir.display(),
+            here.display()
+        );
     }
 
     #[test]
