@@ -36,31 +36,43 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | `pdf_utils/filters.py` | `src/filters.rs` | ported (Flate via `flate2`) |
 | `pdf_utils/decode_limits.py` | `src/decode_limits.rs` | ported |
 | `pdf_utils/xref.py` | `src/xref.rs` | ported |
-| `pdf_utils/reader.py` | `src/reader.rs` | ported (encryption hooks: see `crypt/`) |
+| `pdf_utils/reader.py` | `src/reader.rs` | ported (decryption via `src/crypt/`) |
 | `pdf_utils/rw_common.py` | `src/rw_common.rs` | ported |
-| `pdf_utils/writer.py` | `src/writer.rs` | ported (encryption setup pending: `encrypt`, `encrypt_pubkey`) |
-| `pdf_utils/incremental_writer.py` | `src/writer.rs` (`IncrementalWriter`) | ported (encryption updates pending) |
+| `pdf_utils/writer.py` | `src/writer.rs` | ported (`encrypt`/`encrypt_pubkey` in `src/crypt/mod.rs`) |
+| `pdf_utils/incremental_writer.py` | `src/writer.rs` (`IncrementalWriter`) | ported |
 | `pdf_utils/metadata/info.py`, `model.py` | `src/metadata/{info,model}.rs` | ported |
 | `pdf_utils/metadata/xmp_xml.py` | `src/metadata/xmp_xml.rs` | ported (XML via `quick-xml`, see Decisions) |
 | `pdf_utils/form_tools.py` (`enumerate_fields_in`) | `src/signatures.rs` | ported in part |
 | `sign/validation/pdf_embedded.py` (discovery), `dss.py` (`read_dss`) | `src/signatures.rs` | ported (structural part) |
 | `pdf_utils/extensions.py` | `src/extensions.rs` | ported |
 | `pdf_utils/content_stream_parser.py` | `src/content_stream_parser.rs` | ported |
-| `pdf_utils/embed.py` | `src/embed.rs` | ported (`wrap_encrypted_payload` with the crypt module) |
-| `pdf_utils/crypt/` | — | pending |
+| `pdf_utils/embed.py` | `src/embed.rs` | ported |
+| `pdf_utils/crypt/api.py`, `filter_mixins.py` | `src/crypt/api.rs` | ported (class hierarchy flattened: `CryptFilter` is a value, `SecurityHandler` a shared handle; handler and crypt-filter registries are explicit values) |
+| `pdf_utils/crypt/standard.py` | `src/crypt/standard.rs` | ported |
+| `pdf_utils/crypt/pubkey.py` | `src/crypt/pubkey.rs`, `src/crypt/keys.rs`, `src/crypt/x448.rs` | ported |
+| `pdf_utils/crypt/_legacy.py` | `src/crypt/legacy.rs` | ported |
+| `pdf_utils/crypt/_util.py` | `src/crypt/util.rs`, `src/crypt/rc4.rs` | ported on RustCrypto; RC4 is a small local module (no `rc4` crate in the offline registry) |
+| `pdf_utils/crypt/_saslprep.py` | `src/crypt/saslprep.rs` | replaced by crate `stringprep` |
+| `pdf_utils/crypt/permissions.py` | `src/crypt/permissions.rs` | ported |
+| `pdf_utils/crypt/cred_ser.py` | `src/crypt/cred_ser.rs` | ported |
+| `pdf_utils/crypt/__init__.py` (+ encryption parts of reader, writer, incremental_writer, generic) | `src/crypt/mod.rs` | ported |
+| `pdf_utils/crypt/pdfmac.py` | `src/crypt/pdfmac.rs` | ported |
+| `pdf_utils/crypt/_iso32004_asn1.py` | `src/crypt/iso32004_asn1.rs` | ported |
+| `pdf_utils/{layout,text,content,images,qr,barcodes}.py`, `pdf_utils/font/` | — | lane D (see `docs/hanko-lanes.md`) |
+| `pdf_utils/form_tools.py` (appearance helpers) | — | lane D (only `enumerate_fields_in` is needed here) |
 
 ## Test mapping
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | `tests/xref.rs` | 60 | 59 | 1 | 0 |
-| `test_internal_utils.py` | `tests/internal_utils.rs` | 127 | 110 | 16 | 1 |
+| `test_internal_utils.py` | `tests/internal_utils.rs` | 127 | 111 | 16 | 0 |
 | `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 26 | 0 | 3 |
 | `test_content_stream_parser.py` | `tests/content_stream_parser.rs` | 8 | 8 | 0 | 0 |
-| `test_embed.py` | `tests/embed.rs` | 9 | 4 | 0 | 5 |
-| `test_meta.py` | `tests/meta.rs` | 39 | 37 | 0 | 2 |
-| `test_crypt.py` | — | 84 | 0 | 0 | 84 |
-| `test_pdfmac.py` | — | 50 | 0 | 0 | 50 |
+| `test_embed.py` | `tests/embed.rs` | 9 | 9 | 0 | 0 |
+| `test_meta.py` | `tests/meta.rs` | 39 | 39 | 0 | 0 |
+| `test_crypt.py` | `tests/crypt.rs` | 84 | 84 | 0 | 0 |
+| `test_pdfmac.py` | `tests/pdfmac.rs` | 50 | 48 | 0 | 2 |
 
 Skipped tests:
 
@@ -83,18 +95,32 @@ Skipped tests:
   Rust counterpart (objects are values; updates go through
   `PdfWriter::update_object`).
 
-Pending tests:
+Pending tests (other lanes):
 
-- `test_meta.py::{test_encrypt_skipping_managed_metadata,
-  test_encrypt_with_managed_metadata}`, `test_embed.py::{test_encrypt_efs,
-  test_decrypt_ef_without_explicit_crypt_filter,
-  test_wrapper_doc_underspecified, test_wrapper_doc, test_wrapper_doc_pubkey}`
-  (need the crypt module).
+- `test_decode_limits.py::{test_post_sign_reopen_keeps_limits,
+  test_archival_timestamp_update_keeps_limits, test_add_dss_keeps_limits}`:
+  lane D signing, archival timestamps and DSS updates.
+- `test_pdfmac.py::test_pdf_mac_pades` (lane D PAdES signing with a TSA and
+  lane E AdES validation), `test_pdfmac.py::test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel`
+  (lane D `PdfSigner`).
 
-- `test_internal_utils.py::test_page_tree_import` (needs encryption).
-- `test_decode_limits.py::test_post_sign_reopen_keeps_limits`,
-  `test_archival_timestamp_update_keeps_limits`, `test_add_dss_keeps_limits`
-  (need lane D signing / DSS updates).
+Adapted tests:
+
+- `test_pdfmac.py`: documents with a MAC inside a signature are produced by
+  pyHanko 0.38.1 (`oracle/gen_pdfmac_sig_fixtures.py`, 64 PDFs in
+  `hanko-testdata/data/lanes/b/pdfmac-sig/`, each checked against pyHanko's
+  own verdict) until lane D's signer exists; the signature validation half
+  of `test_sign_crypt_aes256_with_mac` waits for lane E.
+- `test_crypt.py`: `test_encrypt_skipping_metadata(_pubkey)` read the
+  catalog raw before authenticating (eager decryption);
+  `test_invalid_originator_key` patches the recipient DER instead of
+  monkeypatching; `test_custom_crypt_filter_type` uses an explicit
+  `SecurityHandlerRegistry`.
+- Encryption interop: pyHanko 0.38.1 opens files written by the port
+  (R3, R4, R6 + MAC, GCM, MAC'd incremental update; RSA PKCS#1 v1.5, OAEP,
+  RC4 `adbe.pkcs7.s4`; ECDH P-256/384/521, X25519, X448), checked with
+  `oracle/check_decrypt.py`; `tests/crypt.rs::differential_pyhanko_reads_our_encryption`
+  runs when `HANKO_ORACLE` is set.
 
 ## Known divergences
 
@@ -129,5 +155,26 @@ All fail closed (the port never accepts what pyHanko rejects):
   produce an update that its own strict reader rejects).
 - Integral reals beyond 1e15 are written with a trailing `.0` (pyHanko
   writes them as integers, which only works with arbitrary-precision ints).
+- Encryption: objects are decrypted whole when read (pyHanko decrypts each
+  string or stream lazily). Before authenticating, an object that contains
+  an encrypted string or stream cannot be read; a string that fails to
+  decrypt makes its whole object unreadable.
+- Signature `/Contents` stays raw in dictionaries with `/ByteRange` or
+  `/Type /Sig`/`/DocTimeStamp` (ISO 32000 exempts it), matching what
+  pyHanko's validation reads.
+- Public-key recipient matching compares issuer names by exact DER bytes
+  (asn1crypto normalises); CMS recipients and MAC tokens must be DER (BER
+  indefinite lengths are rejected).
+- Key loading is narrower: PKCS#12 through the `p12` crate (legacy SHA-1
+  3DES/RC2 only, no PBES2); encrypted PEM keys: PKCS#8 PBES2/PBES1-3DES and
+  OpenSSL traditional AES-CBC / DES-EDE3 only.
+- Error mapping: `PdfKeyNotAvailableError` → `PdfError::KeyNotAvailable`
+  (a read error); `InappropriateCredentialError` and the PDF MAC
+  `DisallowedAlgorithmError` → `PdfError::Value` with that name as prefix.
+- X448 is implemented locally on `crypto-bigint` (checked against RFC 7748
+  vectors): the `ed448-goldilocks` pre-release did not reproduce them.
+- `wrap_encrypted_payload` takes an enum (password, certificates or
+  handler), so pyHanko's "exactly one of password/certs" `ValueError`
+  cannot occur; an empty certificate list yields a file nobody can open.
 - Producer string: `sigis-hanko <version>` instead of `pyHanko <version>`;
   modification dates are written in UTC (pyHanko: local time zone).

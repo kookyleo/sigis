@@ -271,3 +271,133 @@ pub fn embedded_file_stream(h: &dyn PdfHandler, spec: &Dictionary) -> PdfResult<
     };
     h.get(&ef, b"F")
 }
+
+/// How to encrypt the attachment of [`wrap_encrypted_payload`].
+#[derive(Clone, Debug)]
+pub enum WrapEncryption {
+    /// A password (standard handler, AES-256).
+    Password(String),
+    /// Public-key encryption for the given DER certificates.
+    Certs(Vec<Vec<u8>>),
+    /// An explicit security handler.
+    Handler(crate::crypt::SecurityHandler),
+}
+
+/// Wrap a PDF as an encrypted attachment of an unencrypted wrapper document
+/// (`wrap_encrypted_payload`). Only the embedded file is encrypted.
+///
+/// pyHanko's `ValueError` for passing both or neither of `password` and
+/// `certs` cannot occur: [`WrapEncryption`] holds exactly one.
+#[allow(clippy::too_many_arguments)]
+pub fn wrap_encrypted_payload(
+    plaintext_payload: &[u8],
+    encryption: WrapEncryption,
+    file_spec_string: &str,
+    params: Option<EmbeddedFileParams>,
+    file_name: Option<&str>,
+    description: &str,
+    include_explanation_page: bool,
+) -> PdfResult<crate::writer::PdfFileWriter> {
+    use crate::crypt::{
+        CryptFilter, CryptFilterConfiguration, PubKeyAdbeSubFilter, PubKeyCfData, PubKeyPermissions,
+        RecipientEncryptionPolicy, SecurityHandler, SecurityHandlerVersion, StandardEncryptOptions,
+        DEF_EMBEDDED_FILE, STD_CF,
+    };
+    let mut w = crate::writer::PdfFileWriter::new(true, true)?;
+    let sh = match encryption {
+        WrapEncryption::Handler(sh) => sh,
+        WrapEncryption::Certs(certs) => {
+            let mut cf = CryptFilter::pubkey_aes(32, PubKeyCfData::new(None, false, false))?;
+            cf.set_embedded_only();
+            let cfc = CryptFilterConfiguration::new(
+                vec![(DEF_EMBEDDED_FILE, cf)],
+                "Identity",
+                "Identity",
+                Some(DEF_EMBEDDED_FILE),
+            )?;
+            let sh = SecurityHandler::new_pubkey(
+                SecurityHandlerVersion::Aes256,
+                PubKeyAdbeSubFilter::S5,
+                32,
+                false,
+                Some(cfc),
+                None,
+                true,
+                None,
+            )?;
+            sh.add_recipients(&certs, PubKeyPermissions::allow_everything(), RecipientEncryptionPolicy::default())?;
+            sh
+        }
+        WrapEncryption::Password(pw) => {
+            let mut cf = CryptFilter::standard_aes(32)?;
+            cf.set_embedded_only();
+            let cfc = CryptFilterConfiguration::new(vec![(STD_CF, cf)], "Identity", "Identity", Some(STD_CF))?;
+            SecurityHandler::build_from_pw(
+                pw.as_str(),
+                None,
+                StandardEncryptOptions {
+                    encrypt_metadata: false,
+                    crypt_filter_config: Some(cfc),
+                    ..StandardEncryptOptions::default()
+                },
+            )?
+        }
+    };
+    w.assign_security_handler(&sh)?;
+    let mut root = w.root()?;
+    let mut collection = Dictionary::new();
+    collection.set("Type", Object::Name(b"Collection".to_vec()));
+    collection.set("D", text_string(file_spec_string));
+    collection.set("View", Object::Name(b"H".to_vec()));
+    root.set("Collection", Object::Dictionary(collection));
+    w.set_root(root);
+    let ef = embedded_file_object(
+        &mut w,
+        plaintext_payload,
+        true,
+        Some(&params.unwrap_or_default()),
+        Some("application/pdf"),
+    )?;
+    let spec = FileSpec {
+        file_spec_string: file_spec_string.to_owned(),
+        file_name: file_name.map(str::to_owned),
+        embedded_data: Some(ef),
+        description: Some(description.to_owned()),
+        ..FileSpec::default()
+    };
+    embed_file(&mut w, &spec)?;
+    if include_explanation_page {
+        let mut font = Dictionary::new();
+        font.set("Type", Object::Name(b"Font".to_vec()));
+        font.set("BaseFont", Object::Name(b"Courier".to_vec()));
+        font.set("Subtype", Object::Name(b"Type1".to_vec()));
+        font.set("Encoding", Object::Name(b"WinAnsiEncoding".to_vec()));
+        let mut fonts = Dictionary::new();
+        fonts.set("F1", Object::Dictionary(font));
+        let mut resources = Dictionary::new();
+        resources.set("Font", Object::Dictionary(fonts));
+        let content = "
+        BT
+            /F1 10 Tf 10 830 Td 12 TL
+            (This document is a wrapper for an encrypted attachment.) '
+            (Your viewer should prompt for a password and ) '
+            (open the attached file automatically.) Tj
+            (If not, navigate to the attached document manually.) ' T*
+            (In addition, your viewer must support encryption ) '
+            (scoped to embedded files.) Tj
+        ET
+        ";
+        let stream = DecodedStream::new(Dictionary::new(), content.as_bytes().to_vec()).to_stream()?;
+        let contents = w.add_object(Object::Stream(stream))?;
+        let mut page = Dictionary::new();
+        page.set("Type", Object::Name(b"Page".to_vec()));
+        page.set(
+            "MediaBox",
+            Object::Array(vec![0.into(), 0.into(), Object::Real(595.28), Object::Real(841.89)]),
+        );
+        page.set("Resources", Object::Dictionary(resources));
+        page.set("Contents", Object::Reference(contents));
+        w.insert_page(page, None)?;
+    }
+    Ok(w)
+}

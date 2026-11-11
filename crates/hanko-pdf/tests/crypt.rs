@@ -872,14 +872,9 @@ fn test_continue_encrypted_file_without_auth() {
     for pdf_mac in [true, false] {
         let out = encrypted_with_test_entry(pdf_mac);
         let e = continue_without_auth(&out, true).unwrap_err();
-        if pdf_mac {
-            assert!(matches!(e, PdfError::KeyNotAvailable(_)), "{e:?}");
-        } else {
-            // pyHanko fails while updating the XMP metadata stream
-            // (PdfKeyNotAvailableError); XMP is not managed here, so the
-            // update is refused by the credential check instead
-            assert!(matches!(e, PdfError::KeyNotAvailable(_) | PdfError::Write(_)), "{e:?}");
-        }
+        // with pdf_mac=False, pyHanko fails while updating the XMP metadata
+        // stream; so does the port
+        assert!(matches!(e, PdfError::KeyNotAvailable(_)), "pdf_mac={pdf_mac}: {e:?}");
     }
 }
 

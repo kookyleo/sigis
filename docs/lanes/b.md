@@ -14,8 +14,10 @@ implemented (no `NotImplemented` stubs left).
 
 Phase 2 landed: developer extensions, page import, XMP metadata
 (read/update/serialise), embedded files, content stream parser.
-In progress: encryption and PDF MAC (on helper branch
-`hanko/b-pdf-crypt`, to be merged into `hanko/b-pdf`), then fuzz targets.
+Phase 3 landed: encryption (standard and public-key handlers, crypt
+filters, permissions, credential serialisation), PDF MAC (ISO 32004),
+cargo-fuzz targets. All assigned suites are ported; the 5 pending tests
+wait for lanes D/E (see below).
 
 Notes for lanes C, D, E:
 
@@ -53,19 +55,23 @@ Notes for lanes C, D, E:
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | 60 | 59 | 1 | 0 |
-| `test_internal_utils.py` | 127 | 110 | 16 | 1 |
+| `test_internal_utils.py` | 127 | 111 | 16 | 0 |
 | `test_decode_limits.py` | 29 | 26 | 0 | 3 |
 | `test_content_stream_parser.py` | 8 | 8 | 0 | 0 |
-| `test_embed.py` | 9 | 4 | 0 | 5 |
-| `test_meta.py` | 39 | 37 | 0 | 2 |
-| `test_crypt.py` | 84 | 0 | 0 | 84 |
-| `test_pdfmac.py` | 50 | 0 | 0 | 50 |
+| `test_embed.py` | 9 | 9 | 0 | 0 |
+| `test_meta.py` | 39 | 39 | 0 | 0 |
+| `test_crypt.py` | 84 | 84 | 0 | 0 |
+| `test_pdfmac.py` | 50 | 48 | 0 | 2 |
+| **Total** | **406** | **384** | **17** | **5** |
 
 Skipped and pending tests are listed with reasons in
 `crates/hanko-pdf/PORTING.md`. Pending tests that depend on other lanes:
 `test_decode_limits.py::{test_post_sign_reopen_keeps_limits,
 test_archival_timestamp_update_keeps_limits, test_add_dss_keeps_limits}`
-(lane D signing and DSS updates). Skipped because the module belongs to
+(lane D signing and DSS updates), `test_pdfmac.py::{test_pdf_mac_pades,
+test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel}` (lane D signer,
+lane E AdES validation). PDF MAC tests with signatures use pyHanko-made
+fixtures until lane D's signer lands. Skipped because the module belongs to
 lane D: `test_internal_utils.py::{test_box_constraint_*,
 test_resource_add_test, test_duplicate_resource}` (`layout.py`,
 `content.py`).

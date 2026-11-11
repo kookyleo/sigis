@@ -16,7 +16,7 @@ use hanko_pdf::metadata::model::{
 };
 use hanko_pdf::metadata::xmp_xml::{meta_from_xmp, parse_xmp, serialise_xmp, stream_xmp};
 use hanko_pdf::writer::copy_into_new_writer;
-use hanko_pdf::{IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandlerExt, PdfWriter};
+use hanko_pdf::{IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, PdfWriter};
 
 fn date(y: i32, m: u8, d: u8, h: u8, mi: u8, s: u8, off: Option<i32>) -> PdfDate {
     PdfDate {
@@ -808,4 +808,56 @@ fn test_xmp_with_dangerous_xml() {
         let e = parse_xmp(&data).unwrap_err();
         assert!(e.message().starts_with("XmpXmlProcessingError"), "{f}: {e:?}");
     }
+}
+
+fn raw_metadata(r: &PdfFile) -> hanko_pdf::lopdf::Stream {
+    let root_ref = r.root_ref().unwrap();
+    let root = as_dict(r.get_object_raw(root_ref, None).unwrap());
+    let Ok(Object::Reference(mref)) = root.get(b"Metadata") else { panic!() };
+    match r.get_object_raw(*mref, None).unwrap() {
+        Object::Stream(s) => s,
+        _ => panic!(),
+    }
+}
+
+fn contains(h: &[u8], n: &[u8]) -> bool {
+    h.windows(n.len()).any(|w| w == n)
+}
+
+#[test]
+fn test_encrypt_skipping_managed_metadata() {
+    use hanko_pdf::crypt::StandardEncryptOptions;
+    let mut w = copy_into_new_writer(&read(&minimal())).unwrap();
+    w.encrypt_with(
+        "secret",
+        Some("secret"),
+        StandardEncryptOptions {
+            encrypt_metadata: false,
+            ..StandardEncryptOptions::default()
+        },
+    )
+    .unwrap();
+    w.document_meta().title = Some(MetaString::plain("Metadata is unencrypted"));
+    let out = w.write().unwrap();
+    let r = read(&out);
+    let raw = raw_metadata(&r);
+    let parms = as_dict(raw.dict.get(b"DecodeParms").unwrap().clone());
+    assert_eq!(parms.get(b"Name").unwrap(), &Object::Name(b"Identity".to_vec()));
+    assert!(contains(&raw.content, b"Metadata is unencrypted"));
+    let r = read(&out);
+    r.decrypt("secret").unwrap();
+    assert_eq!(meta_view(&r).title.unwrap().value, "Metadata is unencrypted");
+}
+
+#[test]
+fn test_encrypt_with_managed_metadata() {
+    let mut w = copy_into_new_writer(&read(&minimal())).unwrap();
+    w.encrypt("secret", Some("secret")).unwrap();
+    w.document_meta().title = Some(MetaString::plain("Metadata is encrypted"));
+    let out = w.write().unwrap();
+    let r = read(&out);
+    assert!(!contains(&raw_metadata(&r).content, b"Metadata is encrypted"));
+    let r = read(&out);
+    r.decrypt("secret").unwrap();
+    assert_eq!(meta_view(&r).title.unwrap().value, "Metadata is encrypted");
 }

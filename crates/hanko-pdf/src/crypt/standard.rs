@@ -280,6 +280,9 @@ pub struct StandardEncryptOptions {
     pub use_gcm: bool,
     /// `compat_entries`.
     pub compat_entries: bool,
+    /// Crypt filters (`crypt_filter_config`); the AES-256 default if
+    /// `None`.
+    pub crypt_filter_config: Option<super::api::CryptFilterConfiguration>,
 }
 
 impl Default for StandardEncryptOptions {
@@ -290,6 +293,7 @@ impl Default for StandardEncryptOptions {
             pdf_mac: true,
             use_gcm: false,
             compat_entries: true,
+            crypt_filter_config: None,
         }
     }
 }
@@ -786,7 +790,7 @@ impl SecurityHandler {
             ueseed: Some(ue_seed),
             encrypted_perms: Some(encrypted_perms),
             encrypt_metadata: opts.encrypt_metadata,
-            crypt_filter_config: None,
+            crypt_filter_config: opts.crypt_filter_config.clone(),
             compat_entries: opts.compat_entries,
             kdf_salt,
         })?;

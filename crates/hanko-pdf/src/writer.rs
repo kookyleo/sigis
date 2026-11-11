@@ -1511,6 +1511,11 @@ impl IncrementalWriter {
         }
         if let Some((r, enc)) = encryption {
             w.set_existing_encryption(r, enc);
+            if let Base::Incremental { prev, .. } = &w.base {
+                if let Ok(Some(sh)) = prev.security_handler() {
+                    w.encrypt_metadata = sh.encrypt_metadata();
+                }
+            }
         }
         w.output_version = w.output_version.max(input_version);
         w.ensure_output_version((1, 7))?;

@@ -228,6 +228,16 @@ impl Encryptor for HandlerEncryptor {
         self.sh.is_authenticated()
     }
 
+    fn embedded_file_filter_name(&self) -> Option<Vec<u8>> {
+        let cfc = self.sh.crypt_filter_config();
+        let eff = cfc.embedded_file_filter_name()?;
+        (eff != cfc.stream_filter_name()).then(|| eff.to_vec())
+    }
+
+    fn crypt_filters(&self) -> Option<&dyn CryptFilterDecode> {
+        Some(&self.sh)
+    }
+
     fn standalone_mac_placeholder(&self) -> PdfResult<Option<Object>> {
         if !self.sh.pdf_mac_enabled() {
             return Ok(None);
@@ -391,6 +401,7 @@ impl PdfWriter {
     pub fn assign_security_handler(&mut self, sh: &SecurityHandler) -> PdfResult<ObjectId> {
         let dict = sh.as_pdf_object()?;
         let id = self.set_encryption(Object::Dictionary(dict), sh.encryptor())?;
+        self.encrypt_metadata = sh.encrypt_metadata();
         if let Some(v) = sh.get_min_pdf_version() {
             self.ensure_output_version(v)?;
         }
@@ -437,6 +448,9 @@ impl IncrementalWriter {
     fn reuse_encryption(&mut self) -> PdfResult<()> {
         if let Some((r, enc)) = encryptor_for_update(self.base())? {
             self.set_existing_encryption(r, enc);
+            if let Some(sh) = self.base().security_handler()? {
+                self.encrypt_metadata = sh.encrypt_metadata();
+            }
         }
         Ok(())
     }

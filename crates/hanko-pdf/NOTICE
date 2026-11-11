@@ -23,6 +23,19 @@ Derived files:
 - src/extensions.rs: pyhanko/pdf_utils/extensions.py
 - src/metadata/xmp_xml.rs: pyhanko/pdf_utils/metadata/xmp_xml.py
 - src/embed.rs: pyhanko/pdf_utils/embed.py
+- src/crypt/mod.rs: pyhanko/pdf_utils/crypt/__init__.py, encryption parts of
+  pyhanko/pdf_utils/{reader,writer,incremental_writer,generic}.py
+- src/crypt/api.rs: pyhanko/pdf_utils/crypt/{api,filter_mixins}.py
+- src/crypt/{standard,pubkey,legacy,util,permissions,cred_ser,iso32004_asn1}.rs:
+  the matching pyhanko/pdf_utils/crypt/*.py
+- src/crypt/saslprep.rs: pyhanko/pdf_utils/crypt/_saslprep.py
+- src/crypt/keys.rs: pyhanko/keys/pemder.py
+- src/crypt/pdfmac.rs: pyhanko/pdf_utils/crypt/pdfmac.py, pyhanko/sign/general.py,
+  pyhanko/sign/validation/generic_cms.py
+- src/crypt/{rc4,asn1,x448}.rs: original (Apache-2.0)
+- oracle/gen_pdfmac_sig_fixtures.py: pkgs/pyhanko/tests/test_pdfmac.py
+- tests/crypt.rs, tests/pdfmac.rs, tests/common/crypt.rs:
+  pkgs/pyhanko/tests/test_{crypt,pdfmac}.py, pyhanko_testing_commons samples.py
 - src/content_stream_parser.rs: pyhanko/pdf_utils/content_stream_parser.py
 - tests/xref.rs: pkgs/pyhanko/tests/test_xref.py
 - tests/internal_utils.rs: pkgs/pyhanko/tests/test_internal_utils.py
