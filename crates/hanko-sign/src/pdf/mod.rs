@@ -1,8 +1,11 @@
 //! PDF-level signing (`pyhanko.sign.signers.pdf_signer`, `pyhanko.sign.fields`).
 
+pub mod dss;
+pub mod embedded;
 pub mod fields;
 pub mod seed;
 pub mod signer;
+pub mod timestamp;
 pub mod util;
 pub mod writer;
 

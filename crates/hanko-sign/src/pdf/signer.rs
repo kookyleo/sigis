@@ -82,6 +82,63 @@ impl SigAuthType {
     }
 }
 
+/// Where to put the DSS update for a signature (`SigDSSPlacementPreference`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SigDssPlacement {
+    /// In the signature's own revision (requires `include_vri = false`).
+    TogetherWithSignature,
+    /// In a separate revision after the signature.
+    SeparateRevision,
+    /// Together with the next document timestamp, else separate.
+    #[default]
+    TogetherWithNextTs,
+}
+
+/// DSS settings for a signature (`DSSContentSettings`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DssContentSettings {
+    /// Add VRI entries.
+    pub include_vri: bool,
+    /// Skip a separate DSS revision if nothing new would be added.
+    pub skip_if_unneeded: bool,
+    /// Placement.
+    pub placement: SigDssPlacement,
+    /// Settings for the document timestamp of the same workflow.
+    pub next_ts_settings: Option<crate::pdf::timestamp::TimestampDssSettings>,
+}
+
+impl Default for DssContentSettings {
+    fn default() -> Self {
+        Self {
+            include_vri: true,
+            skip_if_unneeded: true,
+            placement: SigDssPlacement::TogetherWithNextTs,
+            next_ts_settings: None,
+        }
+    }
+}
+
+impl DssContentSettings {
+    /// `get_settings_for_ts`.
+    pub fn settings_for_ts(&self) -> crate::pdf::timestamp::TimestampDssSettings {
+        self.next_ts_settings.unwrap_or(crate::pdf::timestamp::TimestampDssSettings {
+            include_vri: self.include_vri,
+            skip_if_unneeded: self.skip_if_unneeded,
+            update_before_ts: self.placement == SigDssPlacement::TogetherWithSignature,
+        })
+    }
+
+    /// `assert_viable`.
+    pub fn assert_viable(&self) -> Result<()> {
+        if self.include_vri && self.placement == SigDssPlacement::TogetherWithSignature {
+            return Err(signing_error(
+                "If VRI entries are to be included, DSS updates can only be performed after the signature in question was created.",
+            ));
+        }
+        self.settings_for_ts().assert_viable()
+    }
+}
+
 /// Per-call options of [`PdfSigner::sign_pdf_with`].
 #[derive(Clone, Debug)]
 pub struct SignOptions {
@@ -512,6 +569,14 @@ struct Session<'a> {
     subfilter: SigSeedSubFilter,
     sv_spec: Option<SigSeedValueSpec>,
     system_time: Moment,
+    validation_info: Option<crate::ltv::ValidationInfo>,
+    adobe_revinfo: Option<crate::attributes::RevocationInfoArchival>,
+}
+
+impl Session<'_> {
+    fn use_pades(&self) -> bool {
+        matches!(self.subfilter, SigSeedSubFilter::Pades | SigSeedSubFilter::PbadPades)
+    }
 }
 
 impl PdfSigner {
@@ -569,27 +634,129 @@ impl PdfSigner {
             false,
             None,
         )?;
+        let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
+        let mut sig_contents = cms.clone();
+        sig_contents.resize(reserved / 2, 0);
         let signed = prepared.fill_with_cms(&cms)?;
-        self.post_sign(signed, &session)
+        self.post_sign(signed, &session, &sig_contents)
     }
 
     fn signed_attr_settings(&self, session: &Session<'_>) -> CmsSignedAttributes {
         CmsSignedAttributes {
             signing_time: Some(session.system_time),
             cades_signed_attrs: self.meta().cades_signed_attr_spec.clone(),
-            adobe_revinfo_attr: None,
+            adobe_revinfo_attr: session.adobe_revinfo.clone(),
         }
     }
 
-    fn post_sign(&self, signed: Vec<u8>, session: &Session<'_>) -> Result<Vec<u8>> {
+    /// `post_signature_processing`: DSS update and document timestamp.
+    fn post_sign(&self, signed: Vec<u8>, session: &Session<'_>, sig_contents: &[u8]) -> Result<Vec<u8>> {
+        use crate::pdf::dss::{add_dss, DssContent};
         let meta = self.meta();
-        let use_pades = matches!(session.subfilter, SigSeedSubFilter::Pades | SigSeedSubFilter::PbadPades);
-        if use_pades && meta.embed_validation_info {
-            return Err(HankoError::NotImplemented(
-                "hanko_sign: embedding validation information (PAdES B-LT)",
+        if !(session.use_pades() && meta.embed_validation_info) {
+            return Ok(signed);
+        }
+        let info = session
+            .validation_info
+            .clone()
+            .ok_or_else(|| signing_error("Requested embedding of validation info, but none was collected"))?;
+        let dss_settings = meta.dss_settings;
+        let timestamper = if meta.use_pades_lta { self.timestamper.clone() } else { None };
+        let vri = dss_settings.include_vri.then_some(sig_contents);
+        let separate = match dss_settings.placement {
+            SigDssPlacement::SeparateRevision => true,
+            SigDssPlacement::TogetherWithNextTs => timestamper.is_none(),
+            SigDssPlacement::TogetherWithSignature => false,
+        };
+        let mut out = signed;
+        if separate {
+            out = add_dss(
+                &out,
+                &DssContent {
+                    sig_contents: vri,
+                    paths: info.paths.clone(),
+                    ocsps: info.ocsps.clone(),
+                    crls: info.crls.clone(),
+                    embed_roots: self.cms_options.embed_roots,
+                    ..Default::default()
+                },
+                !dss_settings.skip_if_unneeded,
+            )?;
+        }
+        if let Some(ts) = timestamper {
+            let pts = crate::pdf::timestamp::PdfTimeStamper {
+                field_name: meta.timestamp_field_name.clone(),
+                ..crate::pdf::timestamp::PdfTimeStamper::new(ts)
+            };
+            let ctx = meta.validation_context.as_deref();
+            let mut opts = crate::pdf::timestamp::TimestampOptions::new(session.md);
+            opts.validation_context = ctx;
+            opts.validation_info = Some(info.clone());
+            opts.dss_settings = dss_settings.settings_for_ts();
+            opts.tight_size_estimates = meta.tight_size_estimates;
+            opts.embed_roots = self.cms_options.embed_roots;
+            if dss_settings.placement == SigDssPlacement::TogetherWithNextTs {
+                opts.dss_with_ts = Some((vri.map(<[u8]>::to_vec), info));
+            }
+            out = pts.timestamp_pdf(&out, &opts)?;
+        }
+        Ok(out)
+    }
+
+    /// Validate the signer (and TSA) before signing, collecting validation
+    /// information (`perform_presign_validation`).
+    fn presign_validation(
+        &self,
+        update: &PdfUpdate,
+        md: DigestAlgorithm,
+        use_pades: bool,
+    ) -> Result<(Option<crate::ltv::ValidationInfo>, Option<crate::attributes::RevocationInfoArchival>)> {
+        use crate::ltv::{validate_and_collect, ValidationInfo};
+        let meta = self.meta();
+        if meta.embed_validation_info && meta.validation_context.is_none() {
+            return Err(signing_error(
+                "A validation context must be provided if validation/revocation info is to be embedded into the signature.",
             ));
         }
-        Ok(signed)
+        let Some(ctx) = meta.validation_context.as_deref() else {
+            return Ok((None, None));
+        };
+        let mut info = ValidationInfo::default();
+        let cert = self.signer.signing_cert();
+        validate_and_collect(ctx, cert, self.signer.cert_chain(), &mut info)
+            .map_err(|e| signing_error(format!("The signer's certificate could not be validated: {e}")))?;
+        let have = crate::pdf::seed::cert_key_usage_names(cert);
+        if cert.key_usage().is_some() {
+            for ku in &meta.signer_key_usage {
+                if !have.contains(ku) {
+                    return Err(signing_error(format!(
+                        "The signer's certificate could not be validated: the key usage extension does not include {ku}"
+                    )));
+                }
+            }
+        }
+        if meta.use_pades_lta {
+            let sigs = crate::pdf::embedded::embedded_signatures(update)?;
+            if let Some(ts) = sigs.iter().rev().find(|s| s.is_doc_timestamp) {
+                let (tsa, certs) = crate::pdf::timestamp::token_signer(ts.cms())?;
+                let mut pool = self.signer.cert_chain().to_vec();
+                pool.extend(certs);
+                validate_and_collect(ctx, &tsa, &pool, &mut info).map_err(|e| {
+                    signing_error(format!(
+                        "Requested a PAdES-LTA signature on an existing document, but the most recent timestamp could not be validated: {e}"
+                    ))
+                })?;
+            }
+        }
+        if let Some(ts) = &self.timestamper {
+            crate::pdf::timestamp::tsa_validation_info(ts.as_ref(), md, ctx, &mut info)?;
+        }
+        let adobe = if meta.embed_validation_info && !use_pades {
+            crate::attributes::RevocationInfoArchival::from_der_lists(&info.ocsps, &info.crls)?
+        } else {
+            None
+        };
+        Ok((Some(info), adobe))
     }
 
     /// Steps up to the computation of the document digest.
@@ -646,7 +813,25 @@ impl PdfSigner {
             ensure_esic_ext(update)?;
         }
         let mech = self.signer.signature_algorithm(md)?;
-        if mech.oid == hanko_core::asn1::oids::ED25519 {
+        let ec_iso_curve = mech.oid != hanko_core::asn1::oids::ED25519
+            && self.signer.signing_cert().public_key().algorithm.oid == hanko_core::asn1::oids::EC_PUBLIC_KEY
+            && self
+                .signer
+                .signing_cert()
+                .public_key()
+                .algorithm
+                .parameters
+                .as_ref()
+                .and_then(|p| p.decode_as::<const_oid::ObjectIdentifier>().ok())
+                .is_some_and(|c| {
+                    [
+                        hanko_core::asn1::oids::SECP256R1,
+                        hanko_core::asn1::oids::SECP384R1,
+                        hanko_core::asn1::oids::SECP521R1,
+                    ]
+                    .contains(&c)
+                });
+        if mech.oid == hanko_core::asn1::oids::ED25519 || ec_iso_curve {
             ensure_iso32002_ext(update)?;
         }
         if sv_spec.as_ref().is_some_and(|s| s.timestamp_required) && self.timestamper.is_none() {
@@ -655,6 +840,8 @@ impl PdfSigner {
                     .into(),
             ));
         }
+        let use_pades = matches!(subfilter, SigSeedSubFilter::Pades | SigSeedSubFilter::PbadPades);
+        let (validation_info, adobe_revinfo) = self.presign_validation(update, md, use_pades)?;
         let session = Session {
             signer: self,
             field_id,
@@ -662,7 +849,27 @@ impl PdfSigner {
             subfilter,
             sv_spec,
             system_time: self.signing_time.unwrap_or_else(Moment::now),
+            validation_info,
+            adobe_revinfo,
         };
+        if session.use_pades() {
+            if let Some(info) = &session.validation_info {
+                meta.dss_settings.assert_viable()?;
+                if meta.dss_settings.placement == SigDssPlacement::TogetherWithSignature {
+                    crate::pdf::dss::supply_dss_in_writer(
+                        update,
+                        &crate::pdf::dss::DssContent {
+                            sig_contents: None,
+                            paths: info.paths.clone(),
+                            ocsps: info.ocsps.clone(),
+                            crls: info.crls.clone(),
+                            embed_roots: self.cms_options.embed_roots,
+                            ..Default::default()
+                        },
+                    )?;
+                }
+            }
+        }
         if let Some(sv) = &session.sv_spec {
             self.enforce_seed_value_constraints(sv, &session)?;
         }

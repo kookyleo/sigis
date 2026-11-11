@@ -74,7 +74,7 @@ async def run(a):
             vc = ValidationContext(
                 trust_roots=[] if a.no_trust else [load_cert_from_pemder(p) for p in a.trust],
                 other_certs=[load_cert_from_pemder(p) for p in a.other],
-                allow_fetching=False,
+                allow_fetching=bool(a.live),
                 revocation_mode=a.revocation_mode,
             )
             entry = {
@@ -83,6 +83,41 @@ async def run(a):
                 'subfilter': str(sig.sig_object.get('/SubFilter')),
             }
             try:
+                if a.ades_lta and sig.sig_object_type == '/Sig':
+                    from pyhanko.sign.validation.ades import ades_lta_validation
+                    from pyhanko.sign.validation.policy_decl import (
+                        PdfSignatureValidationSpec,
+                        SignatureValidationSpec,
+                    )
+                    from pyhanko_certvalidator.context import (
+                        CertValidationPolicySpec,
+                    )
+                    from pyhanko_certvalidator.policy_decl import (
+                        NO_REVOCATION,
+                        REQUIRE_REVINFO,
+                        CertRevTrustPolicy,
+                    )
+                    from pyhanko_certvalidator.registry import SimpleTrustManager
+
+                    spec = PdfSignatureValidationSpec(
+                        SignatureValidationSpec(
+                            cert_validation_policy=CertValidationPolicySpec(
+                                trust_manager=SimpleTrustManager.build(
+                                    trust_roots=[load_cert_from_pemder(p) for p in a.trust]
+                                ),
+                                revinfo_policy=CertRevTrustPolicy(
+                                    NO_REVOCATION if a.norev else REQUIRE_REVINFO
+                                ),
+                            )
+                        )
+                    )
+                    ades = await ades_lta_validation(sig, spec)
+                    entry['ades_indication'] = enum_name(ades.ades_subindic) if ades.ades_subindic else None
+                    entry['ades_subindic'] = enum_name(ades.ades_subindic)
+                    if ades.api_status is not None:
+                        entry.update(status_json(ades.api_status))
+                    out.append(entry)
+                    continue
                 if sig.sig_object_type == '/DocTimeStamp':
                     st = await async_validate_pdf_timestamp(sig, validation_context=vc)
                 else:
@@ -96,6 +131,21 @@ async def run(a):
     return out
 
 
+def run_with_services(a):
+    if not a.live:
+        return asyncio.run(run(a))
+    # Certomancer's live services, as pyHanko's `pki_services` fixture
+    # provides them (answers at the frozen time).
+    from certomancer.registry import ArchLabel
+    from pyhanko_testing_commons.test_data.samples import CERTOMANCER
+    from pyhanko_testing_commons.test_utils.live_http import live_pki_services
+
+    with live_pki_services() as reg:
+        for arch in a.live:
+            reg.register(CERTOMANCER.get_pki_arch(ArchLabel(arch)))
+        return asyncio.run(run(a))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--pdf', required=True)
@@ -105,14 +155,17 @@ def main():
     ap.add_argument('--extd', action='store_true')
     ap.add_argument('--no-trust', action='store_true')
     ap.add_argument('--password')
+    ap.add_argument('--ades-lta', action='store_true')
+    ap.add_argument('--norev', action='store_true')
+    ap.add_argument('--live', action='append', default=[])
     ap.add_argument('--lenient', action='store_true')
     ap.add_argument('--revocation-mode', default='soft-fail')
     a = ap.parse_args()
     if a.time:
         with freeze_time(datetime.fromisoformat(a.time)):
-            out = asyncio.run(run(a))
+            out = run_with_services(a)
     else:
-        out = asyncio.run(run(a))
+        out = run_with_services(a)
     print(json.dumps(out))
 
 

@@ -26,3 +26,18 @@ architectures. `testing-ca-dsa/signer1-sha512` is skipped (asn1crypto cannot
 encode `sha512_dsa`; pyHanko's tests never use it).
 
 License: MIT (derived from pyHanko test data, see `data/pyhanko/LICENSE-pyHanko`).
+
+## `revinfo/`
+
+OCSP responses and CRLs that Certomancer's live services (pyHanko's
+`pki_services` fixture) return at the times pyHanko's signing tests freeze
+the clock to, exported with `crates/hanko-sign/oracle/export_revinfo.py`:
+
+```sh
+python -I crates/hanko-sign/oracle/export_revinfo.py \
+    crates/hanko-testdata/data/pyhanko/crypto crates/hanko-testdata/data/lanes/d/revinfo
+```
+
+Layout: `<arch>/<YYYY-MM-DD>/ocsp-<cert label>.der` (no nonce) and
+`crl-<repo label>.der`. The Rust tests serve them through fake OCSP / CRL
+fetchers (`tests/support/services.rs`). RSA signatures are deterministic.

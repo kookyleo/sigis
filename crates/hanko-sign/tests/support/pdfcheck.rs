@@ -124,6 +124,8 @@ pub fn embedded_signatures(pdf: &[u8]) -> Vec<FoundSig> {
     }
     let fields = fields.clone();
     walk(&doc, &fields, "", None, &mut out);
+    // pyHanko orders signatures by the revision they cover
+    out.sort_by_key(|s| s.byte_range.get(2).zip(s.byte_range.get(3)).map(|(a, b)| a + b).unwrap_or(0));
     out
 }
 
@@ -276,4 +278,48 @@ pub fn val_untrusted(pdf: &[u8], ix: usize, time: &str, extd: bool) -> Option<se
     }
     assert!(s["summary"].as_str().unwrap_or_default().contains("INTACT"), "{s}");
     Some(s)
+}
+
+/// Counts of the DSS entries (`DocumentSecurityStore.read_dss`):
+/// `(certs, ocsps, crls, vri entries)`.
+pub fn dss_counts(pdf: &[u8]) -> Option<(usize, usize, usize, usize)> {
+    let doc = load(pdf);
+    let r = root(&doc);
+    let Some(Object::Dictionary(dss)) = dict_get(&doc, r, b"DSS") else {
+        return None;
+    };
+    let len = |k: &[u8]| match dict_get(&doc, dss, k) {
+        Some(Object::Array(a)) => a.len(),
+        _ => 0,
+    };
+    let vri = match dict_get(&doc, dss, b"VRI") {
+        Some(Object::Dictionary(d)) => d.len(),
+        _ => 0,
+    };
+    Some((len(b"Certs"), len(b"OCSPs"), len(b"CRLs"), vri))
+}
+
+/// pyHanko's `ades_lta_validation` verdicts (`_simple_pades_check`).
+pub fn ades_lta(pdf: &[u8], trust: &[&std::path::Path], time: &str, norev: bool) -> Option<Vec<serde_json::Value>> {
+    ades_lta_live(pdf, trust, time, norev, &["testing-ca"])
+}
+
+/// [`ades_lta`] with Certomancer's live services for `live` archs.
+pub fn ades_lta_live(pdf: &[u8], trust: &[&std::path::Path], time: &str, norev: bool, live: &[&str]) -> Option<Vec<serde_json::Value>> {
+    let mut extra = vec!["--ades-lta"];
+    for l in live {
+        extra.push("--live");
+        extra.push(l);
+    }
+    if norev {
+        extra.push("--norev");
+    }
+    oracle_verdicts(pdf, trust, time, &extra)
+}
+
+/// Number of signatures (`/Sig`) and document timestamps.
+pub fn sig_kinds(pdf: &[u8]) -> (usize, usize) {
+    let s = embedded_signatures(pdf);
+    let ts = s.iter().filter(|x| x.sig_type() == "DocTimeStamp").count();
+    (s.len() - ts, ts)
 }

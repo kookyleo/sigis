@@ -17,6 +17,7 @@
 pub mod attributes;
 pub mod cms;
 pub mod keys;
+pub mod ltv;
 pub mod pdf;
 pub mod pkcs12;
 pub mod signer;
@@ -27,7 +28,7 @@ use std::sync::Arc;
 
 use hanko_certvalidator::ValidationContext;
 use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::errors::{not_implemented, Result};
+use hanko_core::errors::Result;
 use hanko_core::sign::{KeySigner, TimeStamper};
 use hanko_pdf::MdpPerm;
 
@@ -94,6 +95,11 @@ pub struct PdfSignatureMetadata {
     pub tight_size_estimates: bool,
     /// Name of the document timestamp field (B-LTA).
     pub timestamp_field_name: Option<String>,
+    /// Key usage required of the signer's certificate when a validation
+    /// context is given (`signer_key_usage`).
+    pub signer_key_usage: Vec<String>,
+    /// DSS output settings (`dss_settings`).
+    pub dss_settings: crate::pdf::signer::DssContentSettings,
 }
 
 impl PdfSignatureMetadata {
@@ -118,6 +124,8 @@ impl PdfSignatureMetadata {
             cades_signed_attr_spec: None,
             tight_size_estimates: false,
             timestamp_field_name: None,
+            signer_key_usage: vec!["non_repudiation".into()],
+            dss_settings: Default::default(),
         }
     }
 
@@ -205,24 +213,39 @@ pub fn sign_general_data(
     crate::cms::sign_general_data(data, signer, digest, detached, timestamper)
 }
 
-/// Append a document timestamp (`PdfTimeStamper.timestamp_pdf`).
+/// Append a document timestamp (`PdfTimeStamper.timestamp_pdf`), with
+/// SHA-256. An empty `field_name` generates `Timestamp-<uuid>`.
 pub fn add_document_timestamp(
-    _pdf: &[u8],
-    _timestamper: &dyn TimeStamper,
-    _field_name: &str,
+    pdf: &[u8],
+    timestamper: &dyn TimeStamper,
+    field_name: &str,
 ) -> Result<Vec<u8>> {
-    not_implemented("hanko_sign::add_document_timestamp")
+    use crate::pdf::timestamp::{timestamp_pdf_with, TimestampOptions};
+    let field = (!field_name.is_empty()).then(|| field_name.to_owned());
+    timestamp_pdf_with(pdf, timestamper, field, &TimestampOptions::new(DigestAlgorithm::Sha256))
 }
 
-/// Add validation information for existing signatures to the DSS and
-/// optionally renew with a document timestamp (`PdfTimeStamper.update_archival_timestamp_chain`,
-/// `add_validation_info`).
+/// Add validation information for the existing signatures to the DSS
+/// (`add_validation_info`, one VRI entry per signature) and, if a
+/// timestamper is given, renew the archival timestamp chain
+/// (`PdfTimeStamper.update_archival_timestamp_chain`).
 pub fn add_validation_info(
-    _pdf: &[u8],
-    _ctx: &ValidationContext,
-    _timestamper: Option<&dyn TimeStamper>,
+    pdf: &[u8],
+    ctx: &ValidationContext,
+    timestamper: Option<&dyn TimeStamper>,
 ) -> Result<Vec<u8>> {
-    not_implemented("hanko_sign::add_validation_info")
+    use crate::pdf::embedded::embedded_signatures;
+    use crate::pdf::writer::PdfUpdate;
+    let update = PdfUpdate::new(pdf)?;
+    let sigs = embedded_signatures(&update)?;
+    let mut out = pdf.to_vec();
+    for s in sigs.iter().filter(|s| !s.is_doc_timestamp) {
+        out = crate::pdf::timestamp::add_validation_info_for(&out, s, ctx, true, true, false)?;
+    }
+    match timestamper {
+        Some(ts) => crate::pdf::timestamp::update_archival_chain_with(&out, ts, ctx, DigestAlgorithm::Sha256),
+        None => Ok(out),
+    }
 }
 
 /// PKCS#11 key access via `cryptoki` (`pyhanko.sign.pkcs11`).

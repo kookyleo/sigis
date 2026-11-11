@@ -5,6 +5,7 @@
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod pdfcheck;
+pub mod services;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -59,6 +60,15 @@ impl Pki {
             .as_str()
             .unwrap_or_else(|| panic!("no cert {label} in {}", self.arch));
         Cert::from_der(&std::fs::read(self.dir.join(file)).unwrap()).unwrap()
+    }
+
+    pub fn labels(&self) -> Vec<String> {
+        self.manifest["certs"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect()
     }
 
     pub fn key_label_of(&self, cert_label: &str) -> String {
