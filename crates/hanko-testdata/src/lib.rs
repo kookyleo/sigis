@@ -14,10 +14,49 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-/// Root of the fixture directory.
+/// Environment variable that overrides the fixture directory.
+pub const TESTDATA_ENV: &str = "HANKO_TESTDATA";
+
+/// The manifest directory of the crate whose test is running, read at run
+/// time.
+///
+/// Use this instead of `env!("CARGO_MANIFEST_DIR")` in tests. All worktrees
+/// share one cargo target directory, so a compiled crate (and the path baked
+/// into it at compile time) can come from another worktree; cargo and nextest
+/// set `CARGO_MANIFEST_DIR` for every test process, which always names the
+/// worktree being tested.
+pub fn manifest_dir() -> PathBuf {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")))
+}
+
+fn find_data_dir(start: &Path) -> Option<PathBuf> {
+    start.ancestors().find_map(|dir| {
+        let in_workspace = dir.join("crates/hanko-testdata/data");
+        if in_workspace.is_dir() {
+            return Some(in_workspace);
+        }
+        let in_crate = dir.join("data");
+        (dir.file_name().is_some_and(|n| n == "hanko-testdata") && in_crate.is_dir()).then_some(in_crate)
+    })
+}
+
+/// Root of the fixture directory, resolved at run time:
+///
+/// 1. `$HANKO_TESTDATA`, if set;
+/// 2. `crates/hanko-testdata/data` found by walking up from the running
+///    test's `CARGO_MANIFEST_DIR` (the worktree being tested);
+/// 3. the compile-time location, as a last resort.
 pub fn data_dir() -> PathBuf {
+    if let Some(dir) = std::env::var_os(TESTDATA_ENV) {
+        return PathBuf::from(dir);
+    }
+    if let Some(dir) = std::env::var_os("CARGO_MANIFEST_DIR").and_then(|d| find_data_dir(Path::new(&d))) {
+        return dir;
+    }
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data")
 }
 
@@ -92,5 +131,26 @@ pub mod oracle {
             );
         }
         Some(serde_json::from_slice(&out.stdout).unwrap_or_else(|e| panic!("oracle JSON: {e}")))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_the_data_directory_of_the_running_worktree() {
+        let dir = data_dir();
+        assert!(dir.join("pyhanko").is_dir(), "{}", dir.display());
+        let here = manifest_dir();
+        assert!(dir.starts_with(here.parent().and_then(Path::parent).unwrap_or(&here)), "{} vs {}", dir.display(), here.display());
+    }
+
+    #[test]
+    fn walks_up_from_any_workspace_crate() {
+        let root = manifest_dir().join("../..");
+        let from_other_crate = find_data_dir(&root.join("crates/hanko-cms")).expect("found");
+        assert!(from_other_crate.ends_with("crates/hanko-testdata/data"));
+        assert!(find_data_dir(Path::new("/")).is_none());
     }
 }

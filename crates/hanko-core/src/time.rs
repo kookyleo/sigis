@@ -39,33 +39,23 @@ impl Moment {
             .map(Self::from)
     }
 
-    /// Parse an RFC 3339 / ISO 8601 UTC timestamp such as
-    /// `2012-10-12T00:00:00+00:00` or `2012-10-12T00:00:00Z`.
+    /// Parse an RFC 3339 / ISO 8601 timestamp such as
+    /// `2012-10-12T00:00:00+00:00`, `2012-10-12T00:00:00Z` or
+    /// `2012-10-12T02:00:00.5+02:00`. A missing time means midnight and a
+    /// missing zone designator means UTC; fractional seconds are truncated.
     pub fn parse_rfc3339(s: &str) -> Option<Self> {
         let s = s.trim();
-        let body = s
-            .strip_suffix("+00:00")
-            .or_else(|| s.strip_suffix('Z'))
-            .unwrap_or(s);
-        let (date, time) = body.split_once('T').unwrap_or((body, "00:00:00"));
-        let mut d = date.split('-').map(str::parse::<u16>);
-        let mut t = time
-            .split(':')
-            .map(|p| p.split('.').next().unwrap_or(p).parse::<u8>());
-        let (year, month, day) = (d.next()?.ok()?, d.next()?.ok()?, d.next()?.ok()?);
-        let (hour, min, sec) = (
-            t.next()?.ok()?,
-            t.next().unwrap_or(Ok(0)).ok()?,
-            t.next().unwrap_or(Ok(0)).ok()?,
-        );
-        Self::from_ymd_hms(
-            year,
-            u8::try_from(month).ok()?,
-            u8::try_from(day).ok()?,
-            hour,
-            min,
-            sec,
-        )
+        if s.contains('T') {
+            parse_iso8601(s)
+        } else {
+            parse_iso8601(&format!("{s}T00:00:00"))
+        }
+    }
+
+    /// Parse an `xsd:dateTime` (`YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`).
+    /// A missing zone designator means UTC; fractional seconds are truncated.
+    pub fn parse_xsd_datetime(s: &str) -> Option<Self> {
+        parse_iso8601(s.trim())
     }
 
     /// `self + d`, saturating.
@@ -88,6 +78,45 @@ impl Moment {
         let secs = u64::try_from(self.0).ok()?;
         der::DateTime::from_unix_duration(Duration::from_secs(secs)).ok()
     }
+}
+
+/// `YYYY-MM-DDThh:mm:ss[.f][Z|(+|-)hh:mm]`, offsets up to 14 hours.
+fn parse_iso8601(s: &str) -> Option<Moment> {
+    let (date, rest) = s.split_once('T')?;
+    let (time, offset_secs) = if let Some(t) = rest.strip_suffix('Z') {
+        (t, 0i64)
+    } else if let Some(pos) = rest.rfind(['+', '-']) {
+        let (t, tz) = rest.split_at(pos);
+        let sign = if tz.starts_with('-') { -1 } else { 1 };
+        let (h, m) = tz.get(1..)?.split_once(':')?;
+        let (h, m): (i64, i64) = (h.parse().ok()?, m.parse().ok()?);
+        if !(0..=14).contains(&h) || !(0..=59).contains(&m) {
+            return None;
+        }
+        (t, sign * (h * 3600 + m * 60))
+    } else {
+        (rest, 0)
+    };
+    let mut d = date.split('-');
+    let (y, mo, da) = (d.next()?, d.next()?, d.next()?);
+    if d.next().is_some() || y.len() < 4 {
+        return None;
+    }
+    let mut t = time.split(':');
+    let (h, mi, se) = (t.next()?, t.next().unwrap_or("0"), t.next().unwrap_or("0"));
+    if t.next().is_some() {
+        return None;
+    }
+    let se = se.split('.').next()?;
+    let m = Moment::from_ymd_hms(
+        y.parse().ok()?,
+        mo.parse().ok()?,
+        da.parse().ok()?,
+        h.parse().ok()?,
+        mi.parse().ok()?,
+        se.parse().ok()?,
+    )?;
+    Some(Moment::from_unix_secs(m.unix_secs().checked_sub(offset_secs)?))
 }
 
 fn duration_secs(d: Duration) -> i64 {
@@ -145,6 +174,21 @@ mod tests {
             Some("2021-08-19T12:20:44Z")
         );
         assert_eq!(Moment::parse_rfc3339("garbage"), None);
+        assert_eq!(
+            Moment::parse_rfc3339("2012-10-12T02:30:00.75+02:30"),
+            Moment::parse_rfc3339("2012-10-12T00:00:00Z")
+        );
+        assert_eq!(
+            Moment::parse_rfc3339("2012-10-11T19:00:00-05:00"),
+            Moment::parse_rfc3339("2012-10-12T00:00:00Z")
+        );
+        assert_eq!(Moment::parse_rfc3339("2012-10-12"), Moment::parse_rfc3339("2012-10-12T00:00:00Z"));
+        assert_eq!(Moment::parse_rfc3339("2012-10-12T00:00:00+15:00"), None);
+        assert_eq!(
+            Moment::parse_xsd_datetime("2016-06-01T00:00:00"),
+            Moment::parse_rfc3339("2016-06-01T00:00:00Z")
+        );
+        assert_eq!(Moment::parse_xsd_datetime("2016-06-01"), None);
         assert_eq!(Moment::parse_rfc3339("2021-02-30T00:00:00Z"), None);
     }
 }

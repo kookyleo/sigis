@@ -12,7 +12,7 @@ publish.workspace = true
 der = { workspace = true }
 spki = { workspace = true }
 const-oid = { workspace = true }
-x509-cert = { workspace = true }
+x509-cert = { workspace = true, features = ["hazmat"] }
 cms = { workspace = true }
 x509-ocsp = { workspace = true }
 x509-tsp = { workspace = true }
