@@ -750,7 +750,7 @@ fn validation_context_from_file(
 }
 
 fn crypto_cert(name: &str) -> hanko_core::cert::Cert {
-    let data = std::fs::read(hanko_testdata::pyhanko(&["crypto", name])).unwrap();
+    let data = std::fs::read(common::data(&["pyhanko", "crypto", name])).unwrap();
     load_certs_from_pemder(&data).unwrap().remove(0)
 }
 

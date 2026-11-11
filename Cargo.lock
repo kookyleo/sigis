@@ -1120,10 +1120,16 @@ dependencies = [
 name = "hanko-ades"
 version = "0.0.1"
 dependencies = [
+ "base64 0.22.1",
  "hanko-certvalidator",
+ "hanko-cms",
  "hanko-core",
+ "hanko-eutl",
  "hanko-pdf",
  "hanko-testdata",
+ "hanko-validate",
+ "quick-xml",
+ "serde_json",
 ]
 
 [[package]]

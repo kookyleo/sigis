@@ -8,3 +8,7 @@ also names its source in its header.
 Derived files:
 - oracle/record_plugin.py, oracle/run_oracle.sh: original (drive pyHanko's
   own test suite; no pyHanko code copied).
+- src/lib.rs, src/basic.rs: pyHanko `sign/validation/ades.py`,
+  `sign/validation/generic_cms.py` (`handle_certvalidator_errors`).
+- src/etsi_report.rs: pyHanko `sign/validation/report/tools.py`,
+  `sign/validation/ades.py` (validation object helpers).

@@ -11,7 +11,13 @@ publish.workspace = true
 [dependencies]
 hanko-core = { workspace = true }
 hanko-certvalidator = { workspace = true }
+hanko-cms = { workspace = true }
+hanko-eutl = { workspace = true }
 hanko-pdf = { workspace = true }
+hanko-validate = { workspace = true }
+base64 = { workspace = true }
+quick-xml = "0.38"
+serde_json = { workspace = true }
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }

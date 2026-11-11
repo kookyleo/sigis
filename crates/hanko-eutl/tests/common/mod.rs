@@ -13,8 +13,21 @@ pub const TEST_REAL_TL_EE: &str = "tsl-ee.xml";
 pub const TEST_REAL_LOTL: &str = "eu-lotl.xml";
 pub const TEST_REAL_LOTL_OLD: &str = "eu-lotl-old.xml";
 
+/// Fixture path below `crates/hanko-testdata/data/`, resolved from the
+/// runtime `CARGO_MANIFEST_DIR` of this crate. `hanko_testdata::path` uses
+/// the compile-time value, which a shared sccache can point at another
+/// worktree (request R-E9).
+pub fn data(parts: &[&str]) -> PathBuf {
+    let mut p = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap())
+        .join("..")
+        .join("hanko-testdata")
+        .join("data");
+    p.extend(parts);
+    p
+}
+
 pub fn tl_path(name: &str) -> PathBuf {
-    hanko_testdata::pyhanko(&["tl", name])
+    data(&["pyhanko", "tl", name])
 }
 
 pub fn tl_file(name: &str) -> String {
@@ -95,7 +108,7 @@ impl Drop for TempDir {
 
 /// A certificate from the lane E export of the Certomancer test PKIs.
 pub fn pki_cert(arch: &str, label: &str) -> Cert {
-    let p = hanko_testdata::path(&["lanes", "e", "pki", arch, &format!("{label}.cert.pem")]);
+    let p = data(&["lanes", "e", "pki", arch, &format!("{label}.cert.pem")]);
     hanko_eutl::util::load_certs_from_pemder(&std::fs::read(p).unwrap())
         .unwrap()
         .remove(0)

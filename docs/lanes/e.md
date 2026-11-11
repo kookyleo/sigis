@@ -37,9 +37,9 @@ Rust ports will replay these once lanes A, B and C fill
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_ades_validation.py` | 40 | 0 | 0 | 40 |
-| `test_ades_validation_report.py` | 5 | 0 | 0 | 5 |
-| `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 |
+| `test_ades_validation.py` | 40 | 0 | 0 | 40 (oracle recorded) |
+| `test_ades_validation_report.py` | 5 | 0 | 0 | 5 (oracle recorded) |
+| `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 (oracle recorded) |
 | `test_trusted_list.py` | 53 | 53 | 0 | 0 |
 
 ## Known divergences
@@ -103,6 +103,16 @@ See `crates/hanko-eutl/PORTING.md` (D-E1 … D-E4). All of them fail closed.
   `HankoError::SignatureValidation { message, subindication: &'static str }`).
   `hanko-validate` currently maps `SignatureValidationError` to
   `HankoError::Malformed`.
+- **R-E9 (hanko-testdata, affects all lanes).** `hanko_testdata::path`
+  and friends use the compile-time `env!("CARGO_MANIFEST_DIR")`. With the
+  shared target directory and sccache, the compiled `hanko-testdata` can
+  come from another worktree: in `e-validate`, `hanko_testdata::path`
+  resolved to `/home/l/D/kooky/sigis-wt/c-diff/crates/hanko-testdata/data`.
+  Tests then read fixtures from another branch (or fail on lane-specific
+  fixtures). Proposal: resolve at run time from
+  `std::env::var("CARGO_MANIFEST_DIR")` of the test crate
+  (`<crate>/../hanko-testdata/data`), or from a `HANKO_TESTDATA` variable.
+  Lane E tests do this locally (`tests/common/mod.rs::data`).
 - **R-E4 (hanko-core, minor).** `Moment::parse_rfc3339` ignores numeric
   offsets other than `+00:00`. `hanko-eutl` has its own `xsd:dateTime`
   parser (`util::parse_xsd_datetime`); a shared one in `hanko-core` would
