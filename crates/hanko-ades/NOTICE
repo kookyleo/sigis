@@ -12,3 +12,7 @@ Derived files:
   `sign/validation/generic_cms.py` (`handle_certvalidator_errors`).
 - src/etsi_report.rs: pyHanko `sign/validation/report/tools.py`,
   `sign/validation/ades.py` (validation object helpers).
+- src/with_time.rs: pyHanko `sign/validation/ades.py`
+  (`_process_basic_validation`, `_scoped_ades_with_time_validation`).
+- tests/ades_validation.rs, tests/common/mod.rs: pyHanko
+  `pkgs/pyhanko/tests/test_ades_validation.py`.

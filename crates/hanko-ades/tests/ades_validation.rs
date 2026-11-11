@@ -161,3 +161,61 @@ fn recordings_are_complete() {
         assert_eq!(t["outcome"], "passed", "{id}");
     }
 }
+
+fn run_with_time(test: &str, expect_best_time: Option<&str>) {
+    let rec = Recording::load(MODULE);
+    for call in rec.calls(MODULE, test) {
+        let ctx = default_context(&rec, &call);
+        let result = match call.function() {
+            "ades_with_time_validation" => hanko_ades::with_time::with_time_validation(
+                &call.content_info(),
+                call.raw_digest().as_deref(),
+                &ctx,
+                &QualificationSpec::default(),
+                None,
+            )
+            .unwrap(),
+            other => panic!("unexpected call {other}"),
+        };
+        assert_eq!(result.ades_subindic.standard_name(), call.expected_subindic(), "{test}");
+        if let Some(t) = expect_best_time {
+            assert_eq!(result.best_signature_time, hanko_eutl::util::parse_xsd_datetime(t));
+        }
+    }
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_with_time_happy_path() {
+    run_with_time("test_embedded_cades_with_time_happy_path", Some("2020-11-01T00:00:00Z"));
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_with_time_tampered_timestamp() {
+    run_with_time("test_embedded_cades_with_time_tampered_timestamp", None);
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_with_time_sig_tampered_timestamp() {
+    run_with_time("test_embedded_cades_with_time_sig_tampered_timestamp", None);
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_pre_revoke_with_poe() {
+    run_with_time("test_embedded_cades_pre_revoke_with_poe", Some("2020-11-01T00:00:00Z"));
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_provably_revoked() {
+    run_basic("test_embedded_cades_provably_revoked", &QualificationSpec::default(), default_context);
+}
+
+#[test]
+#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
+fn test_embedded_cades_revoked_no_poe() {
+    run_basic("test_embedded_cades_revoked_no_poe", &QualificationSpec::default(), default_context);
+}

@@ -110,7 +110,7 @@ pub fn basic_result(
     qualification: &QualificationSpec<'_>,
     poe_time: Option<Moment>,
 ) -> BasicValidationResult {
-    let sub = basic_subindication(&status.signature);
+    let (sub, _) = crate::with_time::basic_with_content_ts(&status, qualification, None);
     let mut result = BasicValidationResult {
         ades_subindic: sub,
         api_status: None,
@@ -165,6 +165,24 @@ pub fn basic_validation(
     ctx: &ValidationContext,
     qualification: &QualificationSpec<'_>,
 ) -> Result<BasicValidationResult, HankoError> {
+    match cms_status(content_info, raw_digest, ctx)? {
+        Ok(status) => Ok(basic_result(status, qualification, Some(ctx.timing().validation_time))),
+        Err((sub, msg)) => Ok(BasicValidationResult {
+            ades_subindic: sub,
+            api_status: None,
+            failure_msg: Some(msg),
+            qualification: None,
+        }),
+    }
+}
+
+/// Run the CMS validation; `Ok(Err(..))` carries the AdES sub-indication of
+/// a validation error (pyHanko's `SignatureValidationError` path).
+pub(crate) fn cms_status(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &ValidationContext,
+) -> Result<Result<StandardCmsSignatureStatus, (AdesSubIndic, String)>, HankoError> {
     let content = match raw_digest {
         Some(d) => {
             let alg = signer_digest_algorithm(content_info)
@@ -174,19 +192,14 @@ pub fn basic_validation(
         None => SignedContent::Encapsulated,
     };
     match hanko_cms::validate_cms_signature(content_info, content, ctx) {
-        Ok(status) => Ok(basic_result(status, qualification, Some(ctx.timing().validation_time))),
+        Ok(status) => Ok(Ok(status)),
         Err(e @ HankoError::NotImplemented(_)) => Err(e),
         Err(e) => {
             let sub: AdesSubIndic = match e {
                 HankoError::Malformed(_) => AdesFailure::FORMAT_FAILURE.into(),
                 _ => AdesIndeterminate::GENERIC.into(),
             };
-            Ok(BasicValidationResult {
-                ades_subindic: sub,
-                api_status: None,
-                failure_msg: Some(e.to_string()),
-                qualification: None,
-            })
+            Ok(Err((sub, e.to_string())))
         }
     }
 }

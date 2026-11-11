@@ -40,7 +40,7 @@ Rust ports will replay these once lanes A, B and C fill
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_ades_validation.py` | 40 | 0 | 0 | 40 (oracle recorded) |
+| `test_ades_validation.py` | 40 | 0 | 0 | 40 (oracle recorded; 13 written, ignored until lane A) |
 | `test_ades_validation_report.py` | 5 | 0 | 0 | 5 (oracle recorded) |
 | `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 (oracle recorded) |
 | `test_trusted_list.py` | 53 | 53 | 0 | 0 |

@@ -10,6 +10,7 @@
 //! | pyHanko module | Rust module |
 //! | --- | --- |
 //! | `sign/validation/ades.py` (basic validation) | [`basic`], [`validate_pdf_ades`] |
+//! | `sign/validation/ades.py` (validation with time) | [`with_time`] |
 //! | `sign/validation/report/tools.py` | [`etsi_report`] |
 //! | `sign/ades/report.py` | re-exported from `hanko_validate::report` |
 
@@ -22,6 +23,7 @@
 
 pub mod basic;
 pub mod etsi_report;
+pub mod with_time;
 
 use hanko_certvalidator::ValidationContext;
 use hanko_cms::SignedContent;
@@ -75,9 +77,9 @@ pub enum AdesLevel {
 /// Run AdES validation of a PDF signature (`ades_basic_validation`,
 /// `ades_with_time_validation`, `ades_lta_validation`).
 ///
-/// Basic validation is implemented on top of `hanko_cms`; the levels with
-/// time and long-term need the POE and time-slide machinery of
-/// `hanko_certvalidator::ltv` (lane A) and are pending.
+/// Basic validation and validation with time are implemented on top of
+/// `hanko_cms`; long-term validation needs the POE and time-slide machinery
+/// of `hanko_certvalidator::ltv` (lane A) and is pending.
 pub fn validate_pdf_ades(
     file: &PdfFile,
     signature: &EmbeddedSignature,
@@ -92,7 +94,19 @@ pub fn validate_pdf_ades(
             let result = basic::basic_result(status, &basic::QualificationSpec::default(), None);
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
-        AdesLevel::WithTimestamps => not_implemented("hanko_ades::validate_pdf_ades (with timestamps)"),
+        AdesLevel::WithTimestamps => {
+            let signed = signature.signed_data(file)?;
+            let cms = hanko_validate::cms_from_contents(&signature.contents)?;
+            let status = hanko_cms::validate_cms_signature(cms, SignedContent::Data(&signed), ctx)?;
+            let result = with_time::with_time_result(
+                status,
+                &basic::QualificationSpec::default(),
+                None,
+                None,
+                ctx.timing().validation_time,
+            );
+            Ok(AdesValidationResult::from_subindic(result.ades_subindic))
+        }
         AdesLevel::LongTerm => not_implemented("hanko_ades::validate_pdf_ades (long-term)"),
     }
 }
