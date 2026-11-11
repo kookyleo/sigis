@@ -8,8 +8,10 @@ Owner: lane E (branch `hanko/e-validate`). See `docs/hanko-lanes.md`.
   verification with an own C14N implementation, TSP registry, qualification
   assessment, LOTL bootstrapping and fetching, caches. `hanko-validate`:
   `settings` (`KeyUsageConstraints`), `errors`, AdES indications (`report`).
-- Next: `hanko-validate` PDF validation (`pdf_embedded`, `status`, `dss`) and
-  `hanko-ades` (`ades.py`, reports), coded against the lane A/B/C stubs.
+- Phase 2 (in progress): `hanko-validate` PDF validation coded against the
+  lane A/B/C stubs (coverage, DocMDP/FieldMDP, modification review, CMS and
+  document timestamp validation calls). Next: `hanko-ades` (`ades.py`,
+  reports) and Rust replays of the AdES oracle recordings.
 
 PKI: lead item L1 is open, so lane E exported the Certomancer test PKIs
 (`testing-ca`, `testing-ca-ecdsa`, `testing-ca-qualified`, `unrelated-tsa`;
@@ -80,6 +82,27 @@ See `crates/hanko-eutl/PORTING.md` (D-E1 … D-E4). All of them fail closed.
   `const-oid` under `vendor/` via `[patch.crates-io]` (lead-owned root
   `Cargo.toml`). Lane E works around it for policy matching
   (`hanko_eutl::util::certificate_policy_oids`).
+- **R-E6 (lane B interface).** For the coverage check and DocMDP `/Lock`
+  lookup: `RevisionInfo` with `startxref: u64` and `xref_end: u64` (end of
+  the revision's xref table or stream, pyHanko
+  `get_xref_container_info(rev).end_location`), and
+  `EmbeddedSignature::field_object: ObjectId` (the signature field
+  dictionary). Until then `hanko-validate` scans for `startxref`, uses the
+  revision end as xref end (can only lower coverage) and searches the
+  AcroForm for the field.
+- **R-E7 (lane A interface).** `hanko_cms::validate_cms_signature` needs the
+  `key_usage_settings` (pyHanko applies `non_repudiation` /
+  `digital_signature` defaults for PDF signatures) and the CMS algorithm
+  policy as parameters; AdES mapping needs `is_ee_cert` /
+  `is_side_validation` on `ValidationError::{Expired, Revoked}`
+  (`handle_certvalidator_errors`); LTA validation needs a way to extend a
+  `ValidationContext` with DSS material (certs, CRLs, OCSP responses) and
+  POEs.
+- **R-E8 (hanko-core).** A `HankoError` variant for signature validation
+  failures carrying the AdES sub-indication (e.g.
+  `HankoError::SignatureValidation { message, subindication: &'static str }`).
+  `hanko-validate` currently maps `SignatureValidationError` to
+  `HankoError::Malformed`.
 - **R-E4 (hanko-core, minor).** `Moment::parse_rfc3339` ignores numeric
   offsets other than `+00:00`. `hanko-eutl` has its own `xsd:dateTime`
   parser (`util::parse_xsd_datetime`); a shared one in `hanko-core` would

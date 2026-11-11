@@ -1254,6 +1254,8 @@ dependencies = [
 name = "hanko-validate"
 version = "0.0.1"
 dependencies = [
+ "cms 0.3.0-rc.1",
+ "der 0.8.3",
  "hanko-certvalidator",
  "hanko-cms",
  "hanko-core",
@@ -1262,6 +1264,7 @@ dependencies = [
  "hanko-testdata",
  "thiserror",
  "x509-cert 0.3.0",
+ "x509-tsp",
 ]
 
 [[package]]

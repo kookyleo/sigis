@@ -15,6 +15,9 @@ hanko-cms = { workspace = true }
 hanko-pdf = { workspace = true }
 hanko-diff = { workspace = true }
 thiserror = { workspace = true }
+cms = { workspace = true }
+der = { workspace = true }
+x509-tsp = { workspace = true }
 x509-cert = { workspace = true }
 
 [dev-dependencies]
