@@ -36,8 +36,11 @@ See `docs/hanko-lanes.md`.
 - Phase 3b: `ltv` filled: `PoeManager`, `time_slide`, `past_validate`
   (lane E can use them now).
 
-Next: attribute certificate
-validation, registry and trust anchor qualifiers (`test_registry.py`,
+- Phase 3c: attribute certificate validation (`hanko_certvalidator::ac`),
+  used by `hanko-cms` for certified signer attributes; pyHanko's list of
+  supported critical extensions enforced.
+
+Next: registry and trust anchor qualifiers (`test_registry.py`,
 `test_policy_proc.py`), decision on `test_name_trees.py` /
 `test_policy_graph.py`.
 
