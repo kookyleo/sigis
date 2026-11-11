@@ -533,6 +533,49 @@ fn tsa_config() -> Result<(Option<String>, TrustStore, bool), Box<dyn std::error
     Ok((tsa_url, roots, custom))
 }
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let address: SocketAddr = std::env::var("SIGIS_LISTEN")
+        .unwrap_or_else(|_| "127.0.0.1:38882".into())
+        .parse()?;
+    let (mut trust_store, custom_trust_roots) = match std::env::var("SIGIS_TRUST_ROOTS") {
+        Ok(path) => (TrustStore::from_pem_file(&path)?, true),
+        Err(std::env::VarError::NotPresent) => (TrustStore::new(), false),
+        Err(e) => return Err(e.into()),
+    };
+    let (tsa_url, tsa_roots, custom_tsa_roots) = tsa_config()?;
+    match &tsa_url {
+        Some(url) => eprintln!("Sigis timestamp authority: {url} (PAdES B-T)"),
+        None => eprintln!("Sigis timestamping disabled (PAdES B-B)"),
+    }
+    let demo = load_or_create_demo(&std::env::temp_dir().join("sigis-demo"))?;
+    eprintln!("Sigis demo certificate: {}", demo.path.display());
+    trust_store.add_der_certificate(&demo.cert_der)?;
+    let app = Router::new()
+        .route("/", get(index))
+        .route("/health", get(health))
+        .route("/api/sign", post(sign))
+        .route("/api/verify", post(verify))
+        .route("/api/demo-certificate", get(demo_certificate))
+        .layer(DefaultBodyLimit::max(MAX_BODY))
+        .with_state(AppState {
+            trust_roots: Arc::new(trust_store),
+            custom_trust_roots,
+            demo: Arc::new(demo),
+            tsa_url: tsa_url.map(Arc::from),
+            tsa_roots: Arc::new(tsa_roots),
+            custom_tsa_roots,
+        });
+    let listener = tokio::net::TcpListener::bind(address).await?;
+    eprintln!("Sigis listening on {address}");
+    axum::serve(listener, app)
+        .with_graceful_shutdown(async {
+            let _ = tokio::signal::ctrl_c().await;
+        })
+        .await?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -837,47 +880,4 @@ mod tests {
             .unwrap()
             .contains("DigiCert"));
     }
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let address: SocketAddr = std::env::var("SIGIS_LISTEN")
-        .unwrap_or_else(|_| "127.0.0.1:38882".into())
-        .parse()?;
-    let (mut trust_store, custom_trust_roots) = match std::env::var("SIGIS_TRUST_ROOTS") {
-        Ok(path) => (TrustStore::from_pem_file(&path)?, true),
-        Err(std::env::VarError::NotPresent) => (TrustStore::new(), false),
-        Err(e) => return Err(e.into()),
-    };
-    let (tsa_url, tsa_roots, custom_tsa_roots) = tsa_config()?;
-    match &tsa_url {
-        Some(url) => eprintln!("Sigis timestamp authority: {url} (PAdES B-T)"),
-        None => eprintln!("Sigis timestamping disabled (PAdES B-B)"),
-    }
-    let demo = load_or_create_demo(&std::env::temp_dir().join("sigis-demo"))?;
-    eprintln!("Sigis demo certificate: {}", demo.path.display());
-    trust_store.add_der_certificate(&demo.cert_der)?;
-    let app = Router::new()
-        .route("/", get(index))
-        .route("/health", get(health))
-        .route("/api/sign", post(sign))
-        .route("/api/verify", post(verify))
-        .route("/api/demo-certificate", get(demo_certificate))
-        .layer(DefaultBodyLimit::max(MAX_BODY))
-        .with_state(AppState {
-            trust_roots: Arc::new(trust_store),
-            custom_trust_roots,
-            demo: Arc::new(demo),
-            tsa_url: tsa_url.map(Arc::from),
-            tsa_roots: Arc::new(tsa_roots),
-            custom_tsa_roots,
-        });
-    let listener = tokio::net::TcpListener::bind(address).await?;
-    eprintln!("Sigis listening on {address}");
-    axum::serve(listener, app)
-        .with_graceful_shutdown(async {
-            let _ = tokio::signal::ctrl_c().await;
-        })
-        .await?;
-    Ok(())
 }
