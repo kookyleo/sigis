@@ -40,6 +40,10 @@ Seed corpora are not committed; seed `parse_pdf` and
 `crates/hanko-testdata/data/pyhanko/pdf/` and `xmp` with
 `crates/hanko-testdata/data/pyhanko/xml/`.
 
+Note: `miniz_oxide` skips the zlib Adler-32 check under `cfg(fuzzing)`, so
+fuzz builds accept streams that normal builds reject. Reproduce findings
+with a normal build (`tests/fuzz_regressions.rs`) before acting on them.
+
 ## Budget and results
 
 See `docs/lanes/b.md` ("Fuzzing").

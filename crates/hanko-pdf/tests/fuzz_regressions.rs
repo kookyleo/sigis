@@ -66,3 +66,20 @@ fn update_does_not_clobber_uncovered_xref_stream() {
     assert_eq!(r.total_revisions(), revs + 1);
     assert_eq!(r.get_object(id).unwrap(), text_string("fuzz"));
 }
+
+
+#[test]
+fn update_rewriting_xref_stream_number_is_rejected_on_read() {
+    // the catalog shares object number 2 with the xref stream; upgrading the
+    // header version rewrites the catalog, which clobbers the xref stream
+    // number: pyHanko writes this and its strict reader rejects the result
+    let d = data("incremental_roundtrip-clobber2.pdf");
+    let f = PdfFile::parse_with(&d, ReaderOptions::default()).unwrap();
+    assert!(f.xrefs().xref_stream_refs.contains(&f.root_ref().unwrap()));
+    let mut w = IncrementalWriter::new(f);
+    w.update_meta_on_write = false;
+    w.add_object(text_string("fuzz")).unwrap();
+    let out = w.write_in_place().unwrap();
+    let e = PdfFile::parse_with(&out, ReaderOptions::default()).unwrap_err();
+    assert!(e.message().contains("must not be clobbered"), "{e:?}");
+}
