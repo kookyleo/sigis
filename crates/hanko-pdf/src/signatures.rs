@@ -219,6 +219,8 @@ pub struct EmbeddedSignature {
     pub contents: Vec<u8>,
     /// Revision in which the signature was added.
     pub signed_revision: usize,
+    /// The signature field dictionary holding the signature.
+    pub field_object: ObjectId,
 }
 
 /// Length of the outer DER TLV of `b`, if well-formed.
@@ -358,6 +360,7 @@ impl PdfFile {
                 byte_range,
                 contents,
                 signed_revision,
+                field_object: f.field_ref,
             });
         }
         out.sort_by_key(|s| s.signed_revision);

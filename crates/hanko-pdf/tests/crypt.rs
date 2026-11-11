@@ -2000,7 +2000,7 @@ fn differential_pyhanko_reads_our_encryption() {
         eprintln!("pyHanko oracle not installed; skipping differential check");
         return;
     }
-    let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("oracle/check_decrypt.py");
+    let script = hanko_testdata::manifest_dir().join("oracle/check_decrypt.py");
     let dir = std::env::temp_dir().join(format!("hanko-crypt-diff-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let base = || hanko_pdf::writer::copy_into_new_writer(&read(&minimal())).unwrap();

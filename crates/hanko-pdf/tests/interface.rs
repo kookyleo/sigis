@@ -105,3 +105,43 @@ fn lane_c_and_e_requests() {
     assert!(eff.has(b"Root"));
     assert!(r.trailer_in_revision(2).is_err());
 }
+
+#[test]
+fn lead_round1_b2_fields() {
+    let data = pdf("minimal-signed-twice-both-created.pdf");
+    let f = PdfFile::parse(&data).unwrap();
+    let revs = f.revisions().unwrap();
+    for (ix, r) in revs.iter().enumerate() {
+        let loc = f.xref_location(ix).unwrap();
+        assert_eq!(r.startxref, loc.declared_startxref);
+        assert_eq!(r.xref_end, loc.end);
+    }
+    for s in f.embedded_signatures().unwrap() {
+        assert_eq!(Some(s.field_object), f.signature_field_ref(s.sig_object).unwrap());
+    }
+}
+
+#[test]
+fn lead_round1_b4_spans_and_plain_signature_contents() {
+    use hanko_pdf::lopdf::{Dictionary, StringFormat};
+    let mut w = hanko_pdf::writer::copy_into_new_writer(&PdfFile::parse(&minimal()).unwrap()).unwrap();
+    w.encrypt("secret", None).unwrap();
+    let mut sig = Dictionary::new();
+    sig.set("Type", Object::Name(b"Sig".to_vec()));
+    sig.set("ByteRange", Object::Array(vec![0.into(), 0.into(), 0.into(), 0.into()]));
+    sig.set("Contents", Object::String(vec![0u8; 16], StringFormat::Hexadecimal));
+    sig.set("Name", hanko_pdf::generic::text_string("signer"));
+    let id = w.add_object(Object::Dictionary(sig)).unwrap();
+    let out = w.write().unwrap();
+    let span = w.written_object_spans().get(&id).cloned().expect("span");
+    let body = &out[span];
+    let needle = b"/Contents <00000000000000000000000000000000>";
+    assert!(body.windows(needle.len()).any(|x| x == needle), "{}", String::from_utf8_lossy(body));
+    // other strings are still encrypted
+    assert!(!body.windows(6).any(|x| x == b"signer"));
+    let r = PdfFile::parse(&out).unwrap();
+    r.decrypt("secret").unwrap();
+    let Object::Dictionary(d) = r.get_object(id).unwrap() else { panic!() };
+    assert_eq!(d.get(b"Contents").unwrap(), &Object::String(vec![0u8; 16], StringFormat::Hexadecimal));
+    assert_eq!(text(d.get(b"Name").unwrap()), "signer");
+}

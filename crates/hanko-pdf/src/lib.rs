@@ -74,6 +74,11 @@ pub struct RevisionInfo {
     pub end_offset: usize,
     /// Whether the revision uses an xref stream.
     pub xref_stream: bool,
+    /// Offset pointed to by the revision's `startxref` / `/Prev`.
+    pub startxref: u64,
+    /// End of the revision's xref table (before the trailer) or xref stream
+    /// object (`get_xref_container_info(rev).end_location`).
+    pub xref_end: u64,
 }
 
 fn eof_after(bytes: &[u8], from: usize) -> usize {
@@ -146,6 +151,8 @@ impl PdfFile {
                         s.meta_info.xref_section_type,
                         xref::XRefSectionType::Stream
                     ),
+                    startxref: u64::try_from(m.declared_startxref).unwrap_or(0),
+                    xref_end: m.end_location as u64,
                 }
             })
             .collect())

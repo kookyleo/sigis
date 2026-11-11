@@ -104,16 +104,28 @@ pub fn write_object_encrypted(
     Ok(())
 }
 
+/// Signature dictionaries keep `/Contents` unencrypted (ISO 32000; pyHanko's
+/// placeholder objects ignore the security handler).
+pub fn is_signature_dictionary(d: &Dictionary) -> bool {
+    d.has(b"ByteRange")
+        || matches!(d.get(b"Type"), Ok(Object::Name(n)) if n == b"Sig" || n == b"DocTimeStamp")
+}
+
 fn write_dictionary_encrypted(
     out: &mut Vec<u8>,
     d: &Dictionary,
     enc: Option<(&dyn Encryptor, ObjectId)>,
 ) -> PdfResult<()> {
+    let sig = enc.is_some() && is_signature_dictionary(d);
     out.extend_from_slice(b"<<\n");
     for (k, v) in d.iter() {
         generic::write_name(out, k);
         out.push(b' ');
-        write_object_encrypted(out, v, enc)?;
+        if sig && k == b"Contents" {
+            generic::write_object(out, v);
+        } else {
+            write_object_encrypted(out, v, enc)?;
+        }
         out.push(b'\n');
     }
     out.extend_from_slice(b">>");
@@ -234,6 +246,7 @@ pub struct PdfWriter {
     /// signers, which attach the MAC to the signature).
     pub digest_aware_write: bool,
     init_error: Option<PdfError>,
+    written_spans: BTreeMap<ObjectId, std::ops::Range<usize>>,
 }
 
 fn random_id() -> Vec<u8> {
@@ -272,6 +285,7 @@ impl PdfWriter {
             force_write_when_empty: false,
             digest_aware_write: false,
             init_error: None,
+            written_spans: BTreeMap::new(),
         }
     }
 
@@ -735,6 +749,7 @@ impl PdfWriter {
                 );
             }
         }
+        let mut spans = BTreeMap::new();
         for ((generation, idnum), obj) in &self.objects {
             positions.insert((*generation, *idnum), WrittenPosition::Offset(out.len() as u64));
             out.extend_from_slice(format!("{idnum} {generation} obj\n").as_bytes());
@@ -743,10 +758,20 @@ impl PdfWriter {
                 (Some(e), Some(eid)) if eid != id => Some((e.as_ref(), id)),
                 _ => None,
             };
+            let start = out.len();
             write_object_encrypted(out, obj, enc)?;
+            spans.insert(id, start..out.len());
             out.extend_from_slice(b"\nendobj\n");
         }
+        self.written_spans = spans;
         Ok(())
+    }
+
+    /// Byte ranges of the serialised object bodies (between `n g obj\n` and
+    /// `\nendobj`) in the output of the last write, relative to the start
+    /// of the full file. Signers use them to locate placeholders.
+    pub fn written_object_spans(&self) -> &BTreeMap<ObjectId, std::ops::Range<usize>> {
+        &self.written_spans
     }
 
     /// Prepare the document for writing (`_prep_dom_for_writing`).

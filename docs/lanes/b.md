@@ -41,11 +41,9 @@ Notes for lanes C, D, E:
   `hanko_diff::XrefSectionInfo`). `trailer_in_revision(rev)` now returns the
   section's own trailer, as lane C asked; the merged view is
   `effective_trailer_in_revision`.
-- Lane E request R-E6 is served by new methods instead of new fields on §4
-  structs: `PdfFile::xref_location(rev)` (`declared_startxref`, `start`,
-  `end` = pyHanko `end_location`) and `PdfFile::signature_field_ref(sig_object)`.
-  If the lead prefers fields on `RevisionInfo` / `EmbeddedSignature`, lane B
-  can add them.
+- Lane E request R-E6 / B-2: `RevisionInfo::{startxref, xref_end}` and
+  `EmbeddedSignature::field_object` (as relayed by the lead), plus
+  `PdfFile::xref_location(rev)` and `PdfFile::signature_field_ref(sig_object)`.
 - `RevisionInfo::end_offset` is the end of the `%%EOF` line that follows
   the `startxref` pointing at the revision's xref section (linearized
   originals: both sections end at the first `%%EOF` after the main xref).
@@ -95,15 +93,88 @@ See `crates/hanko-pdf/PORTING.md` ("Known divergences"). All fail closed.
 
 ## Requests to the lead
 
-1. `crates/hanko-core/Cargo.toml`: `cargo check -p hanko-core` (and `-p` of
-   any crate depending on it alone) fails with "no `Raw` in `certificate`":
-   `hanko-core` uses `x509_cert::certificate::Raw`, which needs the
-   `x509-cert` feature `hazmat`. It only builds today through feature
-   unification with `certval`. Please add `features = ["hazmat"]` to
-   hanko-core's `x509-cert` dependency (or to the workspace entry). Lane B
-   runs its checks with `--workspace` meanwhile.
-2. pyHanko oracle (L1): PyPI became reachable on 2026-11-11 evening; lane B
-   installed a lane-local venv at `/tmp/hanko-b/venv` (certomancer,
-   pyhanko 0.38.1, pyhanko-certvalidator 0.33.0) to export the certificates
-   it needs (§5.4 allows a lane-local export). `/tmp/pyhanko-oracle` was not
-   touched.
+None open. (Item 1, `hazmat`, is done on `main`. Item 2: lane B used the
+lane-local venv `/tmp/hanko-b/venv` to export its crypt PKI and the PDF MAC
+signature fixtures; scripts are committed under `crates/hanko-pdf/oracle/`
+and run against `/tmp/pyhanko-oracle/venv` as well.)
+
+## Requests from other lanes (relayed by the lead, 2026-11-12)
+
+When rebasing onto `main`, keep this section in your version of this file.
+
+- **B-1 (from lane C, C1; needed for an exact `PdfFileSource`).** Add to
+  `hanko_pdf::PdfFile`:
+  ```rust
+  pub struct XrefSectionInfo {      // XRefSectionData + XRefSectionMetaInfo
+      pub size: u32,                // /Size of the section
+      pub stream_ref: Option<ObjectId>,         // xref stream of the section
+      pub hybrid_stream_ref: Option<ObjectId>,  // /XRefStm stream, if any
+      pub explicit_refs: BTreeSet<ObjectId>,    // incl. hybrid entries and freed (n, next_gen - 1)
+      pub freed: BTreeSet<ObjectId>,            // refs_freed_in_revision
+      pub object_streams_used: BTreeSet<u32>,   // obj_streams_used
+  }
+  impl PdfFile {
+      pub fn xref_section(&self, revision: usize) -> Result<XrefSectionInfo>;
+      pub fn last_change(&self, id: ObjectId) -> Result<Option<usize>>;          // get_last_change
+      pub fn introducing_revision(&self, id: ObjectId) -> Result<Option<usize>>; // get_introducing_revision
+      pub fn resolves_in(&self, id: ObjectId, revision: usize) -> Result<bool>;  // get_historical_ref(..) is not None
+      pub fn strict(&self) -> bool;
+  }
+  ```
+  `hanko_diff::XrefSectionInfo` has exactly these fields; define it in
+  `hanko-pdf`, and the lead will switch `hanko-diff` to a re-export. Please
+  also pin the semantics of the existing methods in their docs:
+  `object_in_revision(id, rev)` returns what
+  `HistoricalResolver(rev).get_object(id)` returns (`None` when the reference
+  does not resolve: free or never defined), and `trailer_in_revision(rev)` is
+  that section's own trailer (lane C merges older trailers itself, as
+  `TrailerDictionary.flatten`).
+- **B-2 (from lane E, R-E6).** For the coverage check and the DocMDP `/Lock`
+  lookup: `RevisionInfo` gains `startxref: u64` and `xref_end: u64` (end of
+  the revision's xref table or stream, pyHanko
+  `get_xref_container_info(rev).end_location`), and `EmbeddedSignature` gains
+  `field_object: ObjectId` (the signature field dictionary).
+- **B-3 (from lane C, C4).** `lopdf::Object::Real` is `f32`; pyHanko compares
+  numbers exactly (`Decimal`). If `PdfFile` can keep the original numeric
+  text (or an `f64`), the diff rules will use it; otherwise this stays a
+  listed low-risk divergence in lane C. Tell the lead which way you go.
+- **B-4 (from lane D).** Signing needs from `hanko-pdf`: an incremental writer
+  with object get / put / add; a way to locate placeholder offsets in the
+  output (or a hook to serialize one object with placeholders); xref-stream
+  output when the previous revision used one; and encryption of new objects
+  (lane D did the standard handler on `lopdf`; the public-key handler is
+  missing for `test_sign_encrypted.py`).
+- **Lead answers to your requests:** item 1 (`hazmat`) done on `main`;
+  item 2: the standard oracle venv is `/tmp/pyhanko-oracle/venv` now (see
+  `docs/hanko-lanes.md` §5.4). Use `hanko_testdata::data_dir()` /
+  `manifest_dir()` (run-time paths), never `env!("CARGO_MANIFEST_DIR")`.
+
+### Lane B answers (2026-11-12)
+
+- **B-1: done** (`hanko_pdf::XrefSectionInfo`, `PdfFile::{xref_section,
+  last_change, introducing_revision, resolves_in, strict}`). Semantics are
+  pinned in the docs: `object_in_revision` as `HistoricalResolver(rev).get_object`
+  (`None` when the reference does not resolve), `trailer_in_revision` is the
+  section's own trailer; the merged one is `effective_trailer_in_revision`.
+- **B-2: done**: `RevisionInfo::{startxref, xref_end}` and
+  `EmbeddedSignature::field_object`.
+- **B-3: stays `f32`.** The interface fixes `lopdf::Object`, whose reals are
+  `f32`, and keeping the original text would need a parallel object model.
+  Both revisions of a compared object go through the same parser, so equal
+  source text gives equal values; only distinct decimals that collide in
+  `f32` (more than ~7 significant digits) compare equal where pyHanko's
+  `Decimal` would not. Please keep it as a listed low-risk divergence in
+  lane C. Numbers beyond 64-bit integers are rejected by the reader.
+- **B-4: done.** `IncrementalWriter` (derefs to `PdfWriter`):
+  `get_object` / `update_object` / `add_object` / `allocate_placeholder` +
+  `add_object_ext(.., idnum)`; xref streams are written when the previous
+  revision used one (`stream_xrefs`); placeholders: after `write()`,
+  `PdfWriter::written_object_spans()` gives the byte range of every
+  serialised object body in the output, so a signer can search the
+  `/Contents` and `/ByteRange` placeholders inside its signature object's
+  span; encryption of new objects works for standard and public-key
+  handlers (`IncrementalWriter::{encrypt, encrypt_pubkey}`, `PdfWriter::{encrypt,
+  encrypt_pubkey, assign_security_handler}`), and signature dictionaries
+  (`/ByteRange` or `/Type /Sig|/DocTimeStamp`) keep `/Contents`
+  unencrypted, as pyHanko's placeholders do. Fixed object time and ID for
+  reproducible output: `fixed_time`, `set_document_id`.

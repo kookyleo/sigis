@@ -1383,7 +1383,6 @@ dependencies = [
  "aes-gcm",
  "aes-kw",
  "cms 0.3.0-rc.1",
- "const-oid 0.10.3",
  "crypto-bigint 0.7.11",
  "curve25519-dalek 5.0.0",
  "der 0.8.3",
