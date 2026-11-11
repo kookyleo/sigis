@@ -7,7 +7,10 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | pyHanko module | Rust file | Status (ported / replaced by crate X / skipped: reason) |
 | --- | --- | --- |
-| — | — | Interface skeleton only (stubs return `HankoError::NotImplemented`) |
+| `sign/validation/settings.py` | `src/settings.rs` | ported (`KeyUsageConstraints`; config parsing is lead/CLI scope) |
+| `sign/validation/errors.py` | `src/errors.rs` | ported |
+| `sign/ades/report.py` | `src/report.rs` | ported (re-exported by `hanko-ades`) |
+| `sign/validation/pdf_embedded.py`, `status.py`, `dss.py`, `utils.py`, `policy_decl.py` | `src/lib.rs` | pending (stubs return `HankoError::NotImplemented`) |
 
 ## Test mapping
 

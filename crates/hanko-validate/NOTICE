@@ -6,3 +6,6 @@ Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
 also names its source in its header.
 
 Derived files:
+- src/settings.rs: pyHanko `sign/validation/settings.py`.
+- src/errors.rs: pyHanko `sign/validation/errors.py`.
+- src/report.rs: pyHanko `sign/ades/report.py`.

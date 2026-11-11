@@ -15,6 +15,10 @@
     warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod errors;
+pub mod report;
+pub mod settings;
+
 use hanko_certvalidator::ValidationContext;
 use hanko_cms::{StandardCmsSignatureStatus, TimestampSignatureStatus};
 use hanko_core::errors::{not_implemented, Result};
