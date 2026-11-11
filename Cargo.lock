@@ -1316,9 +1316,16 @@ dependencies = [
 name = "hanko-pdf"
 version = "0.0.1"
 dependencies = [
+ "cms 0.3.0-rc.1",
+ "der 0.8.3",
+ "flate2",
+ "getrandom 0.3.4",
  "hanko-core",
  "hanko-testdata",
+ "log",
  "lopdf 0.47.0",
+ "sha1 0.11.0",
+ "thiserror",
 ]
 
 [[package]]

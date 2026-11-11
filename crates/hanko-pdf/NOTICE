@@ -6,3 +6,20 @@ Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
 also names its source in its header.
 
 Derived files:
+- src/lib.rs: pyhanko/pdf_utils/{reader,xref,writer,incremental_writer}.py (interfaces)
+- src/error.rs, src/misc.rs: pyhanko/pdf_utils/misc.py
+- src/generic.rs, src/stream.rs: pyhanko/pdf_utils/generic.py (from PyPDF2)
+- src/filters.rs: pyhanko/pdf_utils/filters.py (from PyPDF2)
+- src/decode_limits.rs: pyhanko/pdf_utils/decode_limits.py
+- src/xref.rs: pyhanko/pdf_utils/xref.py
+- src/reader.rs: pyhanko/pdf_utils/reader.py (from PyPDF2)
+- src/rw_common.rs: pyhanko/pdf_utils/rw_common.py
+- src/writer.rs: pyhanko/pdf_utils/writer.py (from PyPDF2), incremental_writer.py
+- src/metadata/: pyhanko/pdf_utils/metadata/{model,info}.py
+- src/signatures.rs: pyhanko/pdf_utils/form_tools.py, pyhanko/sign/fields.py,
+  pyhanko/sign/validation/{pdf_embedded,dss}.py
+- tests/common/mod.rs: pyhanko_testing_commons/test_data/samples.py
+- tests/xref.rs: pkgs/pyhanko/tests/test_xref.py
+
+PyPDF2 code is distributed under the BSD-3-Clause license, reproduced in
+LICENSE-PyPDF2 (copied from pyhanko/pdf_utils/LICENSE.PyPDF2 at v0.38.1).
