@@ -316,3 +316,31 @@ fn starts_with() {
     assert!(!child.starts_with(oid("2.2.3")));
     assert!(!child.starts_with(oid("1.2.3.4.5.6")));
 }
+
+/// X.690 §8.19.4: under the first arc 2, the second arc may exceed 39 and the
+/// first subidentifier (80 + second) takes several bytes.
+#[test]
+fn second_arc_above_39_under_arc_2() {
+    let oid = ObjectIdentifier::new("2.999.31337.0").unwrap();
+    assert_eq!(oid.as_bytes(), &hex!("8837 81F469 00")[..]);
+    assert_eq!(oid.to_string(), "2.999.31337.0");
+    assert_eq!(oid.arcs().collect::<Vec<_>>(), [2, 999, 31337, 0]);
+    assert_eq!(oid.len(), 4);
+    assert_eq!(oid.parent().unwrap().to_string(), "2.999.31337");
+    assert_eq!(ObjectIdentifier::from_bytes(oid.as_bytes()).unwrap(), oid);
+
+    // 2.40 is the smallest value that needs no special case but used to fail.
+    let oid = ObjectIdentifier::new("2.40").unwrap();
+    assert_eq!(oid.as_bytes(), &[0x78]);
+    assert_eq!(ObjectIdentifier::from_bytes(&[0x78]).unwrap().to_string(), "2.40");
+
+    // First subidentifier >= 128 decodes as 2.(v - 80).
+    assert_eq!(ObjectIdentifier::from_bytes(&hex!("8100")).unwrap().to_string(), "2.48");
+
+    // The bounds for the first arcs 0 and 1 still apply.
+    assert!(ObjectIdentifier::new("1.40").is_err());
+    assert!(ObjectIdentifier::new("0.40").is_err());
+    assert!(ObjectIdentifier::new("3.1").is_err());
+    // A truncated multi-byte root is rejected.
+    assert!(ObjectIdentifier::from_bytes(&[0x88]).is_err());
+}

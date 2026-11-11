@@ -62,17 +62,18 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 Ok(self)
             }
             State::FirstArc(first_arc) => {
-                if arc > ARC_MAX_SECOND {
+                // Only the first arcs 0 and 1 bound the second arc
+                // (X.690 §8.19.4); under 2 it is encoded as `80 + arc`.
+                if first_arc < ARC_MAX_FIRST && arc > ARC_MAX_SECOND {
                     return Err(Error::ArcInvalid { arc });
                 }
+                let root = match checked_mul!(checked_add!(ARC_MAX_SECOND, 1), first_arc).checked_add(arc) {
+                    Some(root) => root,
+                    None => return Err(Error::ArcTooBig),
+                };
 
                 self.state = State::Body;
-                self.bytes[0] = checked_add!(
-                    checked_mul!(checked_add!(ARC_MAX_SECOND, 1), first_arc),
-                    arc
-                ) as u8;
-                self.cursor = 1;
-                Ok(self)
+                self.encode_base128(root)
             }
             State::Body => self.encode_base128(arc),
         }
@@ -154,6 +155,16 @@ mod tests {
         assert_eq!(super::base128_byte(example_arc, 2, 5).unwrap(), 0b11001100);
         assert_eq!(super::base128_byte(example_arc, 3, 5).unwrap(), 0b11000100);
         assert_eq!(super::base128_byte(example_arc, 4, 5).unwrap(), 0b10001);
+    }
+
+    #[test]
+    fn encode_large_second_arc_under_joint_iso_itu_t() {
+        // 2.999 -> first subidentifier 1079 = 0x88 0x37
+        let encoder = Encoder::<4>::new().arc(2).unwrap().arc(999).unwrap().arc(3).unwrap();
+        assert_eq!(&encoder.bytes[..encoder.cursor], &hex!("883703"));
+        assert!(Encoder::<4>::new().arc(1).unwrap().arc(40).is_err());
+        assert!(Encoder::<4>::new().arc(0).unwrap().arc(40).is_err());
+        assert!(Encoder::<4>::new().arc(2).unwrap().arc(u32::MAX).is_err());
     }
 
     #[test]

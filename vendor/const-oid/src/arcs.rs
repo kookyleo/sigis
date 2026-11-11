@@ -21,8 +21,38 @@ pub type Arc = u32;
 /// Maximum value of the first arc in an OID.
 pub(crate) const ARC_MAX_FIRST: Arc = 2;
 
-/// Maximum value of the second arc in an OID.
+/// Maximum value of the second arc in an OID whose first arc is 0 or 1.
+///
+/// Under the first arc 2 the second arc is unbounded (X.690 §8.19.4): the
+/// first subidentifier is `80 + second`, base-128 encoded like any other.
 pub(crate) const ARC_MAX_SECOND: Arc = 39;
+
+/// Decode the first subidentifier of an OID (which combines the first two
+/// arcs) and return `(first_arc, second_arc, encoded_length)`.
+fn root_arcs(bytes: &[u8]) -> Result<(Arc, Arc, usize)> {
+    let mut value: Arc = 0;
+    let mut len = 0usize;
+    loop {
+        let byte = *bytes.get(len).ok_or(if len == 0 { Error::Empty } else { Error::Base128 })?;
+        len = checked_add!(len, 1);
+        value = value
+            .checked_mul(0x80)
+            .and_then(|v| v.checked_add((byte & 0b0111_1111) as Arc))
+            .ok_or(Error::ArcTooBig)?;
+        if byte & 0b1000_0000 == 0 {
+            break;
+        }
+    }
+    let first = match value {
+        0..=39 => 0,
+        40..=79 => 1,
+        _ => 2,
+    };
+    // `first * (ARC_MAX_SECOND + 1) <= value` by construction.
+    #[allow(clippy::arithmetic_side_effects)]
+    let second = value - first * (ARC_MAX_SECOND + 1);
+    Ok((first, second, len))
+}
 
 /// [`Iterator`] over [`Arc`] values (a.k.a. nodes) in an [`ObjectIdentifier`].
 ///
@@ -52,15 +82,15 @@ impl<'a> Arcs<'a> {
         match self.cursor {
             // Indicates we're on the root arc
             None => {
-                let root_byte = *self.bytes.first().ok_or(Error::Empty)?;
-                let root = RootArcs::try_from(root_byte)?;
+                let (first, _, _) = root_arcs(self.bytes)?;
                 self.cursor = Some(0);
-                Ok(Some(root.first_arc()))
+                Ok(Some(first))
             }
+            // `Some(0)` means the second arc is next; body offsets are >= 1.
             Some(0) => {
-                let root = RootArcs::try_from(self.bytes[0])?;
-                self.cursor = Some(1);
-                Ok(Some(root.second_arc()))
+                let (_, second, len) = root_arcs(self.bytes)?;
+                self.cursor = Some(len);
+                Ok(Some(second))
             }
             Some(offset) => {
                 let mut result: Arc = 0;
@@ -109,64 +139,5 @@ impl Iterator for Arcs<'_> {
     fn next(&mut self) -> Option<Arc> {
         // ObjectIdentifier constructors should ensure the OID is well-formed
         self.try_next().expect("OID malformed")
-    }
-}
-
-/// Byte containing the first and second arcs of an OID.
-///
-/// This is represented this way in order to reduce the overall size of the
-/// [`ObjectIdentifier`] struct.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-struct RootArcs(u8);
-
-impl RootArcs {
-    /// Create [`RootArcs`] from the first and second arc values represented
-    /// as `Arc` integers.
-    pub(crate) const fn new(first_arc: Arc, second_arc: Arc) -> Result<Self> {
-        if first_arc > ARC_MAX_FIRST {
-            return Err(Error::ArcInvalid { arc: first_arc });
-        }
-
-        if second_arc > ARC_MAX_SECOND {
-            return Err(Error::ArcInvalid { arc: second_arc });
-        }
-
-        // The checks above ensure this operation will not overflow
-        #[allow(clippy::arithmetic_side_effects)]
-        let byte = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + second_arc as u8;
-
-        Ok(Self(byte))
-    }
-
-    /// Get the value of the first arc
-    #[allow(clippy::arithmetic_side_effects)]
-    pub(crate) const fn first_arc(self) -> Arc {
-        self.0 as Arc / (ARC_MAX_SECOND + 1)
-    }
-
-    /// Get the value of the second arc
-    #[allow(clippy::arithmetic_side_effects)]
-    pub(crate) const fn second_arc(self) -> Arc {
-        self.0 as Arc % (ARC_MAX_SECOND + 1)
-    }
-}
-
-impl TryFrom<u8> for RootArcs {
-    type Error = Error;
-
-    // Ensured not to overflow by constructor invariants
-    #[allow(clippy::arithmetic_side_effects)]
-    fn try_from(octet: u8) -> Result<Self> {
-        let first = octet as Arc / (ARC_MAX_SECOND + 1);
-        let second = octet as Arc % (ARC_MAX_SECOND + 1);
-        let result = Self::new(first, second)?;
-        debug_assert_eq!(octet, result.0);
-        Ok(result)
-    }
-}
-
-impl From<RootArcs> for u8 {
-    fn from(root_arcs: RootArcs) -> u8 {
-        root_arcs.0
     }
 }

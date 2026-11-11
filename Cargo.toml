@@ -28,7 +28,7 @@ members = [
 ]
 # The vendored crate is a patched dependency, not a workspace member: its own
 # tests need fixtures that are not shipped.
-exclude = ["vendor/underskrift"]
+exclude = ["vendor/underskrift", "vendor/const-oid"]
 
 [workspace.package]
 version = "0.0.1"
@@ -75,6 +75,7 @@ sha1 = { version = "0.11.0", default-features = false, features = ["oid"] }
 base64ct = { version = "1.8", features = ["alloc"] }
 thiserror = "2"
 lopdf = { version = "0.47", default-features = false }
+quick-xml = "0.38.4"
 base64 = "0.22"
 regex = "1"
 serde_json = "1"
@@ -92,3 +93,7 @@ zeroize = "1"
 # signature timestamp (PAdES B-T). See vendor/README.md.
 [patch.crates-io]
 underskrift = { path = "vendor/underskrift" }
+# const-oid 0.10.3 with second arcs above 39 under first arc 2 (X.690
+# 8.19.4), e.g. pyHanko's test policy OID 2.999.31337.0. Upstream issue and
+# patch: vendor/const-oid.UPSTREAM.md. Remove once upstream releases a fix.
+const-oid = { path = "vendor/const-oid" }
