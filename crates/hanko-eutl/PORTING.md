@@ -41,14 +41,17 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_trusted_list.py` | `tests/trusted_list.rs`, `tests/qualification.rs` | 53 | 52 | 0 | 1 |
+| `test_trusted_list.py` | `tests/trusted_list.rs`, `tests/qualification.rs` | 53 | 53 | 0 | 0 |
 
-Pending: `test_parse_generated_lotl` (needs a LOTL signed with signxml by
-the oracle; generator not run yet).
+`test_parse_generated_lotl` reads a LOTL that `oracle/export_pki.py`
+generated with pyHanko's `certomancer_lotl` (signxml, ECDSA P-384,
+inclusive C14N 1.1, three references); `generated_qualified_tl_validates`
+(extra) checks the trusted list `test_ades_validation.py` builds.
 
-PKI: `tests/qualification.rs` uses the Certomancer PKIs exported by
-`oracle/export_pki.py` into `crates/hanko-testdata/data/lanes/e/pki/`
-(certificates only). The seven `test_conclude_*` functions assemble the
+PKI: `tests/qualification.rs` uses the Certomancer PKIs and signed lists
+exported by `oracle/export_pki.py` into `crates/hanko-testdata/data/lanes/e/`
+(certificates only; one Certomancer run, since ECDSA certificates differ
+between runs). The seven `test_conclude_*` functions assemble the
 validation path root → interm-qualified → leaf directly instead of running
 `CertificateValidator`: `hanko-certvalidator` rejects this PKI because
 `const-oid` cannot decode the `2.999.31337.*` policy OIDs (request R-E5).

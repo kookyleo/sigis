@@ -229,20 +229,15 @@ fn ecdsa_raw_to_der(raw: &[u8], key_bits: usize) -> Result<Vec<u8>, DsigError> {
         )));
     }
     let (r, s) = raw.split_at(raw.len() / 2);
-    let int = |b: &[u8]| -> Result<der::asn1::Int, DsigError> {
-        der::asn1::Int::new(&{
-            let mut v = vec![0u8];
-            v.extend_from_slice(b);
-            v
-        })
-        .map_err(|e| DsigError::InvalidSignature(e.to_string()))
+    let uint = |b: &[u8]| -> Result<der::asn1::Uint, DsigError> {
+        der::asn1::Uint::new(b).map_err(|e| DsigError::InvalidSignature(e.to_string()))
     };
     #[derive(der::Sequence)]
     struct EcSig {
-        r: der::asn1::Int,
-        s: der::asn1::Int,
+        r: der::asn1::Uint,
+        s: der::asn1::Uint,
     }
-    EcSig { r: int(r)?, s: int(s)? }
+    EcSig { r: uint(r)?, s: uint(s)? }
         .to_der()
         .map_err(|e| DsigError::InvalidSignature(e.to_string()))
 }

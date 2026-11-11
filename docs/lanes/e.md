@@ -14,9 +14,22 @@ Owner: lane E (branch `hanko/e-validate`). See `docs/hanko-lanes.md`.
 PKI: lead item L1 is open, so lane E exported the Certomancer test PKIs
 (`testing-ca`, `testing-ca-ecdsa`, `testing-ca-qualified`, `unrelated-tsa`;
 certificates only) locally with `crates/hanko-eutl/oracle/export_pki.py`
-into `crates/hanko-testdata/data/lanes/e/pki/`. The export ran with a local
-pyHanko 0.38.1 + certomancer 0.16.0 venv outside the repository. Once L1
-lands, the tests can switch to `data/pyhanko-pki/`.
+into `crates/hanko-testdata/data/lanes/e/pki/`, plus two XAdES-signed
+lists. The oracle ran outside the repository with pyHanko 0.38.1,
+pyhanko-certvalidator 0.33.0, certomancer 0.16.0, signxml 5.2.0 and
+xsdata 26.10 (Python 3.14). Once L1 lands, the tests can switch to
+`data/pyhanko-pki/`.
+
+AdES oracle fixtures: `crates/hanko-ades/oracle/record_plugin.py` runs
+pyHanko's own `test_ades_validation*.py` (tag v0.38.1) and records, per
+test case and per `ades.*_validation` call, the validated object (CMS or
+whole PDF), the frozen time, all HTTP exchanges with the Certomancer
+services, and pyHanko's verdict, plus the PKI certificates of that run and
+the generated trusted lists. Output:
+`crates/hanko-testdata/data/lanes/e/ades/*.json` (76/76 upstream cases
+passed under the recorder; 144 validation calls, 98 HTTP exchanges). The
+Rust ports will replay these once lanes A, B and C fill
+`validate_cms_signature`, `PdfFile` and `DiffPolicy`.
 
 ## Per-suite counts
 
@@ -25,7 +38,7 @@ lands, the tests can switch to `data/pyhanko-pki/`.
 | `test_ades_validation.py` | 40 | 0 | 0 | 40 |
 | `test_ades_validation_report.py` | 5 | 0 | 0 | 5 |
 | `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 |
-| `test_trusted_list.py` | 53 | 52 | 0 | 1 |
+| `test_trusted_list.py` | 53 | 53 | 0 | 0 |
 
 ## Known divergences
 

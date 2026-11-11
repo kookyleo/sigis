@@ -6,3 +6,5 @@ Original code: Apache-2.0. Files derived from pyHanko / pyhanko-certvalidator
 also names its source in its header.
 
 Derived files:
+- oracle/record_plugin.py, oracle/run_oracle.sh: original (drive pyHanko's
+  own test suite; no pyHanko code copied).
