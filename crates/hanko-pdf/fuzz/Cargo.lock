@@ -534,6 +534,7 @@ version = "0.0.0"
 dependencies = [
  "hanko-pdf",
  "libfuzzer-sys",
+ "x509-cert",
 ]
 
 [[package]]

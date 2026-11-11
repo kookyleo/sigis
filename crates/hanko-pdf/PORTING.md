@@ -123,5 +123,11 @@ All fail closed (the port never accepts what pyHanko rejects):
   `/Widths` and a font descriptor).
 - XMP: an XML declaration with an `encoding` attribute after the xpacket
   header is rejected (lxml refuses such decoded text, as pyHanko does).
+- Incremental writers number new objects above every object number the
+  file uses (pyHanko: from `/Size`), so files whose `/Size` does not cover
+  their own xref stream are not clobbered (found by fuzzing; pyHanko would
+  produce an update that its own strict reader rejects).
+- Integral reals beyond 1e15 are written with a trailing `.0` (pyHanko
+  writes them as integers, which only works with arbitrary-precision ints).
 - Producer string: `sigis-hanko <version>` instead of `pyHanko <version>`;
   modification dates are written in UTC (pyHanko: local time zone).

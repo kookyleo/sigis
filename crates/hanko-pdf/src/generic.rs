@@ -937,7 +937,14 @@ pub fn format_real(v: f32) -> String {
     if v.is_finite() && v.fract() == 0.0 && v.abs() < 1e15 {
         return format!("{}", v as i64);
     }
-    format!("{v}")
+    let s = format!("{v}");
+    // pyHanko writes large integral decimals without a dot and reads them
+    // back as (arbitrary-precision) integers; keep them reals here
+    if s.contains('.') {
+        s
+    } else {
+        format!("{s}.0")
+    }
 }
 
 fn write_literal_string(out: &mut Vec<u8>, b: &[u8]) {

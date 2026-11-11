@@ -240,9 +240,13 @@ fn expected_xref_stream_size(idx_pairs: &[i64], entry_sizes: &[i64]) -> Option<i
     if !idx_pairs.len().is_multiple_of(2) {
         return None;
     }
-    let count: i64 = idx_pairs.as_chunks::<2>().0.iter().map(|c| c[1]).sum();
-    let width: i64 = entry_sizes.iter().sum();
-    count.checked_mul(width + 1)
+    let count = idx_pairs
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .try_fold(0i64, |acc, c| acc.checked_add(c[1]))?;
+    let width = entry_sizes.iter().try_fold(0i64, |acc, w| acc.checked_add(*w))?;
+    count.checked_mul(width.checked_add(1)?)
 }
 
 /// Big-endian integer of `size` bytes (`convert_to_int`).
@@ -313,7 +317,7 @@ pub fn parse_xref_stream(
     }
     // Guard against absurd entry counts (pyHanko would loop until memory
     // runs out): an entry needs at least one byte unless all widths are 0.
-    let width: i64 = entry_sizes.iter().sum();
+    let width: i64 = entry_sizes.iter().fold(0i64, |a, w| a.saturating_add(*w));
     let declared: i64 = idx_pairs.as_chunks::<2>().0.iter().map(|c| c[1].max(0)).fold(0i64, i64::saturating_add);
     if declared > (data.len() as i64 / width.max(1)).saturating_add(1_000_000) {
         return Err(PdfError::read("XRef stream declares too many entries"));
@@ -1013,7 +1017,7 @@ fn attempt_startxref_correction(stream: &mut Cursor<'_>, startxref: i64) -> PdfR
     stream.seek_rel(-11)?;
     let tmp = stream.read(20);
     if let Some(xref_loc) = tmp.windows(4).position(|w| w == b"xref") {
-        return Ok(startxref - (10 - xref_loc as i64));
+        return Ok(startxref.saturating_sub(10 - xref_loc as i64));
     }
     let readback = 5i64;
     let base = startxref - readback;
@@ -1021,14 +1025,14 @@ fn attempt_startxref_correction(stream: &mut Cursor<'_>, startxref: i64) -> PdfR
     stream.seek(base_u);
     let tmp = stream.read((2 * readback) as usize);
     if let Some(nl) = tmp.iter().rposition(|&b| b == b'\n') {
-        let target = base + nl as i64 - 1;
+        let target = base.saturating_add(nl as i64 - 1);
         let target = usize::try_from(target).map_err(|_| PdfError::read(format!("negative seek value {target}")))?;
         stream.seek(target);
         skip_over_whitespace(stream, false, true)?;
         let line_start = stream.tell() as i64;
         for look in 0..5 {
             if stream.read1().is_some_and(|b| b.is_ascii_digit()) {
-                return Ok(line_start + look);
+                return Ok(line_start.saturating_add(look));
             }
         }
     }

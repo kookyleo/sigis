@@ -1445,6 +1445,21 @@ impl IncrementalWriter {
             Some(Object::Integer(s)) => u32::try_from(s).map_err(|_| PdfError::read("Invalid /Size"))?,
             _ => return Err(PdfError::read("Trailer lacks a valid /Size")),
         };
+        // pyHanko starts numbering at /Size; files whose /Size does not
+        // cover all their objects (e.g. their own xref stream) would then
+        // get objects (or the new xref stream) clobbered, which the reader
+        // rejects. Start above every number the file uses.
+        let highest_used = base
+            .xrefs()
+            .sections()
+            .iter()
+            .enumerate()
+            .flat_map(|(ix, _)| base.xrefs().explicit_refs_raw(ix))
+            .map(|(id, _)| id)
+            .chain(base.xrefs().xref_stream_refs.iter().map(|r| r.0))
+            .max()
+            .unwrap_or(0);
+        let size = size.max(highest_used);
         let stream_xrefs = base.has_xref_stream();
         let input_version = base.input_version();
         let mut w = PdfWriter::with_base(

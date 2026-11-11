@@ -616,7 +616,7 @@ impl PdfFile {
                 return Err(PdfError::strict("Object is in wrong index."));
             }
             let offset = crate::rw_common::as_int(&offset)?;
-            let obj_start = first_object + offset;
+            let obj_start = first_object.saturating_add(offset);
             let obj_start = usize::try_from(obj_start)
                 .map_err(|_| PdfError::value(format!("negative seek value {obj_start}")))?;
             sd.seek(obj_start);

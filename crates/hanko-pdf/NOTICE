@@ -18,6 +18,7 @@ Derived files:
 - src/metadata/: pyhanko/pdf_utils/metadata/{model,info}.py
 - src/signatures.rs: pyhanko/pdf_utils/form_tools.py, pyhanko/sign/fields.py,
   pyhanko/sign/validation/{pdf_embedded,dss}.py
+- fuzz/fuzz_targets/*.rs, tests/fuzz_regressions.rs: original (Apache-2.0)
 - tests/common/mod.rs: pyhanko_testing_commons/test_data/samples.py
 - src/extensions.rs: pyhanko/pdf_utils/extensions.py
 - src/metadata/xmp_xml.rs: pyhanko/pdf_utils/metadata/xmp_xml.py

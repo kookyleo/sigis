@@ -11,6 +11,9 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 hanko-pdf = { path = ".." }
+# hanko-core needs x509-cert/hazmat but does not enable it itself (lane B
+# request 1 to the lead); enable it here so the fuzz crate builds alone.
+x509-cert = { version = "0.3", default-features = false, features = ["hazmat"] }
 
 # Not part of the main workspace: built with `cargo fuzz` (nightly).
 [workspace]
