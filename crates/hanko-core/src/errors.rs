@@ -91,6 +91,10 @@ pub enum ValidationError {
     /// An algorithm was used that the algorithm usage policy forbids.
     #[error("{0}")]
     DisallowedAlgorithm(String),
+    /// Proof of existence is insufficient for past validation
+    /// (`InsufficientPOEError`, a `PathValidationError` subclass).
+    #[error("{0}")]
+    InsufficientPoe(String),
     /// Input could not be decoded.
     #[error("malformed input: {0}")]
     Malformed(String),
@@ -122,6 +126,7 @@ impl ValidationError {
             Self::InsufficientRevinfo(_) => "InsufficientRevinfoError",
             Self::StaleRevinfo { .. } => "StaleRevinfoError",
             Self::DisallowedAlgorithm(_) => "DisallowedAlgorithmError",
+            Self::InsufficientPoe(_) => "InsufficientPOEError",
             Self::Malformed(_) => "ValueError",
         }
     }
@@ -223,6 +228,16 @@ pub enum HankoError {
         /// AdES sub-indication (EN 319 102-1 §5.1.3).
         ades_subindication: Option<crate::ades::AdesSubIndic>,
     },
+    /// A layout or appearance could not be produced (pyHanko `LayoutError`).
+    #[error("layout error: {0}")]
+    Layout(String),
+    /// Invalid configuration (pyHanko `ConfigurationError`).
+    #[error("configuration error: {0}")]
+    Configuration(String),
+    /// A form field could not be filled or created (pyHanko form filling
+    /// errors, e.g. `SigningError` raised while preparing fields).
+    #[error("form filling error: {0}")]
+    FormFilling(String),
     /// Signing failed (key provider, timestamping, embedding).
     #[error("signing failed: {0}")]
     Signing(String),

@@ -43,8 +43,11 @@ pub fn subindication_for_validation_error(err: &ValidationError, is_ee_cert: boo
                 AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE.into()
             }
         }
+        // InsufficientPOEError is a PathValidationError in pyHanko; only a
+        // wrapping TimeSlideFailure maps to NO_POE.
         ValidationError::NotYetValid { .. }
         | ValidationError::PathValidation(_)
+        | ValidationError::InsufficientPoe(_)
         | ValidationError::InsufficientRevinfo(_)
         | ValidationError::Malformed(_) => {
             AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE.into()
