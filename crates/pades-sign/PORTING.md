@@ -28,8 +28,8 @@ counts: `docs/lanes/d.md`.
 | `pdf_utils/form_tools.py` (`enumerate_fields_in`, `get_single_field_annot`, `annot_width_height`) | `src/pdf/fields.rs` | ported |
 | `pdf_utils/generic.py` (`pdf_date`, `pdf_string`) | `src/pdf/util.rs` | ported |
 | Encryption for updates of encrypted files (`crypt/` standard handler) | `src/pdf/writer.rs` via `lopdf::encryption` | standard handler supported; public-key handler pending (lane B) |
-| `sign/pkcs11.py` | `src/pkcs11.rs` | in progress (sub-slice) |
-| `sign/signers/csc_signer.py` | `src/csc.rs` | in progress (sub-slice) |
+| `sign/pkcs11.py` | `src/pkcs11.rs` | ported (`cryptoki`) |
+| `sign/signers/csc_signer.py` | `src/csc.rs` | ported (blocking `reqwest`) |
 | `stamp/`, `pdf_utils/{layout,text,content,images,qr,barcodes}.py`, `pdf_utils/font/` | `src/stamp/`, `src/layout.rs`, `src/text.rs`, `src/content/`, `src/images.rs`, `src/qr.rs`, `src/barcodes.rs`, `src/font/` | in progress (sub-slice) |
 
 ## Test mapping
@@ -41,8 +41,8 @@ counts: `docs/lanes/d.md`.
 | `test_fields.py` | `tests/test_fields.rs` | 27 | 25 | 0 | 2 |
 | `test_seed_values.py` | `tests/test_seed_values.rs` | 36 | 34 | 1 | 1 |
 | `test_sign_encrypted.py` | `tests/test_sign_encrypted.rs` | 11 | 8 | 0 | 3 |
-| `test_pkcs11.py` | `tests/test_pkcs11.rs` | 36 | — | — | in progress |
-| `test_csc.py` | `tests/test_csc.rs` | 17 | — | — | in progress |
+| `test_pkcs11.py` | `tests/test_pkcs11.rs` | 36 | 34 | 2 | 0 |
+| `test_csc.py` | `tests/test_csc.rs` | 17 | 17 | 0 | 0 |
 | `test_stamp.py` | `tests/test_stamp.rs` | 25 | — | — | in progress |
 | `test_text.py` | `tests/test_text.rs` | 15 | — | — | in progress |
 | `test_images.py` | `tests/test_images.rs` | 2 | — | — | in progress |

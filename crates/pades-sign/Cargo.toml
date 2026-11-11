@@ -43,7 +43,11 @@ getrandom = "0.3"
 flate2 = "1"
 # ML-DSA (FIPS 204) signing
 ml-dsa = "0.1"
+# Key providers: PKCS#11 tokens and CSC remote signing services.
+cryptoki = "0.12.1"
+reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }
-serde_json = { workspace = true }
+tiny_http = "0.12.0"

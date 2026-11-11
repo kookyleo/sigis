@@ -16,9 +16,11 @@
 
 pub mod attributes;
 pub mod cms;
+pub mod csc;
 pub mod keys;
 pub mod ltv;
 pub mod pdf;
+pub mod pkcs11;
 pub mod pkcs12;
 pub mod signer;
 pub mod stamp;
@@ -247,31 +249,5 @@ pub fn add_validation_info(
     match timestamper {
         Some(ts) => crate::pdf::timestamp::update_archival_chain_with(&out, ts, ctx, DigestAlgorithm::Sha256),
         None => Ok(out),
-    }
-}
-
-/// PKCS#11 key access via `cryptoki` (`pyhanko.sign.pkcs11`).
-pub mod pkcs11 {
-    use hanko_core::errors::{not_implemented, Result};
-
-    /// How to find a key on a token.
-    #[derive(Clone, Debug, Default, PartialEq, Eq)]
-    pub struct Pkcs11Config {
-        /// Path of the PKCS#11 module.
-        pub module_path: String,
-        /// Token label.
-        pub token_label: Option<String>,
-        /// Key label.
-        pub key_label: Option<String>,
-        /// Key id.
-        pub key_id: Option<Vec<u8>>,
-    }
-
-    /// Open a PKCS#11 signer; returns a [`hanko_core::sign::KeySigner`].
-    pub fn open(
-        _config: &Pkcs11Config,
-        _pin: Option<&str>,
-    ) -> Result<std::sync::Arc<dyn hanko_core::sign::KeySigner>> {
-        not_implemented("hanko_sign::pkcs11::open")
     }
 }

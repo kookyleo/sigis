@@ -6,6 +6,8 @@
 
 pub mod pdfcheck;
 pub mod services;
+pub mod softhsm;
+pub mod csc_server;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

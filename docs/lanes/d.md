@@ -35,8 +35,8 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 | `test_pades.py` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | 27 | 25 | 0 | 2 |
 | `test_seed_values.py` | 36 | 34 | 1 | 1 |
-| `test_pkcs11.py` | 36 | 0 | 0 | 36 |
-| `test_csc.py` | 17 | 0 | 0 | 17 |
+| `test_pkcs11.py` | 36 | 34 | 2 | 0 |
+| `test_csc.py` | 17 | 17 | 0 | 0 |
 | `test_sign_encrypted.py` | 11 | 8 | 0 | 3 |
 | `test_stamp.py` | 25 | 0 | 0 | 25 |
 | `test_text.py` | 15 | 0 | 0 | 15 |
@@ -81,6 +81,25 @@ L1); see the README there.
   oracle verifies.
 - `test_sign_prescribed_attrs` uses the local TSA instead of pyHanko's HTTP
   timestamp client against the mocked TSA (HTTP client: lane A).
+
+### `test_pkcs11.py` / `test_csc.py` details
+
+- PKCS#11 via `cryptoki` 0.12 against SoftHSM2 tokens created per test
+  process (`tests/support/softhsm.rs`; module `/usr/lib/softhsm/libsofthsm2.so`
+  or `PKCS11_TEST_MODULE`; tests print a reason and pass if SoftHSM is
+  absent). Skipped (2): `test_simple_sign_from_config_with_signing_pin`
+  (pyHanko runs it on SafeNet only; SoftHSM cannot require per-signature
+  login), `test_simple_sign_with_raw_dsa` (no DSA in `cryptoki` 0.12 /
+  `hanko-core`). Inside passing parametrized tests, Ed448 / ML-DSA / DSA
+  cases and three `CKM_ECDSA_SHA256` cases are skipped at run time (not
+  supported by SoftHSM 2.6.1 or the core); raw `CKM_ECDSA` covers ECDSA.
+- Divergences: `Pkcs11Signer::new` loads the certificate and key handles
+  eagerly (pyHanko: on first use), so lookup errors surface earlier.
+- CSC via blocking `reqwest` against a local port of certomancer-csc-dummy
+  (`tests/support/csc_server.rs`, `127.0.0.1:0`). pyHanko's coroutines are
+  threads; `SlowCommitter` becomes a server-side delay; the network-failure
+  test connects to a closed local port. Extra test
+  `test_csc_sign_pdf_end_to_end` signs a PDF through the fake service.
 
 ### `test_fields.py` / `test_seed_values.py` details
 
