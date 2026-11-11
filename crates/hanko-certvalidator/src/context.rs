@@ -6,7 +6,7 @@
 use core::time::Duration;
 use std::sync::Arc;
 
-use super::authority::{Cert, TrustAnchor};
+use super::authority::{Cert, TrustAnchor, TrustManager};
 use super::policy::{
     CertRevTrustPolicy, NonRevokedStatusAssertion, RevocationCheckingPolicy, ValidationTimingParams,
 };
@@ -36,6 +36,7 @@ pub struct ValidationContext {
     pub(crate) assertions: Vec<NonRevokedStatusAssertion>,
     pub(crate) fetchers: Fetchers,
     pub(crate) acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
+    pub(crate) trust_manager: Option<Arc<dyn TrustManager>>,
 }
 
 impl ValidationContext {
@@ -79,13 +80,93 @@ impl ValidationContext {
         self.algorithm_policy.clone()
     }
 
+    /// The trust manager, if one was configured.
+    pub fn trust_manager(&self) -> Option<&Arc<dyn TrustManager>> {
+        self.trust_manager.as_ref()
+    }
+
+    /// `cert` as a trust anchor: a supplied anchor with this certificate, or
+    /// the trust manager's answer.
+    pub fn as_trust_anchor(&self, cert: &Cert) -> Option<TrustAnchor> {
+        self.trust_anchors
+            .iter()
+            .find(|a| a.cert() == cert)
+            .cloned()
+            .or_else(|| self.trust_manager.as_ref()?.as_trust_anchor(cert))
+    }
+
+    /// Is `cert` a trust anchor ([`Self::as_trust_anchor`])?
+    pub fn is_trust_anchor(&self, cert: &Cert) -> bool {
+        self.as_trust_anchor(cert).is_some()
+    }
+
+    /// Trust anchors that may have issued `cert`: the supplied ones, then
+    /// the trust manager's `find_potential_issuers` (duplicates removed).
+    /// Callers still check names and key identifiers.
+    pub fn potential_issuing_anchors(&self, cert: &Cert) -> Vec<TrustAnchor> {
+        let mut out = self.trust_anchors.clone();
+        if let Some(manager) = &self.trust_manager {
+            for anchor in manager.find_potential_issuers(cert) {
+                if !out.iter().any(|a| a.cert() == anchor.cert()) {
+                    out.push(anchor);
+                }
+            }
+        }
+        out
+    }
+
+    /// The CRLs supplied to the context, DER-encoded (`crls`).
+    pub fn crls(&self) -> impl Iterator<Item = &[u8]> {
+        self.crls.iter().map(CrlContainer::der)
+    }
+
+    /// The OCSP responses supplied to the context, DER-encoded (`ocsps`).
+    /// A response with several single responses appears once.
+    pub fn ocsps(&self) -> impl Iterator<Item = &[u8]> {
+        let mut seen: Vec<&[u8]> = Vec::new();
+        self.ocsps.iter().filter_map(move |o| {
+            let der = o.der();
+            if seen.contains(&der) {
+                None
+            } else {
+                seen.push(der);
+                Some(der)
+            }
+        })
+    }
+
+    /// A copy of this context extended with validation material from a
+    /// document, for example a PDF DSS: certificates for path building,
+    /// CRLs and OCSP responses. Duplicates are ignored. Proofs of existence
+    /// are kept separately in a
+    /// [`PoeManager`](crate::ltv::poe::PoeManager).
+    pub fn with_revinfo<'a>(
+        &self,
+        certs: impl IntoIterator<Item = &'a Cert>,
+        crls: impl IntoIterator<Item = &'a [u8]>,
+        ocsps: impl IntoIterator<Item = &'a [u8]>,
+    ) -> Result<Self, ValidationError> {
+        let mut out = self.with_other_certs(certs);
+        for der in crls {
+            if !out.crls.iter().any(|c| c.der() == der) {
+                out.crls.push(CrlContainer::from_der(der)?);
+            }
+        }
+        for der in ocsps {
+            if !out.ocsps.iter().any(|o| o.der() == der) {
+                out.ocsps.extend(OcspContainer::load(der)?);
+            }
+        }
+        Ok(out)
+    }
+
     /// A copy of this context with additional certificates available for
     /// path building (`certificate_registry.register_multiple`). Duplicates
     /// are ignored.
     pub fn with_other_certs<'a>(&self, certs: impl IntoIterator<Item = &'a Cert>) -> Self {
         let mut out = self.clone();
         for c in certs {
-            if !out.other_certs.contains(c) && !out.trust_anchors.iter().any(|a| a.cert() == c) {
+            if !out.other_certs.contains(c) && !out.is_trust_anchor(c) {
                 out.other_certs.push(c.clone());
             }
         }
@@ -146,9 +227,17 @@ pub struct ValidationContextBuilder {
     assertions: Vec<NonRevokedStatusAssertion>,
     fetchers: Fetchers,
     acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
+    trust_manager: Option<Arc<dyn TrustManager>>,
 }
 
 impl ValidationContextBuilder {
+    /// Consult `manager` for trust anchors in addition to the supplied ones
+    /// (pyhanko-certvalidator `trust_manager`).
+    pub fn trust_manager(mut self, manager: Arc<dyn TrustManager>) -> Self {
+        self.trust_manager = Some(manager);
+        self
+    }
+
     /// Targets this validator accepts for targeted attribute certificates
     /// (`acceptable_ac_targets`).
     pub fn acceptable_ac_targets(mut self, targets: crate::ac::AcTargetDescription) -> Self {
@@ -295,6 +384,7 @@ impl ValidationContextBuilder {
             assertions: self.assertions,
             fetchers: self.fetchers,
             acceptable_ac_targets: self.acceptable_ac_targets,
+            trust_manager: self.trust_manager,
         })
     }
 }

@@ -364,6 +364,8 @@ pub fn derive_quals_from_cert(cert: &crate::authority::Cert) -> crate::authority
             .and_then(|b| b.path_len_constraint)
             .map(usize::from),
         max_aa_path_length: None,
+        valid_from: Some(cert.not_before()),
+        valid_until: Some(cert.not_after()),
         trusted_service_type: if bc.is_some_and(|b| b.ca) {
             crate::authority::TrustedServiceType::CertificateAuthority
         } else {

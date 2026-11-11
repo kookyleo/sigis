@@ -148,11 +148,19 @@ fn name_constraints_set(
     set
 }
 
-fn environment(ctx: &ValidationContext) -> Result<PkiEnvironment, ValidationError> {
+fn environment(
+    ctx: &ValidationContext,
+    path_anchor: &TrustAnchor,
+) -> Result<PkiEnvironment, ValidationError> {
     let mut pe = PkiEnvironment::default();
     pe.populate_5280_pki_environment();
     let mut tas = TaSource::new();
-    for anchor in &ctx.trust_anchors {
+    let extra = (!ctx
+        .trust_anchors
+        .iter()
+        .any(|a| a.cert() == path_anchor.cert()))
+    .then_some(path_anchor);
+    for anchor in ctx.trust_anchors.iter().chain(extra) {
         tas.push(CertFile {
             filename: String::new(),
             bytes: anchor.cert().der().to_vec(),
@@ -227,7 +235,7 @@ struct PathSearch<'a> {
 impl PathSearch<'_> {
     fn has_issuer(&self, current: &Cert) -> bool {
         self.ctx
-            .trust_anchors
+            .potential_issuing_anchors(current)
             .iter()
             .any(|a| a.cert() != current && may_have_issued(a.cert(), current))
             || self
@@ -260,8 +268,11 @@ impl PathSearch<'_> {
             return;
         }
         self.fetch_missing(current);
-        for anchor in &self.ctx.trust_anchors {
-            if anchor.can_issue() && anchor.cert() != current && may_have_issued(anchor.cert(), current) {
+        for anchor in self.ctx.potential_issuing_anchors(current) {
+            if anchor.can_issue()
+                && anchor.cert() != current
+                && may_have_issued(anchor.cert(), current)
+            {
                 let intermediates = chain.iter().rev().cloned().collect();
                 out.push(ValidationPath::new(
                     anchor.clone(),
@@ -282,7 +293,7 @@ impl PathSearch<'_> {
                 crate::names::check_name(candidate.subject()).is_ok()
                     && *candidate != self.leaf
                     && !chain.contains(candidate)
-                    && !self.ctx.trust_anchors.iter().any(|a| a.cert() == *candidate)
+                    && !self.ctx.is_trust_anchor(candidate)
                     && may_have_issued(candidate, current)
             })
             .cloned()
@@ -305,9 +316,9 @@ pub fn build_paths(
     ctx: &ValidationContext,
     leaf: &Cert,
 ) -> Result<Vec<ValidationPath>, ValidationError> {
-    if let Some(anchor) = ctx.trust_anchors.iter().find(|a| a.cert() == leaf) {
+    if let Some(anchor) = ctx.as_trust_anchor(leaf) {
         return Ok(vec![ValidationPath::new(
-            anchor.clone(),
+            anchor,
             Vec::new(),
             Some(leaf.clone()),
         )]);
@@ -330,6 +341,12 @@ pub fn build_paths(
     Ok(paths)
 }
 
+/// A moment as pyhanko-certvalidator writes it in error messages
+/// (`strftime('%Y-%m-%d %H:%M:%SZ')`).
+pub(crate) fn py_time(m: hanko_core::time::Moment) -> String {
+    m.to_string().replacen('T', " ", 1)
+}
+
 fn check_validity(
     ctx: &ValidationContext,
     cert: &Cert,
@@ -341,7 +358,7 @@ fn check_validity(
         return Err(ValidationError::Expired {
             msg: format!(
                 "The path could not be validated because {description} expired {}",
-                cert.not_after()
+                py_time(cert.not_after())
             ),
         });
     }
@@ -349,7 +366,7 @@ fn check_validity(
         return Err(ValidationError::NotYetValid {
             msg: format!(
                 "The path could not be validated because {description} is not valid until {}",
-                cert.not_before()
+                py_time(cert.not_before())
             ),
         });
     }
@@ -425,7 +442,10 @@ pub fn find_valid_path(
     // pyhanko-certvalidator fails with a `ValueError` on such certificates.
     for name in [cert.subject(), cert.issuer()] {
         if let Err(e) = crate::names::check_name(name) {
-            return Err(Box::new(PathFailure::plain(ValidationError::Malformed(e), None)));
+            return Err(Box::new(PathFailure::plain(
+                ValidationError::Malformed(e),
+                None,
+            )));
         }
     }
     let paths = match build_paths(ctx, cert) {
@@ -592,7 +612,9 @@ fn qualified_policies(
             let mut ps: Vec<usize> = up
                 .iter()
                 .enumerate()
-                .filter(|(_, p)| p.valid_policy != any && p.expected_policy_set.contains(&node.valid_policy))
+                .filter(|(_, p)| {
+                    p.valid_policy != any && p.expected_policy_set.contains(&node.valid_policy)
+                })
                 .map(|(i, _)| i)
                 .collect();
             if ps.is_empty() {
@@ -654,7 +676,8 @@ fn qualified_policies(
         node_set.push((n, i));
     }
     // Step (g)(4).
-    let mut quals: BTreeMap<const_oid::ObjectIdentifier, Vec<PolicyQualifierInfo>> = BTreeMap::new();
+    let mut quals: BTreeMap<const_oid::ObjectIdentifier, Vec<PolicyQualifierInfo>> =
+        BTreeMap::new();
     let mut leaves: BTreeMap<const_oid::ObjectIdentifier, BTreeSet<const_oid::ObjectIdentifier>> =
         BTreeMap::new();
     for (d, i) in node_set {
@@ -665,7 +688,12 @@ fn qualified_policies(
         let desc = descendants(d, i);
         relatives.extend(desc.iter().copied());
         for (rd, ri) in relatives {
-            for q in tree[rd][ri].qualifier_set.as_deref().map(decode_qualifiers).unwrap_or_default() {
+            for q in tree[rd][ri]
+                .qualifier_set
+                .as_deref()
+                .map(decode_qualifiers)
+                .unwrap_or_default()
+            {
                 if !entry.contains(&q) {
                     entry.push(q);
                 }
@@ -724,12 +752,27 @@ fn validate_path_in_stack(
 ) -> Result<Vec<crate::path::QualifiedPolicy>, Box<PathFailure>> {
     let fail = |error: ValidationError| Box::new(PathFailure::plain(error, Some(path.clone())));
     let anchor: &TrustAnchor = path.trust_anchor();
-    if anchor.enforce_validity() {
-        check_validity(ctx, anchor.cert(), "the trust anchor").map_err(|e| {
-            let mut f = fail(e);
-            f.time_horizon = Some(anchor.cert().not_after());
-            f
-        })?;
+    // Trust anchor validity period from the qualifiers, compared without
+    // tolerance, as pyhanko-certvalidator does.
+    let moment = ctx.timing.validation_time;
+    let quals = anchor.qualifiers();
+    if let Some(from) = quals.valid_from.filter(|from| *from > moment) {
+        return Err(fail(ValidationError::NotYetValid {
+            msg: format!(
+                "The path could not be validated because the trust anchor is not valid until {}",
+                py_time(from)
+            ),
+        }));
+    }
+    if let Some(until) = quals.valid_until.filter(|until| *until < moment) {
+        let mut f = fail(ValidationError::Expired {
+            msg: format!(
+                "The path could not be validated because the trust anchor expired {}",
+                py_time(until)
+            ),
+        });
+        f.time_horizon = Some(until);
+        return Err(f);
     }
     let issued = path.issued_certs();
     if issued.is_empty() {
@@ -758,7 +801,11 @@ fn validate_path_in_stack(
         .validation_time
         .to_der_datetime()
         .map(TimeOfInterest)
-        .ok_or_else(|| fail(ValidationError::Malformed("time of interest out of range".into())))?;
+        .ok_or_else(|| {
+            fail(ValidationError::Malformed(
+                "time of interest out of range".into(),
+            ))
+        })?;
     // The anchor's qualifiers combine with the caller's parameters.
     // Permitted subtrees must be intersected: certval gets one list, and
     // every further list is checked by another certval run below.
@@ -797,7 +844,7 @@ fn validate_path_in_stack(
         }
     }
     let cps = settings(ctx, toi, anchor.enforce_validity(), params);
-    let pe = environment(ctx).map_err(fail)?;
+    let pe = environment(ctx, anchor).map_err(fail)?;
 
     let ta = PDVTrustAnchorChoice::try_from(anchor.cert().der())
         .map_err(|e| fail(ValidationError::Malformed(format!("trust anchor: {e}"))))?;

@@ -18,10 +18,9 @@ See `docs/hanko-lanes.md`.
   asn1crypto-compatible name display and string-preparation checks
   (`names`), generic RSASSA-PSS (MGF1 digest different from the message
   digest), the `ecdsa` signature OID.
-- Oracle: `/tmp/pyhanko-oracle/venv` is not installed yet; lane A uses a
-  local copy at `/tmp/lane-a/venv` (pyHanko 0.38.1, pyhanko-certvalidator
-  0.33.0, Certomancer 0.16.0) and the tag sources at `/tmp/lane-a/v0.38.1`.
-  Fixtures: `crates/hanko-testdata/data/lanes/a/harvest/` (see its README).
+- Oracle: the standard venv `/tmp/pyhanko-oracle/venv` and the sources in
+  `/tmp/pyhanko-oracle/src` (§5.4). Fixtures:
+  `crates/hanko-testdata/data/lanes/a/harvest/` (see its README).
 
 - Phase 2: `hanko-fetch` ported (HTTP fetchers with caches, budget,
   multi-URL fallback; RFC 3161 client). Tests use a local server on
@@ -45,7 +44,13 @@ See `docs/hanko-lanes.md`.
   `test_policy_graph.py` skipped with equivalent coverage (see
   `crates/hanko-certvalidator/PORTING.md`).
 
-Remaining: 15 `test_cms.py` functions wait on request R1 (algorithms);
+- Round 1 integration (rebased on `main` b9176be): `hanko_core::key_usage`
+  is the single `KeyUsageConstraints` (A-4), `hanko-cms` uses
+  `hanko_core::ades`, `CmsError` maps to `HankoError::SignatureValidation`,
+  fixtures resolve at run time. `ValidationContext` gained a trust manager
+  hook (A-2), `crls()` / `ocsps()` (A-6) and `with_revinfo` (A-3).
+
+Remaining: 15 `test_cms.py` functions wait on R1 (algorithms, see R8);
 `test_embed_ac_revinfo_adobe_style` waits on lane E (`ades_lta_validation`).
 
 ## Per-suite counts
@@ -89,65 +94,86 @@ accepts); the tests assert this.
 
 ## Requests to the lead
 
-- **R1 — hanko-core algorithm dependencies.** `algorithms.rs` (lane A) needs
-  MD5, SHA-3 / SHAKE256, DSA and Ed448 to match pyHanko (15 `test_cms.py`
-  functions, NIST PKITS 4.1.4/4.1.5, the Ed448 certvalidator test). Please
-  add to `crates/hanko-core/Cargo.toml` (versions match the digest 0.11 /
-  signature 3 family already in use):
-  `md-5 = { version = "0.11", default-features = false, features = ["oid"] }`,
-  `sha3 = { version = "0.11", default-features = false, features = ["oid"] }`,
-  `dsa = { version = "0.7", default-features = false }`,
-  `ed448-goldilocks = { version = "0.14.0-pre.15", default-features = false }`.
-  Lane A will then add the variants `Md5`, `Sha3_224`, `Sha3_256`,
-  `Sha3_384`, `Sha3_512` and `Shake256` to `DigestAlgorithm` (§4 interface:
-  additive, but exhaustive `match`es in other crates would need a new arm;
-  none exist today) and `Dsa(..)` / `Ed448` to `SignatureMechanism`.
-- **R2 — `HankoError` variant for CMS validation failures.** The §4
-  functions return `hanko_core::Result`; pyHanko raises
-  `SignatureValidationError` with an AdES sub-indication. Please add
-  `HankoError::SignatureValidation { message: String, ades_subindication: Option<&'static str> }`.
-  Until then `From<CmsError> for HankoError` maps to `Malformed` (full
-  message kept, fails closed); callers that need the class use
-  `hanko_cms::validate_cms_signature_with` (returns `CmsError`).
-- **R3 — `x509-cert` feature in hanko-core.** `cert.rs` uses
-  `x509_cert::certificate::Raw` (feature `hazmat`), which hanko-core only
-  gets through feature unification with `certval`; `cargo check -p
-  hanko-core` alone fails. Please enable `features = ["pem", "hazmat"]` for
-  x509-cert in `crates/hanko-core/Cargo.toml`.
-- **R4 — hanko-testdata data path with a shared target directory.**
-  `hanko_testdata::path` uses the compile-time `CARGO_MANIFEST_DIR`. All
-  worktrees share `/build/sigis/target` and the same relative package path,
-  so cargo reuses a hanko-testdata build from another worktree, and fixtures
-  added on a lane branch are looked up in `main`'s checkout (observed here).
-  Suggest resolving the data directory at run time, e.g. from the test
-  binary's `CARGO_MANIFEST_DIR` (`<crate>/../hanko-testdata/data`), falling
-  back to the compile-time path. Lane A's tests do this locally
-  (`tests/common/mod.rs::lane_data`).
-- **R6 — `ValidationError` variants for LTV.** pyhanko-certvalidator has
-  `InsufficientPOEError` and `TimeSlideFailure`. `hanko_certvalidator::ltv`
-  reports them through its own `LtvError`; the §4 functions
-  (`time_slide`, `past_validate`) map them to
+Resolved in lead round 1: R1 approved (implementation: see R8), R2, R3, R4
+and R5 done or approved.
+
+- **R6 — `ValidationError` variants for LTV (open).** pyhanko-certvalidator
+  has `InsufficientPOEError` and `TimeSlideFailure`.
+  `hanko_certvalidator::ltv` reports them through its own `LtvError`; the §4
+  functions (`time_slide`, `past_validate`) map them to
   `ValidationError::PathValidation` with the message. If lane E needs to
   tell them apart through `HankoError`, please add
   `ValidationError::InsufficientPoe(String)` (a `PathValidationError`
   subclass in pyHanko).
-- **R5 — additive interface changes in `hanko-cms` and `hanko-fetch` (for approval).** Kept
-  every §4 item; added fields to `SignatureStatus` (`trust_problem_indic`,
-  `pkcs7_signature_mechanism`, `md_algorithm_name`, `revocation_details`,
-  `error_time_horizon`, `validation_time`) and to
-  `StandardCmsSignatureStatus` (`cades_signer_attrs`, `ac_attrs`,
-  `ac_validation_errs`). In `hanko-certvalidator::ltv`, `PoeType` gained
-  `Policy`, `PoeManager` gained `with_current_time`, `poe_time`,
-  `register_by_digest`, `iter`, `merge`. `PkixValidationParams` (§4
-  `policy::*`) gained `initial_permitted_subtrees`,
-  `initial_excluded_subtrees` and `max_policy_graph_nodes` (struct
-  literals need `..Default::default()`); `TrustAnchor` gained qualifiers.
-  `TrustProblem::KeyUsage` also carries the
-  self-signed `InvalidCertificateError`. In `hanko-fetch`, `FetchLimits`
-  gained `max_requests`, `max_cert_requests`, `max_aia_urls_per_object`
-  (pyhanko-certvalidator 0.33 `FetchLimits`), `HttpFetchers` is now built
-  with `HttpFetchers::new(FetcherSettings)` (fields private, shared caches
-  and budget), and `HttpTimeStamper` with `HttpTimeStamper::new(url)` plus
-  builder methods (`url` and `limits` stay public). Consumers that construct
-  these structs with literals would need the new constructors; readers are
-  unaffected.
+- **R7 — lane E unit tests construct `hanko_cms` status structs with
+  literals (needs a lane E change).** R5 added fields to `SignatureStatus`
+  and `StandardCmsSignatureStatus`, so three struct literals in lane E's
+  `#[cfg(test)]` code no longer compile:
+  `crates/hanko-ades/src/basic.rs:303` and
+  `crates/hanko-ades/src/with_time.rs:290` (`SignatureStatus { .. }`),
+  `crates/hanko-ades/src/with_time.rs:313`
+  (`StandardCmsSignatureStatus { .. }`). Both types now derive `Default`
+  (the fail-closed status); the fix is `..Default::default()` as the last
+  line of each literal. Everything else in the workspace builds; clippy is
+  clean with `--exclude hanko-ades` plus `-p hanko-ades --lib`.
+- **R8 — R1 changes exhaustive matches in lane E crates.** The new
+  `DigestAlgorithm` variants (`Md5`, `Sha3_224`, `Sha3_256`, `Sha3_384`,
+  `Sha3_512`, `Shake256`) break three exhaustive `match`es in lane E code
+  that did not exist when R1 was written:
+  `crates/hanko-eutl/src/xml/dsig.rs:308` and `:350` (digest to
+  RSA / ECDSA signature OID) and
+  `crates/hanko-ades/src/etsi_report.rs:184` (digest to XML URI). Lane A
+  keeps the R1 work in a separate commit at the end of this branch. Each
+  match needs an arm for the new variants: in `dsig.rs`, an "unsupported
+  algorithm" error (XML-DSig there only uses SHA-1/SHA-2), and in
+  `etsi_report.rs`, the XML Signature URIs
+  (`http://www.w3.org/2007/05/xmldsig-more#sha3-256` etc.; MD5:
+  `http://www.w3.org/2001/04/xmldsig-more#md5`). Please apply those arms
+  when merging, or tell lane A to mark `DigestAlgorithm` `#[non_exhaustive]`
+  instead.
+
+## Requests from other lanes (relayed by the lead, 2026-11-12)
+
+Status of the relayed items:
+
+- **A-1 (lane E): done.** `ValidationPath::qualified_policies()` returns
+  `Option<&[QualifiedPolicy]>` (issuer- and user-domain policy OIDs, plus
+  CPS URI and user notice text), set on paths returned by
+  `validate_path_qualified` / `find_valid_path`. The pre-eIDAS check of
+  `hanko-eutl` can use it.
+- **A-2 (lane E): done.** `TrustAnchor::with_qualifiers(cert,
+  TrustQualifiers { valid_from, valid_until, trusted_service_type,
+  standard_parameters, max_path_length, .. })` and
+  `TrustAnchor::from_name_and_key`; qualifiers are enforced during
+  validation. Trust manager hook: trait
+  `hanko_certvalidator::TrustManager` (`as_trust_anchor(&Cert)`,
+  `find_potential_issuers(&Cert)`) and
+  `ValidationContextBuilder::trust_manager(Arc<dyn TrustManager>)`. Path
+  building consults the manager after the supplied anchors; CRL and OCSP
+  issuer lookup sees the supplied anchors, other certificates and the path.
+- **A-3 (lane E): done.** `hanko_cms::validate_cms_signature_with(..,
+  &CmsValidationOptions)` takes `key_usage_settings`, the CMS algorithm
+  policy and separate timestamp / AC contexts; pyHanko's PDF defaults
+  (`non_repudiation` or `digital_signature`) are passed by the caller, as in
+  pyHanko. `is_ee_cert` / `is_side_validation`: `ValidationError` is
+  lead-owned, so they are on `hanko_certvalidator::PathFailure` (returned by
+  `find_valid_path` / `validate_path_detailed`), and
+  `hanko_cms::validate::handle_path_failure` already ports
+  `handle_certvalidator_errors` (`CertUsageResult::error_subindic`). If lane
+  E prefers the fields on `ValidationError::{Expired, Revoked}`, that is a
+  lead change. DSS material: `ValidationContext::with_revinfo(certs, crls,
+  ocsps)` returns an extended copy; POEs go into
+  `hanko_certvalidator::ltv::poe::PoeManager` (`register`,
+  `register_by_digest`, `merge`).
+- **A-4 (lead): done.** See commit "Use the shared key usage and AdES types
+  from hanko-core". The lane E call sites compile unchanged. `Default` now
+  equals `new()` (pyHanko: `explicit_extd_key_usage_required=True`); the
+  derived `Default` had `false`. Key purpose names now follow asn1crypto
+  exactly: `1.2.840.113583.1.1.5` is `adobe_authentic_documents_trust` (was
+  `pdf_signing`), and `0.4.0.2231.3.0` has no name in asn1crypto (was
+  `tsl_signing`; now its dotted OID). No lane E code uses either name.
+- **A-5 (lane D): see R8.** SHA-3 / SHAKE256 digests, DSA and Ed448
+  verification. Signing (Ed448, DSA, ML-DSA) is lane D's; the crates are
+  then available in `hanko-core`.
+- **A-6 (lane D): done.** `ValidationContext::crls()` and `ocsps()` return
+  the supplied DER encodings.

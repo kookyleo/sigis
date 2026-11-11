@@ -33,7 +33,7 @@ pub mod revinfo;
 mod stringprep_tables;
 pub mod validate;
 
-pub use authority::{Cert, TrustAnchor};
+pub use authority::{Cert, TrustAnchor, TrustManager};
 pub use context::{ValidationContext, ValidationContextBuilder};
 pub use path::{QualifiedPolicy, ValidationPath};
 pub use policy::{
@@ -42,6 +42,5 @@ pub use policy::{
 };
 pub use validate::{
     build_paths, find_valid_path, validate_path, validate_path_detailed, validate_path_qualified,
-    CertificateValidator,
-    PathFailure,
+    CertificateValidator, PathFailure,
 };

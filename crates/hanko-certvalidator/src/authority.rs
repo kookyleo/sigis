@@ -5,6 +5,7 @@
 pub use hanko_core::cert::{Cert, RawCertificate};
 
 use crate::policy::PkixValidationParams;
+use hanko_core::time::Moment;
 
 /// The service a trust anchor is trusted for (`TrustedServiceType`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -29,6 +30,10 @@ pub struct TrustQualifiers {
     pub max_path_length: Option<usize>,
     /// Maximum path length for AA controls.
     pub max_aa_path_length: Option<usize>,
+    /// Lower bound of the anchor's validity period (`valid_from`).
+    pub valid_from: Option<Moment>,
+    /// Upper bound of the anchor's validity period (`valid_until`).
+    pub valid_until: Option<Moment>,
     /// The service the anchor is trusted for.
     pub trusted_service_type: TrustedServiceType,
 }
@@ -140,6 +145,25 @@ impl TrustAnchor {
             TrustedServiceType::Unspecified | TrustedServiceType::CertificateAuthority
         )
     }
+}
+
+/// A dynamic source of trust anchors (`TrustManager`), consulted in
+/// addition to the anchors supplied to the
+/// [`ValidationContextBuilder`](crate::ValidationContextBuilder), for
+/// example a trusted list registry.
+///
+/// Path building asks the manager for anchors that may have issued a
+/// certificate and whether a certificate is itself an anchor. Revocation
+/// checks look up CRL and OCSP issuers among the supplied anchors, the other
+/// certificates and the path being validated.
+pub trait TrustManager: Send + Sync + std::fmt::Debug {
+    /// `as_trust_anchor`: `cert` as a trust anchor, if the manager trusts it.
+    fn as_trust_anchor(&self, cert: &Cert) -> Option<TrustAnchor>;
+
+    /// `find_potential_issuers`: trust anchors whose name matches the issuer
+    /// of `cert`. Path building still checks names, key identifiers and
+    /// [`TrustAnchor::can_issue`].
+    fn find_potential_issuers(&self, cert: &Cert) -> Vec<TrustAnchor>;
 }
 
 /// A name and a public key (`Authority` / `NamedKeyAuthority`).

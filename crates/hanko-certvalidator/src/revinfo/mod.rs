@@ -32,8 +32,8 @@ use super::authority::Cert;
 use super::context::ValidationContext;
 use super::path::ValidationPath;
 use super::policy::RevocationCheckingRule;
-use hanko_core::errors::ValidationError;
 use hanko_core::algorithms::DigestAlgorithm;
+use hanko_core::errors::ValidationError;
 use hanko_core::time::Moment;
 
 /// A parsed CRL with the exact bytes of its signed part.
@@ -111,6 +111,11 @@ impl OcspContainer {
                 der: whole.clone(),
             })
             .collect())
+    }
+
+    /// DER of the whole `OCSPResponse` this single response came from.
+    pub fn der(&self) -> &[u8] {
+        &self.der
     }
 
     pub(crate) fn single(&self) -> Option<&x509_ocsp::SingleResponse> {
@@ -313,7 +318,10 @@ impl Target {
             der: cert.der().to_vec(),
             serial: cert.serial_bytes().to_vec(),
             issuer: cert.issuer().clone(),
-            dps: cert.crl_distribution_points().map(|d| d.0).unwrap_or_default(),
+            dps: cert
+                .crl_distribution_points()
+                .map(|d| d.0)
+                .unwrap_or_default(),
             is_ca: cert.is_ca(),
             is_ac: false,
             declares_ocsp: cert.declares_ocsp(),
@@ -442,7 +450,10 @@ pub(crate) fn check_path_revocation_detailed(
 }
 
 /// Port of `_check_revocation` in pyhanko-certvalidator `validate.py`.
-pub(crate) fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<(), ValidationError> {
+pub(crate) fn check_revocation(
+    ctx: &ValidationContext,
+    subject: &Subject<'_>,
+) -> Result<(), ValidationError> {
     let policy = &ctx.revinfo_policy.revocation_checking_policy;
     let rule = if subject.is_ee {
         policy.ee_certificate_rule

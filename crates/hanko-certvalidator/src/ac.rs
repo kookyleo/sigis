@@ -768,7 +768,7 @@ pub fn validate_ac(
         return Err(ValidationError::Expired {
             msg: format!(
                 "The path could not be validated because the attribute certificate expired {}",
-                ac.not_after
+                crate::validate::py_time(ac.not_after)
             ),
         }
         .into());
@@ -777,7 +777,7 @@ pub fn validate_ac(
         return Err(ValidationError::NotYetValid {
             msg: format!(
                 "The path could not be validated because the attribute certificate is not valid until {}",
-                ac.not_before
+                crate::validate::py_time(ac.not_before)
             ),
         }
         .into());
