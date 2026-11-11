@@ -14,7 +14,8 @@
     .top-label{font-size:12px;color:#7b8a81;letter-spacing:.06em;text-transform:uppercase;font-weight:650}
     main{padding:66px 0 80px}.eyebrow{font-size:11px;letter-spacing:.16em;color:#427565;font-weight:750;text-transform:uppercase;margin:0 0 16px}
     h1{font-size:clamp(34px,5vw,52px);line-height:1.08;letter-spacing:-.045em;margin:0 0 15px;font-weight:680}.intro{color:#687a70;line-height:1.65;margin:0;max-width:620px;font-size:15px}
-    .notice{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;margin-top:30px;border:1px solid #ecdcb9;background:#fcf8ec;border-radius:10px;color:#765a27;font-size:13px;line-height:1.5}.notice-icon{font-weight:800}.demo-cert{margin:0 0 20px;padding:11px 12px;border-radius:8px;background:#eff7f0;color:#245d43;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.demo-cert code{font-size:11px}
+    .notice{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;margin-top:30px;border:1px solid #ecdcb9;background:#fcf8ec;border-radius:10px;color:#765a27;font-size:13px;line-height:1.5}.notice-icon{font-weight:800}.demo-cert{margin:0 0 20px;padding:11px 12px;border-radius:8px;background:#eff7f0;color:#245d43;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.demo-cert code{font-size:11px}.tsa-info{margin:-8px 0 20px;font-size:12px;color:#5d7064;line-height:1.5;overflow-wrap:anywhere}
+    .sig-list{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}.sig-list:empty{display:none}.sig-item{border:1px solid #e4eae3;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.6;color:#3d5548;overflow-wrap:anywhere}.sig-item strong{color:#1c2b28}.sig-item .bad{color:#9b3c2e}
     .workspace{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px;align-items:start}.card{background:#fff;border:1px solid #e1e7df;border-radius:14px;box-shadow:0 5px 22px rgba(30,54,38,.035);overflow:hidden}
     .card-head{padding:25px 25px 21px;border-bottom:1px solid #edf0eb;display:flex;gap:14px}.icon{width:38px;height:38px;flex:none;border-radius:10px;background:#edf5ef;color:#286a55;display:grid;place-items:center}.icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
     h2{font-size:17px;letter-spacing:-.02em;margin:1px 0 5px}.card-subtitle{font-size:13px;color:#7c8b82;margin:0;line-height:1.45}.card-body{padding:23px 25px 25px}.field{margin-bottom:20px}.field>label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}.field-hint{font-size:12px;color:#849187;margin:7px 0 0;line-height:1.4}
@@ -40,6 +41,7 @@
         <div class="card-body"><form id="sign-form">
           <div class="field"><label for="sign-pdf">PDF document</label><input id="sign-pdf" name="pdf" type="file" accept=".pdf,application/pdf" required><p class="field-hint">Choose the PDF you want to sign.</p></div>
           <p class="demo-cert" id="demo-cert"><strong>Using the local demo certificate.</strong> The service generated a self-signed certificate on this machine. This service trusts it for verification. Other PDF readers will not trust it.</p>
+          <p class="tsa-info" id="tsa-info"></p>
           <div class="field"><label for="certificate">PKCS#12 certificate (optional)</label><input id="certificate" name="pkcs12" type="file" accept=".p12,.pfx,application/x-pkcs12"><p class="field-hint">Leave empty to sign with the demo certificate. Upload a .p12 or .pfx file to use your own key.</p></div>
           <div class="field"><label for="password">Certificate password</label><input id="password" name="password" type="password" autocomplete="off"><p class="field-hint">Only for an uploaded certificate. Leave empty if it has no password.</p></div>
           <button class="action" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 17v3h14v-3"/></svg><span>Sign &amp; download</span></button>
@@ -52,6 +54,7 @@
           <div class="field"><label for="verify-pdf">Signed PDF document</label><input id="verify-pdf" name="pdf" type="file" accept=".pdf,application/pdf" required><p class="field-hint">Choose a PDF to check its signature details.</p></div>
           <button class="action secondary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4m-12-9 2 2 3-4"/></svg><span>Verify PDF</span></button>
           <div class="status" id="verify-status" role="status" aria-live="polite"></div>
+          <ul class="sig-list" id="verify-summary" aria-label="Signatures"></ul>
           <div class="result" id="verify-result" hidden><div class="result-label">Verification result</div><pre id="verify-output"></pre></div>
         </form></div>
       </section>
@@ -96,7 +99,29 @@
       path.textContent = cert.path;
       info.append(path);
       document.getElementById('demo-cert').append(info);
+      document.getElementById('tsa-info').textContent = cert.tsa_url
+        ? `Timestamp: PAdES ${cert.pades_level} with an RFC 3161 timestamp from ${cert.tsa_url}.`
+        : `Timestamp: disabled. Signatures are PAdES ${cert.pades_level} without a trusted signing time.`;
     }).catch(() => {});
+    function signatureItem(sig, index) {
+      const item = document.createElement('li');
+      item.className = 'sig-item';
+      const title = document.createElement('strong');
+      title.textContent = `Signature ${index + 1}: ${sig.status} · PAdES ${sig.pades_level}`;
+      const signer = document.createElement('div');
+      signer.textContent = `Signer: ${sig.signer || 'unknown'}`;
+      const timestamp = document.createElement('div');
+      if (!sig.timestamp_present) {
+        timestamp.textContent = 'Timestamp: none (signing time is not established)';
+      } else {
+        const time = sig.timestamp_time || 'unknown time';
+        const tsa = sig.timestamp_authority || 'unknown TSA';
+        timestamp.textContent = `Timestamp: ${time} by ${tsa} · ${sig.timestamp_trusted ? 'trusted' : 'NOT trusted'}`;
+        if (!sig.timestamp_trusted) timestamp.className = 'bad';
+      }
+      item.append(title, signer, timestamp);
+      return item;
+    }
     document.getElementById('certificate').addEventListener('change', event => {
       document.getElementById('demo-cert').hidden = event.currentTarget.files.length > 0;
     });
@@ -122,9 +147,12 @@
       event.preventDefault();
       const form = event.currentTarget;
       const result = document.getElementById('verify-result');
+      const summary = document.getElementById('verify-summary');
       result.hidden = true;
+      summary.replaceChildren();
       request(form, '/api/verify', async (response, status) => {
         const data = await response.json();
+        summary.replaceChildren(...(data.signatures || []).map(signatureItem));
         document.getElementById('verify-output').textContent = JSON.stringify(data, null, 2);
         result.hidden = false;
         showStatus(status, 'Verification completed. Review the details below.');

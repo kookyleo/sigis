@@ -14,7 +14,7 @@ exclude = ["vendor/"]
 axum = { version = "0.8", features = ["multipart"] }
 serde_json = "1"
 openssl = "0.10"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal", "time"] }
 underskrift = { version = "0.1.4", default-features = false, features = ["verify", "tsp"] }
 uuid = { version = "1", features = ["v4"] }
 zeroize = "1"
