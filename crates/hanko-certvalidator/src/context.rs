@@ -91,6 +91,23 @@ impl ValidationContext {
         out
     }
 
+    /// Every CRL the context knows for `cert`: the supplied ones, plus
+    /// those the CRL fetcher returns (`async_retrieve_crls`). Fetch
+    /// failures yield the supplied CRLs only.
+    pub fn retrieve_crls(&self, cert: &Cert) -> Vec<Vec<u8>> {
+        let mut out: Vec<Vec<u8>> = self.crls.iter().map(|c| c.der().to_vec()).collect();
+        if let Some(fetcher) = &self.fetchers.crl {
+            if let Ok(fetched) = fetcher.fetch_crls(cert) {
+                for c in fetched {
+                    if !out.contains(&c) {
+                        out.push(c);
+                    }
+                }
+            }
+        }
+        out
+    }
+
     /// The time of interest (`moment`).
     pub fn moment(&self) -> Moment {
         self.timing.validation_time
@@ -118,6 +135,7 @@ pub struct ValidationContextBuilder {
     crls: Vec<Vec<u8>>,
     ocsps: Vec<Vec<u8>>,
     moment: Option<Moment>,
+    point_in_time_validation: Option<bool>,
     best_signature_time: Option<Moment>,
     time_tolerance: Option<Duration>,
     revinfo_policy: Option<CertRevTrustPolicy>,
@@ -162,6 +180,14 @@ impl ValidationContextBuilder {
     /// Set the time of interest. Defaults to the current time.
     pub fn moment(mut self, moment: Moment) -> Self {
         self.moment = Some(moment);
+        self
+    }
+
+    /// Override whether only revocations before the time of interest count
+    /// (`point_in_time_validation`). Defaults to `true` iff a moment was set,
+    /// as in pyhanko-certvalidator.
+    pub fn point_in_time_validation(mut self, value: bool) -> Self {
+        self.point_in_time_validation = Some(value);
         self
     }
 
@@ -243,6 +269,9 @@ impl ValidationContextBuilder {
             crls,
             ocsps,
             timing: ValidationTimingParams {
+                point_in_time_validation: self
+                    .point_in_time_validation
+                    .unwrap_or(self.moment.is_some()),
                 validation_time,
                 best_signature_time: self.best_signature_time.unwrap_or(validation_time),
                 time_tolerance: self.time_tolerance.unwrap_or(DEFAULT_TIME_TOLERANCE),

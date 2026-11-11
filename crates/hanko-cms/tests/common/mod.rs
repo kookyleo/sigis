@@ -261,6 +261,9 @@ pub fn context(h: &Harvest, vc: &Value) -> Option<ValidationContext> {
     }
     let rp = &vc["revinfo_policy"];
     let rule = |k: &str| RevocationCheckingRule::from_value(rp[k].as_str().unwrap()).unwrap();
+    if let Some(pit) = vc["point_in_time_validation"].as_bool() {
+        b = b.point_in_time_validation(pit);
+    }
     b = b
         .moment(moment(&vc["moment"]))
         .best_signature_time(moment(&vc["best_signature_time"]))

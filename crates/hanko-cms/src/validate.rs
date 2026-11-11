@@ -517,7 +517,7 @@ pub fn validate_cert_usage(
     params: Option<&PkixValidationParams>,
 ) -> CertUsageResult {
     let found = match path {
-        Some(p) => validate_path_detailed(ctx, p, params, 0).map(|()| p.clone()),
+        Some(p) => validate_path_detailed(ctx, p, params).map(|()| p.clone()),
         None => find_valid_path(ctx, cert, params),
     };
     let path = match found {

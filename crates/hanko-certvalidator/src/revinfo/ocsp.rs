@@ -132,13 +132,32 @@ fn check_authorization(
             )
             .is_ok()
         })
-        && responder.valid_at(ctx.timing.validation_time, ctx.timing.time_tolerance);
+        && responder.valid_at(ctx.timing.validation_time, ctx.timing.time_tolerance)
+        && responder_chain_ok(ctx, responder, subject);
     if !provenance_ok {
         failures.push(PROVENANCE_ERR);
         failures.push("Unable to verify OCSP response since response was signed by an unauthorized certificate");
         return false;
     }
     true
+}
+
+/// `_validate_delegated_ocsp_provenance`: a delegated responder without
+/// `id-pkix-ocsp-nocheck` needs a valid path, including its own revocation
+/// status, through the certificate's issuer.
+fn responder_chain_ok(ctx: &ValidationContext, responder: &Cert, subject: &Subject<'_>) -> bool {
+    if responder.has_extension(&oids::OCSP_NOCHECK) {
+        // Signature and validity were checked against the issuer above.
+        return true;
+    }
+    // "Recursion detected in OCSP responder authorisation check".
+    if subject.stack.contains(responder) {
+        return false;
+    }
+    let Some(chain) = subject.path.truncate_to_issuer_and_append(responder) else {
+        return false;
+    };
+    crate::validate::validate_path_at_depth(ctx, &chain, None, subject.stack).is_ok()
 }
 
 /// Handle one response; `Ok(true)` means the status is good.
@@ -209,7 +228,8 @@ fn handle_single(
         CertStatus::Good(_) => Ok(true),
         CertStatus::Revoked(info) => {
             let revoked_at = Moment::from(info.revocation_time.0.to_date_time());
-            if revoked_at <= ctx.timing.validation_time {
+            let timing = &ctx.timing;
+            if !timing.point_in_time_validation || revoked_at <= timing.validation_time {
                 let reason = info.revocation_reason.unwrap_or(CrlReason::Unspecified);
                 return Err(revoked_error(
                     "OCSP response",
@@ -230,7 +250,21 @@ pub(crate) fn verify_ocsp(
     ctx: &ValidationContext,
     subject: &Subject<'_>,
 ) -> Result<CheckOutcome, ValidationError> {
-    let mut responses: Vec<&OcspContainer> = ctx.ocsps.iter().collect();
+    // With an OCSP fetcher, the responses for a certificate that names a
+    // responder come from the fetcher (`async_retrieve_ocsps`).
+    let fetched;
+    let mut responses: Vec<&OcspContainer> = match ctx.fetchers.ocsp.as_ref() {
+        Some(fetcher) if subject.cert.declares_ocsp() => {
+            match fetcher.fetch_ocsp(subject.cert, subject.issuer) {
+                Ok(der) => {
+                    fetched = OcspContainer::load(&der).unwrap_or_default();
+                    fetched.iter().collect()
+                }
+                Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
+            }
+        }
+        _ => ctx.ocsps.iter().collect(),
+    };
     // Freshest first; responses without thisUpdate last.
     responses.sort_by_key(|r| std::cmp::Reverse(r.this_update()));
 

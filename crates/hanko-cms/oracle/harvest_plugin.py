@@ -75,6 +75,7 @@ def describe_vc(vc):
         'trust_manager': type(tm).__name__,
         'other_certs': others,
         'moment': dt(vc.moment),
+        'point_in_time_validation': vc.timing_params.point_in_time_validation,
         'best_signature_time': dt(vc.best_signature_time),
         'time_tolerance': vc.time_tolerance.total_seconds(),
         'fetching_allowed': vc.fetching_allowed,

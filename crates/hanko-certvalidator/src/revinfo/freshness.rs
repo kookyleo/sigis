@@ -169,6 +169,7 @@ mod tests {
 
     fn timing(validation: Moment, signature: Moment) -> ValidationTimingParams {
         ValidationTimingParams {
+            point_in_time_validation: true,
             validation_time: validation,
             best_signature_time: signature,
             time_tolerance: Duration::from_secs(1),

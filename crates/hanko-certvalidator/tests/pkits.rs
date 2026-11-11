@@ -37,46 +37,6 @@ const KNOWN_DIVERGENCES: &[(&str, &str)] = &[
         "40203",
         "UTCTime before 1970 (here 1950) cannot be decoded by the der crate",
     ),
-    (
-        "41418",
-        "coverage across reason-partitioned (onlySomeReasons) CRLs is not accumulated",
-    ),
-    (
-        "41419",
-        "coverage across reason-partitioned (onlySomeReasons) CRLs is not accumulated",
-    ),
-    ("41422", "indirect CRLs are not supported"),
-    ("41423", "indirect CRLs are not supported"),
-    ("41424", "indirect CRLs are not supported"),
-    ("41425", "indirect CRLs are not supported"),
-    (
-        "41428",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41429",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41430",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41431",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41432",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41433",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
-    (
-        "41434",
-        "cRLIssuer distribution points (indirect CRLs) are not supported",
-    ),
 ];
 
 struct Case {
@@ -179,6 +139,86 @@ fn load_cases() -> Vec<Case> {
             json: c.clone(),
         })
         .collect()
+}
+
+/// `test_nist_pkits_with_simulated_crl_downloads`: the revocation cases
+/// with every CRL coming from a CRL fetcher instead of the context, CRL
+/// checks required, and no explicit time of interest (so any revocation
+/// counts, as with pyhanko-certvalidator's default `moment`).
+#[test]
+fn test_nist_pkits_with_simulated_crl_downloads() {
+    use hanko_certvalidator::{CertRevTrustPolicy, RevocationCheckingPolicy, RevocationCheckingRule};
+    let mut diverging = BTreeMap::new();
+    let mut ran = 0;
+    for case in load_cases() {
+        let v = &case.json;
+        if !v.get("revocation").and_then(Value::as_bool).unwrap_or(true) {
+            continue;
+        }
+        ran += 1;
+        let mut crls = vec![load_nist_crl("TrustAnchorRootCRL.crl")];
+        crls.extend(strings(v, "crls").iter().map(|c| load_nist_crl(c)));
+        let fetchers = common::fakes::with_crls(Arc::new(common::fakes::FixedCrls(
+            crls,
+            Default::default(),
+        )));
+        let root = load_nist_cert("TrustAnchorRootCertificate.crt");
+        let mut builder = ValidationContext::builder()
+            .trust_root(root.clone())
+            .moment(pkits_moment())
+            .point_in_time_validation(false)
+            .fetchers(fetchers)
+            .revinfo_policy(CertRevTrustPolicy::new(RevocationCheckingPolicy {
+                ee_certificate_rule: RevocationCheckingRule::CrlRequired,
+                intermediate_ca_cert_rule: RevocationCheckingRule::CrlRequired,
+            }))
+            .algorithm_policy(Arc::new(
+                DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["md2", "md5"]),
+            ));
+        let mut load_failed = false;
+        for cert in strings(v, "other_certs") {
+            match try_load(&cert) {
+                Ok(c) => builder = builder.other_cert(c),
+                Err(_) => load_failed = true,
+            }
+        }
+        let expected = v.get("error").and_then(|e| e["class"].as_str()).unwrap_or("ok");
+        let outcome: Result<(), ValidationError> = (|| {
+            if load_failed {
+                return Err(ValidationError::Malformed("certificate".into()));
+            }
+            let ctx = builder.build()?;
+            let leaf = try_load(v["cert"].as_str().expect("cert"))?;
+            let path = if v.get("path_intermediates").is_some() {
+                let interm = strings(v, "path_intermediates")
+                    .iter()
+                    .map(|c| load_nist_cert(c))
+                    .collect();
+                ValidationPath::new(TrustAnchor::new(root), interm, Some(leaf))
+            } else {
+                let mut paths = build_paths(&ctx, &leaf)?;
+                assert_eq!(paths.len(), 1, "{}", case.id);
+                paths.remove(0)
+            };
+            validate_path(&ctx, &path, params(v).as_ref())
+        })();
+        let agrees = match (&outcome, expected) {
+            (Ok(()), "ok") => true,
+            (Err(e), class) => class != "ok" && e.is_instance_of(class),
+            _ => false,
+        };
+        if !agrees {
+            diverging.insert(case.id.clone(), format!("expected {expected}, got {outcome:?}"));
+        }
+    }
+    assert!(ran > 100, "{ran}");
+    // DSA and pre-1970 UTCTime, as in `test_nist_pkits`.
+    let known: Vec<&str> = KNOWN_DIVERGENCES.iter().map(|(id, _)| *id).collect();
+    let unexpected: Vec<_> = diverging
+        .iter()
+        .filter(|(id, _)| !known.contains(&id.as_str()))
+        .collect();
+    assert!(unexpected.is_empty(), "{unexpected:#?}");
 }
 
 #[test]

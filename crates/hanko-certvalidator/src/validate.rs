@@ -80,6 +80,23 @@ fn pdv_cert(cert: &Cert) -> Result<PDVCertificate, ValidationError> {
     Ok(pdv)
 }
 
+/// The authority key identifier of `cert`, if present.
+pub(crate) fn authority_key_id(cert: &Cert) -> Option<Vec<u8>> {
+    cert.extension::<AuthorityKeyIdentifier>()
+        .ok()
+        .flatten()
+        .and_then(|(_, aki)| aki.key_identifier)
+        .map(|k| k.as_bytes().to_vec())
+}
+
+/// The subject key identifier of `cert`, if present.
+pub(crate) fn subject_key_id(cert: &Cert) -> Option<Vec<u8>> {
+    cert.extension::<SubjectKeyIdentifier>()
+        .ok()
+        .flatten()
+        .map(|(_, ski)| ski.0.as_bytes().to_vec())
+}
+
 /// Could `issuer` have issued `cert`? Names must chain (RFC 5280 name
 /// comparison); if both key identifiers are present they must agree.
 fn may_have_issued(issuer: &Cert, cert: &Cert) -> bool {
@@ -105,39 +122,81 @@ fn may_have_issued(issuer: &Cert, cert: &Cert) -> bool {
 const MAX_PATH_DEPTH: usize = 16;
 const MAX_PATHS: usize = 64;
 
-fn extend_paths(
-    ctx: &ValidationContext,
-    leaf: &Cert,
-    current: &Cert,
-    chain: &mut Vec<Cert>,
-    out: &mut Vec<ValidationPath>,
-) {
-    if out.len() >= MAX_PATHS {
-        return;
+struct PathSearch<'a> {
+    ctx: &'a ValidationContext,
+    leaf: &'a Cert,
+    /// Certificates available for chaining: the context's, plus fetched ones.
+    pool: Vec<Cert>,
+    /// Certificates whose AIA issuers were already fetched.
+    fetched_for: Vec<Cert>,
+}
+
+impl PathSearch<'_> {
+    fn has_issuer(&self, current: &Cert) -> bool {
+        self.ctx
+            .trust_anchors
+            .iter()
+            .any(|a| a.cert() != current && may_have_issued(a.cert(), current))
+            || self
+                .pool
+                .iter()
+                .any(|c| c != current && may_have_issued(c, current))
     }
-    for anchor in &ctx.trust_anchors {
-        if anchor.cert() != current && may_have_issued(anchor.cert(), current) {
-            let intermediates = chain.iter().rev().cloned().collect();
-            out.push(ValidationPath::new(
-                anchor.clone(),
-                intermediates,
-                Some(leaf.clone()),
-            ));
+
+    /// Fetch issuer certificates through AIA when none is known
+    /// (`fetch_missing_potential_issuers`). Fetch failures are ignored.
+    fn fetch_missing(&mut self, current: &Cert) {
+        let Some(fetcher) = self.ctx.fetchers.cert.as_ref() else {
+            return;
+        };
+        if self.fetched_for.contains(current) || self.has_issuer(current) {
+            return;
+        }
+        self.fetched_for.push(current.clone());
+        if let Ok(certs) = fetcher.fetch_issuers(current) {
+            for c in certs {
+                if !self.pool.contains(&c) {
+                    self.pool.push(c);
+                }
+            }
         }
     }
-    if chain.len() >= MAX_PATH_DEPTH {
-        return;
-    }
-    for candidate in &ctx.other_certs {
-        if crate::names::check_name(candidate.subject()).is_err() {
-            // asn1crypto cannot index such a certificate by subject.
-            continue;
+
+    fn extend(&mut self, current: &Cert, chain: &mut Vec<Cert>, out: &mut Vec<ValidationPath>) {
+        if out.len() >= MAX_PATHS {
+            return;
         }
-        let used = candidate == leaf || chain.contains(candidate);
-        let is_anchor = ctx.trust_anchors.iter().any(|a| a.cert() == candidate);
-        if !used && !is_anchor && may_have_issued(candidate, current) {
+        self.fetch_missing(current);
+        for anchor in &self.ctx.trust_anchors {
+            if anchor.cert() != current && may_have_issued(anchor.cert(), current) {
+                let intermediates = chain.iter().rev().cloned().collect();
+                out.push(ValidationPath::new(
+                    anchor.clone(),
+                    intermediates,
+                    Some(self.leaf.clone()),
+                ));
+            }
+        }
+        if chain.len() >= MAX_PATH_DEPTH {
+            return;
+        }
+        let candidates: Vec<Cert> = self
+            .pool
+            .iter()
+            .filter(|candidate| {
+                // asn1crypto cannot index a certificate whose subject fails
+                // string preparation.
+                crate::names::check_name(candidate.subject()).is_ok()
+                    && *candidate != self.leaf
+                    && !chain.contains(candidate)
+                    && !self.ctx.trust_anchors.iter().any(|a| a.cert() == *candidate)
+                    && may_have_issued(candidate, current)
+            })
+            .cloned()
+            .collect();
+        for candidate in candidates {
             chain.push(candidate.clone());
-            extend_paths(ctx, leaf, candidate, chain, out);
+            self.extend(&candidate, chain, out);
             chain.pop();
         }
     }
@@ -161,7 +220,13 @@ pub fn build_paths(
         )]);
     }
     let mut paths = Vec::new();
-    extend_paths(ctx, leaf, leaf, &mut Vec::new(), &mut paths);
+    let mut search = PathSearch {
+        ctx,
+        leaf,
+        pool: ctx.other_certs.clone(),
+        fetched_for: Vec::new(),
+    };
+    search.extend(leaf, &mut Vec::new(), &mut paths);
     if paths.is_empty() {
         return Err(ValidationError::PathBuilding(format!(
             "Unable to build a validation path for the certificate \"{}\" - no issuer matching \"{}\" was found",
@@ -289,8 +354,8 @@ pub fn find_valid_path(
     };
     let mut failures = Vec::new();
     for path in paths {
-        match validate_path_detailed(ctx, &path, params, 0) {
-            Ok(()) => return Ok(path),
+        match validate_path_qualified(ctx, &path, params) {
+            Ok(p) => return Ok(p),
             Err(f) => failures.push(f),
         }
     }
@@ -320,19 +385,23 @@ pub fn validate_path(
     path: &ValidationPath,
     params: Option<&PkixValidationParams>,
 ) -> Result<(), ValidationError> {
-    validate_path_at_depth(ctx, path, params, 0)
+    validate_path_at_depth(ctx, path, params, &[])
 }
 
 /// Maximum nesting of CRL signer path validations.
 pub(crate) const MAX_REVINFO_DEPTH: u8 = 3;
 
+/// Validate `path` inside the validations of revocation information signers
+/// for the certificates in `stack` (the leaves of the enclosing paths).
 pub(crate) fn validate_path_at_depth(
     ctx: &ValidationContext,
     path: &ValidationPath,
     params: Option<&PkixValidationParams>,
-    depth: u8,
+    stack: &[Cert],
 ) -> Result<(), ValidationError> {
-    validate_path_detailed(ctx, path, params, depth).map_err(|f| f.error)
+    validate_path_in_stack(ctx, path, params, stack)
+        .map(|_| ())
+        .map_err(|f| f.error)
 }
 
 /// [`validate_path`] with the failure details of [`PathFailure`].
@@ -340,8 +409,205 @@ pub fn validate_path_detailed(
     ctx: &ValidationContext,
     path: &ValidationPath,
     params: Option<&PkixValidationParams>,
-    depth: u8,
 ) -> Result<(), Box<PathFailure>> {
+    validate_path_in_stack(ctx, path, params, &[]).map(|_| ())
+}
+
+/// [`validate_path_detailed`], returning the path with its qualified
+/// policies set (`ValidationPath.qualified_policies()`).
+pub fn validate_path_qualified(
+    ctx: &ValidationContext,
+    path: &ValidationPath,
+    params: Option<&PkixValidationParams>,
+) -> Result<ValidationPath, Box<PathFailure>> {
+    let policies = validate_path_in_stack(ctx, path, params, &[])?;
+    let mut p = path.clone();
+    p.set_qualified_policies(policies);
+    Ok(p)
+}
+
+/// Decode `SEQUENCE OF PolicyQualifierInfo` leniently (the strict decoder
+/// rejects some PKITS user notices).
+fn decode_qualifiers(der: &[u8]) -> Vec<x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo> {
+    use der::Decode;
+    use hanko_core::asn1::tlv::Tlv;
+    let Ok(seq) = Tlv::parse_exact(der) else {
+        return Vec::new();
+    };
+    seq.children()
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|q| {
+            let parts = q.children().ok()?;
+            let id = const_oid::ObjectIdentifier::from_der(parts.first()?.raw).ok()?;
+            let qualifier = match parts.get(1) {
+                Some(t) => Some(der::Any::from_der(t.raw).ok()?),
+                None => None,
+            };
+            Some(x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo {
+                policy_qualifier_id: id,
+                qualifier,
+            })
+        })
+        .collect()
+}
+
+/// `user_constrained_policies` (RFC 5280 §6.1.5 (g) as replaced by RFC 9618
+/// §5.5), computed over certval's final policy graph. Edges are
+/// reconstructed from the expected policy sets: a node's parents are the
+/// nodes one level up that expect its policy, else the anyPolicy node.
+fn qualified_policies(
+    results: &CertificationPathResults,
+    params: Option<&PkixValidationParams>,
+) -> Vec<crate::path::QualifiedPolicy> {
+    use std::collections::{BTreeMap, BTreeSet};
+    use x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo;
+    let any = const_oid::db::rfc5280::ANY_POLICY;
+    let Some(tree) = results.get_final_valid_policy_graph() else {
+        return Vec::new();
+    };
+    let n = tree.len().saturating_sub(1);
+    if n == 0 {
+        return Vec::new();
+    }
+    // parents[d][i]: indices into tree[d - 1].
+    let mut parents: Vec<Vec<Vec<usize>>> = vec![Vec::new(); tree.len()];
+    for d in 1..tree.len() {
+        for node in &tree[d] {
+            let up = &tree[d - 1];
+            let mut ps: Vec<usize> = up
+                .iter()
+                .enumerate()
+                .filter(|(_, p)| p.valid_policy != any && p.expected_policy_set.contains(&node.valid_policy))
+                .map(|(i, _)| i)
+                .collect();
+            if ps.is_empty() {
+                ps = up
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, p)| p.valid_policy == any)
+                    .map(|(i, _)| i)
+                    .collect();
+            }
+            parents[d].push(ps);
+        }
+    }
+    let ancestors = |d: usize, i: usize| -> Vec<(usize, usize)> {
+        let mut out = Vec::new();
+        let mut frontier = vec![(d, i)];
+        while let Some((dd, ii)) = frontier.pop() {
+            if dd == 0 {
+                continue;
+            }
+            for &p in &parents[dd][ii] {
+                if !out.contains(&(dd - 1, p)) {
+                    out.push((dd - 1, p));
+                    frontier.push((dd - 1, p));
+                }
+            }
+        }
+        out
+    };
+    let descendants = |d: usize, i: usize| -> Vec<(usize, usize)> {
+        let mut out = Vec::new();
+        let mut frontier = vec![(d, i)];
+        while let Some((dd, ii)) = frontier.pop() {
+            if dd + 1 >= tree.len() {
+                continue;
+            }
+            for (ci, ps) in parents[dd + 1].iter().enumerate() {
+                if ps.contains(&ii) && !out.contains(&(dd + 1, ci)) {
+                    out.push((dd + 1, ci));
+                    frontier.push((dd + 1, ci));
+                }
+            }
+        }
+        out
+    };
+    // Step (g)(2) and (3): nodes branching off anyPolicy, and a final anyPolicy.
+    let mut node_set = Vec::new();
+    for d in 1..=n {
+        for (i, node) in tree[d].iter().enumerate() {
+            if node.valid_policy == any || parents[d][i].len() != 1 {
+                continue;
+            }
+            if tree[d - 1][parents[d][i][0]].valid_policy == any {
+                node_set.push((d, i));
+            }
+        }
+    }
+    if let Some(i) = tree[n].iter().position(|x| x.valid_policy == any) {
+        node_set.push((n, i));
+    }
+    // Step (g)(4).
+    let mut quals: BTreeMap<const_oid::ObjectIdentifier, Vec<PolicyQualifierInfo>> = BTreeMap::new();
+    let mut leaves: BTreeMap<const_oid::ObjectIdentifier, BTreeSet<const_oid::ObjectIdentifier>> =
+        BTreeMap::new();
+    for (d, i) in node_set {
+        let node = &tree[d][i];
+        let entry = quals.entry(node.valid_policy).or_default();
+        let mut relatives = vec![(d, i)];
+        relatives.extend(ancestors(d, i));
+        let desc = descendants(d, i);
+        relatives.extend(desc.iter().copied());
+        for (rd, ri) in relatives {
+            for q in tree[rd][ri].qualifier_set.as_deref().map(decode_qualifiers).unwrap_or_default() {
+                if !entry.contains(&q) {
+                    entry.push(q);
+                }
+            }
+        }
+        let l = leaves.entry(node.valid_policy).or_default();
+        if d == n {
+            l.insert(node.valid_policy);
+        }
+        for (dd, di) in desc {
+            if dd == n {
+                l.insert(tree[dd][di].valid_policy);
+            }
+        }
+    }
+    let qualified = |p: &const_oid::ObjectIdentifier| -> Vec<crate::path::QualifiedPolicy> {
+        leaves[p]
+            .iter()
+            .map(|issuer| crate::path::QualifiedPolicy {
+                user_domain_policy_id: *p,
+                issuer_domain_policy_id: *issuer,
+                qualifiers: quals[p].clone(),
+            })
+            .collect()
+    };
+    let user_set: Vec<const_oid::ObjectIdentifier> = params
+        .map(|p| p.user_initial_policy_set.clone())
+        .filter(|v: &Vec<_>| !v.is_empty())
+        .unwrap_or_else(|| vec![any]);
+    if user_set.contains(&any) {
+        return leaves.keys().flat_map(&qualified).collect();
+    }
+    let mut out: Vec<crate::path::QualifiedPolicy> = leaves
+        .keys()
+        .filter(|p| user_set.contains(p))
+        .flat_map(&qualified)
+        .collect();
+    if leaves.contains_key(&any) {
+        let accounted: Vec<_> = out.iter().map(|q| q.user_domain_policy_id).collect();
+        for p in user_set.iter().filter(|p| !accounted.contains(p)) {
+            out.push(crate::path::QualifiedPolicy {
+                user_domain_policy_id: *p,
+                issuer_domain_policy_id: *p,
+                qualifiers: quals[&any].clone(),
+            });
+        }
+    }
+    out
+}
+
+fn validate_path_in_stack(
+    ctx: &ValidationContext,
+    path: &ValidationPath,
+    params: Option<&PkixValidationParams>,
+    outer: &[Cert],
+) -> Result<Vec<crate::path::QualifiedPolicy>, Box<PathFailure>> {
     let fail = |error: ValidationError| Box::new(PathFailure::plain(error, Some(path.clone())));
     let anchor: &TrustAnchor = path.trust_anchor();
     if anchor.enforce_validity() {
@@ -353,8 +619,13 @@ pub fn validate_path_detailed(
     }
     let issued = path.issued_certs();
     if issued.is_empty() {
-        // Only the trust anchor itself.
-        return Ok(());
+        // Only the trust anchor itself: every policy is acceptable.
+        let any = const_oid::db::rfc5280::ANY_POLICY;
+        return Ok(vec![crate::path::QualifiedPolicy {
+            user_domain_policy_id: any,
+            issuer_domain_policy_id: any,
+            qualifiers: Vec::new(),
+        }]);
     }
     let total = issued.len();
     for (index, (cert, _)) in issued.iter().enumerate() {
@@ -385,7 +656,7 @@ pub fn validate_path_detailed(
         .collect::<Result<_, _>>()
         .map_err(fail)?;
     let Some(target) = chain.pop() else {
-        return Ok(());
+        return Ok(Vec::new());
     };
     let cv_path = CertificationPath::new(ta, chain, target);
     let mut results = CertificationPathResults::new();
@@ -412,7 +683,15 @@ pub fn validate_path_detailed(
         }
     }
 
-    revinfo::check_path_revocation_detailed(ctx, path, depth)
+    if outer.len() > usize::from(MAX_REVINFO_DEPTH) {
+        return Err(fail(ValidationError::InsufficientRevinfo(
+            "The path could not be validated because revocation information signers are nested too deeply".into(),
+        )));
+    }
+    let mut stack = outer.to_vec();
+    stack.push(path.leaf().unwrap_or(anchor.cert()).clone());
+    revinfo::check_path_revocation_detailed(ctx, path, &stack)?;
+    Ok(qualified_policies(&results, params))
 }
 
 /// Validates one certificate against a [`ValidationContext`]
@@ -446,10 +725,10 @@ impl<'a> CertificateValidator<'a> {
         let paths = build_paths(self.ctx, &self.cert)?;
         let mut first_error = None;
         for path in paths {
-            match validate_path(self.ctx, &path, self.params.as_ref()) {
-                Ok(()) => return Ok(path),
+            match validate_path_qualified(self.ctx, &path, self.params.as_ref()) {
+                Ok(p) => return Ok(p),
                 Err(e) => {
-                    first_error.get_or_insert(e);
+                    first_error.get_or_insert(e.error);
                 }
             }
         }

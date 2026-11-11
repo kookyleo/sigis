@@ -27,9 +27,16 @@ See `docs/hanko-lanes.md`.
   multi-URL fallback; RFC 3161 client). Tests use a local server on
   127.0.0.1 and pyHanko-produced TSA responses (`data/lanes/a/tsa/`).
 
-Next: certvalidator gaps (fetching during validation, indirect CRLs,
-`onlySomeReasons`, OCSP responder revocation, registry/AIA, policy
-qualifiers), attribute certificate validation, `ltv`.
+- Phase 3a: revocation checking ported closely from `validate_crl.py` /
+  `validate_ocsp.py` (indirect CRLs, `cRLIssuer`, reason coverage, CRL
+  issuer recursion guard, delegated OCSP responder revocation, fetching with
+  soft-fail), AIA issuer fetching in path building, qualified policies
+  (RFC 9618 §5.5), `point_in_time_validation`. NIST PKITS: 243/246 agree.
+
+Next: `ltv` (POE, time slide, past validation), attribute certificate
+validation, registry and trust anchor qualifiers (`test_registry.py`,
+`test_policy_proc.py`), decision on `test_name_trees.py` /
+`test_policy_graph.py`.
 
 ## Per-suite counts
 
@@ -47,12 +54,12 @@ qualifiers), attribute certificate validation, `ltv`.
 | `test_policy_proc.py` | 13 | 0 | 0 | 13 |
 | `test_registry.py` | 9 | 0 | 0 | 9 |
 | `test_sig_validate.py` | 3 | 3 | 0 | 0 |
-| `test_validate.py` | 21 | 14 | 0 | 7 |
+| `test_validate.py` | 21 | 21 | 0 | 0 |
 | `test_cms.py` | 78 | 55 | 2 | 21 |
 | `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 8 | 2 | 0 |
 | `test_tsa_fetcher_requests.py` | 4 | 4 | 0 | 0 |
-| **Total** | **271** | **122** | **20** | **129** |
+| **Total** | **271** | **129** | **20** | **122** |
 
 `test_cms.py` details (skips, pending items, recorded-call agreement) are in
 `crates/hanko-cms/PORTING.md`.
@@ -62,8 +69,8 @@ qualifiers), attribute certificate validation, `ltv`.
 All fail closed (the port rejects or reports less trust where pyHanko
 accepts); the tests assert this.
 
-- NIST PKITS: 16 cases (DSA, UTCTime 1950, indirect CRLs,
-  `onlySomeReasons`), see `crates/hanko-certvalidator/PORTING.md`.
+- NIST PKITS: 3 cases (DSA, UTCTime 1950), see
+  `crates/hanko-certvalidator/PORTING.md`.
 - `test_cms.py` recorded calls: 18 of 161 differ, all listed in
   `crates/hanko-cms/tests/test_cms.rs` (`KNOWN`): MD5, SHA-3, DSA, Ed448
   (request R1) and attribute certificates (in progress).

@@ -5,10 +5,10 @@ mod common;
 
 use std::sync::Arc;
 
-use common::{load_cert, moment, read};
+use common::{load_cert, load_nist_cert, load_nist_crl, moment, read};
 use hanko_certvalidator::{
-    build_paths, validate_path, NonRevokedStatusAssertion, TrustAnchor, ValidationContext,
-    ValidationPath,
+    build_paths, validate_path, Cert, NonRevokedStatusAssertion, PkixValidationParams,
+    TrustAnchor, ValidationContext, ValidationPath,
 };
 use hanko_core::algorithms::DisallowWeakAlgorithmsPolicy;
 use hanko_core::errors::ValidationError;
@@ -269,4 +269,211 @@ fn test_fail_validation_if_required_delta_crl_not_available() {
             .is_match(&err.to_string()),
         "{err}"
     );
+}
+
+// --- Fetching and policy qualifiers (pending items of the previous phase) ---
+
+
+fn user_notice_cases() -> serde_json::Value {
+    serde_json::from_slice(&read(&["nist_pkits", "pkits-user-notice.json"])).expect("json")
+}
+
+#[test]
+fn test_nist_pkits_user_notice() {
+    let cases = user_notice_cases();
+    let cases: &Vec<serde_json::Value> = cases.as_array().expect("array");
+    assert!(!cases.is_empty());
+    for case in cases {
+        let mut b = ValidationContext::builder()
+            .trust_root(load_nist_cert("TrustAnchorRootCertificate.crt"))
+            .crl(load_nist_crl("TrustAnchorRootCRL.crl"))
+            .moment(moment("2022-05-01T00:00:00Z"))
+            .point_in_time_validation(false)
+            .revocation_mode("require")
+            .algorithm_policy(weak_md_only());
+        for c in case["crls"].as_array().into_iter().flatten() {
+            b = b.crl(load_nist_crl(c.as_str().expect("crl")));
+        }
+        for c in case["other_certs"].as_array().into_iter().flatten() {
+            b = b.other_cert(load_nist_cert(c.as_str().expect("cert")));
+        }
+        let ctx = b.build().expect("context");
+        let leaf = load_nist_cert(case["cert"].as_str().expect("cert"));
+        let params = case.get("params").map(|p| {
+            let mut params = PkixValidationParams::default();
+            if let Some(set) = p.get("user_initial_policy_set").and_then(|s| s.as_array()) {
+                params.user_initial_policy_set = set
+                    .iter()
+                    .map(|o| o.as_str().expect("oid").parse().expect("oid"))
+                    .collect();
+            }
+            if let Some(b) = p.get("initial_explicit_policy").and_then(|b| b.as_bool()) {
+                params.initial_explicit_policy = b;
+            }
+            params
+        });
+        assert_eq!(build_paths(&ctx, &leaf).expect("paths").len(), 1);
+        let path = hanko_certvalidator::find_valid_path(&ctx, &leaf, params.as_ref()).expect("valid");
+        let qps = path.qualified_policies().expect("qualified policies");
+        assert_eq!(qps.len(), 1, "{}", case["id"]);
+        assert_eq!(qps[0].qualifiers.len(), 1, "{} {:?}", case["id"], qps[0]);
+        assert_eq!(
+            qps[0].user_notice_text().as_deref(),
+            case["notice"].as_str(),
+            "{}",
+            case["id"]
+        );
+    }
+}
+
+#[test]
+fn test_408020_cps_pointer_qualifier_test20() {
+    let ctx = ValidationContext::builder()
+        .trust_root(load_nist_cert("TrustAnchorRootCertificate.crt"))
+        .other_cert(load_nist_cert("GoodCACert.crt"))
+        .crl(load_nist_crl("GoodCACRL.crl"))
+        .crl(load_nist_crl("TrustAnchorRootCRL.crl"))
+        .moment(moment("2022-05-01T00:00:00Z"))
+        .point_in_time_validation(false)
+        .revocation_mode("require")
+        .algorithm_policy(weak_md_only())
+        .build()
+        .expect("context");
+    let leaf = load_nist_cert("CPSPointerQualifierTest20EE.crt");
+    assert_eq!(build_paths(&ctx, &leaf).expect("paths").len(), 1);
+    let path = hanko_certvalidator::find_valid_path(&ctx, &leaf, None).expect("valid");
+    let qps = path.qualified_policies().expect("qualified policies");
+    assert_eq!(qps.len(), 1);
+    assert_eq!(qps[0].qualifiers.len(), 1);
+    assert_eq!(
+        qps[0].cps_uri().as_deref(),
+        Some("http://csrc.nist.gov/groups/ST/crypto_apps_infra/csor/pki_registration.html#PKITest")
+    );
+}
+
+#[test]
+fn test_building_trust_path_fetched_in_different_orders() {
+    let root = load_cert(&["multilayer", "certs", "root.cert.pem"]);
+    let middle = load_cert(&["multilayer", "certs", "interm1.cert.pem"]);
+    let end = load_cert(&["multilayer", "certs", "interm2.cert.pem"]);
+    let alice = load_cert(&["multilayer", "certs", "alice.cert.pem"]);
+    let by_name = |n: &str| match n {
+        "root" => root.clone(),
+        "middle" => middle.clone(),
+        _ => end.clone(),
+    };
+    for order in [
+        ["root", "middle", "end"],
+        ["root", "end", "middle"],
+        ["middle", "root", "end"],
+        ["middle", "end", "root"],
+    ] {
+        let fetched: Vec<Cert> = order.iter().map(|n| by_name(n)).collect();
+        let ctx = ValidationContext::builder()
+            .trust_root(root.clone())
+            .fetchers(hanko_core::fetch::Fetchers {
+                cert: Some(Arc::new(common::fakes::FixedIssuers(fetched))),
+                ..Default::default()
+            })
+            .build()
+            .expect("context");
+        let paths = build_paths(&ctx, &alice).expect("paths");
+        let names: Vec<Vec<String>> = paths
+            .iter()
+            .map(|p| {
+                let mut v = vec![certval::name_to_string(p.trust_anchor().cert().subject())];
+                v.extend(
+                    p.intermediates()
+                        .iter()
+                        .map(|c| certval::name_to_string(c.subject())),
+                );
+                v
+            })
+            .collect();
+        assert!(
+            names.iter().any(|n| n.len() == 3
+                && n[0].contains("Root CA")
+                && n[1].contains("Intermediate CA 1")
+                && n[2].contains("Intermediate CA 2")),
+            "{order:?}: {names:?}"
+        );
+    }
+}
+
+#[test]
+fn test_do_not_fetch_crl_if_cache_sufficient() {
+    let dir = ["ades", "time-slide"];
+    let crl = |n: &str| read(&[dir[0], dir[1], n]);
+    let crl_fetcher = Arc::new(common::fakes::Failing::default());
+    let ctx = ValidationContext::builder()
+        .trust_root(load_cert(&[dir[0], dir[1], "certs", "root.crt"]))
+        .other_cert(load_cert(&[dir[0], dir[1], "certs", "interm.crt"]))
+        .crl(crl("interm-2020-10-01.crl"))
+        .crl(crl("root-2020-10-01.crl"))
+        .fetchers(hanko_core::fetch::Fetchers {
+            ocsp: Some(Arc::new(common::fakes::Failing::default())),
+            crl: Some(crl_fetcher.clone()),
+            cert: Some(Arc::new(common::fakes::Failing::default())),
+        })
+        .moment(moment("2020-10-02T00:00:00Z"))
+        .revocation_mode("require")
+        .build()
+        .expect("context");
+    assert_eq!(crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+    let leaf = load_cert(&[dir[0], dir[1], "certs", "alice.crt"]);
+    let paths = build_paths(&ctx, &leaf).expect("paths");
+    assert_eq!(paths.len(), 1);
+    assert_eq!(paths[0].len(), 3);
+    validate_path(&ctx, &paths[0], None).expect("valid");
+    assert_eq!(crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+}
+
+#[test]
+fn test_41503_invalid_deltacrl_test3_combine_cache_with_fetched() {
+    let fetcher = Arc::new(common::fakes::FixedCrls(
+        vec![load_nist_crl("deltaCRLCA1deltaCRL.crl")],
+        Default::default(),
+    ));
+    let ctx = ValidationContext::builder()
+        .trust_root(load_nist_cert("TrustAnchorRootCertificate.crt"))
+        .other_cert(load_nist_cert("deltaCRLCA1Cert.crt"))
+        .crl(load_nist_crl("deltaCRLCA1CRL.crl"))
+        .crl(load_nist_crl("TrustAnchorRootCRL.crl"))
+        .fetchers(common::fakes::with_crls(fetcher))
+        .moment(moment("2022-05-01T00:00:00Z"))
+        .point_in_time_validation(false)
+        .revocation_mode("require")
+        .algorithm_policy(weak_md_only())
+        .build()
+        .expect("context");
+    let leaf = load_nist_cert("InvaliddeltaCRLTest4EE.crt");
+    let paths = build_paths(&ctx, &leaf).expect("paths");
+    assert_eq!(paths.len(), 1);
+    let e = validate_path(&ctx, &paths[0], None).expect_err("revoked");
+    assert_eq!(e.class_name(), "RevokedError");
+    assert!(e.to_string().contains("revoked at 08:30:00"), "{e}");
+}
+
+#[test]
+fn test_context_retrieve_all_crls() {
+    let crl1 = load_nist_crl("deltaCRLCA1CRL.crl");
+    let crl2 = load_nist_crl("TrustAnchorRootCRL.crl");
+    let crl3 = load_nist_crl("deltaCRLCA1deltaCRL.crl");
+    let ctx = ValidationContext::builder()
+        .trust_root(load_nist_cert("TrustAnchorRootCertificate.crt"))
+        .other_cert(load_nist_cert("deltaCRLCA1Cert.crt"))
+        .crl(crl1.clone())
+        .crl(crl2.clone())
+        .fetchers(common::fakes::with_crls(Arc::new(common::fakes::FixedCrls(
+            vec![crl3.clone()],
+            Default::default(),
+        ))))
+        .revocation_mode("require")
+        .build()
+        .expect("context");
+    let mut got = ctx.retrieve_crls(&load_nist_cert("InvaliddeltaCRLTest4EE.crt"));
+    got.sort();
+    let mut want = vec![crl1, crl2, crl3];
+    want.sort();
+    assert_eq!(got, want);
 }

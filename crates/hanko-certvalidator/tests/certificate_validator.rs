@@ -1,9 +1,6 @@
 // Port of pyhanko-certvalidator `tests/test_certificate_validator.py`
 // (MIT, see LICENSE-pyHanko).
-//
-// pyHanko also inspects the qualified policies of the resulting path
-// (`path.qualified_policies()`); this crate does not expose the valid policy
-// tree yet, so those assertions are pending (see PORTING.md).
+
 
 mod common;
 
@@ -37,6 +34,16 @@ fn test_certvalidator_with_params() {
         .validate()
         .expect("valid");
     assert_eq!(path.len(), 3);
+    // The parameters got through: the user-constrained policy carries q7.
+    let qps = path.qualified_policies().expect("qualified policies");
+    assert_eq!(qps.len(), 1);
+    assert_eq!(qps[0].qualifiers.len(), 1);
+    assert_eq!(
+        qps[0].user_notice_text().as_deref(),
+        Some(
+            "q7:  This is the user notice from qualifier 7 associated with NIST-test-policy-3.  This user notice should be displayed when  NIST-test-policy-1 is in the user-constrained-policy-set"
+        )
+    );
 
     // The parameters reach certval: a policy outside the certificate's
     // (mapped) policies must fail.
@@ -66,4 +73,9 @@ fn test_self_signed_with_policy() {
         .validate()
         .expect("valid");
     assert_eq!(path.len(), 1);
+    let qps = path.qualified_policies().expect("qualified policies");
+    assert_eq!(qps.len(), 1);
+    let any = const_oid::db::rfc5280::ANY_POLICY;
+    assert_eq!(qps[0].user_domain_policy_id, any);
+    assert_eq!(qps[0].issuer_domain_policy_id, any);
 }

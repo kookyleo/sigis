@@ -34,12 +34,13 @@ pub mod validate;
 
 pub use authority::{Cert, TrustAnchor};
 pub use context::{ValidationContext, ValidationContextBuilder};
-pub use path::ValidationPath;
+pub use path::{QualifiedPolicy, ValidationPath};
 pub use policy::{
     CertRevTrustPolicy, FreshnessReqType, NonRevokedStatusAssertion, PkixValidationParams,
     RevocationCheckingPolicy, RevocationCheckingRule, NO_REVOCATION, REQUIRE_REVINFO,
 };
 pub use validate::{
-    build_paths, find_valid_path, validate_path, validate_path_detailed, CertificateValidator,
+    build_paths, find_valid_path, validate_path, validate_path_detailed, validate_path_qualified,
+    CertificateValidator,
     PathFailure,
 };

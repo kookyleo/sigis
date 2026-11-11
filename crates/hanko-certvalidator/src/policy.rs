@@ -225,6 +225,9 @@ pub struct ValidationTimingParams {
     pub best_signature_time: Moment,
     /// Allowed clock drift.
     pub time_tolerance: Duration,
+    /// The time of interest was given explicitly (`point_in_time_validation`):
+    /// only revocations before it count. Otherwise any revocation counts.
+    pub point_in_time_validation: bool,
 }
 
 #[cfg(test)]

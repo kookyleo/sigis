@@ -1,11 +1,12 @@
 // Derived from pyhanko-certvalidator `revinfo/validate_crl.py` (MIT, see LICENSE-pyHanko).
 
-//! CRL-based revocation checking: direct CRLs, delta CRLs, and CRLs signed by
-//! a separate key of the CRL issuer (whose path is then validated too).
+//! CRL-based revocation checking (`verify_crl`): direct and indirect CRLs,
+//! delta CRLs, CRL issuers other than the certificate issuer (whose paths
+//! are validated too), coverage of revocation reasons across
+//! reason-partitioned CRLs, and fetching more CRLs when the supplied ones
+//! do not suffice.
 
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::certificate::Raw;
-use x509_cert::crl::RevokedCert;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, IssuingDistributionPoint};
 use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName};
 use x509_cert::ext::pkix::CrlReason;
@@ -14,6 +15,7 @@ use x509_cert::name::{Name, RdnSequence};
 
 use super::freshness::RevinfoUsabilityRating;
 use super::{revoked_error, CheckOutcome, CrlContainer, Failures, Subject};
+use crate::path::ValidationPath;
 use crate::authority::Cert;
 use crate::context::ValidationContext;
 use hanko_core::algorithms::{validate_signature, SignatureValidationContext};
@@ -64,17 +66,6 @@ fn is_delta(crl: &CrlContainer) -> bool {
     crl_extension(crl, &oids::CE_DELTA_CRL_INDICATOR).is_some()
 }
 
-/// How a CRL relates to the certificate being checked.
-enum Scope {
-    /// The CRL does not apply (wrong issuer, wrong distribution point,
-    /// indirect, ...).
-    NotApplicable,
-    /// The CRL applies, but its scope excludes the certificate.
-    Excluded(&'static str),
-    /// The CRL applies; `partial_reasons` means it only covers some reasons.
-    Applies { partial_reasons: bool },
-}
-
 /// The general names a distribution point name stands for; a name relative
 /// to the CRL issuer is appended to the issuer's name (RFC 5280 §4.2.1.13).
 fn dp_names(name: &DistributionPointName, crl_issuer: &Name) -> Vec<GeneralName> {
@@ -90,29 +81,6 @@ fn dp_names(name: &DistributionPointName, crl_issuer: &Name) -> Vec<GeneralName>
     }
 }
 
-fn general_names_intersect(a: &[GeneralName], b: &[GeneralName]) -> bool {
-    a.iter().any(|x| {
-        b.iter().any(|y| match (x, y) {
-            (GeneralName::DirectoryName(n1), GeneralName::DirectoryName(n2)) => {
-                certval::compare_names(n1, n2)
-            }
-            _ => x == y,
-        })
-    })
-}
-
-fn idp_matches_cert_dps(
-    idp_name: &DistributionPointName,
-    cert_dps: &[DistributionPoint],
-    crl_issuer: &Name,
-) -> bool {
-    let idp_names = dp_names(idp_name, crl_issuer);
-    cert_dps.iter().any(|dp| {
-        dp.distribution_point
-            .as_ref()
-            .is_some_and(|name| general_names_intersect(&dp_names(name, crl_issuer), &idp_names))
-    })
-}
 
 fn parse_idp(crl: &CrlContainer) -> Result<Option<IssuingDistributionPoint>, ValidationError> {
     crl_extension(crl, &oids::CE_ISSUING_DISTRIBUTION_POINT)
@@ -122,78 +90,6 @@ fn parse_idp(crl: &CrlContainer) -> Result<Option<IssuingDistributionPoint>, Val
             })
         })
         .transpose()
-}
-
-fn crl_scope(crl: &CrlContainer, subject: &Subject<'_>) -> Result<Scope, ValidationError> {
-    let tbs = &crl.crl.tbs_cert_list;
-    if !certval::compare_names(&tbs.issuer, subject.cert.issuer()) || is_delta(crl) {
-        return Ok(Scope::NotApplicable);
-    }
-    let cert_dps = subject
-        .cert
-        .crl_distribution_points()
-        .map(|d| d.0)
-        .unwrap_or_default();
-    // A certificate that names a CRL issuer uses indirect CRLs (unsupported).
-    if cert_dps.iter().any(|dp| dp.crl_issuer.is_some()) {
-        return Ok(Scope::NotApplicable);
-    }
-    let Some(idp) = parse_idp(crl)? else {
-        return Ok(Scope::Applies {
-            partial_reasons: false,
-        });
-    };
-    if idp.indirect_crl {
-        return Ok(Scope::NotApplicable);
-    }
-    if let Some(name) = &idp.distribution_point {
-        if !idp_matches_cert_dps(name, &cert_dps, &tbs.issuer) {
-            return Ok(Scope::NotApplicable);
-        }
-    }
-    let is_ca = subject.cert.is_ca();
-    if idp.only_contains_user_certs && is_ca {
-        return Ok(Scope::Excluded(
-            "CRL only contains end-entity certificates and certificate is a CA certificate",
-        ));
-    }
-    if idp.only_contains_ca_certs && !is_ca {
-        return Ok(Scope::Excluded(
-            "CRL only contains CA certificates and certificate is an end-entity certificate",
-        ));
-    }
-    if idp.only_contains_attribute_certs {
-        return Ok(Scope::Excluded("CRL only contains attribute certificates"));
-    }
-    Ok(Scope::Applies {
-        partial_reasons: idp.only_some_reasons.is_some(),
-    })
-}
-
-fn find_entry<'a>(crl: &'a CrlContainer, subject: &Subject<'_>) -> Option<&'a RevokedCert<Raw>> {
-    let serial = subject.cert.serial_bytes();
-    crl.crl
-        .tbs_cert_list
-        .revoked_certificates
-        .as_ref()?
-        .iter()
-        .find(|entry| entry.serial_number.as_bytes() == serial)
-}
-
-/// Revocation date and reason of the certificate on `crl`, if listed.
-/// `Err(())` means the entry has an unknown critical extension.
-fn lookup(crl: &CrlContainer, subject: &Subject<'_>) -> Result<Option<(Moment, CrlReason)>, ()> {
-    let Some(entry) = find_entry(crl, subject) else {
-        return Ok(None);
-    };
-    let exts = entry.crl_entry_extensions.as_ref();
-    if has_unknown_critical(exts, &KNOWN_ENTRY_EXTENSIONS) {
-        return Err(());
-    }
-    let reason = find_extension(exts, &oids::CE_CRL_REASONS)
-        .and_then(|ext| der::Decode::from_der(ext.extn_value.as_bytes()).ok())
-        .unwrap_or(CrlReason::Unspecified);
-    Ok(Some((Moment::from(entry.revocation_date), reason)))
 }
 
 fn signed_by(crl: &CrlContainer, signer: &Cert) -> bool {
@@ -206,78 +102,6 @@ fn signed_by(crl: &CrlContainer, signer: &Cert) -> bool {
         &SignatureValidationContext::default(),
     )
     .is_ok()
-}
-
-/// Who signed a CRL.
-enum Signer {
-    /// A certificate whose key verifies the CRL and that may sign CRLs.
-    Found(Cert),
-    /// A matching key was found, but its certificate may not sign CRLs.
-    Unauthorized,
-    /// No known key verifies the CRL.
-    Unknown,
-}
-
-/// Find the CRL signer: the certificate's issuer, or another certificate with
-/// the CRL issuer's name (separate CRL signing key, key rollover).
-fn find_signer(ctx: &ValidationContext, crl: &CrlContainer, subject: &Subject<'_>) -> Signer {
-    let crl_issuer = &crl.crl.tbs_cert_list.issuer;
-    let others = ctx
-        .known_certs()
-        .filter(|c| *c != subject.issuer && certval::compare_names(c.subject(), crl_issuer));
-    let mut unauthorized = false;
-    for candidate in std::iter::once(subject.issuer).chain(others) {
-        if !signed_by(crl, candidate) {
-            continue;
-        }
-        if candidate.key_usage().is_some_and(|ku| !ku.crl_sign()) {
-            unauthorized = true;
-            continue;
-        }
-        return Signer::Found(candidate.clone());
-    }
-    if unauthorized {
-        Signer::Unauthorized
-    } else {
-        Signer::Unknown
-    }
-}
-
-/// A CRL signer other than the certificate's issuer needs its own valid path.
-fn signer_path_error(
-    ctx: &ValidationContext,
-    signer: &Cert,
-    subject: &Subject<'_>,
-) -> Option<String> {
-    if signer == subject.issuer {
-        return None;
-    }
-    if subject.depth >= crate::validate::MAX_REVINFO_DEPTH {
-        return Some(
-            "The CRL issuer certificate path could not be validated: nesting too deep".to_owned(),
-        );
-    }
-    let paths = match crate::validate::build_paths(ctx, signer) {
-        Ok(paths) => paths,
-        Err(e) => {
-            return Some(format!(
-                "The CRL issuer certificate path could not be validated. {e}"
-            ))
-        }
-    };
-    let mut first_error = None;
-    for path in &paths {
-        match crate::validate::validate_path_at_depth(ctx, path, None, subject.depth + 1) {
-            Ok(()) => return None,
-            Err(e) => {
-                first_error.get_or_insert(e);
-            }
-        }
-    }
-    let detail = first_error.map(|e| e.to_string()).unwrap_or_default();
-    Some(format!(
-        "The CRL issuer certificate path could not be validated. {detail}"
-    ))
 }
 
 /// Record a freshness failure; `true` if the CRL is usable.
@@ -311,175 +135,506 @@ fn fresh(
     false
 }
 
-/// Find and check the delta CRL that a base CRL with a `freshestCRL`
-/// extension requires (`_maybe_get_delta_crl`). `Ok(None)` means no delta is
-/// required; `Err(())` means a required delta is missing or unusable (the
-/// failure is recorded).
-fn delta_for<'a>(
-    ctx: &'a ValidationContext,
-    base: &CrlContainer,
-    signer: &Cert,
-    failures: &mut Failures,
-) -> Result<Result<Option<&'a CrlContainer>, ()>, ValidationError> {
-    if crl_extension(base, &oids::CE_FRESHEST_CRL).is_none() {
-        return Ok(Ok(None));
+
+/// Every revocation reason (`VALID_REVOCATION_REASONS`) as `ReasonFlags`
+/// bits: keyCompromise (1) to aACompromise (8).
+const ALL_REASONS: u16 = 0b1_1111_1110;
+
+/// `crl_extension` on a CRL, decoded.
+fn crl_ext_value<'a, T: der::Decode<'a, Error = der::Error>>(
+    crl: &'a CrlContainer,
+    oid: &const_oid::ObjectIdentifier,
+) -> Option<T> {
+    crl_extension(crl, oid).and_then(|e| T::from_der(e.extn_value.as_bytes()).ok())
+}
+
+/// The key identifier of a CRL's authority key identifier extension.
+fn crl_aki(crl: &CrlContainer) -> Option<Vec<u8>> {
+    crl_ext_value::<x509_cert::ext::pkix::AuthorityKeyIdentifier>(
+        crl,
+        &oids::CE_AUTHORITY_KEY_IDENTIFIER,
+    )
+    .and_then(|aki| aki.key_identifier)
+    .map(|k| k.as_bytes().to_vec())
+}
+
+fn gn_eq(a: &GeneralName, b: &GeneralName) -> bool {
+    match (a, b) {
+        (GeneralName::DirectoryName(n1), GeneralName::DirectoryName(n2)) => {
+            certval::compare_names(n1, n2)
+        }
+        _ => a == b,
     }
-    let base_idp = parse_idp(base)?;
-    let base_aki =
-        crl_extension(base, &oids::CE_AUTHORITY_KEY_IDENTIFIER).map(|e| e.extn_value.as_bytes());
-    let mut deltas: Vec<&CrlContainer> = ctx
-        .crls
-        .iter()
-        .filter(|c| {
-            is_delta(c)
-                && certval::compare_names(
-                    &c.crl.tbs_cert_list.issuer,
-                    &base.crl.tbs_cert_list.issuer,
-                )
-        })
-        .collect();
-    deltas.sort_by_key(|c| std::cmp::Reverse(c.this_update()));
-    let mut matching = None;
-    for delta in deltas {
-        let same_idp = parse_idp(delta)? == base_idp;
-        let delta_aki = crl_extension(delta, &oids::CE_AUTHORITY_KEY_IDENTIFIER)
-            .map(|e| e.extn_value.as_bytes());
-        if same_idp && delta_aki == base_aki {
-            matching = Some(delta);
-            break;
+}
+
+fn gn_in(name: &GeneralName, list: &[GeneralName]) -> bool {
+    list.iter().any(|x| gn_eq(name, x))
+}
+
+/// `_match_dps_idp_names`.
+fn match_dps_idp_names(
+    idp: &IssuingDistributionPoint,
+    crl_dps: &[DistributionPoint],
+    crl_issuer: &Cert,
+    crl_authority_name: &Name,
+) -> bool {
+    let mut idp_names: Vec<GeneralName> = Vec::new();
+    let has_idp_name = idp.distribution_point.is_some();
+    if let Some(name) = &idp.distribution_point {
+        idp_names = dp_names(name, crl_issuer.subject());
+    }
+    let mut has_dp_name = false;
+    let mut matched = false;
+    if !crl_dps.is_empty() {
+        for dp in crl_dps {
+            if matched {
+                break;
+            }
+            if let Some(name) = &dp.distribution_point {
+                has_dp_name = true;
+                matched = dp_names(name, crl_issuer.subject())
+                    .iter()
+                    .any(|n| gn_in(n, &idp_names));
+            } else if let Some(issuers) = &dp.crl_issuer {
+                has_dp_name = true;
+                matched = issuers.iter().any(|n| gn_in(n, &idp_names));
+            }
+        }
+    } else {
+        has_dp_name = true;
+        matched = gn_in(
+            &GeneralName::DirectoryName(crl_authority_name.clone()),
+            &idp_names,
+        );
+    }
+    matched || !has_idp_name || !has_dp_name
+}
+
+fn is_indirect(crl: &CrlContainer) -> Result<bool, ValidationError> {
+    Ok(parse_idp(crl)?.is_some_and(|idp| idp.indirect_crl))
+}
+
+/// Errors gathered while processing the CRLs for one certificate (`_CRLErrs`).
+#[derive(Default)]
+struct CrlErrs {
+    failures: Failures,
+    issuer_failures: usize,
+}
+
+/// Outcome of the CRL issuer search (`_find_crl_issuer`).
+enum IssuerSearch {
+    Found(Cert),
+    NoMatches,
+    Error(String),
+}
+
+/// `_find_candidate_crl_issuer_certs` + `_find_candidate_crl_paths` +
+/// `_find_crl_issuer`.
+fn find_crl_issuer(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    subject: &Subject<'_>,
+    indirect: bool,
+) -> IssuerSearch {
+    let crl_issuer_name = &crl.crl.tbs_cert_list.issuer;
+    let cert_issuer = subject.issuer;
+    let mut candidates: Vec<Cert> = Vec::new();
+    if certval::compare_names(cert_issuer.subject(), crl_issuer_name) {
+        candidates.push(cert_issuer.clone());
+    }
+    for c in ctx.known_certs() {
+        if certval::compare_names(c.subject(), crl_issuer_name) && !candidates.contains(c) {
+            candidates.push(c.clone());
         }
     }
+    let n = candidates.len();
+    let (mut skipped, mut unauthorized, mut path_failures, mut sig_failures) = (0, 0, 0, 0);
+    let mut explicit: Vec<String> = Vec::new();
+    let mut paths: Vec<(Cert, ValidationPath)> = Vec::new();
+    for cand in candidates {
+        let direct = certval::compare_names(cand.subject(), subject.cert.issuer());
+        let indirect_issuer =
+            certval::compare_names(cand.issuer(), subject.cert.issuer()) && &cand != subject.cert;
+        if !direct && !indirect_issuer && !indirect {
+            skipped += 1;
+            continue;
+        }
+        if cand.key_usage().is_some_and(|ku| !ku.crl_sign()) {
+            unauthorized += 1;
+            continue;
+        }
+        match subject.path.truncate_to_issuer_and_append(&cand) {
+            Some(p) => paths.push((cand, p)),
+            None => path_failures += 1,
+        }
+    }
+    for (cand, path) in paths {
+        // A CRL issuer whose own path is being validated further up
+        // (`check_path_verif_recursion`) is accepted as is.
+        if subject.stack.contains(&cand) {
+            return IssuerSearch::Found(cand);
+        }
+        // A certificate of the path being validated is checked by that
+        // validation (from the anchor down); others need their own path.
+        let in_main_path = subject.path.authorities().contains(&&cand);
+        if !in_main_path {
+            if let Err(e) = crate::validate::validate_path_at_depth(ctx, &path, None, subject.stack)
+            {
+                explicit.push(format!(
+                    "The CRL issuer certificate path could not be validated. {e}"
+                ));
+                continue;
+            }
+        }
+        if signed_by(crl, &cand) {
+            return IssuerSearch::Found(cand);
+        }
+        sig_failures += 1;
+    }
+    let plural = n > 1;
+    if n == 0 || skipped == n {
+        IssuerSearch::NoMatches
+    } else if sig_failures == n {
+        IssuerSearch::Error("CRL signature could not be verified".into())
+    } else if unauthorized == n {
+        IssuerSearch::Error(if plural {
+            "The CRL issuers that were identified are not authorized to sign CRLs".into()
+        } else {
+            "The CRL issuer that was identified is not authorized to sign CRLs".into()
+        })
+    } else if path_failures == n {
+        IssuerSearch::Error(if plural {
+            "The chain of trust for the CRL issuers that were identified could not be determined"
+                .into()
+        } else {
+            "The chain of trust for the CRL issuer that was identified could not be determined"
+                .into()
+        })
+    } else if explicit.len() == 1 {
+        IssuerSearch::Error(explicit.remove(0))
+    } else {
+        IssuerSearch::Error(format!(
+            "Unable to determine CRL trust status. {}",
+            explicit.join("; ")
+        ))
+    }
+}
+
+/// `_get_crl_scope_assuming_authority`: the reasons the CRL covers for the
+/// certificate, or `None` if it does not apply.
+fn crl_scope(
+    crl: &CrlContainer,
+    crl_issuer: &Cert,
+    subject: &Subject<'_>,
+    indirect: bool,
+    errs: &mut CrlErrs,
+) -> Result<Option<u16>, ValidationError> {
+    let cert = subject.cert;
+    let cert_dps = cert
+        .crl_distribution_points()
+        .map(|d| d.0)
+        .unwrap_or_default();
+    let issuer_gn = GeneralName::DirectoryName(crl_issuer.subject().clone());
+    let mut has_dp_crl_issuer = false;
+    let mut dp_match = false;
+    for dp in &cert_dps {
+        if let Some(names) = &dp.crl_issuer {
+            has_dp_crl_issuer = true;
+            if gn_in(&issuer_gn, names) {
+                dp_match = true;
+            }
+        }
+    }
+    let same_issuer = certval::compare_names(crl_issuer.subject(), cert.issuer());
+    let indirect_match = has_dp_crl_issuer && dp_match && indirect;
+    let missing_idp = has_dp_crl_issuer && (!dp_match || !indirect);
+    let indirect_crl_issuer = certval::compare_names(crl_issuer.issuer(), cert.issuer());
+    if (!same_issuer && !indirect_match && !indirect_crl_issuer) || missing_idp {
+        errs.issuer_failures += 1;
+        return Ok(None);
+    }
+    let idp = parse_idp(crl)?;
+    if let Some(idp) = &idp {
+        if !match_dps_idp_names(idp, &cert_dps, crl_issuer, crl_issuer.subject()) {
+            errs.failures.push(
+                "The CRL issuing distribution point extension does not share any names with the certificate CRL distribution point extension",
+            );
+            errs.issuer_failures += 1;
+            return Ok(None);
+        }
+        let is_ca = cert.is_ca();
+        if idp.only_contains_user_certs && is_ca {
+            errs.failures.push(
+                "CRL only contains end-entity certificates and certificate is a CA certificate",
+            );
+            return Ok(None);
+        }
+        if idp.only_contains_ca_certs && !is_ca {
+            errs.failures.push(
+                "CRL only contains CA certificates and certificate is an end-entity certificate",
+            );
+            return Ok(None);
+        }
+        if idp.only_contains_attribute_certs {
+            errs.failures.push("CRL only contains attribute certificates");
+            return Ok(None);
+        }
+    }
+    let reasons = idp
+        .as_ref()
+        .and_then(|i| i.only_some_reasons)
+        .map(|r| r.bits())
+        .filter(|bits| *bits != 0)
+        .unwrap_or(ALL_REASONS);
+    if has_unknown_critical(
+        crl.crl.tbs_cert_list.crl_extensions.as_ref(),
+        &KNOWN_CRL_EXTENSIONS,
+    ) {
+        errs.failures
+            .push("One or more unrecognized critical extensions are present in the CRL");
+        return Ok(None);
+    }
+    Ok(Some(reasons))
+}
+
+/// `find_cert_in_list`: the revocation date and reason of the certificate
+/// on `crl`, tracking `certificateIssuer` entry extensions (indirect CRLs).
+/// `Err(())` means the entry has an unknown critical extension.
+fn find_cert_in_list(
+    crl: &CrlContainer,
+    subject: &Subject<'_>,
+    crl_authority_name: &Name,
+) -> Result<Option<(Moment, CrlReason)>, ()> {
+    let Some(entries) = crl.crl.tbs_cert_list.revoked_certificates.as_ref() else {
+        return Ok(None);
+    };
+    let serial = subject.cert.serial_bytes();
+    let mut last_issuer: Option<Name> = None;
+    for entry in entries {
+        let exts = entry.crl_entry_extensions.as_ref();
+        if let Some(ext) = find_extension(exts, &oids::CE_CERTIFICATE_ISSUER) {
+            let names: Option<Vec<GeneralName>> = der::Decode::from_der(ext.extn_value.as_bytes()).ok();
+            if let Some(name) = names.into_iter().flatten().find_map(|g| match g {
+                GeneralName::DirectoryName(n) => Some(n),
+                _ => None,
+            }) {
+                last_issuer = Some(name);
+            }
+        }
+        if entry.serial_number.as_bytes() != serial {
+            continue;
+        }
+        let issuer = last_issuer.as_ref().unwrap_or(crl_authority_name);
+        if !certval::compare_names(issuer, subject.cert.issuer()) {
+            continue;
+        }
+        if has_unknown_critical(exts, &KNOWN_ENTRY_EXTENSIONS) {
+            return Err(());
+        }
+        let reason = find_extension(exts, &oids::CE_CRL_REASONS)
+            .and_then(|ext| der::Decode::from_der(ext.extn_value.as_bytes()).ok())
+            .unwrap_or(CrlReason::Unspecified);
+        return Ok(Some((Moment::from(entry.revocation_date), reason)));
+    }
+    Ok(None)
+}
+
+/// `_check_cert_on_crl_and_delta`.
+fn check_cert_on_crl_and_delta(
+    crl_issuer: &Cert,
+    subject: &Subject<'_>,
+    crl: &CrlContainer,
+    delta: Option<&CrlContainer>,
+) -> Result<Option<(Moment, CrlReason)>, ()> {
+    let mut hit = None;
+    if let Some(d) = delta {
+        hit = find_cert_in_list(d, subject, crl_issuer.subject())?;
+    }
+    if hit.is_none() {
+        hit = find_cert_in_list(crl, subject, crl_issuer.subject())?;
+    }
+    Ok(hit.filter(|(_, reason)| *reason != CrlReason::RemoveFromCRL))
+}
+
+/// `_maybe_get_delta_crl`. `Err(msg)` means a required delta is missing.
+fn maybe_get_delta<'a>(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    crl_issuer: &Cert,
+    deltas: &[&'a CrlContainer],
+    errs: &mut CrlErrs,
+) -> Result<Result<Option<&'a CrlContainer>, String>, ValidationError> {
+    let has_freshest = crl_ext_value::<x509_cert::ext::pkix::FreshestCrl>(crl, &oids::CE_FRESHEST_CRL)
+        .is_some_and(|f| !f.0.is_empty());
+    if !has_freshest {
+        return Ok(Ok(None));
+    }
+    let base_idp = parse_idp(crl)?;
+    let base_aki = crl_aki(crl);
+    let mut matching = None;
+    for d in deltas {
+        if !certval::compare_names(&d.crl.tbs_cert_list.issuer, crl_issuer.subject()) {
+            continue;
+        }
+        if parse_idp(d)? != base_idp {
+            continue;
+        }
+        if crl_aki(d) != base_aki {
+            continue;
+        }
+        matching = Some(*d);
+        break;
+    }
     let Some(delta) = matching else {
-        failures.push("Delta CRL matching Freshest CRL extension not available");
-        return Ok(Err(()));
+        return Ok(Err(
+            "Delta CRL matching Freshest CRL extension not available".to_owned()
+        ));
     };
     if has_unknown_critical(
         delta.crl.tbs_cert_list.crl_extensions.as_ref(),
         &KNOWN_CRL_EXTENSIONS,
     ) {
-        failures.push("One or more unrecognized critical extensions are present in the delta CRL");
-        return Ok(Err(()));
+        errs.failures.push(
+            "One or more unrecognized critical extensions are present in the delta CRL",
+        );
+        return Ok(Ok(None));
     }
-    if !fresh(ctx, delta, "Delta CRL", failures) {
-        return Ok(Err(()));
-    }
-    if !signed_by(delta, signer) {
-        failures.push("Delta CRL signature could not be verified");
-        return Ok(Err(()));
+    if !fresh(ctx, delta, "Delta CRL", &mut errs.failures) {
+        return Ok(Ok(None));
     }
     Ok(Ok(Some(delta)))
 }
 
-/// Check the certificate against the supplied CRLs (port of `verify_crl`).
+/// `_handle_single_crl`: the reasons covered, `None` if the CRL is not
+/// usable, or a revocation error.
+fn handle_single_crl(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    subject: &Subject<'_>,
+    deltas: &[&CrlContainer],
+    errs: &mut CrlErrs,
+) -> Result<Option<u16>, ValidationError> {
+    let indirect = is_indirect(crl)?;
+    let crl_issuer = match find_crl_issuer(ctx, crl, subject, indirect) {
+        IssuerSearch::Found(c) => c,
+        IssuerSearch::NoMatches => {
+            errs.issuer_failures += 1;
+            return Ok(None);
+        }
+        IssuerSearch::Error(msg) => {
+            errs.failures.push(msg);
+            return Ok(None);
+        }
+    };
+    let Some(reasons) = crl_scope(crl, &crl_issuer, subject, indirect, errs)? else {
+        return Ok(None);
+    };
+    if !fresh(ctx, crl, "CRL", &mut errs.failures) {
+        return Ok(None);
+    }
+    let delta = match maybe_get_delta(ctx, crl, &crl_issuer, deltas, errs)? {
+        Ok(d) => d,
+        Err(msg) => {
+            errs.failures.push(msg);
+            return Ok(None);
+        }
+    };
+    if let Some(d) = delta {
+        if !signed_by(d, &crl_issuer) {
+            errs.failures.push("Delta CRL signature could not be verified");
+            return Ok(None);
+        }
+    }
+    let hit = match check_cert_on_crl_and_delta(&crl_issuer, subject, crl, delta) {
+        Ok(hit) => hit,
+        Err(()) => {
+            errs.failures.push(
+                "One or more unrecognized critical extensions are present in the CRL entry for the certificate",
+            );
+            return Ok(None);
+        }
+    };
+    if let Some((revoked_at, reason)) = hit {
+        let timing = &ctx.timing;
+        if !timing.point_in_time_validation || revoked_at < timing.validation_time {
+            return Err(revoked_error("CRL", &subject.description, revoked_at, reason));
+        }
+    }
+    Ok(Some(reasons))
+}
+
+/// `_process_crl_completeness`: `None` if every reason is covered.
+fn completeness(
+    checked: u16,
+    total: usize,
+    errs: &mut CrlErrs,
+) -> Option<CheckOutcome> {
+    if checked & ALL_REASONS == ALL_REASONS {
+        return None;
+    }
+    if total == errs.issuer_failures {
+        return Some(CheckOutcome::NoMatches);
+    }
+    if errs.failures.messages.is_empty() {
+        errs.failures
+            .push("The available CRLs do not cover all revocation reasons");
+    }
+    Some(CheckOutcome::Indeterminate {
+        failures: errs.failures.messages.clone(),
+        suspect_stale: errs.failures.suspect_stale(),
+    })
+}
+
+/// Check the certificate against the supplied CRLs, then against fetched
+/// ones if those do not suffice and fetching is enabled (port of
+/// `verify_crl`).
 pub(crate) fn verify_crl(
     ctx: &ValidationContext,
     subject: &Subject<'_>,
 ) -> Result<CheckOutcome, ValidationError> {
-    let mut candidates: Vec<&CrlContainer> = ctx.crls.iter().collect();
-    // Freshest first.
-    candidates.sort_by_key(|c| std::cmp::Reverse(c.this_update()));
-
-    let mut failures = Failures::default();
-    let mut matched = false;
-    let mut reasons_incomplete = false;
-    let validation_time = ctx.timing.validation_time;
-
-    for crl in candidates {
-        let partial_reasons = match crl_scope(crl, subject)? {
-            Scope::NotApplicable => continue,
-            Scope::Excluded(msg) => {
-                matched = true;
-                failures.push(msg);
-                continue;
-            }
-            Scope::Applies { partial_reasons } => partial_reasons,
-        };
-        matched = true;
-
-        let signer = match find_signer(ctx, crl, subject) {
-            Signer::Found(signer) => signer,
-            Signer::Unauthorized => {
-                failures.push("The CRL issuer that was identified is not authorized to sign CRLs");
-                continue;
-            }
-            Signer::Unknown => {
-                failures.push("CRL signature could not be verified");
-                continue;
-            }
-        };
-        if let Some(msg) = signer_path_error(ctx, &signer, subject) {
-            failures.push(msg);
-            continue;
+    let mut errs = CrlErrs::default();
+    let (complete, deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
+        ctx.crls.iter().partition(|c| !is_delta(c));
+    let mut total = complete.len();
+    let mut checked: u16 = 0;
+    for crl in &complete {
+        if let Some(r) = handle_single_crl(ctx, crl, subject, &deltas, &mut errs)? {
+            checked |= r;
         }
-        let issuer_key = signer.public_key();
-        let allowed = ctx.algorithm_policy.signature_algorithm_allowed(
-            &crl.crl.signature_algorithm,
-            Some(validation_time),
-            Some(&issuer_key),
-        );
-        if !allowed.allowed {
-            failures.push(format!(
-                "The CRL was signed with a disallowed algorithm: {}",
-                allowed.failure_reason.unwrap_or_default()
-            ));
-            continue;
-        }
-        if has_unknown_critical(
-            crl.crl.tbs_cert_list.crl_extensions.as_ref(),
-            &KNOWN_CRL_EXTENSIONS,
-        ) {
-            failures.push("One or more unrecognized critical extensions are present in the CRL");
-            continue;
-        }
-        if !fresh(ctx, crl, "CRL", &mut failures) {
-            continue;
-        }
-        let delta = match delta_for(ctx, crl, &signer, &mut failures)? {
-            Ok(delta) => delta,
-            Err(()) => continue,
-        };
-
-        // The delta CRL takes precedence; removeFromCRL lifts an entry.
-        let listed = match delta.map(|d| lookup(d, subject)).transpose() {
-            Ok(Some(Some(hit))) => Ok(Some(hit)),
-            Ok(_) => lookup(crl, subject),
-            Err(()) => Err(()),
-        };
-        match listed {
-            Err(()) => {
-                failures.push(
-                    "One or more unrecognized critical extensions are present in the CRL entry for the certificate",
-                );
-                continue;
-            }
-            Ok(Some((revoked_at, reason)))
-                if reason != CrlReason::RemoveFromCRL && revoked_at < validation_time =>
-            {
-                return Err(revoked_error(
-                    "CRL",
-                    &subject.description,
-                    revoked_at,
-                    reason,
-                ));
-            }
-            Ok(_) => {}
-        }
-        if partial_reasons {
-            // Coverage across reason-partitioned CRLs is not accumulated.
-            reasons_incomplete = true;
-            continue;
-        }
+    }
+    let Some(outcome) = completeness(checked, total, &mut errs) else {
         return Ok(CheckOutcome::Good);
+    };
+    let Some(fetcher) = ctx.fetchers.crl.as_ref() else {
+        return Ok(outcome);
+    };
+    let fetched = match fetcher.fetch_crls(subject.cert) {
+        Ok(f) => f,
+        Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
+    };
+    let fetched: Vec<CrlContainer> = fetched
+        .iter()
+        .filter_map(|der| CrlContainer::from_der(der).ok())
+        .collect();
+    let (extra_complete, extra_deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
+        fetched.iter().partition(|c| !is_delta(c));
+    let all_deltas: Vec<&CrlContainer> = deltas.iter().chain(extra_deltas.iter()).copied().collect();
+    // Supplied CRLs are reprocessed if a fetched delta may complete them.
+    let mut to_process: Vec<&CrlContainer> = complete
+        .iter()
+        .filter(|c| {
+            extra_deltas.iter().any(|d| {
+                certval::compare_names(&d.crl.tbs_cert_list.issuer, &c.crl.tbs_cert_list.issuer)
+            })
+        })
+        .copied()
+        .collect();
+    to_process.extend(extra_complete.iter().copied());
+    for crl in &to_process {
+        if let Some(r) = handle_single_crl(ctx, crl, subject, &all_deltas, &mut errs)? {
+            checked |= r;
+        }
     }
-
-    if reasons_incomplete {
-        failures.push("The available CRLs do not cover all revocation reasons");
-    }
-    if !matched {
-        return Ok(CheckOutcome::NoMatches);
-    }
-    Ok(CheckOutcome::Indeterminate {
-        suspect_stale: failures.suspect_stale(),
-        failures: failures.messages,
-    })
+    total += to_process.len();
+    Ok(completeness(checked, total, &mut errs).unwrap_or(CheckOutcome::Good))
 }

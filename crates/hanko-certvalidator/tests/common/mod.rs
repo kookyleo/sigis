@@ -62,3 +62,75 @@ pub fn moment(s: &str) -> Moment {
 pub fn pkits_moment() -> Moment {
     moment("2022-05-01T00:00:00Z")
 }
+
+/// In-memory fetchers for tests (`MockOCSPFetcher`, `MockCRLFetcher`,
+/// `MockCertFetcher`, `ReturnPredeterminedCRLs` of the upstream tests).
+pub mod fakes {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    use hanko_certvalidator::Cert;
+    use hanko_core::errors::{FetchError, FetchErrorKind};
+    use hanko_core::fetch::{CertificateFetcher, CrlFetcher, Fetchers, OcspFetcher};
+
+    /// Fails every request, counting calls.
+    #[derive(Debug, Default)]
+    pub struct Failing {
+        pub calls: AtomicUsize,
+    }
+
+    impl Failing {
+        fn fail(&self) -> FetchError {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            FetchError::new(FetchErrorKind::Network, "No connection")
+        }
+    }
+
+    impl OcspFetcher for Failing {
+        fn fetch_ocsp(&self, _: &Cert, _: &Cert) -> Result<Vec<u8>, FetchError> {
+            Err(self.fail())
+        }
+    }
+
+    impl CrlFetcher for Failing {
+        fn fetch_crls(&self, _: &Cert) -> Result<Vec<Vec<u8>>, FetchError> {
+            Err(self.fail())
+        }
+    }
+
+    impl CertificateFetcher for Failing {
+        fn fetch_issuers(&self, _: &Cert) -> Result<Vec<Cert>, FetchError> {
+            Err(self.fail())
+        }
+    }
+
+    /// Returns the same CRLs for every certificate.
+    #[derive(Debug)]
+    pub struct FixedCrls(pub Vec<Vec<u8>>, pub AtomicUsize);
+
+    impl CrlFetcher for FixedCrls {
+        fn fetch_crls(&self, _: &Cert) -> Result<Vec<Vec<u8>>, FetchError> {
+            self.1.fetch_add(1, Ordering::SeqCst);
+            Ok(self.0.clone())
+        }
+    }
+
+    /// Returns the same certificates as issuers of every certificate.
+    #[derive(Debug)]
+    pub struct FixedIssuers(pub Vec<Cert>);
+
+    impl CertificateFetcher for FixedIssuers {
+        fn fetch_issuers(&self, _: &Cert) -> Result<Vec<Cert>, FetchError> {
+            Ok(self.0.clone())
+        }
+    }
+
+    /// Fetchers that fail, except for the given CRL fetcher.
+    pub fn with_crls(crl: Arc<dyn CrlFetcher>) -> Fetchers {
+        Fetchers {
+            ocsp: Some(Arc::new(Failing::default())),
+            crl: Some(crl),
+            cert: Some(Arc::new(Failing::default())),
+        }
+    }
+}

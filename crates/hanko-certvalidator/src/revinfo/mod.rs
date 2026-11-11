@@ -40,6 +40,7 @@ use hanko_core::time::Moment;
 pub struct CrlContainer {
     pub(crate) crl: Arc<CertificateList<Raw>>,
     pub(crate) tbs: Arc<[u8]>,
+    pub(crate) der: Arc<[u8]>,
 }
 
 impl CrlContainer {
@@ -51,7 +52,13 @@ impl CrlContainer {
         Ok(Self {
             crl: Arc::new(crl),
             tbs: tbs.into(),
+            der: der.into(),
         })
+    }
+
+    /// The DER encoding.
+    pub fn der(&self) -> &[u8] {
+        &self.der
     }
 
     /// `thisUpdate`.
@@ -264,17 +271,24 @@ pub(crate) enum CheckOutcome {
         failures: Vec<String>,
         suspect_stale: Option<Moment>,
     },
+    /// Fetching revocation information failed (`OCSPFetchError` /
+    /// `CRLFetchError`).
+    FetchFailed(String),
 }
 
 /// Everything the CRL and OCSP checks need about the certificate being checked.
 pub(crate) struct Subject<'a> {
     pub(crate) cert: &'a Cert,
     pub(crate) issuer: &'a Cert,
+    /// The path being validated (the certificate's issuer is in it).
+    pub(crate) path: &'a ValidationPath,
     pub(crate) description: String,
     pub(crate) description_definite: String,
     pub(crate) is_ee: bool,
-    /// Nesting level: CRL signer paths are validated recursively.
-    pub(crate) depth: u8,
+    /// Leaves of the paths being validated, outermost first (the current
+    /// path's leaf last): revocation information signers are validated
+    /// recursively (`cert_path_stack`).
+    pub(crate) stack: &'a [Cert],
 }
 
 /// Human-readable reason, as asn1crypto's `CRLReason.human_friendly`.
@@ -337,7 +351,7 @@ pub(crate) fn revoked_error(
 pub(crate) fn check_path_revocation_detailed(
     ctx: &ValidationContext,
     path: &ValidationPath,
-    depth: u8,
+    stack: &[Cert],
 ) -> Result<(), Box<crate::validate::PathFailure>> {
     let issued = path.issued_certs();
     let total = issued.len();
@@ -346,10 +360,11 @@ pub(crate) fn check_path_revocation_detailed(
         let subject = Subject {
             cert,
             issuer,
+            path,
             description: path.describe(index, total),
             description_definite: path.describe_definite(index, total),
             is_ee,
-            depth,
+            stack,
         };
         check_revocation(ctx, &subject).map_err(|error| {
             let time_horizon = match &error {
@@ -401,6 +416,7 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
     let revinfo_declared = cert_has_crl || cert_has_ocsp;
 
     let mut failures: Vec<String> = Vec::new();
+    let mut soft_fail = false;
     let mut revocation_check_failed = false;
     let mut ocsp_status_good = false;
     let mut ocsp_matched = false;
@@ -425,6 +441,14 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
                 ocsp_suspect_stale = suspect_stale;
             }
             CheckOutcome::NoMatches => {}
+            CheckOutcome::FetchFailed(msg) => {
+                if rule.tolerant() {
+                    soft_fail = true;
+                } else {
+                    failures.push(msg);
+                    revocation_check_failed = true;
+                }
+            }
         }
     }
     if !ocsp_status_good && rule.ocsp_mandatory() {
@@ -463,6 +487,14 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
                 crl_suspect_stale = suspect_stale;
             }
             CheckOutcome::NoMatches => {}
+            CheckOutcome::FetchFailed(msg) => {
+                if rule.tolerant() {
+                    soft_fail = true;
+                } else {
+                    failures.push(msg);
+                    revocation_check_failed = true;
+                }
+            }
         }
     }
     if !crl_status_good && rule.crl_mandatory() {
@@ -481,9 +513,11 @@ fn check_revocation(ctx: &ValidationContext, subject: &Subject<'_>) -> Result<()
     let expected_revinfo =
         rule.strict() || (revinfo_declared && rule == RevocationCheckingRule::CheckIfDeclared);
     let matched = crl_matched || ocsp_matched;
-    // pyhanko-certvalidator only tolerates *fetch* failures in soft-fail
-    // mode. This module never fetches, so tolerant rules need no special case:
-    // information that applies but fails validation is still an error.
+    // Only *fetch* failures are tolerated in soft-fail mode: information
+    // that applies but fails validation is still an error.
+    if soft_fail {
+        return Ok(());
+    }
     if !status_good && matched && revocation_check_failed {
         let msg = format!(
             "The path could not be validated because {} revocation checks failed: {}",
