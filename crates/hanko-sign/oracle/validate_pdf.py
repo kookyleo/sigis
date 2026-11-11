@@ -59,6 +59,21 @@ def status_json(st):
         out['signer_reported_dt'] = st.signer_reported_dt.isoformat()
     if getattr(st, 'signing_cert', None) is not None:
         out['signing_cert_sha256'] = st.signing_cert.sha256.hex()
+    if hasattr(st, 'ac_attrs'):
+        out['ac_attrs_is_none'] = st.ac_attrs is None
+        out['ac_attrs_len'] = len(st.ac_attrs) if st.ac_attrs else 0
+    csa = getattr(st, 'cades_signer_attrs', None)
+    if csa is not None:
+        claimed = csa.claimed_attrs
+        out['cades_signer_attrs'] = {
+            'unknown_attrs_present': csa.unknown_attrs_present,
+            'claimed_count': len(claimed) if claimed is not None else None,
+            'certified_is_none': csa.certified_attrs is None,
+            'certified_count': len(csa.certified_attrs) if csa.certified_attrs else 0,
+            'groups': sorted(
+                v for a in claimed['group'].attr_values for v in a['values'].native
+            ) if claimed is not None and 'group' in claimed else None,
+        }
     if getattr(st, 'diff_result', None) is not None:
         out['diff_result'] = str(st.diff_result)
     return out
@@ -122,7 +137,8 @@ async def run(a):
                     st = await async_validate_pdf_timestamp(sig, validation_context=vc)
                 else:
                     st = await async_validate_pdf_signature(
-                        sig, vc, skip_diff=not a.extd
+                        sig, vc, skip_diff=not a.extd,
+                        ac_validation_context=vc if a.ac_vc else None,
                     )
                 entry.update(status_json(st))
             except Exception as e:  # report pyHanko's rejection class
@@ -157,6 +173,7 @@ def main():
     ap.add_argument('--password')
     ap.add_argument('--ades-lta', action='store_true')
     ap.add_argument('--norev', action='store_true')
+    ap.add_argument('--ac-vc', action='store_true')
     ap.add_argument('--live', action='append', default=[])
     ap.add_argument('--lenient', action='store_true')
     ap.add_argument('--revocation-mode', default='soft-fail')

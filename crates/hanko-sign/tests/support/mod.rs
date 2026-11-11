@@ -100,8 +100,12 @@ impl Pki {
     /// A local TSA for `label` (`DUMMY_TS`) at `at`.
     pub fn tsa(&self, label: &str, at: Moment) -> DummyTimeStamper {
         let key = self.key(&self.key_label_of(label));
-        DummyTimeStamper::new(self.cert(label), key, vec![self.cert("root"), self.cert("interm")])
-            .with_fixed_time(at)
+        let embed: Vec<Cert> = ["root", "interm"]
+            .iter()
+            .filter(|l| self.manifest["certs"].get(**l).is_some())
+            .map(|l| self.cert(l))
+            .collect();
+        DummyTimeStamper::new(self.cert(label), key, embed).with_fixed_time(at)
     }
 
     pub fn cert_path(&self, label: &str) -> PathBuf {

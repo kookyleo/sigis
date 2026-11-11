@@ -64,6 +64,7 @@ pub struct PdfUpdate {
     hybrid: bool,
     encrypted: bool,
     placeholders: BTreeMap<ObjectId, usize>,
+    fresh: bool,
 }
 
 /// Find the offset after the last `startxref` keyword.
@@ -136,7 +137,24 @@ impl PdfUpdate {
             hybrid,
             encrypted,
             placeholders: BTreeMap::new(),
+            fresh: false,
         })
+    }
+
+    /// Start a new document with the contents of `bytes` instead of an
+    /// incremental update (`copy_into_new_writer`): `write` produces a
+    /// single-revision file with a classic cross-reference table.
+    pub fn fresh(bytes: &[u8]) -> Result<Self> {
+        let mut u = Self::new(bytes)?;
+        u.fresh = true;
+        u.stream_xrefs = false;
+        u.hybrid = false;
+        Ok(u)
+    }
+
+    /// `true` for a document started with [`PdfUpdate::fresh`].
+    pub fn is_fresh(&self) -> bool {
+        self.fresh
     }
 
     /// The original file.
@@ -405,13 +423,39 @@ impl PdfUpdate {
                 "incremental updates of encrypted documents are not supported yet".into(),
             ));
         }
-        let mut out = self.base.clone();
-        if !out.ends_with(b"\n") && !out.ends_with(b"\r") {
-            out.push(b'\n');
+        let mut all: BTreeMap<ObjectId, &Object> = BTreeMap::new();
+        let mut out = if self.fresh {
+            for (id, obj) in &self.doc.objects {
+                let skip = match obj {
+                    Object::Stream(s) => matches!(
+                        s.dict.get(b"Type").and_then(Object::as_name),
+                        Ok(b"XRef") | Ok(b"ObjStm")
+                    ),
+                    _ => false,
+                };
+                if !skip {
+                    all.insert(*id, obj);
+                }
+            }
+            let v = self.doc.version.as_bytes();
+            let mut h = b"%PDF-".to_vec();
+            h.extend_from_slice(if v.is_empty() { b"1.7" } else { v });
+            h.extend_from_slice(b"\n%\xe2\xe3\xcf\xd3\n");
+            h
+        } else {
+            let mut o = self.base.clone();
+            if !o.ends_with(b"\n") && !o.ends_with(b"\r") {
+                o.push(b'\n');
+            }
+            o
+        };
+        for (id, obj) in &self.objects {
+            all.insert(*id, obj);
         }
         let mut positions: BTreeMap<ObjectId, usize> = BTreeMap::new();
         let mut offsets = BTreeMap::new();
-        for (&id, obj) in &self.objects {
+        for (&id, obj) in &all {
+            let obj: &Object = obj;
             positions.insert(id, out.len());
             let _ = writeln!(out, "{} {} obj", id.0, id.1);
             let start = out.len();
@@ -448,10 +492,12 @@ impl PdfUpdate {
                 Object::String(self.document_id[1].clone(), lopdf::StringFormat::Hexadecimal),
             ]),
         );
-        trailer.set(
-            "Prev",
-            Object::Integer(i64::try_from(self.prev_startxref).unwrap_or(i64::MAX)),
-        );
+        if !self.fresh {
+            trailer.set(
+                "Prev",
+                Object::Integer(i64::try_from(self.prev_startxref).unwrap_or(i64::MAX)),
+            );
+        }
         let xref_location;
         if self.stream_xrefs {
             xref_location = out.len();
@@ -488,6 +534,9 @@ impl PdfUpdate {
             xref_location = out.len();
             out.extend_from_slice(b"xref\n");
             let chunks = contiguous_chunks(&positions);
+            if chunks.is_empty() {
+                out.extend_from_slice(b"0 0\n");
+            }
             let null_ref = b"0000000000 65535 f \n";
             let mut first_chunk = true;
             for (first, chunk) in chunks {

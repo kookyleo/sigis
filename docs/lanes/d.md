@@ -32,7 +32,7 @@ Totals are test functions at the v0.38.1 tag (§5.1).
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `test_signing.py` | 78 | 14 | 0 | 64 |
-| `test_pades.py` | 48 | 15 | 0 | 33 |
+| `test_pades.py` | 48 | 39 | 1 | 8 |
 | `test_fields.py` | 27 | 0 | 0 | 27 |
 | `test_seed_values.py` | 36 | 0 | 0 | 36 |
 | `test_pkcs11.py` | 36 | 0 | 0 | 36 |
@@ -58,6 +58,21 @@ Lane D exported the Certomancer PKI and revocation data locally into
 `crates/hanko-testdata/data/lanes/d/{pki,revinfo}` (§5.4 allows this before
 L1); see the README there.
 
+### `test_pades.py` details
+
+- Skipped: `test_cades_signer_attrs_multivalued` (signs an attribute with
+  two identical values; the `der` SET OF types cannot represent it; it tests
+  the validator's rejection, lane E).
+- Pending: `test_pades_revinfo_http_ts_dummydata` (HTTP TSA client, lane A
+  `hanko-fetch::HttpTimeStamper`); `test_pades_live_ac_presign_validation`,
+  `test_pades_lta_live_ac_presign_validation`,
+  `test_cades_signer_attrs_autofill_dss`, `..._validate_acs`,
+  `..._validate_acs_no_claimed`, `..._validate_acs_wrong_vc`,
+  `..._validate_acs_missing_vc` (attribute certificate validation, lane A).
+- `dummy_ocsp_vc` is emulated by serving `FIXED_OCSP` through an OCSP fetcher.
+- pyHanko's I/O variants (`in_place`, `direct_flush`, `to_disk`) run the
+  same flow through files, since the Rust API takes and returns bytes.
+
 ## Known divergences
 
 - VRI keys: pyHanko hashes the binary `/Contents` in the signing flow but
@@ -68,6 +83,8 @@ L1); see the README there.
 - A seed value dictionary that requires a timestamp without a configured
   timestamper fails (pyHanko builds an HTTP timestamper from `/TimeStamp
   /URL`; pending `hanko-fetch`).
+- `test_sign_with_policy` uses policy OID `1.3.6.1.4.1.99999.1` instead of
+  `2.999`: `const-oid` cannot encode a first subidentifier above 127.
 - Revocation information is fetched before validation (OCSP first, CRLs if
   no OCSP response), since `hanko-certvalidator` does not fetch during
   validation; pyHanko's validator records what it fetched.

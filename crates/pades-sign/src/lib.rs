@@ -49,6 +49,8 @@ pub enum SubFilter {
     /// `ETSI.CAdES.detached` (PAdES).
     #[default]
     Pades,
+    /// `PBAD.PAdES` (Brazilian PAdES profile).
+    PbadPades,
 }
 
 /// Signature metadata and options (`PdfSignatureMetadata`).

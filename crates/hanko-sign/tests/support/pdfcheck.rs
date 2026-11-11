@@ -323,3 +323,15 @@ pub fn sig_kinds(pdf: &[u8]) -> (usize, usize) {
     let ts = s.iter().filter(|x| x.sig_type() == "DocTimeStamp").count();
     (s.len() - ts, ts)
 }
+
+/// pyHanko's structural view of a PDF (`oracle/inspect_pdf.py`).
+pub fn inspect(pdf: &[u8]) -> Option<serde_json::Value> {
+    let p = temp_file("inspect.pdf", pdf);
+    oracle("inspect_pdf.py", &[path_str(&p)])
+}
+
+/// Number of revisions (incremental sections), counted from `startxref`
+/// keywords.
+pub fn revision_count(pdf: &[u8]) -> usize {
+    pdf.windows(9).filter(|w| *w == b"startxref").count()
+}

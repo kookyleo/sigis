@@ -313,6 +313,10 @@ fn timestamp_pdf_full(
         };
         let sig_id = update.add(Object::Dictionary(spec.to_dict(true)));
         update.get_dict_mut(field_id)?.set("V", Object::Reference(sig_id));
+        update.update_info(
+            &crate::pdf::util::pdf_date(hanko_core::time::Moment::now()),
+            crate::pdf::signer::PRODUCER,
+        )?;
         let prepared = write_and_digest(&mut update, sig_id, bytes_reserved, md)?;
         let token = ts.timestamp(&prepared.document_digest, md)?;
         let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;

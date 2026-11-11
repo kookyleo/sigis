@@ -116,3 +116,34 @@ pub fn simple_vc(arch: &str, time: &str) -> ValidationContext {
         .build()
         .unwrap()
 }
+
+/// A fetcher that always returns the same OCSP response.
+#[derive(Debug)]
+pub struct FixedOcsp(pub Vec<u8>);
+
+impl OcspFetcher for FixedOcsp {
+    fn fetch_ocsp(&self, _cert: &Cert, _issuer: &Cert) -> Result<Vec<u8>, FetchError> {
+        Ok(self.0.clone())
+    }
+}
+
+/// `dummy_ocsp_vc`: trust the testing CA root; `FIXED_OCSP`
+/// (`crypto/ocsp.resp.der`, unrelated to the current keys) is the only
+/// revocation information. pyHanko supplies it in the context
+/// (`ocsps=[FIXED_OCSP]`); the port serves it through an OCSP fetcher, since
+/// a `ValidationContext` does not expose supplied responses (see
+/// `docs/lanes/d.md`, requests).
+pub fn dummy_ocsp_vc(time: &str) -> ValidationContext {
+    let ocsp = super::pyhanko_data(&["crypto", "ocsp.resp.der"]);
+    ValidationContext::builder()
+        .trust_root(pki("testing-ca").cert("root"))
+        .moment(at(time))
+        .ocsp_response(ocsp.clone())
+        .fetchers(Fetchers {
+            ocsp: Some(Arc::new(FixedOcsp(ocsp))),
+            crl: None,
+            cert: None,
+        })
+        .build()
+        .unwrap()
+}

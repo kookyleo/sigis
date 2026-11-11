@@ -203,6 +203,11 @@ pub fn add_dss(pdf: &[u8], content: &DssContent<'_>, force_write: bool) -> Resul
     let mut update = PdfUpdate::new(pdf)?;
     let modified = supply_dss_in_writer(&mut update, content)?;
     if modified || force_write {
+        // pyHanko refreshes the document metadata on every write
+        update.update_info(
+            &crate::pdf::util::pdf_date(hanko_core::time::Moment::now()),
+            crate::pdf::signer::PRODUCER,
+        )?;
         Ok(update.write()?.0)
     } else {
         Ok(pdf.to_vec())

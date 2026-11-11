@@ -148,6 +148,9 @@ pub struct SignOptions {
     pub bytes_reserved: Option<usize>,
     /// Refuse hybrid-reference files (pyHanko's strict reader mode).
     pub strict: bool,
+    /// Write a new single-revision document instead of an incremental
+    /// update (signing the output of `copy_into_new_writer`).
+    pub fresh_document: bool,
 }
 
 impl Default for SignOptions {
@@ -156,6 +159,7 @@ impl Default for SignOptions {
             existing_fields_only: false,
             bytes_reserved: None,
             strict: true,
+            fresh_document: false,
         }
     }
 }
@@ -181,6 +185,7 @@ impl From<SubFilter> for SigSeedSubFilter {
         match s {
             SubFilter::Pkcs7Detached => SigSeedSubFilter::AdobePkcs7Detached,
             SubFilter::Pades => SigSeedSubFilter::Pades,
+            SubFilter::PbadPades => SigSeedSubFilter::PbadPades,
         }
     }
 }
@@ -561,6 +566,115 @@ pub fn ensure_iso32002_ext(update: &mut PdfUpdate) -> Result<()> {
     )
 }
 
+/// Instructions for the updates after the signature
+/// (`PostSignInstructions`): DSS and document timestamp (B-LT / B-LTA).
+#[derive(Clone, Debug)]
+pub struct PostSignInstructions {
+    /// Validation information to embed.
+    pub validation_info: crate::ltv::ValidationInfo,
+    /// Digest for the document timestamp.
+    pub timestamp_md_algorithm: DigestAlgorithm,
+    /// TSA for the document timestamp; none if `None`.
+    pub timestamper: Option<std::sync::Arc<dyn TimeStamper>>,
+    /// Name of the timestamp field.
+    pub timestamp_field_name: Option<String>,
+    /// DSS settings.
+    pub dss_settings: DssContentSettings,
+    /// No safety margin in the timestamp size estimate.
+    pub tight_size_estimates: bool,
+    /// Embed trust anchors in the DSS.
+    pub embed_roots: bool,
+}
+
+/// A document in its final pre-signing state (`PdfTBSDocument`).
+#[derive(Clone, Debug)]
+pub struct PdfTbsDocument {
+    /// The output with the placeholder, and its digest.
+    pub prepared: PreparedDocument,
+    /// Digest algorithm.
+    pub md_algorithm: DigestAlgorithm,
+    /// PAdES signature.
+    pub use_pades: bool,
+    /// Post-signing instructions, if any.
+    pub post_sign_instructions: Option<PostSignInstructions>,
+    /// Signed attribute settings for the CMS object.
+    pub signed_attr_settings: CmsSignedAttributes,
+    /// Attribute profile for the CMS object.
+    pub attr_profile: AttrProfile,
+}
+
+impl PdfTbsDocument {
+    /// Embed an externally produced CMS object and run the post-signing
+    /// steps (`PdfTBSDocument.finish_signing`).
+    pub fn finish_signing(
+        prepared: PreparedDocument,
+        cms: &[u8],
+        psi: Option<&PostSignInstructions>,
+        validation_context: Option<&hanko_certvalidator::ValidationContext>,
+    ) -> Result<Vec<u8>> {
+        let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
+        let mut sig_contents = cms.to_vec();
+        sig_contents.resize(reserved / 2, 0);
+        let signed = prepared.fill_with_cms(cms)?;
+        match psi {
+            Some(psi) => post_signature_processing(signed, &sig_contents, psi, validation_context),
+            None => Ok(signed),
+        }
+    }
+}
+
+/// DSS update and document timestamp after signing
+/// (`PdfPostSignatureDocument.post_signature_processing`).
+pub fn post_signature_processing(
+    signed: Vec<u8>,
+    sig_contents: &[u8],
+    psi: &PostSignInstructions,
+    validation_context: Option<&hanko_certvalidator::ValidationContext>,
+) -> Result<Vec<u8>> {
+    use crate::pdf::dss::{add_dss, DssContent};
+    let info = &psi.validation_info;
+    let dss_settings = psi.dss_settings;
+    let vri = dss_settings.include_vri.then_some(sig_contents);
+    let separate = match dss_settings.placement {
+        SigDssPlacement::SeparateRevision => true,
+        SigDssPlacement::TogetherWithNextTs => psi.timestamper.is_none(),
+        SigDssPlacement::TogetherWithSignature => false,
+    };
+    let mut out = signed;
+    if separate {
+        out = add_dss(
+            &out,
+            &DssContent {
+                sig_contents: vri,
+                paths: info.paths.clone(),
+                ocsps: info.ocsps.clone(),
+                crls: info.crls.clone(),
+                embed_roots: psi.embed_roots,
+                ..Default::default()
+            },
+            !dss_settings.skip_if_unneeded,
+        )?;
+    }
+    if let Some(ts) = &psi.timestamper {
+        let mut opts = crate::pdf::timestamp::TimestampOptions::new(psi.timestamp_md_algorithm);
+        opts.validation_context = validation_context;
+        opts.validation_info = Some(info.clone());
+        opts.dss_settings = dss_settings.settings_for_ts();
+        opts.tight_size_estimates = psi.tight_size_estimates;
+        opts.embed_roots = psi.embed_roots;
+        if dss_settings.placement == SigDssPlacement::TogetherWithNextTs {
+            opts.dss_with_ts = Some((vri.map(<[u8]>::to_vec), info.clone()));
+        }
+        out = crate::pdf::timestamp::timestamp_pdf_with(
+            &out,
+            ts.as_ref(),
+            psi.timestamp_field_name.clone(),
+            &opts,
+        )?;
+    }
+    Ok(out)
+}
+
 /// Session state of one signing operation (`PdfSigningSession`).
 struct Session<'a> {
     signer: &'a PdfSigner,
@@ -616,29 +730,62 @@ impl PdfSigner {
 
     /// Sign `pdf` with explicit options (`PdfSigner.sign_pdf`).
     pub fn sign_pdf_with(&self, pdf: &[u8], opts: &SignOptions) -> Result<Vec<u8>> {
-        let mut update = PdfUpdate::new(pdf)?;
-        let prepared = self.prepare(&mut update, opts)?;
-        let (prepared, session) = prepared;
-        let settings = self.signed_attr_settings(&session);
-        let profile = profile_for(session.subfilter);
+        let tbs = self.digest_doc_for_signing(pdf, opts)?;
         let cms = CmsSigner {
             signer: self.signer.as_ref(),
             options: &self.cms_options,
         }
         .sign(
-            &prepared.document_digest,
-            session.md,
-            &settings,
-            profile,
+            &tbs.prepared.document_digest,
+            tbs.md_algorithm,
+            &tbs.signed_attr_settings,
+            tbs.attr_profile,
             self.timestamper.as_deref(),
             false,
             None,
         )?;
-        let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
-        let mut sig_contents = cms.clone();
-        sig_contents.resize(reserved / 2, 0);
-        let signed = prepared.fill_with_cms(&cms)?;
-        self.post_sign(signed, &session, &sig_contents)
+        PdfTbsDocument::finish_signing(
+            tbs.prepared,
+            &cms,
+            tbs.post_sign_instructions.as_ref(),
+            self.metadata.validation_context.as_deref(),
+        )
+    }
+
+    /// Prepare the document up to the computation of the byte range digest
+    /// (`async_digest_doc_for_signing`).
+    pub fn digest_doc_for_signing(&self, pdf: &[u8], opts: &SignOptions) -> Result<PdfTbsDocument> {
+        let mut update = if opts.fresh_document {
+            PdfUpdate::fresh(pdf)?
+        } else {
+            PdfUpdate::new(pdf)?
+        };
+        let (prepared, session) = self.prepare(&mut update, opts)?;
+        let meta = self.meta();
+        let post_sign_instructions = if session.use_pades() && meta.embed_validation_info {
+            let info = session.validation_info.clone().ok_or_else(|| {
+                signing_error("Requested embedding of validation info, but none was collected")
+            })?;
+            Some(PostSignInstructions {
+                validation_info: info,
+                timestamp_md_algorithm: session.md,
+                timestamper: if meta.use_pades_lta { self.timestamper.clone() } else { None },
+                timestamp_field_name: meta.timestamp_field_name.clone(),
+                dss_settings: meta.dss_settings,
+                tight_size_estimates: meta.tight_size_estimates,
+                embed_roots: self.cms_options.embed_roots,
+            })
+        } else {
+            None
+        };
+        Ok(PdfTbsDocument {
+            signed_attr_settings: self.signed_attr_settings(&session),
+            attr_profile: profile_for(session.subfilter),
+            md_algorithm: session.md,
+            use_pades: session.use_pades(),
+            prepared,
+            post_sign_instructions,
+        })
     }
 
     fn signed_attr_settings(&self, session: &Session<'_>) -> CmsSignedAttributes {
@@ -647,60 +794,6 @@ impl PdfSigner {
             cades_signed_attrs: self.meta().cades_signed_attr_spec.clone(),
             adobe_revinfo_attr: session.adobe_revinfo.clone(),
         }
-    }
-
-    /// `post_signature_processing`: DSS update and document timestamp.
-    fn post_sign(&self, signed: Vec<u8>, session: &Session<'_>, sig_contents: &[u8]) -> Result<Vec<u8>> {
-        use crate::pdf::dss::{add_dss, DssContent};
-        let meta = self.meta();
-        if !(session.use_pades() && meta.embed_validation_info) {
-            return Ok(signed);
-        }
-        let info = session
-            .validation_info
-            .clone()
-            .ok_or_else(|| signing_error("Requested embedding of validation info, but none was collected"))?;
-        let dss_settings = meta.dss_settings;
-        let timestamper = if meta.use_pades_lta { self.timestamper.clone() } else { None };
-        let vri = dss_settings.include_vri.then_some(sig_contents);
-        let separate = match dss_settings.placement {
-            SigDssPlacement::SeparateRevision => true,
-            SigDssPlacement::TogetherWithNextTs => timestamper.is_none(),
-            SigDssPlacement::TogetherWithSignature => false,
-        };
-        let mut out = signed;
-        if separate {
-            out = add_dss(
-                &out,
-                &DssContent {
-                    sig_contents: vri,
-                    paths: info.paths.clone(),
-                    ocsps: info.ocsps.clone(),
-                    crls: info.crls.clone(),
-                    embed_roots: self.cms_options.embed_roots,
-                    ..Default::default()
-                },
-                !dss_settings.skip_if_unneeded,
-            )?;
-        }
-        if let Some(ts) = timestamper {
-            let pts = crate::pdf::timestamp::PdfTimeStamper {
-                field_name: meta.timestamp_field_name.clone(),
-                ..crate::pdf::timestamp::PdfTimeStamper::new(ts)
-            };
-            let ctx = meta.validation_context.as_deref();
-            let mut opts = crate::pdf::timestamp::TimestampOptions::new(session.md);
-            opts.validation_context = ctx;
-            opts.validation_info = Some(info.clone());
-            opts.dss_settings = dss_settings.settings_for_ts();
-            opts.tight_size_estimates = meta.tight_size_estimates;
-            opts.embed_roots = self.cms_options.embed_roots;
-            if dss_settings.placement == SigDssPlacement::TogetherWithNextTs {
-                opts.dss_with_ts = Some((vri.map(<[u8]>::to_vec), info));
-            }
-            out = pts.timestamp_pdf(&out, &opts)?;
-        }
-        Ok(out)
     }
 
     /// Validate the signer (and TSA) before signing, collecting validation
