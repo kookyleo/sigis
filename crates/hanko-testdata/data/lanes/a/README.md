@@ -37,3 +37,18 @@ Regenerate (oracle venv with pyHanko 0.38.1, source tree of tag v0.38.1):
 | File | Upstream module | Calls |
 | --- | --- | ---: |
 | `harvest/test_cms.json` | `pkgs/pyhanko/tests/test_cms.py` | 161 |
+| `harvest/test_tsa_fetcher.json` | `pkgs/pyhanko/tests/test_tsa_fetcher.py` | 4 |
+| `harvest/test_tsa_fetcher_requests.json` | `pkgs/pyhanko/tests/test_tsa_fetcher_requests.py` | 2 |
+
+## `tsa/`
+
+RFC 3161 material for the hanko-fetch tests, written by
+`crates/hanko-fetch/oracle/gen_tsa_fixtures.py` with time frozen at
+2020-11-01T00:00:00Z (`$HANKO_ORACLE crates/hanko-fetch/oracle/gen_tsa_fixtures.py crates/hanko-testdata/data/lanes/a/tsa`):
+
+- `error-1.der` … `error-3.der`: the refused `TimeStampResp` values of
+  `test_handle_error_response`;
+- `granted-fixed-nonce.der`: the response of pyHanko's test TSA
+  (`DUMMY_TS`) to a request over SHA-256("Hello world!") with nonce
+  `0x0102030405060708`;
+- `root.der`: the testing CA root that anchors the TSA certificate.
