@@ -17,8 +17,10 @@
 pub mod attributes;
 pub mod cms;
 pub mod keys;
+pub mod pdf;
 pub mod pkcs12;
 pub mod signer;
+pub mod stamp;
 pub mod timestamps;
 
 use std::sync::Arc;
@@ -29,7 +31,13 @@ use hanko_core::errors::{not_implemented, Result};
 use hanko_core::sign::{KeySigner, TimeStamper};
 use hanko_pdf::MdpPerm;
 
+pub use crate::attributes::{CadesSignedAttrSpec, CmsSignedAttributes, SignerAttrSpec};
+pub use crate::cms::CmsSignerOptions;
+pub use crate::pdf::fields::{FieldMdpAction, FieldMdpSpec, SigFieldSpec};
+pub use crate::pdf::seed::{SigSeedSubFilter, SigSeedValueSpec};
+pub use crate::pdf::signer::{BuildProps, SigAuthType, SignOptions};
 pub use crate::signer::{ExternalSigner, SimpleSigner};
+pub use crate::stamp::StampStyle;
 pub use crate::timestamps::DummyTimeStamper;
 
 /// `/SubFilter` of a PDF signature.
@@ -45,12 +53,16 @@ pub enum SubFilter {
 /// Signature metadata and options (`PdfSignatureMetadata`).
 #[derive(Clone, Debug)]
 pub struct PdfSignatureMetadata {
-    /// Signature field name; created if absent.
+    /// Signature field name; created if absent. Empty: use the only empty
+    /// signature field (requires `existing_fields_only`).
     pub field_name: String,
-    /// Digest algorithm.
-    pub md_algorithm: DigestAlgorithm,
-    /// `/SubFilter`.
-    pub subfilter: SubFilter,
+    /// Digest algorithm; if `None`, taken from the signer's mechanism, the
+    /// seed value dictionary, or chosen for the key
+    /// (`select_suitable_signing_md`).
+    pub md_algorithm: Option<DigestAlgorithm>,
+    /// `/SubFilter`; if `None`, taken from the seed value dictionary, else
+    /// `adbe.pkcs7.detached` (pyHanko's default).
+    pub subfilter: Option<SubFilter>,
     /// `/Reason`.
     pub reason: Option<String>,
     /// `/Location`.
@@ -67,6 +79,21 @@ pub struct PdfSignatureMetadata {
     pub use_pades_lta: bool,
     /// Context used to collect validation information.
     pub validation_context: Option<Arc<ValidationContext>>,
+    /// DocMDP level for approval signatures that lock fields
+    /// (`docmdp_permissions`).
+    pub docmdp_permissions: MdpPerm,
+    /// `/Prop_Build`.
+    pub app_build_props: Option<BuildProps>,
+    /// `/Prop_AuthTime`.
+    pub prop_auth_time: Option<i64>,
+    /// `/Prop_AuthType`.
+    pub prop_auth_type: Option<SigAuthType>,
+    /// CAdES signed attributes.
+    pub cades_signed_attr_spec: Option<CadesSignedAttrSpec>,
+    /// No safety margin in size estimates.
+    pub tight_size_estimates: bool,
+    /// Name of the document timestamp field (B-LTA).
+    pub timestamp_field_name: Option<String>,
 }
 
 impl PdfSignatureMetadata {
@@ -74,8 +101,8 @@ impl PdfSignatureMetadata {
     pub fn new(field_name: impl Into<String>) -> Self {
         Self {
             field_name: field_name.into(),
-            md_algorithm: DigestAlgorithm::Sha256,
-            subfilter: SubFilter::Pades,
+            md_algorithm: None,
+            subfilter: Some(SubFilter::Pades),
             reason: None,
             location: None,
             name: None,
@@ -84,12 +111,28 @@ impl PdfSignatureMetadata {
             embed_validation_info: false,
             use_pades_lta: false,
             validation_context: None,
+            docmdp_permissions: MdpPerm::FillForms,
+            app_build_props: None,
+            prop_auth_time: None,
+            prop_auth_type: None,
+            cades_signed_attr_spec: None,
+            tight_size_estimates: false,
+            timestamp_field_name: None,
+        }
+    }
+
+    /// pyHanko's defaults (`PdfSignatureMetadata(field_name=...)`):
+    /// `adbe.pkcs7.detached` unless the seed values say otherwise.
+    pub fn pyhanko_defaults(field_name: impl Into<String>) -> Self {
+        Self {
+            subfilter: None,
+            ..Self::new(field_name)
         }
     }
 }
 
 /// Signs PDF documents (`PdfSigner`).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PdfSigner {
     /// Signature options.
     pub metadata: PdfSignatureMetadata,
@@ -97,12 +140,57 @@ pub struct PdfSigner {
     pub signer: Arc<dyn KeySigner>,
     /// TSA for signature timestamps (B-T) and document timestamps (B-LTA).
     pub timestamper: Option<Arc<dyn TimeStamper>>,
+    /// Field to create if the field does not exist (`new_field_spec`).
+    pub new_field_spec: Option<SigFieldSpec>,
+    /// Appearance of visible signatures (`stamp_style`).
+    pub stamp_style: Option<StampStyle>,
+    /// Extra text parameters for the appearance.
+    pub appearance_text_params: std::collections::BTreeMap<String, String>,
+    /// CMS options of the signer (`embed_roots`, attribute certificates).
+    pub cms_options: CmsSignerOptions,
+    /// Signing time (`/M`, `signingTime`); the current time if `None`.
+    pub signing_time: Option<hanko_core::time::Moment>,
+    /// Ignore seed value dictionaries (testing).
+    pub ignore_sv: bool,
 }
 
 impl PdfSigner {
+    /// A signer with default settings.
+    pub fn new(metadata: PdfSignatureMetadata, signer: Arc<dyn KeySigner>) -> Self {
+        Self {
+            metadata,
+            signer,
+            timestamper: None,
+            new_field_spec: None,
+            stamp_style: None,
+            appearance_text_params: Default::default(),
+            cms_options: CmsSignerOptions::default(),
+            signing_time: None,
+            ignore_sv: false,
+        }
+    }
+
+    /// Set the timestamper.
+    pub fn with_timestamper(mut self, ts: Arc<dyn TimeStamper>) -> Self {
+        self.timestamper = Some(ts);
+        self
+    }
+
+    /// Set the signing time.
+    pub fn at(mut self, t: hanko_core::time::Moment) -> Self {
+        self.signing_time = Some(t);
+        self
+    }
+
+    /// Set the field specification for new fields.
+    pub fn with_field_spec(mut self, spec: SigFieldSpec) -> Self {
+        self.new_field_spec = Some(spec);
+        self
+    }
+
     /// Sign `pdf` and return the signed file (`sign_pdf`).
-    pub fn sign_pdf(&self, _pdf: &[u8]) -> Result<Vec<u8>> {
-        not_implemented("hanko_sign::PdfSigner::sign_pdf")
+    pub fn sign_pdf(&self, pdf: &[u8]) -> Result<Vec<u8>> {
+        self.sign_pdf_with(pdf, &SignOptions::default())
     }
 }
 
