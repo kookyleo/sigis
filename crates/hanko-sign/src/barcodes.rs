@@ -64,7 +64,7 @@ fn index_b(s: Sym) -> Option<u8> {
             }
             let cp = u32::from(c);
             if (0x60..=0x7f).contains(&cp) {
-                return u8::try_from(cp).ok();
+                return u8::try_from(cp - 0x20).ok();
             }
             match c {
                 'ó' => Some(96),
@@ -371,5 +371,18 @@ mod tests {
         // "123456": start C, 12 34 56, checksum, stop
         let m = code128_modules("123456").unwrap();
         assert!(m.starts_with(CODES[105]));
+    }
+
+    #[test]
+    fn matches_python_barcode() {
+        // `barcode.get_barcode('code128', code=...).build()[0]`
+        assert_eq!(
+            code128_modules("this is a test").unwrap(),
+            "110100100001001111010010011000010100001101001011110010011011001100100001101001011110010011011001100100101100001101100110010011110100101100100001011110010010011110100100010011001100011101011"
+        );
+        assert_eq!(
+            code128_modules("ab12345678cd9").unwrap(),
+            "110100100001001011000010010000110101110111101011001110010001011000111000101101100001010010111101110100001011001000010011011100101100110100010001100011101011"
+        );
     }
 }

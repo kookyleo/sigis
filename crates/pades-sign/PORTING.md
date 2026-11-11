@@ -30,7 +30,9 @@ counts: `docs/lanes/d.md`.
 | Encryption for updates of encrypted files (`crypt/` standard handler) | `src/pdf/writer.rs` via `lopdf::encryption` | standard handler supported; public-key handler pending (lane B) |
 | `sign/pkcs11.py` | `src/pkcs11.rs` | ported (`cryptoki`) |
 | `sign/signers/csc_signer.py` | `src/csc.rs` | ported (blocking `reqwest`) |
-| `stamp/`, `pdf_utils/{layout,text,content,images,qr,barcodes}.py`, `pdf_utils/font/` | `src/stamp/`, `src/layout.rs`, `src/text.rs`, `src/content/`, `src/images.rs`, `src/qr.rs`, `src/barcodes.rs`, `src/font/` | in progress (sub-slice) |
+| `stamp/` (`base`, `text`, `qr`, `static`, `functions`, `art`), stamp config | `src/stamp/` | ported |
+| `pdf_utils/{layout,text,content,images,qr,barcodes,form_tools}.py` | `src/layout.rs`, `src/text.rs`, `src/content/`, `src/images.rs`, `src/qr.rs`, `src/barcodes.rs`, `src/form_tools.rs` | ported (`png`/`zune-jpeg`, `qrcode` with python-qrcode segmentation, Code 128 only) |
+| `pdf_utils/font/` | `src/font/` | ported (`ttf-parser`, `rustybuzz`, `subsetter`; CFF subsets rebuilt in fontTools' layout) |
 
 ## Test mapping
 
@@ -43,10 +45,10 @@ counts: `docs/lanes/d.md`.
 | `test_sign_encrypted.py` | `tests/test_sign_encrypted.rs` | 11 | 8 | 0 | 3 |
 | `test_pkcs11.py` | `tests/test_pkcs11.rs` | 36 | 34 | 2 | 0 |
 | `test_csc.py` | `tests/test_csc.rs` | 17 | 17 | 0 | 0 |
-| `test_stamp.py` | `tests/test_stamp.rs` | 25 | — | — | in progress |
-| `test_text.py` | `tests/test_text.rs` | 15 | — | — | in progress |
-| `test_images.py` | `tests/test_images.rs` | 2 | — | — | in progress |
-| `test_barcode.py` | `tests/test_barcode.rs` | 2 | — | — | in progress |
+| `test_stamp.py` | `tests/test_stamp.rs` | 25 | 25 | 0 | 0 |
+| `test_text.py` | `tests/test_text.rs` | 15 | 15 | 0 | 0 |
+| `test_images.py` | `tests/test_images.rs` | 2 | 2 | 0 | 0 |
+| `test_barcode.py` | `tests/test_barcode.rs` | 2 | 2 | 0 | 0 |
 
 Skip reasons and pending dependencies per test: `docs/lanes/d.md`.
 Infrastructure tests (key loading, CMS, TSA): `tests/keys_and_cms.rs`.
