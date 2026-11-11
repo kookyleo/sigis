@@ -212,7 +212,13 @@ pub fn ldap_string_prep_check(value: &str) -> Result<(), &'static str> {
     let mapped: String = value
         .chars()
         .filter(|c| !in_ranges(*c, REMOVE_1))
-        .map(|c| if "\t\n\u{b}\u{c}\r\u{85}".contains(c) { ' ' } else { c })
+        .map(|c| {
+            if "\t\n\u{b}\u{c}\r\u{85}".contains(c) {
+                ' '
+            } else {
+                c
+            }
+        })
         .filter(|c| !in_ranges(*c, REMOVE_2) && !in_ranges(*c, REMOVE_3))
         .collect();
     let normalized: String = mapped.nfkc().collect();
@@ -221,7 +227,9 @@ pub fn ldap_string_prep_check(value: &str) -> Result<(), &'static str> {
             return Err("X.509 Name objects may not contain unassigned code points");
         }
         if in_table(t::C8, c) {
-            return Err("X.509 Name objects may not contain change display or zzzzdeprecated characters");
+            return Err(
+                "X.509 Name objects may not contain change display or zzzzdeprecated characters",
+            );
         }
         if in_table(t::C3, c) {
             return Err("X.509 Name objects may not contain private use characters");
@@ -241,8 +249,14 @@ pub fn ldap_string_prep_check(value: &str) -> Result<(), &'static str> {
         .chars()
         .any(|c| !in_table(t::D1, c) && in_table(t::D2, c));
     if has_r_al {
-        let first = normalized.chars().next().is_some_and(|c| in_table(t::D1, c));
-        let last = normalized.chars().last().is_some_and(|c| in_table(t::D1, c));
+        let first = normalized
+            .chars()
+            .next()
+            .is_some_and(|c| in_table(t::D1, c));
+        let last = normalized
+            .chars()
+            .last()
+            .is_some_and(|c| in_table(t::D1, c));
         if has_l || !first || !last {
             return Err("X.509 Name object contains a malformed bidirectional sequence");
         }

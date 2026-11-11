@@ -13,7 +13,7 @@ use common::{b64, check, Harvest, Replayed};
 use hanko_cms::signed_data::{
     find_cms_attribute_iter, find_unique_cms_attribute, parse_attributes, AttributeLookupError,
 };
-use hanko_cms::AdesSubIndication;
+use hanko_core::ades::{AdesIndeterminate, AdesSubIndic};
 use hanko_core::asn1::oids;
 use hanko_core::asn1::tlv;
 use hanko_core::time::Moment;
@@ -24,20 +24,48 @@ const MODULE: &str = "test_cms";
 /// divergence fails closed (asserted by `common::check`).
 const KNOWN: &[(&str, usize, &str)] = &[
     // R1: SHA-3 digests need the `sha3` crate in hanko-core.
-    ("test_detached_cms_with_multiple_signature_timestamps", 0, "R1: sha3_256 TST"),
-    ("test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha3_256]", 0, "R1: sha3_256 TST"),
-    ("test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha512]", 0, "R1: sha3_256 TST"),
+    (
+        "test_detached_cms_with_multiple_signature_timestamps",
+        0,
+        "R1: sha3_256 TST",
+    ),
+    (
+        "test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha3_256]",
+        0,
+        "R1: sha3_256 TST",
+    ),
+    (
+        "test_detached_cms_with_multiple_signature_timestamps_algo_policy[sha512]",
+        0,
+        "R1: sha3_256 TST",
+    ),
     // R1: MD5 needs the `md-5` crate in hanko-core.
     ("test_sign_weak_digest", 1, "R1: md5"),
     ("test_sign_weak_digest", 2, "R1: md5"),
     ("test_sign_weak_sig_digest_mismatch", 1, "R1: md5"),
     ("test_sign_weak_sig_digest_mismatch_allowed", 1, "R1: md5"),
-    ("test_sign_digest_mismatch_allowed_but_inner_banned", 1, "R1: md5"),
-    ("test_sign_digest_mismatch_allowed_but_outer_banned", 1, "R1: md5"),
-    ("test_sign_digest_mismatch_allowed_passed_through_context", 1, "R1: md5"),
+    (
+        "test_sign_digest_mismatch_allowed_but_inner_banned",
+        1,
+        "R1: md5",
+    ),
+    (
+        "test_sign_digest_mismatch_allowed_but_outer_banned",
+        1,
+        "R1: md5",
+    ),
+    (
+        "test_sign_digest_mismatch_allowed_passed_through_context",
+        1,
+        "R1: md5",
+    ),
     ("test_sign_weak_sig_digest", 1, "R1: md5"),
     ("test_sign_weak_sig_digest_allowed", 1, "R1: md5"),
-    ("test_sign_weak_sig_digest_disallowed_by_custom_policy", 1, "R1: md5"),
+    (
+        "test_sign_weak_sig_digest_disallowed_by_custom_policy",
+        1,
+        "R1: md5",
+    ),
     // R1: DSA needs the `dsa` crate in hanko-core.
     ("test_sign_with_dsa_trust", 1, "R1: DSA"),
     ("test_sign_with_explicit_dsa_implied_hash", 1, "R1: DSA"),
@@ -135,7 +163,9 @@ fn test_detached_cms_with_content_tst() {
     assert!(pp.contains("Content timestamp"));
     assert!(pp.contains("Signature timestamp"));
     assert!(s.signature.valid && s.signature.intact);
-    assert!(s.summary().contains("CONTENT_TIMESTAMP_TOKEN<INTACT:UNTRUSTED>"));
+    assert!(s
+        .summary()
+        .contains("CONTENT_TIMESTAMP_TOKEN<INTACT:UNTRUSTED>"));
     assert!(s.summary().contains(",TIMESTAMP_TOKEN<INTACT:UNTRUSTED>"));
 }
 
@@ -146,11 +176,16 @@ fn test_detached_cms_with_wrong_tst() {
     let ts = s.timestamp_validity.as_ref().expect("timestamp");
     assert!(!ts.signature.intact && ts.signature.valid);
     assert_eq!(ts.timestamp, nov_2020());
-    let cts = s.content_timestamp_validity.as_ref().expect("content timestamp");
+    let cts = s
+        .content_timestamp_validity
+        .as_ref()
+        .expect("content timestamp");
     assert!(cts.signature.intact && cts.signature.valid);
     assert_eq!(cts.timestamp, nov_2020());
     assert!(s.signature.valid && s.signature.intact);
-    assert!(s.summary().contains("CONTENT_TIMESTAMP_TOKEN<INTACT:UNTRUSTED>"));
+    assert!(s
+        .summary()
+        .contains("CONTENT_TIMESTAMP_TOKEN<INTACT:UNTRUSTED>"));
     assert!(s.summary().contains("TIMESTAMP_TOKEN<INVALID>"));
 }
 
@@ -160,7 +195,10 @@ fn test_detached_cms_with_wrong_content_tst() {
     let s = r.standard();
     let ts = s.timestamp_validity.as_ref().expect("timestamp");
     assert!(ts.signature.intact && ts.signature.valid);
-    let cts = s.content_timestamp_validity.as_ref().expect("content timestamp");
+    let cts = s
+        .content_timestamp_validity
+        .as_ref()
+        .expect("content timestamp");
     assert!(!cts.signature.intact && cts.signature.valid);
     assert_eq!(cts.timestamp, nov_2020());
     let pp = s.pretty_print_details();
@@ -184,7 +222,10 @@ fn test_detached_with_malformed_content_tst() {
     let results = run("test_detached_with_malformed_content_tst");
     assert_eq!(results.len(), 5);
     for r in results {
-        assert!(r.error().to_string().contains("does not encapsulate TSTInfo"));
+        assert!(r
+            .error()
+            .to_string()
+            .contains("does not encapsulate TSTInfo"));
     }
 }
 
@@ -278,7 +319,9 @@ fn test_forbidden_signature_algorithm() {
     let s = &pdf_statuses("test_forbidden_signature_algorithm")[0];
     assert_eq!(
         s.signature.trust_problem_indic,
-        Some(AdesSubIndication::CryptoConstraintsFailure)
+        Some(AdesSubIndic::Indeterminate(
+            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
+        ))
     );
 }
 
@@ -339,7 +382,7 @@ fn test_old_style_signing_cert_attr_mismatch() {
             .contains("Signing certificate attribute does not match "));
         assert_eq!(
             e.ades_subindication(),
-            AdesSubIndication::NoSigningCertificateFound
+            AdesSubIndic::Indeterminate(AdesIndeterminate::NO_SIGNING_CERTIFICATE_FOUND)
         );
         assert_eq!(
             e.ades_subindication().status(),
@@ -385,7 +428,7 @@ fn test_signing_cert_attr_malformed_issuer() {
         .contains("Signing certificate attribute does not match "));
     assert_eq!(
         errors[0].ades_subindication(),
-        AdesSubIndication::NoSigningCertificateFound
+        AdesSubIndic::Indeterminate(AdesIndeterminate::NO_SIGNING_CERTIFICATE_FOUND)
     );
 }
 
@@ -411,7 +454,11 @@ fn trusted(test: &str) {
     let statuses = pdf_statuses(test);
     assert!(!statuses.is_empty());
     for s in statuses {
-        assert!(s.signature.trusted(), "{test}: {:?}", s.signature.trust_problem);
+        assert!(
+            s.signature.trusted(),
+            "{test}: {:?}",
+            s.signature.trust_problem
+        );
     }
 }
 
@@ -597,8 +644,14 @@ const SAMPLE_GROUP_ATTR: &str =
 fn test_parse_malformed_claimed_attrs() {
     use hanko_cms::attributes::claimed_attributes_from;
     for (bad, pattern) in [
-        (NONSENSICAL_ATTR, regex_lite("Failed to parse claimed", "role")),
-        (UNTYPABLE_ATTR, regex_lite("Failed to parse", "unknown type")),
+        (
+            NONSENSICAL_ATTR,
+            regex_lite("Failed to parse claimed", "role"),
+        ),
+        (
+            UNTYPABLE_ATTR,
+            regex_lite("Failed to parse", "unknown type"),
+        ),
     ] {
         let attrs = vec![common::unhex(bad), common::unhex(SAMPLE_GROUP_ATTR)];
         let e = claimed_attributes_from(&attrs, true).expect_err("fatal");
@@ -739,7 +792,10 @@ fn test_find_cms_attribute_iter_single_value() {
 
 #[test]
 fn test_find_cms_attribute_iter_multiple_values() {
-    let a = attrs(&[attr(&oids::MESSAGE_DIGEST, &[octets(b"test1"), octets(b"test2")])]);
+    let a = attrs(&[attr(
+        &oids::MESSAGE_DIGEST,
+        &[octets(b"test1"), octets(b"test2")],
+    )]);
     let values: Vec<_> = find_cms_attribute_iter(Some(&a), oids::MESSAGE_DIGEST).collect();
     assert_eq!(values, vec![octets(b"test1"), octets(b"test2")]);
 }
@@ -747,7 +803,10 @@ fn test_find_cms_attribute_iter_multiple_values() {
 #[test]
 fn test_find_cms_attribute_iter_nonexistent_attribute() {
     let a = test_attrs();
-    assert_eq!(find_cms_attribute_iter(Some(&a), oids::SIGNING_TIME).count(), 0);
+    assert_eq!(
+        find_cms_attribute_iter(Some(&a), oids::SIGNING_TIME).count(),
+        0
+    );
 }
 
 #[test]
@@ -758,14 +817,20 @@ fn test_find_cms_attribute_iter_none_attrs() {
 #[test]
 fn test_find_cms_attribute_iter_empty_attrs() {
     let a = attrs(&[]);
-    assert_eq!(find_cms_attribute_iter(Some(&a), oids::CONTENT_TYPE).count(), 0);
+    assert_eq!(
+        find_cms_attribute_iter(Some(&a), oids::CONTENT_TYPE).count(),
+        0
+    );
 }
 
 #[test]
 fn test_find_unique_cms_attribute_success() {
     let a = test_attrs();
     let v = find_unique_cms_attribute(Some(&a), oids::CONTENT_TYPE).expect("value");
-    assert_eq!(const_oid::ObjectIdentifier::from_der(v).expect("oid"), oids::CT_DATA);
+    assert_eq!(
+        const_oid::ObjectIdentifier::from_der(v).expect("oid"),
+        oids::CT_DATA
+    );
 }
 
 #[test]
@@ -778,7 +843,10 @@ fn test_find_unique_cms_attribute_raises_on_missing() {
 
 #[test]
 fn test_find_unique_cms_attribute_raises_on_multiple() {
-    let a = attrs(&[attr(&oids::MESSAGE_DIGEST, &[octets(b"test1"), octets(b"test2")])]);
+    let a = attrs(&[attr(
+        &oids::MESSAGE_DIGEST,
+        &[octets(b"test1"), octets(b"test2")],
+    )]);
     let e = find_unique_cms_attribute(Some(&a), oids::MESSAGE_DIGEST).expect_err("multiple");
     assert_eq!(
         e.to_string(),
@@ -817,7 +885,10 @@ fn test_find_cms_attribute_iter_preserves_order() {
         &[octets(b"first"), octets(b"second"), octets(b"third")],
     )]);
     let values: Vec<_> = find_cms_attribute_iter(Some(&a), oids::MESSAGE_DIGEST).collect();
-    assert_eq!(values, vec![octets(b"first"), octets(b"second"), octets(b"third")]);
+    assert_eq!(
+        values,
+        vec![octets(b"first"), octets(b"second"), octets(b"third")]
+    );
 }
 
 #[test]

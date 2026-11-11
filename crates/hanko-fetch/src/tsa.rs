@@ -102,7 +102,9 @@ pub fn handle_tsp_response(
     response: &[u8],
     nonce: Option<&[u8]>,
 ) -> std::result::Result<Vec<u8>, TimestampRequestError> {
-    let bad = |what: &str| TimestampRequestError(format!("Timestamp server response is malformed: {what}"));
+    let bad = |what: &str| {
+        TimestampRequestError(format!("Timestamp server response is malformed: {what}"))
+    };
     let resp = Tlv::parse_exact(response).map_err(|e| bad(&e.to_string()))?;
     let parts = resp.children().map_err(|e| bad(&e.to_string()))?;
     let status_info = parts.first().ok_or_else(|| bad("no status"))?;
@@ -121,7 +123,10 @@ pub fn handle_tsp_response(
         } else if f.is_universal(tag::BIT_STRING) {
             let bits = f.value.get(1..).unwrap_or_default();
             for (bit, name) in FAIL_INFO_NAMES {
-                if bits.get(bit / 8).is_some_and(|b| b & (0x80 >> (bit % 8)) != 0) {
+                if bits
+                    .get(bit / 8)
+                    .is_some_and(|b| b & (0x80 >> (bit % 8)) != 0)
+                {
                     fail_infos.push(name);
                 }
             }
@@ -167,7 +172,10 @@ pub fn token_tst_info(token: &[u8]) -> std::result::Result<TstInfo, String> {
         .ok_or("no encapContentInfo")?;
     let eci_parts = eci.children().map_err(|e| e.to_string())?;
     let ct = eci_parts.first().ok_or("no content type")?;
-    if !RawOid::from_tlv(ct).map_err(|e| e.to_string())?.is(&oids::CT_TST_INFO) {
+    if !RawOid::from_tlv(ct)
+        .map_err(|e| e.to_string())?
+        .is(&oids::CT_TST_INFO)
+    {
         return Err("token does not encapsulate TSTInfo".into());
     }
     let econtent = eci_parts

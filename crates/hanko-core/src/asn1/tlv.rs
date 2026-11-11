@@ -224,8 +224,14 @@ mod tests {
     #[test]
     fn high_tag_numbers_and_retag() {
         let tlv = Tlv::parse_exact(&[0x9f, 0x81, 0x00, 0x01, 0x07]).expect("parse");
-        assert_eq!((tlv.class, tlv.number, tlv.value), (Class::ContextSpecific, 128, &[7u8][..]));
-        let set = retag(&Tlv::parse_exact(&[0xa0, 0x02, 0x05, 0x00]).expect("p"), 0x31);
+        assert_eq!(
+            (tlv.class, tlv.number, tlv.value),
+            (Class::ContextSpecific, 128, &[7u8][..])
+        );
+        let set = retag(
+            &Tlv::parse_exact(&[0xa0, 0x02, 0x05, 0x00]).expect("p"),
+            0x31,
+        );
         assert_eq!(set, vec![0x31, 0x02, 0x05, 0x00]);
     }
 

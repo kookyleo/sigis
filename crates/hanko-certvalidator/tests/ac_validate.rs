@@ -81,11 +81,17 @@ fn role_ctx() -> Ctx {
 
 fn assert_err(r: Result<AcValidationResult, AcError>, class: &str, pattern: &[&str]) {
     let e = r.expect_err("error");
-    assert!(e.is_instance_of(class), "{} is not a {class}: {e}", e.class_name());
+    assert!(
+        e.is_instance_of(class),
+        "{} is not a {class}: {e}",
+        e.class_name()
+    );
     let msg = e.to_string();
     let mut pos = 0;
     for p in pattern {
-        let i = msg[pos..].find(p).unwrap_or_else(|| panic!("{p:?} not in {msg:?}"));
+        let i = msg[pos..]
+            .find(p)
+            .unwrap_or_else(|| panic!("{p:?} not in {msg:?}"));
         pos += i + p.len();
     }
 }
@@ -204,7 +210,11 @@ fn test_basic_ac_validation_bad_targeting_name() {
         )],
         group_memberships: Vec::new(),
     });
-    assert_err(validate_ac(&c.build(), &ac, None), "InvalidCertificateError", &["AC targeting"]);
+    assert_err(
+        validate_ac(&c.build(), &ac, None),
+        "InvalidCertificateError",
+        &["AC targeting"],
+    );
 }
 
 #[test]
@@ -214,7 +224,11 @@ fn test_basic_ac_validation_bad_targeting_group() {
         validator_names: Vec::new(),
         group_memberships: vec![dn("OU=Not Validators,O=Testing Attribute Authority,C=XX")],
     });
-    assert_err(validate_ac(&c.build(), &ac, None), "InvalidCertificateError", &["AC targeting"]);
+    assert_err(
+        validate_ac(&c.build(), &ac, None),
+        "InvalidCertificateError",
+        &["AC targeting"],
+    );
 }
 
 #[test]
@@ -281,10 +295,22 @@ fn test_ac_issuer_search_nonstandard_forms_failures() {
             "InvalidAttrCertificateError",
             "conflicting",
         ),
-        ("alice-misleading-aki.attr.crt", "PathBuildingError", "suitable AA"),
-        ("alice-v2form-wrong-serial.attr.crt", "PathBuildingError", "suitable AA"),
+        (
+            "alice-misleading-aki.attr.crt",
+            "PathBuildingError",
+            "suitable AA",
+        ),
+        (
+            "alice-v2form-wrong-serial.attr.crt",
+            "PathBuildingError",
+            "suitable AA",
+        ),
     ] {
-        assert_err(validate_ac(&role_ctx().build(), &oneoff(name), Some(&alice)), class, &[pattern]);
+        assert_err(
+            validate_ac(&role_ctx().build(), &oneoff(name), Some(&alice)),
+            class,
+            &[pattern],
+        );
     }
 }
 
@@ -307,7 +333,12 @@ fn ac_path() -> ValidationPath {
     )
 }
 
-fn rev_ctx(others: Vec<Cert>, crls: &[&[&str]], ocsps: &[&str], at: &'static str) -> ValidationContext {
+fn rev_ctx(
+    others: Vec<Cert>,
+    crls: &[&[&str]],
+    ocsps: &[&str],
+    at: &'static str,
+) -> ValidationContext {
     let mut c = Ctx::new(others);
     c.crls = crls.iter().map(|p| aa(p)).collect();
     c.ocsps = ocsps.iter().map(|p| aa(&[p])).collect();
@@ -317,7 +348,10 @@ fn rev_ctx(others: Vec<Cert>, crls: &[&[&str]], ocsps: &[&str], at: &'static str
 }
 
 fn role_others() -> Vec<Cert> {
-    vec![cert(&["root", "interm-role.crt"]), cert(&["interm", "role-aa.crt"])]
+    vec![
+        cert(&["root", "interm-role.crt"]),
+        cert(&["interm", "role-aa.crt"]),
+    ]
 }
 
 fn complex_others() -> Vec<Cert> {
@@ -411,7 +445,11 @@ fn test_ac_crls_out_of_scope() {
     );
     let ac = aa(&["aa", "alice-role-complex-crls.attr.crt"]);
     let e = verify_ac_crl(&ctx, &ac, &ac_path()).expect_err("indeterminate");
-    assert!(e.to_string().contains("insufficient information from known CRLs"), "{e}");
+    assert!(
+        e.to_string()
+            .contains("insufficient information from known CRLs"),
+        "{e}"
+    );
 }
 
 #[test]
@@ -433,13 +471,23 @@ fn test_ac_unrevoked_complex_crls_full_path_validation() {
 
 #[test]
 fn test_ac_revoked_ocsp() {
-    let ctx = rev_ctx(role_others(), &[], &["alice-revoked.ors"], "2021-12-12T00:00:00Z");
+    let ctx = rev_ctx(
+        role_others(),
+        &[],
+        &["alice-revoked.ors"],
+        "2021-12-12T00:00:00Z",
+    );
     revoked(verify_ac_ocsp(&ctx, &with_rev(), &ac_path()).expect_err("revoked"));
 }
 
 #[test]
 fn test_ac_unrevoked_oscp() {
-    let ctx = rev_ctx(role_others(), &[], &["alice-all-good.ors"], "2019-12-12T00:00:00Z");
+    let ctx = rev_ctx(
+        role_others(),
+        &[],
+        &["alice-all-good.ors"],
+        "2019-12-12T00:00:00Z",
+    );
     verify_ac_ocsp(&ctx, &with_rev(), &ac_path()).expect("good");
 }
 
@@ -456,6 +504,11 @@ fn test_ac_revoked_full_path_validation() {
 
 #[test]
 fn test_ac_unrevoked_full_path_validation_ocsp() {
-    let ctx = rev_ctx(role_others(), &ALL_GOOD[..2], &["alice-all-good.ors"], "2019-12-12T00:00:00Z");
+    let ctx = rev_ctx(
+        role_others(),
+        &ALL_GOOD[..2],
+        &["alice-all-good.ors"],
+        "2019-12-12T00:00:00Z",
+    );
     validate_ac(&ctx, &with_rev(), None).expect("valid");
 }

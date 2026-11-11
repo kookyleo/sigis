@@ -104,7 +104,7 @@ fn cert_dps() -> Vec<DistributionPoint> {
         .unwrap()
         .unwrap()
         .1
-        .0
+         .0
 }
 
 #[test]

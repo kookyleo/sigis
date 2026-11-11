@@ -1,7 +1,6 @@
 // Port of pyhanko-certvalidator `tests/test_certificate_validator.py`
 // (MIT, see LICENSE-pyHanko).
 
-
 mod common;
 
 use std::sync::Arc;

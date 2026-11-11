@@ -18,12 +18,12 @@ use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
 use x509_cert::name::Name;
 
+use hanko_certvalidator::names::check_name;
 use hanko_core::algorithms::DigestAlgorithm;
 use hanko_core::asn1::ess::{EssCertId, EssCertIdV2, IssuerSerial};
 use hanko_core::asn1::oids;
 use hanko_core::asn1::raw_oid::RawOid;
 use hanko_core::asn1::tlv::{self, tag, Tlv};
-use hanko_certvalidator::names::check_name;
 use hanko_core::cert::Cert;
 
 use crate::errors::{CmsError, CmsResult};
@@ -328,13 +328,19 @@ impl SignedData {
         }
         let parts = ci.children()?;
         let [ct, content] = parts.as_slice() else {
-            return Err(CmsError::Malformed("ContentInfo must have two fields".into()));
+            return Err(CmsError::Malformed(
+                "ContentInfo must have two fields".into(),
+            ));
         };
         if !RawOid::from_tlv(ct)?.is(&oids::CT_SIGNED_DATA) {
-            return Err(CmsError::Malformed("ContentInfo does not contain SignedData".into()));
+            return Err(CmsError::Malformed(
+                "ContentInfo does not contain SignedData".into(),
+            ));
         }
         if !content.is_context(0) || !content.constructed {
-            return Err(CmsError::Malformed("ContentInfo content must be [0] EXPLICIT".into()));
+            return Err(CmsError::Malformed(
+                "ContentInfo content must be [0] EXPLICIT".into(),
+            ));
         }
         let inner = Tlv::parse_exact(content.value)?;
         Self::from_tlv(&inner)
@@ -376,17 +382,16 @@ impl SignedData {
             .collect::<CmsResult<Vec<_>>>()?;
         let eci = next("encapContentInfo")?;
         if !eci.is_universal(tag::SEQUENCE) {
-            return Err(CmsError::Malformed("encapContentInfo is not a SEQUENCE".into()));
+            return Err(CmsError::Malformed(
+                "encapContentInfo is not a SEQUENCE".into(),
+            ));
         }
         let eci_parts = eci.children()?;
         let (econtent_type, econtent) = match eci_parts.as_slice() {
             [ct] => (RawOid::from_tlv(ct)?, None),
             [ct, c] if c.is_context(0) && c.constructed => {
                 let octets = Tlv::parse_exact(c.value)?;
-                (
-                    RawOid::from_tlv(ct)?,
-                    Some(octet_string_contents(&octets)?),
-                )
+                (RawOid::from_tlv(ct)?, Some(octet_string_contents(&octets)?))
             }
             _ => return Err(CmsError::Malformed("malformed encapContentInfo".into())),
         };
@@ -453,9 +458,7 @@ pub fn extract_signer_info(sd: &SignedData) -> CmsResult<&SignerInfo> {
 /// Strip redundant sign-extension octets of an INTEGER's contents.
 fn normalize_int(bytes: &[u8]) -> &[u8] {
     let mut b = bytes;
-    while b.len() > 1
-        && ((b[0] == 0 && b[1] & 0x80 == 0) || (b[0] == 0xff && b[1] & 0x80 != 0))
-    {
+    while b.len() > 1 && ((b[0] == 0 && b[1] & 0x80 == 0) || (b[0] == 0xff && b[1] & 0x80 != 0)) {
         b = &b[1..];
     }
     b
@@ -480,7 +483,8 @@ fn names_match(expected_der: &[u8], cert: &Cert, allow_bytes: bool) -> bool {
 
 /// `match_issuer_serial` for an `IssuerAndSerialNumber`.
 pub fn match_issuer_and_serial(issuer_der: &[u8], serial: &[u8], cert: &Cert) -> bool {
-    names_match(issuer_der, cert, true) && normalize_int(serial) == normalize_int(cert.serial_bytes())
+    names_match(issuer_der, cert, true)
+        && normalize_int(serial) == normalize_int(cert.serial_bytes())
 }
 
 /// `match_issuer_serial` for an ESS `IssuerSerial`: the issuer must be

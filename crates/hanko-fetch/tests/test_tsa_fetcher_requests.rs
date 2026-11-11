@@ -2,10 +2,10 @@
 // (MIT, see LICENSE-pyHanko). The `requests`-based client and the aiohttp
 // one are the same client in this port.
 
-mod common;
-mod tsa_common;
 #[path = "../../hanko-cms/tests/common/mod.rs"]
 mod cms_replay;
+mod common;
+mod tsa_common;
 
 #[test]
 fn test_ts_fetch_supplied_session_error_requests() {
@@ -25,7 +25,11 @@ fn test_http_timestamp_bad_content_type_requests() {
 #[test]
 fn test_http_timestamp_requests() {
     tsa_common::http_timestamp_round_trip();
-    let results = cms_replay::check("test_tsa_fetcher_requests", "test_http_timestamp_requests", &[]);
+    let results = cms_replay::check(
+        "test_tsa_fetcher_requests",
+        "test_http_timestamp_requests",
+        &[],
+    );
     let s = results
         .iter()
         .find_map(|r| match r {

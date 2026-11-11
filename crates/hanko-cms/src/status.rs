@@ -10,7 +10,7 @@ use hanko_core::cert::Cert;
 use hanko_core::errors::ValidationError;
 use hanko_core::time::Moment;
 
-use crate::ades::AdesSubIndication;
+use hanko_core::ades::AdesSubIndic;
 
 /// Why trust in the signer could not be established (`trust_problem_indic`).
 ///
@@ -40,7 +40,9 @@ pub struct RevocationDetails {
 }
 
 /// Cryptographic and trust status of one CMS signature (`SignatureStatus`).
-#[derive(Clone, Debug)]
+///
+/// [`Default`] is the fail-closed status: not intact, not valid, no path.
+#[derive(Clone, Debug, Default)]
 pub struct SignatureStatus {
     /// The message digest attribute matches the content.
     pub intact: bool,
@@ -58,7 +60,7 @@ pub struct SignatureStatus {
     /// path on which validation failed.
     pub validation_path: Option<ValidationPath>,
     /// AdES sub-indication of the trust problem (`trust_problem_indic`).
-    pub trust_problem_indic: Option<AdesSubIndication>,
+    pub trust_problem_indic: Option<AdesSubIndic>,
     /// asn1crypto name of the signature algorithm (`pkcs7_signature_mechanism`).
     pub pkcs7_signature_mechanism: String,
     /// asn1crypto name of the digest algorithm (`md_algorithm` in pyHanko).
@@ -233,7 +235,7 @@ impl CadesSignerAttributeAssertions {
 }
 
 /// Status of a CAdES-style CMS signature (`StandardCMSSignatureStatus`).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct StandardCmsSignatureStatus {
     /// Core signature status.
     pub signature: SignatureStatus,
@@ -257,9 +259,8 @@ impl StandardCmsSignatureStatus {
     /// is valid, intact and trusted.
     pub fn bottom_line(&self) -> bool {
         let ts_ok = |ts: &Option<TimestampSignatureStatus>| {
-            ts.as_ref().is_none_or(|t| {
-                t.signature.valid && t.signature.intact && t.trusted()
-            })
+            ts.as_ref()
+                .is_none_or(|t| t.signature.valid && t.signature.intact && t.trusted())
         };
         self.signature.intact
             && self.signature.valid
@@ -283,11 +284,7 @@ impl StandardCmsSignatureStatus {
                 ts.signature.summary_with("|")
             ));
         }
-        if self
-            .cades_signer_attrs
-            .as_ref()
-            .is_some_and(|c| !c.valid())
-        {
+        if self.cades_signer_attrs.as_ref().is_some_and(|c| !c.valid()) {
             out.push("CERTIFIED_SIGNER_ATTRS_INVALID".to_owned());
         }
         out
@@ -374,9 +371,7 @@ impl StandardCmsSignatureStatus {
         ));
         sections
             .iter()
-            .map(|(hdr, body)| {
-                format!("{hdr}\n{}\n{body}\n\n", "-".repeat(hdr.chars().count()))
-            })
+            .map(|(hdr, body)| format!("{hdr}\n{}\n{body}\n\n", "-".repeat(hdr.chars().count())))
             .collect::<Vec<_>>()
             .join("\n")
     }

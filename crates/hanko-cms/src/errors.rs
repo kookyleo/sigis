@@ -13,7 +13,7 @@
 
 use hanko_core::errors::HankoError;
 
-use crate::ades::AdesSubIndication;
+use hanko_core::ades::{AdesFailure, AdesIndeterminate, AdesSubIndic};
 
 /// Failure of CMS processing.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
@@ -24,7 +24,7 @@ pub enum CmsError {
         /// Failure message (`failure_message`).
         message: String,
         /// Sub-indication; `None` stands for the default `GENERIC`.
-        ades_subindication: Option<AdesSubIndication>,
+        ades_subindication: Option<AdesSubIndic>,
     },
     /// Information could not be extracted (`CMSExtractionError`).
     #[error("{0}")]
@@ -37,7 +37,7 @@ pub enum CmsError {
     Malformed(String),
 }
 
-fn format_sve(message: &str, sub: &Option<AdesSubIndication>) -> String {
+fn format_sve(message: &str, sub: &Option<AdesSubIndic>) -> String {
     match sub {
         Some(s) => format!("{message} [{s}]"),
         None => message.to_owned(),
@@ -46,7 +46,7 @@ fn format_sve(message: &str, sub: &Option<AdesSubIndication>) -> String {
 
 impl CmsError {
     /// `SignatureValidationError(message, ades_subindication=sub)`.
-    pub fn validation(message: impl Into<String>, sub: AdesSubIndication) -> Self {
+    pub fn validation(message: impl Into<String>, sub: AdesSubIndic) -> Self {
         Self::SignatureValidation {
             message: message.into(),
             ades_subindication: Some(sub),
@@ -67,8 +67,10 @@ impl CmsError {
             Self::SignatureValidation {
                 ades_subindication:
                     Some(
-                        AdesSubIndication::CryptoConstraintsFailure
-                        | AdesSubIndication::CryptoConstraintsFailureNoPoe,
+                        AdesSubIndic::Indeterminate(AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE)
+                        | AdesSubIndic::Indeterminate(
+                            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE,
+                        ),
                     ),
                 ..
             } => "DisallowedAlgorithmError",
@@ -81,14 +83,16 @@ impl CmsError {
 
     /// The effective AdES sub-indication (`ades_subindication`); `GENERIC`
     /// for errors without one.
-    pub fn ades_subindication(&self) -> AdesSubIndication {
+    pub fn ades_subindication(&self) -> AdesSubIndic {
         match self {
             Self::SignatureValidation {
                 ades_subindication: Some(s),
                 ..
             } => *s,
-            Self::Malformed(_) | Self::Structural(_) => AdesSubIndication::FormatFailure,
-            _ => AdesSubIndication::Generic,
+            Self::Malformed(_) | Self::Structural(_) => {
+                AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE)
+            }
+            _ => AdesSubIndic::Indeterminate(AdesIndeterminate::GENERIC),
         }
     }
 
@@ -102,11 +106,18 @@ impl CmsError {
 }
 
 impl From<CmsError> for HankoError {
-    /// `HankoError` has no variant for signature validation failures yet
-    /// (lane A request R2); until it has, they map to `Malformed` with the
-    /// full message, which keeps the failure closed.
+    /// Signature validation failures map to
+    /// [`HankoError::SignatureValidation`] with the effective sub-indication;
+    /// extraction and structural errors (`ValueError` subclasses in pyHanko)
+    /// map to [`HankoError::Malformed`].
     fn from(e: CmsError) -> Self {
-        HankoError::Malformed(e.to_string())
+        match e {
+            CmsError::SignatureValidation { .. } => HankoError::SignatureValidation {
+                ades_subindication: Some(e.ades_subindication()),
+                message: e.failure_message().to_owned(),
+            },
+            other => HankoError::Malformed(other.to_string()),
+        }
     }
 }
 

@@ -148,7 +148,9 @@ fn load_cases() -> Vec<Case> {
 /// counts, as with pyhanko-certvalidator's default `moment`).
 #[test]
 fn test_nist_pkits_with_simulated_crl_downloads() {
-    use hanko_certvalidator::{CertRevTrustPolicy, RevocationCheckingPolicy, RevocationCheckingRule};
+    use hanko_certvalidator::{
+        CertRevTrustPolicy, RevocationCheckingPolicy, RevocationCheckingRule,
+    };
     let mut diverging = BTreeMap::new();
     let mut ran = 0;
     for case in load_cases() {
@@ -159,10 +161,8 @@ fn test_nist_pkits_with_simulated_crl_downloads() {
         ran += 1;
         let mut crls = vec![load_nist_crl("TrustAnchorRootCRL.crl")];
         crls.extend(strings(v, "crls").iter().map(|c| load_nist_crl(c)));
-        let fetchers = common::fakes::with_crls(Arc::new(common::fakes::FixedCrls(
-            crls,
-            Default::default(),
-        )));
+        let fetchers =
+            common::fakes::with_crls(Arc::new(common::fakes::FixedCrls(crls, Default::default())));
         let root = load_nist_cert("TrustAnchorRootCertificate.crt");
         let mut builder = ValidationContext::builder()
             .trust_root(root.clone())
@@ -183,7 +183,10 @@ fn test_nist_pkits_with_simulated_crl_downloads() {
                 Err(_) => load_failed = true,
             }
         }
-        let expected = v.get("error").and_then(|e| e["class"].as_str()).unwrap_or("ok");
+        let expected = v
+            .get("error")
+            .and_then(|e| e["class"].as_str())
+            .unwrap_or("ok");
         let outcome: Result<(), ValidationError> = (|| {
             if load_failed {
                 return Err(ValidationError::Malformed("certificate".into()));
@@ -209,7 +212,10 @@ fn test_nist_pkits_with_simulated_crl_downloads() {
             _ => false,
         };
         if !agrees {
-            diverging.insert(case.id.clone(), format!("expected {expected}, got {outcome:?}"));
+            diverging.insert(
+                case.id.clone(),
+                format!("expected {expected}, got {outcome:?}"),
+            );
         }
     }
     assert!(ran > 100, "{ran}");

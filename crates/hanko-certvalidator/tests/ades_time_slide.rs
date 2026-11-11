@@ -95,7 +95,13 @@ fn no_algo() -> TimeSlideOptions {
 #[test]
 fn test_time_slide_not_revoked() {
     let now = moment("2020-11-29T00:05:00Z");
-    let ctx = context(false, &["root-2020-11-29.crl"], &["alice-2020-11-29.ors"], default_policy(), now);
+    let ctx = context(
+        false,
+        &["root-2020-11-29.crl"],
+        &["alice-2020-11-29.ors"],
+        default_policy(),
+        now,
+    );
     let poe = PoeManager::with_current_time(now);
     let t = time_slide_with(&test_path(false), now, &ctx, &poe, no_algo()).expect("slide");
     assert_eq!(t, now);
@@ -104,7 +110,13 @@ fn test_time_slide_not_revoked() {
 #[test]
 fn test_time_slide_revocation_ocsp() {
     let now = moment("2020-12-10T00:05:00Z");
-    let ctx = context(false, &["root-2020-12-10.crl"], &["alice-2020-12-10.ors"], default_policy(), now);
+    let ctx = context(
+        false,
+        &["root-2020-12-10.crl"],
+        &["alice-2020-12-10.ors"],
+        default_policy(),
+        now,
+    );
     let poe = PoeManager::with_current_time(now);
     let t = time_slide_with(&test_path(false), now, &ctx, &poe, no_algo()).expect("slide");
     assert_eq!(t, moment("2020-12-01T00:00:00Z"));
@@ -134,8 +146,16 @@ fn test_time_slide_revoked_intermediate() {
     let now = moment("2020-12-10T00:05:00Z");
     let path = test_path(true);
     let mut poe = PoeManager::with_current_time(now);
-    poe.register(path.leaf().expect("leaf").der(), poe_date(), PoeType::Provided);
-    poe.register(&data("interm-2020-11-29.crl"), poe_date(), PoeType::Provided);
+    poe.register(
+        path.leaf().expect("leaf").der(),
+        poe_date(),
+        PoeType::Provided,
+    );
+    poe.register(
+        &data("interm-2020-11-29.crl"),
+        poe_date(),
+        PoeType::Provided,
+    );
     let ctx = context(
         true,
         &["root-2020-12-10.crl", "interm-2020-11-29.crl"],
@@ -152,7 +172,11 @@ fn test_time_slide_revoked_intermediate_enforce_cert_poe() {
     let now = moment("2020-12-10T00:05:00Z");
     let path = test_path(true);
     let mut poe = PoeManager::with_current_time(now);
-    poe.register(&data("interm-2020-11-29.crl"), poe_date(), PoeType::Provided);
+    poe.register(
+        &data("interm-2020-11-29.crl"),
+        poe_date(),
+        PoeType::Provided,
+    );
     let ctx = context(
         true,
         &["root-2020-12-10.crl", "interm-2020-11-29.crl"],
@@ -163,7 +187,10 @@ fn test_time_slide_revoked_intermediate_enforce_cert_poe() {
     let e = time_slide_with(&path, now, &ctx, &poe, no_algo()).expect_err("no POE");
     assert_eq!(e.class_name(), "InsufficientPOEError", "{e}");
     let msg = e.to_string();
-    assert!(msg.find("for").is_some_and(|i| msg[i..].contains("Alice")), "{msg}");
+    assert!(
+        msg.find("for").is_some_and(|i| msg[i..].contains("Alice")),
+        "{msg}"
+    );
 }
 
 #[test]
@@ -171,7 +198,11 @@ fn test_time_slide_revoked_intermediate_enforce_revinfo_poe() {
     let now = moment("2020-12-10T00:05:00Z");
     let path = test_path(true);
     let mut poe = PoeManager::with_current_time(now);
-    poe.register(path.leaf().expect("leaf").der(), poe_date(), PoeType::Provided);
+    poe.register(
+        path.leaf().expect("leaf").der(),
+        poe_date(),
+        PoeType::Provided,
+    );
     let ctx = context(
         true,
         &["root-2020-12-10.crl", "interm-2020-11-29.crl"],
@@ -185,7 +216,10 @@ fn test_time_slide_revoked_intermediate_enforce_revinfo_poe() {
         "{e:?}"
     );
     let msg = e.to_string();
-    assert!(msg.find("for").is_some_and(|i| msg[i..].contains("Alice")), "{msg}");
+    assert!(
+        msg.find("for").is_some_and(|i| msg[i..].contains("Alice")),
+        "{msg}"
+    );
 }
 
 /// `VALIDATION_POLICY_SPEC`: the root as trust anchor, the default policy.
@@ -196,7 +230,12 @@ fn spec_context(revoked: bool, crls: &[&str], ocsps: &[&str], now: Moment) -> Va
 #[test]
 fn test_point_in_time_validation_not_revoked() {
     let now = moment("2020-11-29T00:05:00Z");
-    let ctx = spec_context(false, &["root-2020-11-29.crl"], &["alice-2020-11-29.ors"], now);
+    let ctx = spec_context(
+        false,
+        &["root-2020-11-29.crl"],
+        &["alice-2020-11-29.ors"],
+        now,
+    );
     let poe = PoeManager::with_current_time(now);
     let t = past_validate_with(&ctx, &test_path(false), &poe, now, None).expect("past");
     assert_eq!(t, now);
@@ -207,9 +246,22 @@ fn test_point_in_time_validation_revoked_intermediate() {
     let now = moment("2020-12-10T00:05:00Z");
     let path = test_path(true);
     let mut poe = PoeManager::with_current_time(now);
-    poe.register(path.leaf().expect("leaf").der(), poe_date(), PoeType::Provided);
-    poe.register(&data("interm-2020-11-29.crl"), poe_date(), PoeType::Provided);
-    let ctx = spec_context(true, &["root-2020-12-10.crl", "interm-2020-11-29.crl"], &[], now);
+    poe.register(
+        path.leaf().expect("leaf").der(),
+        poe_date(),
+        PoeType::Provided,
+    );
+    poe.register(
+        &data("interm-2020-11-29.crl"),
+        poe_date(),
+        PoeType::Provided,
+    );
+    let ctx = spec_context(
+        true,
+        &["root-2020-12-10.crl", "interm-2020-11-29.crl"],
+        &[],
+        now,
+    );
     let t = past_validate_with(&ctx, &path, &poe, now, None).expect("past");
     assert_eq!(t, moment("2020-12-01T00:00:00Z"));
 }
@@ -235,20 +287,32 @@ fn test_poe_manager_read_cert() {
 fn test_poe_manager_cert_by_digest() {
     let c = cert("root.crt");
     let mut m = PoeManager::new();
-    m.register_by_digest(digest_for_poe(c.der()), moment("2020-11-11T00:00:00Z"), PoeType::Provided);
+    m.register_by_digest(
+        digest_for_poe(c.der()),
+        moment("2020-11-11T00:00:00Z"),
+        PoeType::Provided,
+    );
     assert_eq!(m.poe_time(c.der()), moment("2020-11-11T00:00:00Z"));
 }
 
 #[test]
 fn test_poe_manager_read_bytes() {
     let mut m = PoeManager::new();
-    m.register(b"deadbeef", moment("2020-11-11T00:00:00Z"), PoeType::Provided);
+    m.register(
+        b"deadbeef",
+        moment("2020-11-11T00:00:00Z"),
+        PoeType::Provided,
+    );
     assert_eq!(m.poe_time(b"deadbeef"), moment("2020-11-11T00:00:00Z"));
 }
 
 #[test]
 fn test_poe_manager_read_bytes_by_digest() {
     let mut m = PoeManager::new();
-    m.register_by_digest(digest_for_poe(b"deadbeef"), moment("2020-11-11T00:00:00Z"), PoeType::Provided);
+    m.register_by_digest(
+        digest_for_poe(b"deadbeef"),
+        moment("2020-11-11T00:00:00Z"),
+        PoeType::Provided,
+    );
     assert_eq!(m.poe_time(b"deadbeef"), moment("2020-11-11T00:00:00Z"));
 }

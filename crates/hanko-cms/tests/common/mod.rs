@@ -46,19 +46,11 @@ pub fn unhex(s: &str) -> Vec<u8> {
         .collect()
 }
 
-/// Path below `crates/hanko-testdata/data/lanes/a/`, resolved at run time.
-///
-/// `hanko_testdata::path` bakes the data directory in at compile time; with
-/// the target directory shared between worktrees, a build from another
-/// worktree can be reused and point at that worktree's (older) data. The
-/// test binary's run-time `CARGO_MANIFEST_DIR` always names this crate.
+/// Path below `crates/hanko-testdata/data/lanes/a/`.
 pub fn lane_data(parts: &[&str]) -> std::path::PathBuf {
-    let mut p = std::path::PathBuf::from(
-        std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"),
-    );
-    p.extend(["..", "hanko-testdata", "data", "lanes", "a"]);
-    p.extend(parts);
-    p
+    let mut all = vec!["lanes", "a"];
+    all.extend_from_slice(parts);
+    hanko_testdata::path(&all)
 }
 
 /// A harvested fixture file.
@@ -286,7 +278,7 @@ pub fn status_json(st: &hanko_cms::SignatureStatus) -> Value {
         "valid": st.valid,
         "trusted": st.trusted(),
         "revoked": st.revoked(),
-        "trust_problem_indic": st.trust_problem_indic.map(|s| s.name()),
+        "trust_problem_indic": st.trust_problem_indic.map(|s| s.standard_name()),
         "md_algorithm": st.md_algorithm_name,
         "pkcs7_signature_mechanism": st.pkcs7_signature_mechanism,
         "validation_path_len": st.validation_path.as_ref().map(|p| p.len()),
@@ -308,9 +300,9 @@ pub fn standard_json(st: &StandardCmsSignatureStatus) -> Value {
     let mut v = status_json(&st.signature);
     v["bottom_line"] = Value::Bool(st.bottom_line());
     v["summary"] = Value::String(st.summary());
-    v["signer_reported_dt"] = st
-        .signer_reported_dt
-        .map_or(Value::Null, |m| Value::String(hanko_cms::status::isoformat(m)));
+    v["signer_reported_dt"] = st.signer_reported_dt.map_or(Value::Null, |m| {
+        Value::String(hanko_cms::status::isoformat(m))
+    });
     v["timestamp_validity"] = ts_json(&st.timestamp_validity);
     v["content_timestamp_validity"] = ts_json(&st.content_timestamp_validity);
     if let Some(ac) = &st.ac_attrs {
@@ -331,7 +323,7 @@ pub fn error_json(e: &CmsError) -> Value {
     serde_json::json!({
         "error": e.class_name(),
         "message": e.to_string(),
-        "ades_subindication": e.ades_subindication().name(),
+        "ades_subindication": e.ades_subindication().standard_name(),
     })
 }
 
@@ -395,105 +387,103 @@ fn content_type_oid(name: &str) -> hanko_core::asn1::raw_oid::RawOid {
 /// Replay one recorded call with hanko-cms.
 pub fn replay(h: &Harvest, call: &Value) -> Replayed {
     let inputs = &call["inputs"];
-    let r: Result<Replayed, CmsError> = (|| {
-        match call["fn"].as_str().unwrap() {
-            "validate_sig_integrity" => {
-                let si = SignerInfo::from_der(&b64(inputs["signer_info"].as_str().unwrap()))?;
-                let cert = h.cert(inputs["cert"].as_str().unwrap());
-                let ct = content_type_oid(inputs["expected_content_type"].as_str().unwrap());
-                let digest = unhex(inputs["actual_digest"].as_str().unwrap());
-                let (i, v) = validate::validate_sig_integrity(&si, &cert, &ct, &digest)?;
-                Ok(Replayed::Integrity(i, v))
-            }
-            "async_validate_cms_signature" => {
-                let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
-                let ctx = context(h, &inputs["vc"]);
-                let raw = inputs["raw_digest"].as_str().map(unhex);
-                let policy = cms_policy(&inputs["algorithm_policy"])
-                    .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>);
-                let st = validate::validate_cms_signature_basic(
-                    &sd,
-                    raw.as_deref(),
-                    ctx.as_ref(),
-                    None,
-                    policy,
-                )?;
-                Ok(Replayed::Basic(st))
-            }
-            "async_validate_detached_cms" => {
-                let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
-                let data = b64(inputs["input_data"]["bytes"].as_str().unwrap());
-                let ctx = context(h, &inputs["vc"]);
-                let ts_ctx = context(h, &inputs["ts_vc"]);
-                let ac_ctx = context(h, &inputs["ac_vc"]);
-                let options = CmsValidationOptions {
-                    ts_validation_context: ts_ctx.as_ref(),
-                    ac_validation_context: ac_ctx.as_ref(),
-                    algorithm_policy: cms_policy(&inputs["algorithm_policy"])
-                        .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>),
-                    ..Default::default()
-                };
-                let st = validate::validate_detached_cms_with(
-                    &sd,
-                    &DataDigester::new(&data),
-                    false,
-                    ctx.as_ref(),
-                    &options,
-                )?;
-                Ok(Replayed::Standard(st))
-            }
-            "async_validate_pdf_signature" => {
-                let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
-                let md = inputs["md_algorithm"].as_str().unwrap();
-                let digest = unhex(inputs["document_digest"].as_str().unwrap());
-                let Some(algorithm) = [
-                    DigestAlgorithm::Sha1,
-                    DigestAlgorithm::Sha224,
-                    DigestAlgorithm::Sha256,
-                    DigestAlgorithm::Sha384,
-                    DigestAlgorithm::Sha512,
-                ]
-                .into_iter()
-                .find(|d| d.name() == md) else {
-                    return Err(CmsError::validation_generic(format!(
-                        "Unknown hash function '{md}'"
-                    )));
-                };
-                let ctx = context(h, &inputs["vc"]);
-                let ts_ctx = context(h, &inputs["ts_vc"]);
-                let ac_ctx = context(h, &inputs["ac_vc"]);
-                let options = CmsValidationOptions {
-                    ts_validation_context: ts_ctx.as_ref(),
-                    ac_validation_context: ac_ctx.as_ref(),
-                    algorithm_policy: cms_policy(&inputs["algorithm_policy"])
-                        .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>),
-                    ..Default::default()
-                };
-                let st = validate::validate_detached_cms_with(
-                    &sd,
-                    &PrecomputedDigest { algorithm, digest },
-                    false,
-                    ctx.as_ref(),
-                    &options,
-                )?;
-                Ok(Replayed::Standard(st))
-            }
-            "extract_certs_for_validation" => {
-                let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
-                let info = validate::extract_certs_for_validation(&sd)?;
-                Ok(Replayed::Certs(
-                    hanko_cms::status::human_friendly(&info.signer_cert),
-                    info.other_certs.len(),
-                    info.attribute_certs.len(),
-                ))
-            }
-            "extract_signer_info" => {
-                let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
-                hanko_cms::signed_data::extract_signer_info(&sd)?;
-                Ok(Replayed::Ok)
-            }
-            other => panic!("unknown recorded function {other}"),
+    let r: Result<Replayed, CmsError> = (|| match call["fn"].as_str().unwrap() {
+        "validate_sig_integrity" => {
+            let si = SignerInfo::from_der(&b64(inputs["signer_info"].as_str().unwrap()))?;
+            let cert = h.cert(inputs["cert"].as_str().unwrap());
+            let ct = content_type_oid(inputs["expected_content_type"].as_str().unwrap());
+            let digest = unhex(inputs["actual_digest"].as_str().unwrap());
+            let (i, v) = validate::validate_sig_integrity(&si, &cert, &ct, &digest)?;
+            Ok(Replayed::Integrity(i, v))
         }
+        "async_validate_cms_signature" => {
+            let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
+            let ctx = context(h, &inputs["vc"]);
+            let raw = inputs["raw_digest"].as_str().map(unhex);
+            let policy = cms_policy(&inputs["algorithm_policy"])
+                .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>);
+            let st = validate::validate_cms_signature_basic(
+                &sd,
+                raw.as_deref(),
+                ctx.as_ref(),
+                None,
+                policy,
+            )?;
+            Ok(Replayed::Basic(st))
+        }
+        "async_validate_detached_cms" => {
+            let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
+            let data = b64(inputs["input_data"]["bytes"].as_str().unwrap());
+            let ctx = context(h, &inputs["vc"]);
+            let ts_ctx = context(h, &inputs["ts_vc"]);
+            let ac_ctx = context(h, &inputs["ac_vc"]);
+            let options = CmsValidationOptions {
+                ts_validation_context: ts_ctx.as_ref(),
+                ac_validation_context: ac_ctx.as_ref(),
+                algorithm_policy: cms_policy(&inputs["algorithm_policy"])
+                    .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>),
+                ..Default::default()
+            };
+            let st = validate::validate_detached_cms_with(
+                &sd,
+                &DataDigester::new(&data),
+                false,
+                ctx.as_ref(),
+                &options,
+            )?;
+            Ok(Replayed::Standard(st))
+        }
+        "async_validate_pdf_signature" => {
+            let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
+            let md = inputs["md_algorithm"].as_str().unwrap();
+            let digest = unhex(inputs["document_digest"].as_str().unwrap());
+            let Some(algorithm) = [
+                DigestAlgorithm::Sha1,
+                DigestAlgorithm::Sha224,
+                DigestAlgorithm::Sha256,
+                DigestAlgorithm::Sha384,
+                DigestAlgorithm::Sha512,
+            ]
+            .into_iter()
+            .find(|d| d.name() == md) else {
+                return Err(CmsError::validation_generic(format!(
+                    "Unknown hash function '{md}'"
+                )));
+            };
+            let ctx = context(h, &inputs["vc"]);
+            let ts_ctx = context(h, &inputs["ts_vc"]);
+            let ac_ctx = context(h, &inputs["ac_vc"]);
+            let options = CmsValidationOptions {
+                ts_validation_context: ts_ctx.as_ref(),
+                ac_validation_context: ac_ctx.as_ref(),
+                algorithm_policy: cms_policy(&inputs["algorithm_policy"])
+                    .map(|p| p as Arc<dyn CmsAlgorithmUsagePolicy>),
+                ..Default::default()
+            };
+            let st = validate::validate_detached_cms_with(
+                &sd,
+                &PrecomputedDigest { algorithm, digest },
+                false,
+                ctx.as_ref(),
+                &options,
+            )?;
+            Ok(Replayed::Standard(st))
+        }
+        "extract_certs_for_validation" => {
+            let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
+            let info = validate::extract_certs_for_validation(&sd)?;
+            Ok(Replayed::Certs(
+                hanko_cms::status::human_friendly(&info.signer_cert),
+                info.other_certs.len(),
+                info.attribute_certs.len(),
+            ))
+        }
+        "extract_signer_info" => {
+            let sd = SignedData::from_der(&b64(inputs["signed_data"].as_str().unwrap()))?;
+            hanko_cms::signed_data::extract_signer_info(&sd)?;
+            Ok(Replayed::Ok)
+        }
+        other => panic!("unknown recorded function {other}"),
     })();
     r.unwrap_or_else(Replayed::Error)
 }
@@ -545,7 +535,9 @@ pub fn diff(call: &Value, got: &Value) -> Vec<String> {
         let mro = str_list(&expected["mro"]);
         let got_class = got["error"].as_str().unwrap();
         if !mro.iter().any(|c| c == got_class) {
-            out.push(format!("error class: expected {err} (mro {mro:?}), got {got_class}"));
+            out.push(format!(
+                "error class: expected {err} (mro {mro:?}), got {got_class}"
+            ));
         }
         if expected["message"] != got["message"] {
             out.push(format!(
@@ -566,7 +558,10 @@ pub fn diff(call: &Value, got: &Value) -> Vec<String> {
         out.push(format!("expected success {expected}, got {got}"));
         return out;
     }
-    if matches!(fn_name, "extract_certs_for_validation" | "extract_signer_info") {
+    if matches!(
+        fn_name,
+        "extract_certs_for_validation" | "extract_signer_info"
+    ) {
         for k in ["other_certs", "attribute_certs", "ok"] {
             if expected.get(k).is_some() && expected[k] != got[k] {
                 out.push(format!("{k}: expected {}, got {}", expected[k], got[k]));
@@ -586,7 +581,10 @@ pub fn diff(call: &Value, got: &Value) -> Vec<String> {
     for k in compared_fields(fn_name) {
         // PDF validation falls back to the signature dictionary's /M entry
         // (lane E); only the CMS signingTime attribute is in scope here.
-        if fn_name == "async_validate_pdf_signature" && *k == "signer_reported_dt" && g[*k].is_null() {
+        if fn_name == "async_validate_pdf_signature"
+            && *k == "signer_reported_dt"
+            && g[*k].is_null()
+        {
             continue;
         }
         if e.get(*k).is_some() && e[*k] != g[*k] {

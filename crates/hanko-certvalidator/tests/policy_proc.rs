@@ -51,25 +51,41 @@ fn assert_err(r: Result<(), hanko_core::errors::ValidationError>, a: &str, b: &s
 
 #[test]
 fn test_extract_policy() {
-    let anchor = TrustAnchor::with_enforced_validity(load_nist_cert("ValidCertificatePathTest1EE.crt"));
-    let params = anchor.qualifiers().standard_parameters.as_ref().expect("params");
+    let anchor =
+        TrustAnchor::with_enforced_validity(load_nist_cert("ValidCertificatePathTest1EE.crt"));
+    let params = anchor
+        .qualifiers()
+        .standard_parameters
+        .as_ref()
+        .expect("params");
     assert_eq!(
         params.user_initial_policy_set,
-        vec![const_oid::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.2.1.48.1")]
+        vec![const_oid::ObjectIdentifier::new_unwrap(
+            "2.16.840.1.101.3.2.1.48.1"
+        )]
     );
 }
 
 #[test]
 fn test_extract_permitted_subtrees() {
-    let anchor = TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
-    let params = anchor.qualifiers().standard_parameters.as_ref().expect("params");
-    let permitted = params.initial_permitted_subtrees.as_ref().expect("permitted");
+    let anchor =
+        TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
+    let params = anchor
+        .qualifiers()
+        .standard_parameters
+        .as_ref()
+        .expect("params");
+    let permitted = params
+        .initial_permitted_subtrees
+        .as_ref()
+        .expect("permitted");
     let dirnames: Vec<_> = permitted
         .iter()
         .filter(|s| matches!(s.base, GeneralName::DirectoryName(_)))
         .collect();
     assert_eq!(dirnames.len(), 1);
-    let expected = Name::from_str("OU=permittedSubtree1,O=Test Certificates 2011,C=US").expect("name");
+    let expected =
+        Name::from_str("OU=permittedSubtree1,O=Test Certificates 2011,C=US").expect("name");
     match &dirnames[0].base {
         GeneralName::DirectoryName(n) => assert!(certval::compare_names(n, &expected)),
         _ => unreachable!(),
@@ -78,16 +94,22 @@ fn test_extract_permitted_subtrees() {
 
 #[test]
 fn test_validate_with_derived() {
-    let anchor = TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
+    let anchor =
+        TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
     let ctx = ctx_with(anchor, &[]);
     let path = only_path(&ctx, "InvalidDNnameConstraintsTest2EE.crt");
     assert_eq!(path.pkix_len(), 1);
-    assert_err(validate_path(&ctx, &path, None), "not all names", "permitted");
+    assert_err(
+        validate_path(&ctx, &path, None),
+        "not all names",
+        "permitted",
+    );
 }
 
 #[test]
 fn test_validate_with_merged_permitted_subtrees() {
-    let anchor = TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
+    let anchor =
+        TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN1CACert.crt"));
     let ctx = ctx_with(anchor, &[]);
     let path = only_path(&ctx, "ValidDNnameConstraintsTest1EE.crt");
     assert_eq!(path.pkix_len(), 1);
@@ -98,12 +120,17 @@ fn test_validate_with_merged_permitted_subtrees() {
         )]),
         ..PkixValidationParams::default()
     };
-    assert_err(validate_path(&ctx, &path, Some(&extra)), "not all names", "permitted");
+    assert_err(
+        validate_path(&ctx, &path, Some(&extra)),
+        "not all names",
+        "permitted",
+    );
 }
 
 #[test]
 fn test_validate_with_merged_excluded_subtrees() {
-    let anchor = TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN3CACert.crt"));
+    let anchor =
+        TrustAnchor::with_enforced_validity(load_nist_cert("nameConstraintsDN3CACert.crt"));
     let ctx = ctx_with(anchor, &[]);
     let path = only_path(&ctx, "ValidDNnameConstraintsTest6EE.crt");
     assert_eq!(path.pkix_len(), 1);
@@ -114,7 +141,11 @@ fn test_validate_with_merged_excluded_subtrees() {
         )]),
         ..PkixValidationParams::default()
     };
-    assert_err(validate_path(&ctx, &path, Some(&extra)), "some names", "excluded");
+    assert_err(
+        validate_path(&ctx, &path, Some(&extra)),
+        "some names",
+        "excluded",
+    );
 }
 
 fn certless(permitted: &str) -> (TrustAnchor, PkixValidationParams) {
@@ -152,14 +183,22 @@ fn test_validate_with_certless_root_failure() {
     let path = only_path(&ctx, "ValidDNnameConstraintsTest1EE.crt");
     assert_eq!(path.pkix_len(), 1);
     assert_eq!(path.trust_anchor(), &anchor);
-    assert_err(validate_path(&ctx, &path, Some(&params)), "not all names", "permitted");
+    assert_err(
+        validate_path(&ctx, &path, Some(&params)),
+        "not all names",
+        "permitted",
+    );
 }
 
 #[test]
 fn test_validate_empty_path_certless_root() {
     let crt = load_nist_cert("nameConstraintsDN1CACert.crt");
-    let anchor = TrustAnchor::from_name_and_key(crt.subject().clone(), crt.public_key(), TrustQualifiers::default())
-        .expect("anchor");
+    let anchor = TrustAnchor::from_name_and_key(
+        crt.subject().clone(),
+        crt.public_key(),
+        TrustQualifiers::default(),
+    )
+    .expect("anchor");
     let ctx = ctx_with(anchor.clone(), &[]);
     validate_path(&ctx, &ValidationPath::new(anchor, Vec::new(), None), None).expect("valid");
 }
@@ -168,22 +207,37 @@ fn test_validate_empty_path_certless_root() {
 fn test_trust_anchor_authority_consistency() {
     let crt = load_nist_cert("nameConstraintsDN1CACert.crt");
     let anchor = TrustAnchor::new(crt.clone());
-    let without_cert =
-        TrustAnchor::from_name_and_key(crt.subject().clone(), crt.public_key(), TrustQualifiers::default())
-            .expect("anchor");
+    let without_cert = TrustAnchor::from_name_and_key(
+        crt.subject().clone(),
+        crt.public_key(),
+        TrustQualifiers::default(),
+    )
+    .expect("anchor");
     assert_eq!(anchor.authority(), without_cert.authority());
 }
 
 fn nist_ee_path(ca: &str, ee: &str) -> (ValidationContext, ValidationPath) {
-    let ctx = ctx_with(TrustAnchor::new(load_nist_cert("TrustAnchorRootCertificate.crt")), &[ca]);
+    let ctx = ctx_with(
+        TrustAnchor::new(load_nist_cert("TrustAnchorRootCertificate.crt")),
+        &[ca],
+    );
     let path = only_path(&ctx, ee);
     assert_eq!(path.pkix_len(), 2);
     (ctx, path)
 }
 
-const NC_DNS: (&str, &str) = ("nameConstraintsDNS1CACert.crt", "ValidDNSnameConstraintsTest30EE.crt");
-const NC_EMAIL: (&str, &str) = ("nameConstraintsRFC822CA1Cert.crt", "ValidRFC822nameConstraintsTest21EE.crt");
-const NC_URI: (&str, &str) = ("nameConstraintsURI1CACert.crt", "ValidURInameConstraintsTest34EE.crt");
+const NC_DNS: (&str, &str) = (
+    "nameConstraintsDNS1CACert.crt",
+    "ValidDNSnameConstraintsTest30EE.crt",
+);
+const NC_EMAIL: (&str, &str) = (
+    "nameConstraintsRFC822CA1Cert.crt",
+    "ValidRFC822nameConstraintsTest21EE.crt",
+);
+const NC_URI: (&str, &str) = (
+    "nameConstraintsURI1CACert.crt",
+    "ValidURInameConstraintsTest34EE.crt",
+);
 
 #[derive(Clone, Copy)]
 enum Kind {
@@ -216,8 +270,16 @@ fn test_excluded_subtree_catches_differently_cased_name() {
         (NC_DNS, Kind::Dns, "TestCertificates.GOV"),
         (NC_DNS, Kind::Dns, "testserver.testcertificates.gov."),
         (NC_DNS, Kind::Dns, "TESTCERTIFICATES.GOV."),
-        (NC_EMAIL, Kind::Email, "Test21EE@MAILSERVER.TESTCERTIFICATES.GOV"),
-        (NC_EMAIL, Kind::Email, "Test21EE@mailserver.testcertificates.gov."),
+        (
+            NC_EMAIL,
+            Kind::Email,
+            "Test21EE@MAILSERVER.TESTCERTIFICATES.GOV",
+        ),
+        (
+            NC_EMAIL,
+            Kind::Email,
+            "Test21EE@mailserver.testcertificates.gov.",
+        ),
         (NC_EMAIL, Kind::Email, ".TESTCERTIFICATES.GOV"),
         (NC_EMAIL, Kind::Email, "MAILSERVER.TESTCERTIFICATES.GOV"),
         (NC_URI, Kind::Uri, "TESTSERVER.TESTCERTIFICATES.GOV"),
@@ -237,7 +299,11 @@ fn test_excluded_subtree_does_not_overmatch() {
     for (certs, kind, base) in [
         (NC_DNS, Kind::Dns, "OTHER.TESTCERTIFICATES.GOV"),
         (NC_DNS, Kind::Dns, "ESTCERTIFICATES.GOV"),
-        (NC_EMAIL, Kind::Email, "test21ee@mailserver.testcertificates.gov"),
+        (
+            NC_EMAIL,
+            Kind::Email,
+            "test21ee@mailserver.testcertificates.gov",
+        ),
         (NC_URI, Kind::Uri, "OTHER.TESTCERTIFICATES.GOV"),
     ] {
         let (ctx, path) = nist_ee_path(certs.0, certs.1);

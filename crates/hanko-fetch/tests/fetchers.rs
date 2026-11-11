@@ -70,5 +70,10 @@ fn fetches_a_crl() {
         content_type: Some("application/pkix-crl".into()),
         body: crl.clone(),
     });
-    assert_eq!(HttpFetchers::default().fetch_crl_url(&server.url).expect("crl"), crl);
+    assert_eq!(
+        HttpFetchers::default()
+            .fetch_crl_url(&server.url)
+            .expect("crl"),
+        crl
+    );
 }

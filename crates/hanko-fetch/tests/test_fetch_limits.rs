@@ -27,7 +27,11 @@ fn network(limits: FetchLimits) -> (HttpFetchers, Arc<FailingTransport>) {
     (fetchers, transport)
 }
 
-fn limits(max_requests: Option<usize>, max_cert: Option<usize>, max_aia: Option<usize>) -> FetchLimits {
+fn limits(
+    max_requests: Option<usize>,
+    max_cert: Option<usize>,
+    max_aia: Option<usize>,
+) -> FetchLimits {
     FetchLimits {
         max_requests,
         max_cert_requests: max_cert,
@@ -44,10 +48,14 @@ fn count(t: &FailingTransport) -> usize {
 fn test_cert_requests_beyond_total_limit_are_refused() {
     let (f, t) = network(limits(Some(2), Some(200), Some(10)));
     for i in 0..2 {
-        let e = f.fetch_certs(&format!("http://x/{i}"), "certificate").expect_err("fail");
+        let e = f
+            .fetch_certs(&format!("http://x/{i}"), "certificate")
+            .expect_err("fail");
         assert!(e.message.contains("Failed to fetch"), "{e}");
     }
-    let e = f.fetch_certs("http://x/2", "certificate").expect_err("limit");
+    let e = f
+        .fetch_certs("http://x/2", "certificate")
+        .expect_err("limit");
     assert!(e.message.contains("limit of 2 requests"), "{e}");
     assert_eq!(count(&t), 2);
 }
@@ -129,7 +137,10 @@ fn test_aia_cap_logs_a_warning_when_truncating() {
         cap_aia_urls(Some(&budget), vec!["a".into(), "b".into()]),
         vec!["a".to_owned()]
     );
-    assert_eq!(cap_aia_urls(Some(&budget), vec!["a".into()]), vec!["a".to_owned()]);
+    assert_eq!(
+        cap_aia_urls(Some(&budget), vec!["a".into()]),
+        vec!["a".to_owned()]
+    );
 }
 
 #[test]

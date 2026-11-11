@@ -404,11 +404,7 @@ pub(crate) static A1: &[(u32, u32)] = &[
 ];
 
 /// RFC 3454 table C.3 as inclusive code point ranges.
-pub(crate) static C3: &[(u32, u32)] = &[
-    (0xE000, 0xF8FF),
-    (0xF0000, 0xFFFFD),
-    (0x100000, 0x10FFFD),
-];
+pub(crate) static C3: &[(u32, u32)] = &[(0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)];
 
 /// RFC 3454 table C.4 as inclusive code point ranges.
 pub(crate) static C4: &[(u32, u32)] = &[
@@ -433,9 +429,7 @@ pub(crate) static C4: &[(u32, u32)] = &[
 ];
 
 /// RFC 3454 table C.5 as inclusive code point ranges.
-pub(crate) static C5: &[(u32, u32)] = &[
-    (0xD800, 0xDFFF),
-];
+pub(crate) static C5: &[(u32, u32)] = &[(0xD800, 0xDFFF)];
 
 /// RFC 3454 table C.8 as inclusive code point ranges.
 pub(crate) static C8: &[(u32, u32)] = &[
@@ -846,4 +840,3 @@ pub(crate) static D2: &[(u32, u32)] = &[
     (0xF0000, 0xFFFFD),
     (0x100000, 0x10FFFD),
 ];
-

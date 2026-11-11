@@ -10,11 +10,11 @@ fn set(items: &[&str]) -> BTreeSet<String> {
 }
 
 fn ku(items: &[&str]) -> KeyUsageConstraints {
-    KeyUsageConstraints::with_key_usage(items)
+    KeyUsageConstraints::with_key_usage(items.iter().copied(), [])
 }
 
 fn eku(items: &[&str]) -> KeyUsageConstraints {
-    KeyUsageConstraints::with_extd_key_usage(items)
+    KeyUsageConstraints::with_extd_key_usage(items.iter().copied())
 }
 
 #[test]
@@ -38,7 +38,10 @@ fn test_ku_accept() {
             Some(set(&["non_repudiation", "digital_signature"])),
         ),
         (ku(&[]), Some(set(&["non_repudiation"]))),
-        (KeyUsageConstraints::default(), Some(set(&["non_repudiation"]))),
+        (
+            KeyUsageConstraints::default(),
+            Some(set(&["non_repudiation"])),
+        ),
         (KeyUsageConstraints::default(), None),
     ];
     for (cfg, cert_ku) in cases {
@@ -69,7 +72,8 @@ fn test_ku_reject() {
     ];
     for (cfg, cert_ku) in cases {
         assert!(
-            cfg.validate_key_usage_extension(Some(&cert_ku), &none).is_err(),
+            cfg.validate_key_usage_extension(Some(&cert_ku), &none)
+                .is_err(),
             "{cfg:?} {cert_ku:?}"
         );
     }

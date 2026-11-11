@@ -131,7 +131,10 @@ pub(crate) fn potential_issuer(issuer: &Cert, cert: &Cert) -> bool {
     if !certval::compare_names(issuer.subject(), cert.issuer()) {
         return false;
     }
-    if let (Some(aki), Some(ski)) = (crate::validate::authority_key_id(cert), key_identifier(issuer)) {
+    if let (Some(aki), Some(ski)) = (
+        crate::validate::authority_key_id(cert),
+        key_identifier(issuer),
+    ) {
         if aki != ski {
             return false;
         }
@@ -156,12 +159,16 @@ pub struct LayeredCertificateStore {
 impl LayeredCertificateStore {
     /// `retrieve_by_key_hash`.
     pub fn retrieve_by_key_hash(&self, hash: &[u8]) -> Option<Cert> {
-        self.stores.iter().find_map(|s| s.retrieve_by_key_hash(hash))
+        self.stores
+            .iter()
+            .find_map(|s| s.retrieve_by_key_hash(hash))
     }
 
     /// `retrieve_by_key_identifier`.
     pub fn retrieve_by_key_identifier(&self, ki: &[u8]) -> Option<Cert> {
-        self.stores.iter().find_map(|s| s.retrieve_by_key_identifier(ki))
+        self.stores
+            .iter()
+            .find_map(|s| s.retrieve_by_key_identifier(ki))
     }
 
     /// `retrieve_by_issuer_serial`.

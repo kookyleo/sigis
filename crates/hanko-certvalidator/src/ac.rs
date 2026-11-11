@@ -13,7 +13,9 @@ use der::Decode;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::ext::pkix::crl::dp::DistributionPoint;
 use x509_cert::ext::pkix::name::GeneralName;
-use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, AuthorityKeyIdentifier, CrlDistributionPoints};
+use x509_cert::ext::pkix::{
+    AuthorityInfoAccessSyntax, AuthorityKeyIdentifier, CrlDistributionPoints,
+};
 use x509_cert::ext::Extension;
 use x509_cert::name::Name;
 
@@ -71,7 +73,10 @@ impl AcError {
         match self {
             Self::InvalidCertificate(_) => class == "InvalidCertificateError",
             Self::InvalidAttrCertificate(_) => {
-                matches!(class, "InvalidAttrCertificateError" | "InvalidCertificateError")
+                matches!(
+                    class,
+                    "InvalidAttrCertificateError" | "InvalidCertificateError"
+                )
             }
             Self::Validation(e) => e.is_instance_of(class),
         }
@@ -139,7 +144,9 @@ pub struct AttrCert {
 }
 
 fn malformed(what: &str) -> AcError {
-    AcError::Validation(ValidationError::Malformed(format!("attribute certificate: {what}")))
+    AcError::Validation(ValidationError::Malformed(format!(
+        "attribute certificate: {what}"
+    )))
 }
 
 fn general_names(t: &Tlv<'_>) -> Result<Vec<GeneralName>, AcError> {
@@ -195,7 +202,9 @@ impl AttrCert {
         let mut holder = Holder::default();
         for h in holder_tlv.children().map_err(m)? {
             match (h.class, h.number) {
-                (Class::ContextSpecific, 0) => holder.base_certificate_id = Some(issuer_serial(&h)?),
+                (Class::ContextSpecific, 0) => {
+                    holder.base_certificate_id = Some(issuer_serial(&h)?)
+                }
                 (Class::ContextSpecific, 1) => holder.entity_name = Some(general_names(&h)?),
                 (Class::ContextSpecific, 2) => holder.object_digest_info = true,
                 _ => return Err(malformed("holder")),
@@ -207,7 +216,9 @@ impl AttrCert {
             for f in issuer_tlv.children().map_err(m)? {
                 match (f.class, f.number) {
                     (Class::Universal, 16) => issuer.names = Some(general_names(&f)?),
-                    (Class::ContextSpecific, 0) => issuer.base_certificate_id = Some(issuer_serial(&f)?),
+                    (Class::ContextSpecific, 0) => {
+                        issuer.base_certificate_id = Some(issuer_serial(&f)?)
+                    }
                     (Class::ContextSpecific, 1) => issuer.object_digest_info = true,
                     _ => return Err(malformed("issuer")),
                 }
@@ -215,8 +226,8 @@ impl AttrCert {
         } else {
             issuer.names = Some(general_names(issuer_tlv)?);
         }
-        let inner_signature_algorithm =
-            AlgorithmIdentifierOwned::from_der(next()?.raw).map_err(|e| malformed(&e.to_string()))?;
+        let inner_signature_algorithm = AlgorithmIdentifierOwned::from_der(next()?.raw)
+            .map_err(|e| malformed(&e.to_string()))?;
         let serial = next()?.value.to_vec();
         let validity = next()?.children().map_err(m)?;
         let [nb, na] = validity.as_slice() else {
@@ -226,18 +237,19 @@ impl AttrCert {
         let mut attributes = Vec::new();
         for a in next()?.children().map_err(m)? {
             let ty = a.children().map_err(m)?;
-            let oid = RawOid::from_tlv(ty.first().ok_or_else(|| malformed("attribute"))?)
-                .map_err(m)?;
+            let oid =
+                RawOid::from_tlv(ty.first().ok_or_else(|| malformed("attribute"))?).map_err(m)?;
             attributes.push((oid, a.raw.to_vec()));
         }
         let mut extensions = Vec::new();
         for rest in it {
             if rest.is_universal(tag::SEQUENCE) {
-                extensions = Vec::<Extension>::from_der(rest.raw).map_err(|e| malformed(&e.to_string()))?;
+                extensions =
+                    Vec::<Extension>::from_der(rest.raw).map_err(|e| malformed(&e.to_string()))?;
             }
         }
-        let signature_algorithm =
-            AlgorithmIdentifierOwned::from_der(sig_alg.raw).map_err(|e| malformed(&e.to_string()))?;
+        let signature_algorithm = AlgorithmIdentifierOwned::from_der(sig_alg.raw)
+            .map_err(|e| malformed(&e.to_string()))?;
         if !sig.is_universal(tag::BIT_STRING) {
             return Err(malformed("signature"));
         }
@@ -263,11 +275,11 @@ impl AttrCert {
 
     /// The issuer's directory name (`get_issuer_dn`).
     pub fn issuer_name(&self) -> Option<Name> {
-        let names = self
+        let names = self.issuer.names.as_ref().or(self
             .issuer
-            .names
+            .base_certificate_id
             .as_ref()
-            .or(self.issuer.base_certificate_id.as_ref().map(|b| &b.issuer))?;
+            .map(|b| &b.issuer))?;
         dir_name(names)
     }
 
@@ -322,7 +334,10 @@ fn matches_issuer_serial(is: &AcIssuerSerial, cert: &Cert) -> bool {
 
 /// `check_ac_holder_match`: the parts of the holder entry that do not
 /// match `holder_cert` (`base_certificate_id`, `entity_name`).
-pub fn check_ac_holder_match(holder_cert: &Cert, holder: &Holder) -> Result<Vec<&'static str>, AcError> {
+pub fn check_ac_holder_match(
+    holder_cert: &Cert,
+    holder: &Holder,
+) -> Result<Vec<&'static str>, AcError> {
     let mut mismatches = Vec::new();
     if let Some(base) = &holder.base_certificate_id {
         if !matches_issuer_serial(base, holder_cert) {
@@ -354,7 +369,9 @@ pub struct AcTargetDescription {
 
 fn gn_eq(a: &GeneralName, b: &GeneralName) -> bool {
     match (a, b) {
-        (GeneralName::DirectoryName(x), GeneralName::DirectoryName(y)) => certval::compare_names(x, y),
+        (GeneralName::DirectoryName(x), GeneralName::DirectoryName(y)) => {
+            certval::compare_names(x, y)
+        }
         _ => a == b,
     }
 }
@@ -382,7 +399,9 @@ fn validate_targeting(ac: &AttrCert, targets: &AcTargetDescription) -> Result<()
             }
         }
     }
-    Err(AcError::InvalidAttrCertificate("AC targeting check failed".into()))
+    Err(AcError::InvalidAttrCertificate(
+        "AC targeting check failed".into(),
+    ))
 }
 
 /// `AAControls`.
@@ -418,12 +437,15 @@ impl AaControls {
             match (f.class, f.number) {
                 (Class::Universal, 2) => {
                     out.path_len_constraint = f.value.iter().try_fold(0u32, |acc, b| {
-                        acc.checked_mul(256).and_then(|v| v.checked_add(u32::from(*b)))
+                        acc.checked_mul(256)
+                            .and_then(|v| v.checked_add(u32::from(*b)))
                     })
                 }
                 (Class::ContextSpecific, 0) => out.permitted = Some(oids(&f)),
                 (Class::ContextSpecific, 1) => out.excluded = Some(oids(&f)),
-                (Class::Universal, 1) => out.permit_unspecified = f.value.first().is_some_and(|b| *b != 0),
+                (Class::Universal, 1) => {
+                    out.permit_unspecified = f.value.first().is_some_and(|b| *b != 0)
+                }
                 _ => {}
             }
         }
@@ -494,7 +516,11 @@ fn check_aa_path(path: &ValidationPath) -> Result<(), AcError> {
 
 /// `aa_attr_in_scope`.
 fn aa_attr_in_scope(path: &ValidationPath, attr: &RawOid) -> bool {
-    let controls: Vec<AaControls> = path.certs().into_iter().filter_map(AaControls::read).collect();
+    let controls: Vec<AaControls> = path
+        .certs()
+        .into_iter()
+        .filter_map(AaControls::read)
+        .collect();
     controls.is_empty() || controls.iter().all(|c| c.accept(attr))
 }
 
@@ -502,7 +528,8 @@ fn aa_attr_in_scope(path: &ValidationPath, attr: &RawOid) -> bool {
 fn validate_aa_usage(cert: &Cert) -> Result<(), AcError> {
     if !cert.key_usage().is_some_and(|ku| ku.digital_signature()) {
         return Err(AcError::InvalidCertificate(
-            "The X.509 certificate provided is not valid for the purpose of digital signature".into(),
+            "The X.509 certificate provided is not valid for the purpose of digital signature"
+                .into(),
         ));
     }
     if cert.is_ca() {
@@ -526,7 +553,8 @@ fn candidate_issuers(ctx: &ValidationContext, ac: &AttrCert) -> Result<Vec<Cert>
         let v = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes())
             .map_err(|e| malformed(&e.to_string()))?;
         aki = v.key_identifier.map(|k| k.as_bytes().to_vec());
-        if let (Some(iss), Some(ser)) = (&v.authority_cert_issuer, &v.authority_cert_serial_number) {
+        if let (Some(iss), Some(ser)) = (&v.authority_cert_issuer, &v.authority_cert_serial_number)
+        {
             let from_aki = AcIssuerSerial {
                 issuer: iss.clone(),
                 serial: ser.as_bytes().to_vec(),
@@ -566,7 +594,11 @@ fn candidate_issuers(ctx: &ValidationContext, ac: &AttrCert) -> Result<Vec<Cert>
     };
     Ok(candidates
         .into_iter()
-        .filter(|c| aa_name.as_ref().is_none_or(|n| certval::compare_names(c.subject(), n)))
+        .filter(|c| {
+            aa_name
+                .as_ref()
+                .is_none_or(|n| certval::compare_names(c.subject(), n))
+        })
         .filter(|c| {
             aki.as_ref().is_none_or(|k| {
                 c.decoded()
@@ -637,7 +669,9 @@ pub fn validate_ac(
         validate_targeting(&ac, targets)?;
     }
     if ac.holder == Holder::default() {
-        return Err(AcError::InvalidAttrCertificate("AC holder entry is empty".into()));
+        return Err(AcError::InvalidAttrCertificate(
+            "AC holder entry is empty".into(),
+        ));
     }
     if let Some(h) = holder {
         let mismatches = check_ac_holder_match(h, &ac.holder)?;
@@ -684,7 +718,10 @@ pub fn validate_ac(
             .into()
         }));
     };
-    let aa_cert = aa_path.leaf().cloned().unwrap_or_else(|| aa_path.trust_anchor().cert().clone());
+    let aa_cert = aa_path
+        .leaf()
+        .cloned()
+        .unwrap_or_else(|| aa_path.trust_anchor().cert().clone());
 
     // `_check_ac_signature`.
     if ac.signature_algorithm != ac.inner_signature_algorithm {

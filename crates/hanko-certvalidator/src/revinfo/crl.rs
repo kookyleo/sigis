@@ -15,9 +15,9 @@ use x509_cert::name::{Name, RdnSequence};
 
 use super::freshness::RevinfoUsabilityRating;
 use super::{revoked_error, CheckOutcome, CrlContainer, Failures, Subject};
-use crate::path::ValidationPath;
 use crate::authority::Cert;
 use crate::context::ValidationContext;
+use crate::path::ValidationPath;
 use hanko_core::algorithms::{validate_signature, SignatureValidationContext};
 use hanko_core::asn1::oids;
 use hanko_core::errors::ValidationError;
@@ -81,7 +81,6 @@ fn dp_names(name: &DistributionPointName, crl_issuer: &Name) -> Vec<GeneralName>
     }
 }
 
-
 fn parse_idp(crl: &CrlContainer) -> Result<Option<IssuingDistributionPoint>, ValidationError> {
     crl_extension(crl, &oids::CE_ISSUING_DISTRIBUTION_POINT)
         .map(|ext| {
@@ -134,7 +133,6 @@ fn fresh(
     }
     false
 }
-
 
 /// Every revocation reason (`VALID_REVOCATION_REASONS`) as `ReasonFlags`
 /// bits: keyCompromise (1) to aACompromise (8).
@@ -416,7 +414,8 @@ pub(crate) fn crl_scope(
             return Ok(None);
         }
         if idp.only_contains_attribute_certs {
-            errs.failures.push("CRL only contains attribute certificates");
+            errs.failures
+                .push("CRL only contains attribute certificates");
             return Ok(None);
         }
     }
@@ -453,7 +452,8 @@ fn find_cert_in_list(
     for entry in entries {
         let exts = entry.crl_entry_extensions.as_ref();
         if let Some(ext) = find_extension(exts, &oids::CE_CERTIFICATE_ISSUER) {
-            let names: Option<Vec<GeneralName>> = der::Decode::from_der(ext.extn_value.as_bytes()).ok();
+            let names: Option<Vec<GeneralName>> =
+                der::Decode::from_der(ext.extn_value.as_bytes()).ok();
             if let Some(name) = names.into_iter().flatten().find_map(|g| match g {
                 GeneralName::DirectoryName(n) => Some(n),
                 _ => None,
@@ -504,8 +504,9 @@ pub(crate) fn maybe_get_delta<'a>(
     deltas: &[&'a CrlContainer],
     errs: &mut CrlErrs,
 ) -> Result<Result<Option<&'a CrlContainer>, String>, ValidationError> {
-    let has_freshest = crl_ext_value::<x509_cert::ext::pkix::FreshestCrl>(crl, &oids::CE_FRESHEST_CRL)
-        .is_some_and(|f| !f.0.is_empty());
+    let has_freshest =
+        crl_ext_value::<x509_cert::ext::pkix::FreshestCrl>(crl, &oids::CE_FRESHEST_CRL)
+            .is_some_and(|f| !f.0.is_empty());
     if !has_freshest {
         return Ok(Ok(None));
     }
@@ -527,16 +528,15 @@ pub(crate) fn maybe_get_delta<'a>(
     }
     let Some(delta) = matching else {
         return Ok(Err(
-            "Delta CRL matching Freshest CRL extension not available".to_owned()
+            "Delta CRL matching Freshest CRL extension not available".to_owned(),
         ));
     };
     if has_unknown_critical(
         delta.crl.tbs_cert_list.crl_extensions.as_ref(),
         &KNOWN_CRL_EXTENSIONS,
     ) {
-        errs.failures.push(
-            "One or more unrecognized critical extensions are present in the delta CRL",
-        );
+        errs.failures
+            .push("One or more unrecognized critical extensions are present in the delta CRL");
         return Ok(Ok(None));
     }
     // Freshness is only checked when a context (validation timing) is given
@@ -585,7 +585,8 @@ fn handle_single_crl(
     };
     if let Some(d) = delta {
         if !signed_by(d, &crl_issuer) {
-            errs.failures.push("Delta CRL signature could not be verified");
+            errs.failures
+                .push("Delta CRL signature could not be verified");
             return Ok(None);
         }
     }
@@ -601,18 +602,19 @@ fn handle_single_crl(
     if let Some((revoked_at, reason)) = hit {
         let timing = &ctx.timing;
         if !timing.point_in_time_validation || revoked_at < timing.validation_time {
-            return Err(revoked_error("CRL", &subject.description, revoked_at, reason));
+            return Err(revoked_error(
+                "CRL",
+                &subject.description,
+                revoked_at,
+                reason,
+            ));
         }
     }
     Ok(Some(reasons))
 }
 
 /// `_process_crl_completeness`: `None` if every reason is covered.
-fn completeness(
-    checked: u16,
-    total: usize,
-    errs: &mut CrlErrs,
-) -> Option<CheckOutcome> {
+fn completeness(checked: u16, total: usize, errs: &mut CrlErrs) -> Option<CheckOutcome> {
     if checked & ALL_REASONS == ALL_REASONS {
         return None;
     }
@@ -649,7 +651,8 @@ pub(crate) fn verify_crl(
     let Some(outcome) = completeness(checked, total, &mut errs) else {
         return Ok(CheckOutcome::Good);
     };
-    let (Some(fetcher), Some(x509)) = (ctx.fetchers.crl.as_ref(), subject.cert.x509.as_ref()) else {
+    let (Some(fetcher), Some(x509)) = (ctx.fetchers.crl.as_ref(), subject.cert.x509.as_ref())
+    else {
         return Ok(outcome);
     };
     let fetched = match fetcher.fetch_crls(x509) {
@@ -662,7 +665,8 @@ pub(crate) fn verify_crl(
         .collect();
     let (extra_complete, extra_deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
         fetched.iter().partition(|c| !is_delta(c));
-    let all_deltas: Vec<&CrlContainer> = deltas.iter().chain(extra_deltas.iter()).copied().collect();
+    let all_deltas: Vec<&CrlContainer> =
+        deltas.iter().chain(extra_deltas.iter()).copied().collect();
     // Supplied CRLs are reprocessed if a fetched delta may complete them.
     let mut to_process: Vec<&CrlContainer> = complete
         .iter()

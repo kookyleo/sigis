@@ -28,7 +28,8 @@
 pub mod ades;
 pub mod attributes;
 pub mod errors;
-pub mod key_usage;
+/// Key usage constraints, shared with lane E ([`hanko_core::key_usage`]).
+pub use hanko_core::key_usage;
 pub mod policy;
 pub mod signed_data;
 pub mod status;
@@ -38,9 +39,9 @@ use hanko_certvalidator::ValidationContext;
 use hanko_core::algorithms::DigestAlgorithm;
 use hanko_core::errors::Result;
 
-pub use ades::{AdesStatus, AdesSubIndication};
+pub use ades::{AdesStatus, AdesSubIndic};
 pub use errors::{CmsError, CmsResult};
-pub use key_usage::KeyUsageConstraints;
+pub use hanko_core::key_usage::KeyUsageConstraints;
 pub use signed_data::{SignedData, SignerInfo};
 pub use status::{
     RevocationDetails, SignatureStatus, StandardCmsSignatureStatus, TimestampSignatureStatus,

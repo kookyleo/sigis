@@ -18,10 +18,10 @@ use hanko_core::asn1::oids;
 use hanko_core::asn1::tlv::{tag, Tlv};
 use hanko_core::cert::Cert;
 
-use crate::ades::AdesSubIndication;
 use crate::errors::{CmsError, CmsResult};
 use crate::signed_data::{find_unique_cms_attribute, AttributeLookupError, CmsAttribute};
 use crate::status::{AttributeInfo, AttributeMap, CadesSignerAttributeAssertions};
+use hanko_core::ades::{AdesFailure, AdesSubIndic};
 
 /// `RoleSyntax` (RFC 5755).
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
@@ -132,7 +132,7 @@ fn attr_error(attr_type: Option<&str>, kind: &str, err: &str, fatal: bool) -> Cm
     if fatal {
         return Err(CmsError::validation(
             format!("Failed to parse {kind} of {ty}: {err}"),
-            AdesSubIndication::FormatFailure,
+            AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
         ));
     }
     Ok(())
@@ -227,13 +227,14 @@ pub fn collect_signer_attr_status(
     ctx: Option<&ValidationContext>,
     signed_attrs: Option<&[CmsAttribute]>,
 ) -> CmsResult<SignerAttrStatus> {
-    let signer_attrs = match find_unique_cms_attribute(signed_attrs, oids::AA_SIGNER_ATTRIBUTES_V2) {
+    let signer_attrs = match find_unique_cms_attribute(signed_attrs, oids::AA_SIGNER_ATTRIBUTES_V2)
+    {
         Ok(v) => Some(v),
         Err(AttributeLookupError::Nonexistent(_)) => None,
         Err(e @ AttributeLookupError::Multivalued(_)) => {
             return Err(CmsError::validation(
                 e.to_string(),
-                AdesSubIndication::FormatFailure,
+                AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
             ))
         }
     };
@@ -241,7 +242,8 @@ pub fn collect_signer_attr_status(
     let mut cades_results: Option<Vec<AcValidationResult>> = None;
     let mut cades_errors: Option<Vec<String>> = None;
     if let Some(value) = signer_attrs {
-        let malformed = |e: &dyn std::fmt::Display| CmsError::Malformed(format!("signer-attrs-v2: {e}"));
+        let malformed =
+            |e: &dyn std::fmt::Display| CmsError::Malformed(format!("signer-attrs-v2: {e}"));
         let seq = Tlv::parse_exact(value).map_err(|e| malformed(&e))?;
         if !seq.is_universal(tag::SEQUENCE) {
             return Err(malformed(&"not a SEQUENCE"));
@@ -251,9 +253,7 @@ pub fn collect_signer_attr_status(
         let mut unknown_cert_attrs = false;
         let mut signed_assertions = false;
         for field in seq.children().map_err(|e| malformed(&e))? {
-            let inner = || -> CmsResult<Tlv<'_>> {
-                Ok(Tlv::parse_exact(field.value)?)
-            };
+            let inner = || -> CmsResult<Tlv<'_>> { Ok(Tlv::parse_exact(field.value)?) };
             match (field.class, field.number) {
                 (hanko_core::asn1::tlv::Class::ContextSpecific, 0) => {
                     for a in inner()?.children()? {

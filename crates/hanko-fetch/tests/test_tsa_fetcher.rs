@@ -6,10 +6,10 @@
 // nonce. Signing a PDF with the token is lane D; the validation of the
 // signed PDFs is replayed from the recorded pyHanko calls.
 
-mod common;
-mod tsa_common;
 #[path = "../../hanko-cms/tests/common/mod.rs"]
 mod cms_replay;
+mod common;
+mod tsa_common;
 
 use common::read_lane;
 use hanko_fetch::tsa::handle_tsp_response;
@@ -46,8 +46,8 @@ fn test_handle_error_response() {
         ("error-2.der", "clock is down", ""),
         ("error-3.der", "", "time_not_available"),
     ] {
-        let e = handle_tsp_response(&read_lane(&["tsa", file]), Some(b"0000"))
-            .expect_err("refused");
+        let e =
+            handle_tsp_response(&read_lane(&["tsa", file]), Some(b"0000")).expect_err("refused");
         let expected = format!("statusString \"{status_string}\", failInfo \"{fail_info}\"");
         assert!(e.0.contains("refused") && e.0.contains(&expected), "{e}");
     }
@@ -55,8 +55,11 @@ fn test_handle_error_response() {
 
 #[test]
 fn test_handle_bad_nonce() {
-    let e = handle_tsp_response(&read_lane(&["tsa", "granted-fixed-nonce.der"]), Some(b"0000"))
-        .expect_err("bad nonce");
+    let e = handle_tsp_response(
+        &read_lane(&["tsa", "granted-fixed-nonce.der"]),
+        Some(b"0000"),
+    )
+    .expect_err("bad nonce");
     assert!(e.0.contains("bad nonce"), "{e}");
     // With the right nonce, the token is returned.
     assert!(handle_tsp_response(

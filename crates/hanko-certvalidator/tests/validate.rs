@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use common::{load_cert, load_nist_cert, load_nist_crl, moment, read};
 use hanko_certvalidator::{
-    build_paths, validate_path, Cert, NonRevokedStatusAssertion, PkixValidationParams,
-    TrustAnchor, ValidationContext, ValidationPath,
+    build_paths, validate_path, Cert, NonRevokedStatusAssertion, PkixValidationParams, TrustAnchor,
+    ValidationContext, ValidationPath,
 };
 use hanko_core::algorithms::DisallowWeakAlgorithmsPolicy;
 use hanko_core::errors::ValidationError;
@@ -273,7 +273,6 @@ fn test_fail_validation_if_required_delta_crl_not_available() {
 
 // --- Fetching and policy qualifiers (pending items of the previous phase) ---
 
-
 fn user_notice_cases() -> serde_json::Value {
     serde_json::from_slice(&read(&["nist_pkits", "pkits-user-notice.json"])).expect("json")
 }
@@ -313,7 +312,8 @@ fn test_nist_pkits_user_notice() {
             params
         });
         assert_eq!(build_paths(&ctx, &leaf).expect("paths").len(), 1);
-        let path = hanko_certvalidator::find_valid_path(&ctx, &leaf, params.as_ref()).expect("valid");
+        let path =
+            hanko_certvalidator::find_valid_path(&ctx, &leaf, params.as_ref()).expect("valid");
         let qps = path.qualified_policies().expect("qualified policies");
         assert_eq!(qps.len(), 1, "{}", case["id"]);
         assert_eq!(qps[0].qualifiers.len(), 1, "{} {:?}", case["id"], qps[0]);
@@ -419,13 +419,19 @@ fn test_do_not_fetch_crl_if_cache_sufficient() {
         .revocation_mode("require")
         .build()
         .expect("context");
-    assert_eq!(crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+    assert_eq!(
+        crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst),
+        0
+    );
     let leaf = load_cert(&[dir[0], dir[1], "certs", "alice.crt"]);
     let paths = build_paths(&ctx, &leaf).expect("paths");
     assert_eq!(paths.len(), 1);
     assert_eq!(paths[0].len(), 3);
     validate_path(&ctx, &paths[0], None).expect("valid");
-    assert_eq!(crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+    assert_eq!(
+        crl_fetcher.calls.load(std::sync::atomic::Ordering::SeqCst),
+        0
+    );
 }
 
 #[test]
@@ -464,10 +470,9 @@ fn test_context_retrieve_all_crls() {
         .other_cert(load_nist_cert("deltaCRLCA1Cert.crt"))
         .crl(crl1.clone())
         .crl(crl2.clone())
-        .fetchers(common::fakes::with_crls(Arc::new(common::fakes::FixedCrls(
-            vec![crl3.clone()],
-            Default::default(),
-        ))))
+        .fetchers(common::fakes::with_crls(Arc::new(
+            common::fakes::FixedCrls(vec![crl3.clone()], Default::default()),
+        )))
         .revocation_mode("require")
         .build()
         .expect("context");

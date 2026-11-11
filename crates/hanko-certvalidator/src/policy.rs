@@ -285,7 +285,8 @@ impl PkixValidationParams {
                 .copied()
                 .collect()
         };
-        let concat = |a: &Option<Vec<GeneralSubtree>>, b: &Option<Vec<GeneralSubtree>>| match (a, b) {
+        let concat = |a: &Option<Vec<GeneralSubtree>>, b: &Option<Vec<GeneralSubtree>>| match (a, b)
+        {
             (None, None) => None,
             (a, b) => Some(
                 a.iter()
@@ -342,16 +343,26 @@ pub fn derive_quals_from_cert(cert: &crate::authority::Cert) -> crate::authority
         );
     }
     let standard_parameters = ext_found.then(|| PkixValidationParams {
-        user_initial_policy_set: acceptable.clone().filter(|a| !a.is_empty()).unwrap_or_else(|| vec![any]),
+        user_initial_policy_set: acceptable
+            .clone()
+            .filter(|a| !a.is_empty())
+            .unwrap_or_else(|| vec![any]),
         initial_explicit_policy: acceptable.is_some(),
         initial_permitted_subtrees: permitted,
         initial_excluded_subtrees: excluded,
         ..PkixValidationParams::default()
     });
-    let bc = cert.extension::<BasicConstraints>().ok().flatten().map(|(_, bc)| bc);
+    let bc = cert
+        .extension::<BasicConstraints>()
+        .ok()
+        .flatten()
+        .map(|(_, bc)| bc);
     crate::authority::TrustQualifiers {
         standard_parameters,
-        max_path_length: bc.as_ref().and_then(|b| b.path_len_constraint).map(usize::from),
+        max_path_length: bc
+            .as_ref()
+            .and_then(|b| b.path_len_constraint)
+            .map(usize::from),
         max_aa_path_length: None,
         trusted_service_type: if bc.is_some_and(|b| b.ca) {
             crate::authority::TrustedServiceType::CertificateAuthority

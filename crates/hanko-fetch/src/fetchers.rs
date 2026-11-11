@@ -16,10 +16,10 @@ use hanko_core::fetch::{CertificateFetcher, CrlFetcher, Fetchers, OcspFetcher};
 
 use crate::budget::{cap_aia_urls, FetchBudget, FetchKind, FetchLimits};
 use crate::common::{
-    enumerate_delivery_point_urls, format_ocsp_request, gather_aia_issuer_urls,
-    get_ocsp_urls, get_relevant_crl_dps, pem_detect, pem_unarmor, process_ocsp_response_data,
-    random_bytes, unpack_cert_content, CertIdHash, OcspResponseError,
-    ACCEPTABLE_CERT_DER_ALIASES, ACCEPTABLE_CERT_PEM_ALIASES, ACCEPTABLE_PKCS7_DER_ALIASES,
+    enumerate_delivery_point_urls, format_ocsp_request, gather_aia_issuer_urls, get_ocsp_urls,
+    get_relevant_crl_dps, pem_detect, pem_unarmor, process_ocsp_response_data, random_bytes,
+    unpack_cert_content, CertIdHash, OcspResponseError, ACCEPTABLE_CERT_DER_ALIASES,
+    ACCEPTABLE_CERT_PEM_ALIASES, ACCEPTABLE_PKCS7_DER_ALIASES,
     ACCEPTABLE_STRICT_CERT_CONTENT_TYPES,
 };
 use crate::transport::{
@@ -168,7 +168,10 @@ impl HttpFetchers {
     ) -> Result<HttpResponse, TransportError> {
         let mut headers = vec![
             ("Accept".to_owned(), accept.join(",")),
-            ("User-Agent".to_owned(), self.inner.settings.user_agent.clone()),
+            (
+                "User-Agent".to_owned(),
+                self.inner.settings.user_agent.clone(),
+            ),
         ];
         if let Some((ct, _)) = body {
             headers.push(("Content-Type".to_owned(), ct.to_owned()));
@@ -211,12 +214,13 @@ impl HttpFetchers {
     pub fn fetch_certs(&self, url: &str, url_origin_type: &str) -> Result<Vec<Cert>, FetchError> {
         Self::cached(&self.inner.certs_by_url, url.to_owned(), || {
             self.charge(FetchKind::Cert)?;
-            self.grab_certs(url, url_origin_type).map_err(|(kind, detail)| {
-                fetch_error(
-                    kind,
-                    format!("Failed to fetch certificate(s) from url {url}. ({detail})"),
-                )
-            })
+            self.grab_certs(url, url_origin_type)
+                .map_err(|(kind, detail)| {
+                    fetch_error(
+                        kind,
+                        format!("Failed to fetch certificate(s) from url {url}. ({detail})"),
+                    )
+                })
         })
     }
 
@@ -254,8 +258,13 @@ impl HttpFetchers {
                 ));
             }
         }
-        unpack_cert_content(&response.body, response.content_type.as_deref(), url, permit_pem)
-            .map_err(|e| (FetchErrorKind::BadResponse, e.0))
+        unpack_cert_content(
+            &response.body,
+            response.content_type.as_deref(),
+            url,
+            permit_pem,
+        )
+        .map_err(|e| (FetchErrorKind::BadResponse, e.0))
     }
 
     /// Fetch issuer certificates from a list of `caIssuers` URLs; failing
@@ -308,11 +317,7 @@ impl HttpFetchers {
     pub fn fetch_ocsp_response(&self, cert: &Cert, issuer: &Cert) -> Result<Vec<u8>, FetchError> {
         let key = (issuer_serial(cert), issuer.der().to_vec());
         Self::cached(&self.inner.ocsp_by_cert, key, || {
-            let nonce = self
-                .inner
-                .settings
-                .request_nonces
-                .then(random_bytes::<16>);
+            let nonce = self.inner.settings.request_nonces.then(random_bytes::<16>);
             let request = format_ocsp_request(cert, issuer, self.inner.settings.certid_hash, nonce)
                 .map_err(|e| fetch_error(FetchErrorKind::BadResponse, e.to_string()))?;
             let body = request

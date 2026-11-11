@@ -58,9 +58,14 @@ fn collect_crls<'a>(
     control_time: Moment,
     poe: &PoeManager,
 ) -> std::result::Result<Vec<CrlOfInterest<'a>>, ValidationError> {
-    let usable = |c: &&CrlContainer| c.this_update() <= control_time && poe.poe_time(c.der()) <= control_time;
-    let (complete, deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
-        ctx.crls.iter().filter(usable).partition(|c| !crl::is_delta(c));
+    let usable = |c: &&CrlContainer| {
+        c.this_update() <= control_time && poe.poe_time(c.der()) <= control_time
+    };
+    let (complete, deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) = ctx
+        .crls
+        .iter()
+        .filter(usable)
+        .partition(|c| !crl::is_delta(c));
     let target = Target::from_cert(cert);
     let subj = subject(&target, issuer, path);
     let mut out = Vec::new();
@@ -130,9 +135,11 @@ fn apply_algo_policy(
     control_time: Moment,
     public_key: &spki::SubjectPublicKeyInfoOwned,
 ) -> std::result::Result<Moment, LtvError> {
-    let c = ctx
-        .algorithm_policy
-        .signature_algorithm_allowed(algorithm, Some(control_time), Some(public_key));
+    let c = ctx.algorithm_policy.signature_algorithm_allowed(
+        algorithm,
+        Some(control_time),
+        Some(public_key),
+    );
     if c.allowed {
         return Ok(control_time);
     }
@@ -143,7 +150,9 @@ fn apply_algo_policy(
     if let Some(r) = c.failure_reason {
         msg.push_str(&format!(" Reason: {r}"));
     }
-    Err(LtvError::Validation(ValidationError::DisallowedAlgorithm(msg)))
+    Err(LtvError::Validation(ValidationError::DisallowedAlgorithm(
+        msg,
+    )))
 }
 
 fn human(cert: &Cert) -> String {
@@ -152,7 +161,8 @@ fn human(cert: &Cert) -> String {
 
 fn iso(m: Moment) -> String {
     let s = m.to_string();
-    s.strip_suffix('Z').map_or(s.clone(), |b| format!("{b}+00:00"))
+    s.strip_suffix('Z')
+        .map_or(s.clone(), |b| format!("{b}+00:00"))
 }
 
 /// The usability cutoff of the most recent revocation information
@@ -205,8 +215,14 @@ pub fn time_slide(
     ctx: &ValidationContext,
     poe: &PoeManager,
 ) -> Result<Moment> {
-    time_slide_with(path, init_control_time, ctx, poe, TimeSlideOptions::default())
-        .map_err(Into::into)
+    time_slide_with(
+        path,
+        init_control_time,
+        ctx,
+        poe,
+        TimeSlideOptions::default(),
+    )
+    .map_err(Into::into)
 }
 
 /// [`time_slide`] with options and the detailed error type.
@@ -284,11 +300,13 @@ fn slide(
             )));
         }
         if crls.is_empty() && ocsps.is_empty() && !cert.has_extension(&oids::OCSP_NOCHECK) {
-            return Err(LtvError::Validation(ValidationError::InsufficientRevinfo(format!(
-                "No revocation info from before {} found for certificate {}.",
-                iso(control_time),
-                human(&cert)
-            ))));
+            return Err(LtvError::Validation(ValidationError::InsufficientRevinfo(
+                format!(
+                    "No revocation info from before {} found for certificate {}.",
+                    iso(control_time),
+                    human(&cert)
+                ),
+            )));
         }
 
         let mut once_revoked = false;

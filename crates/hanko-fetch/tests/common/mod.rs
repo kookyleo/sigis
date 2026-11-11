@@ -27,10 +27,7 @@ impl HttpTransport for FailingTransport {
 
 /// Path of a pyhanko-certvalidator fixture.
 pub fn cv_fixture(parts: &[&str]) -> std::path::PathBuf {
-    let mut p = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    p.extend(["..", "hanko-testdata", "data", "pyhanko-certvalidator"]);
-    p.extend(parts);
-    p
+    hanko_testdata::certvalidator(parts)
 }
 
 pub fn read_cv(parts: &[&str]) -> Vec<u8> {
@@ -44,10 +41,9 @@ pub fn load_cert(parts: &[&str]) -> Cert {
 
 /// Path below `crates/hanko-testdata/data/lanes/a/`.
 pub fn lane_data(parts: &[&str]) -> std::path::PathBuf {
-    let mut p = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    p.extend(["..", "hanko-testdata", "data", "lanes", "a"]);
-    p.extend(parts);
-    p
+    let mut all = vec!["lanes", "a"];
+    all.extend_from_slice(parts);
+    hanko_testdata::path(&all)
 }
 
 pub fn read_lane(parts: &[&str]) -> Vec<u8> {

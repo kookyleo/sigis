@@ -195,7 +195,10 @@ pub fn unpack_cert_content(
         if !seq.is_universal(tag::SEQUENCE) {
             return Err(ContentError("payload is not a SEQUENCE".into()));
         }
-        let len = seq.children().map_err(|e| ContentError(e.to_string()))?.len();
+        let len = seq
+            .children()
+            .map_err(|e| ContentError(e.to_string()))?
+            .len();
         return match len {
             2 => unpack_der_pkcs7(data, url),
             3 => Ok(vec![cert_from_der(data)?]),
@@ -267,7 +270,11 @@ pub fn ac_extensions(ac_der: &[u8]) -> Vec<Extension> {
         let fields = info.children().ok()?;
         // version, holder, issuer, signature, serial, validity, attributes,
         // [issuerUniqueID], [extensions]
-        let last = fields.get(7..)?.iter().rev().find(|f| f.is_universal(tag::SEQUENCE))?;
+        let last = fields
+            .get(7..)?
+            .iter()
+            .rev()
+            .find(|f| f.is_universal(tag::SEQUENCE))?;
         Extensions::from_der(last.raw).ok()
     };
     parse().unwrap_or_default()
@@ -487,5 +494,7 @@ pub fn random_bytes<const N: usize>() -> [u8; N] {
 
 /// An IA5 URI general name (test helper for building distribution points).
 pub fn uri_name(url: &str) -> Option<GeneralName> {
-    Ia5String::new(url).ok().map(GeneralName::UniformResourceIdentifier)
+    Ia5String::new(url)
+        .ok()
+        .map(GeneralName::UniformResourceIdentifier)
 }

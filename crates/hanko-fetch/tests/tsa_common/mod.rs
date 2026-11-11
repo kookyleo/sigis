@@ -40,8 +40,14 @@ pub fn http_timestamp_round_trip() {
             .find(|(k, _)| k.eq_ignore_ascii_case(n))
             .map(|(_, v)| v.clone())
     };
-    assert_eq!(header("content-type").as_deref(), Some("application/timestamp-query"));
-    assert_eq!(header("accept").as_deref(), Some("application/timestamp-reply"));
+    assert_eq!(
+        header("content-type").as_deref(),
+        Some("application/timestamp-query")
+    );
+    assert_eq!(
+        header("accept").as_deref(),
+        Some("application/timestamp-reply")
+    );
 
     let root = hanko_core::cert::Cert::from_der(&read_lane(&["tsa", "root.der"])).unwrap();
     let ctx = hanko_certvalidator::ValidationContext::builder()

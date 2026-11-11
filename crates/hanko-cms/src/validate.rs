@@ -43,20 +43,20 @@ use hanko_core::cert::Cert;
 use hanko_core::errors::ValidationError;
 use hanko_core::time::Moment;
 
-use crate::ades::AdesSubIndication;
 use crate::attributes::{collect_signer_attr_status, SignerAttrStatus};
 use crate::errors::{CmsError, CmsResult};
-use crate::key_usage::KeyUsageConstraints;
 use crate::policy::{digest_name, lift_policy, signature_algorithm_name, CmsAlgorithmUsagePolicy};
 use crate::signed_data::{
-    check_ess_certid, extract_certificate_info, extract_signer_info,
-    find_cms_attribute_iter, find_unique_cms_attribute, AttributeLookupError, CmsAttribute,
-    EssCertIdAny, SignedData, SignedDataCerts, SignerInfo,
+    check_ess_certid, extract_certificate_info, extract_signer_info, find_cms_attribute_iter,
+    find_unique_cms_attribute, AttributeLookupError, CmsAttribute, EssCertIdAny, SignedData,
+    SignedDataCerts, SignerInfo,
 };
 use crate::status::{
     human_friendly, RevocationDetails, SignatureStatus, StandardCmsSignatureStatus,
     TimestampSignatureStatus, TrustProblem,
 };
+use hanko_core::ades::{AdesFailure, AdesIndeterminate, AdesSubIndic};
+use hanko_core::key_usage::KeyUsageConstraints;
 
 /// Which pyHanko status class a validation reports, which fixes the default
 /// key usage requirements (`default_usage_constraints`).
@@ -115,10 +115,7 @@ impl<'a> DataDigester<'a> {
 
 /// `TSTDigestNotAvailableError` / unsupported digest algorithm.
 pub(crate) fn digest_not_available(alg: &AlgorithmIdentifierOwned) -> CmsError {
-    CmsError::validation_generic(format!(
-        "Unknown hash function '{}'",
-        digest_name(&alg.oid)
-    ))
+    CmsError::validation_generic(format!("Unknown hash function '{}'", digest_name(&alg.oid)))
 }
 
 /// Resolve a digest algorithm identifier.
@@ -197,13 +194,14 @@ pub fn validate_algorithm_protection(
         Err(AttributeLookupError::Multivalued(_)) => {
             return Err(CmsError::validation(
                 "Multiple CMS algorithm protection attributes present",
-                AdesSubIndication::FormatFailure,
+                AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
             ))
         }
     };
     let prot = CmsAlgorithmProtection::from_der(value)
         .map_err(|e| CmsError::Malformed(format!("CMSAlgorithmProtection: {e}")))?;
-    let generic = |m: &str| CmsError::validation(m, AdesSubIndication::Generic);
+    let generic =
+        |m: &str| CmsError::validation(m, AdesSubIndic::Indeterminate(AdesIndeterminate::GENERIC));
     if !same_algorithm(&prot.digest_algorithm, claimed_digest_algorithm) {
         return Err(generic(
             "Digest algorithm does not match CMS algorithm protection attribute.",
@@ -245,11 +243,13 @@ pub fn validate_algorithm_protection(
 /// The signing certificate attribute (`get_signing_cert_attr`): the first
 /// `ESSCertID(v2)` of `signingCertificateV2`, else of `signingCertificate`.
 /// `Ok(None)` if neither is present.
-pub fn get_signing_cert_attr(attrs: Option<&[CmsAttribute]>) -> CmsResult<Option<Vec<EssCertIdAny>>> {
+pub fn get_signing_cert_attr(
+    attrs: Option<&[CmsAttribute]>,
+) -> CmsResult<Option<Vec<EssCertIdAny>>> {
     let cardinality = || {
         CmsError::validation(
             "Wrong cardinality for signing certificate attribute",
-            AdesSubIndication::NoSigningCertificateFound,
+            AdesSubIndic::Indeterminate(AdesIndeterminate::NO_SIGNING_CERTIFICATE_FOUND),
         )
     };
     match find_unique_cms_attribute(attrs, oids::AA_SIGNING_CERTIFICATE_V2) {
@@ -285,7 +285,7 @@ fn check_signing_certificate(cert: &Cert, attrs: Option<&[CmsAttribute]>) -> Cms
             "Signing certificate attribute does not match selected signer's certificate for subject\"{}\".",
             human_friendly(cert)
         ),
-        AdesSubIndication::NoSigningCertificateFound,
+        AdesSubIndic::Indeterminate(AdesIndeterminate::NO_SIGNING_CERTIFICATE_FOUND),
     ))
 }
 
@@ -327,7 +327,7 @@ pub fn validate_sig_integrity(
                 .map_err(|_| {
                     CmsError::validation(
                         "Content type not found in signature, or multiple content-type attributes present.",
-                        AdesSubIndication::FormatFailure,
+                        AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
                     )
                 })?;
             let content_type = RawOid::from_der(content_type)
@@ -339,7 +339,7 @@ pub fn validate_sig_integrity(
                         content_type_name(&content_type),
                         content_type_name(expected_content_type)
                     ),
-                    AdesSubIndication::FormatFailure,
+                    AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
                 ));
             }
             let embedded = extract_message_digest(&sa.attrs)?;
@@ -388,7 +388,7 @@ pub fn extract_certs_for_validation(sd: &SignedData) -> CmsResult<SignedDataCert
     let info = extract_certificate_info(sd).map_err(|e| match e {
         CmsError::Extraction(_) if sd.signer_infos.len() == 1 => CmsError::validation(
             "signer certificate not included in signature",
-            AdesSubIndication::NoSigningCertificateFound,
+            AdesSubIndic::Indeterminate(AdesIndeterminate::NO_SIGNING_CERTIFICATE_FOUND),
         ),
         other => other,
     })?;
@@ -443,7 +443,7 @@ pub struct CertUsageResult {
     /// On failure: the path on which validation failed, if pyHanko reports one.
     pub error_path: Option<ValidationPath>,
     /// On failure: the AdES sub-indication.
-    pub error_subindic: Option<AdesSubIndication>,
+    pub error_subindic: Option<AdesSubIndic>,
     /// On failure: the underlying problem.
     pub trust_problem: Option<TrustProblem>,
     /// Revocation details.
@@ -454,21 +454,34 @@ pub struct CertUsageResult {
 
 /// `handle_certvalidator_errors`: map a path failure to an AdES status.
 pub fn handle_path_failure(f: PathFailure) -> CertUsageResult {
-    use AdesSubIndication as S;
     let mut out = CertUsageResult::default();
     let (sub, path, horizon) = if f.invalid_certificate {
-        (S::ChainConstraintsFailure, None, None)
+        (
+            AdesSubIndic::Indeterminate(AdesIndeterminate::CHAIN_CONSTRAINTS_FAILURE),
+            None,
+            None,
+        )
     } else {
         match &f.error {
-            ValidationError::StaleRevinfo { time_cutoff, .. } => (S::TryLater, None, *time_cutoff),
-            ValidationError::DisallowedAlgorithm(_) => (S::CryptoConstraintsFailure, f.path, None),
+            ValidationError::StaleRevinfo { time_cutoff, .. } => (
+                AdesSubIndic::Indeterminate(AdesIndeterminate::TRY_LATER),
+                None,
+                *time_cutoff,
+            ),
+            ValidationError::DisallowedAlgorithm(_) => (
+                AdesSubIndic::Indeterminate(AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE),
+                f.path,
+                None,
+            ),
             ValidationError::Revoked {
                 revocation_time,
                 reason,
                 ..
             } => {
                 let sub = if f.is_side_validation {
-                    S::CertificateChainGeneralFailure
+                    AdesSubIndic::Indeterminate(
+                        AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE,
+                    )
                 } else {
                     out.revo_details = Some(RevocationDetails {
                         ca_revoked: !f.is_ee_cert,
@@ -476,24 +489,38 @@ pub fn handle_path_failure(f: PathFailure) -> CertUsageResult {
                         revocation_reason: *reason,
                     });
                     if f.is_ee_cert {
-                        S::RevokedNoPoe
+                        AdesSubIndic::Indeterminate(AdesIndeterminate::REVOKED_NO_POE)
                     } else {
-                        S::RevokedCaNoPoe
+                        AdesSubIndic::Indeterminate(AdesIndeterminate::REVOKED_CA_NO_POE)
                     }
                 };
                 (sub, f.path, *revocation_time)
             }
-            ValidationError::PathBuilding(_) => (S::NoCertificateChainFound, None, None),
+            ValidationError::PathBuilding(_) => (
+                AdesSubIndic::Indeterminate(AdesIndeterminate::NO_CERTIFICATE_CHAIN_FOUND),
+                None,
+                None,
+            ),
             ValidationError::Expired { .. } => {
                 let sub = if !f.is_side_validation && f.is_ee_cert {
-                    S::OutOfBoundsNoPoe
+                    AdesSubIndic::Indeterminate(AdesIndeterminate::OUT_OF_BOUNDS_NO_POE)
                 } else {
-                    S::CertificateChainGeneralFailure
+                    AdesSubIndic::Indeterminate(
+                        AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE,
+                    )
                 };
                 (sub, f.path, f.time_horizon)
             }
-            ValidationError::Malformed(_) => (S::CertificateChainGeneralFailure, None, None),
-            _ => (S::CertificateChainGeneralFailure, f.path, None),
+            ValidationError::Malformed(_) => (
+                AdesSubIndic::Indeterminate(AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE),
+                None,
+                None,
+            ),
+            _ => (
+                AdesSubIndic::Indeterminate(AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE),
+                f.path,
+                None,
+            ),
         }
     };
     out.error_subindic = Some(sub);
@@ -525,9 +552,11 @@ pub fn validate_cert_usage(
         Err(f) => return handle_path_failure(*f),
     };
     if path.pkix_len() > 0 {
-        if let Err(e) = key_usage_settings.validate(cert, &BTreeSet::new(), &BTreeSet::new()) {
+        if let Err(e) = key_usage_settings.validate(cert) {
             return CertUsageResult {
-                error_subindic: Some(AdesSubIndication::ChainConstraintsFailure),
+                error_subindic: Some(AdesSubIndic::Indeterminate(
+                    AdesIndeterminate::CHAIN_CONSTRAINTS_FAILURE,
+                )),
                 trust_problem: Some(TrustProblem::KeyUsage(e.0)),
                 ..CertUsageResult::default()
             };
@@ -606,7 +635,7 @@ pub fn cms_basic_validation(
             if sd.econtent.is_some() {
                 return Err(CmsError::validation(
                     "CMS structural error: detached signatures should not have encapsulated data",
-                    AdesSubIndication::FormatFailure,
+                    AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
                 ));
             }
             d.to_vec()
@@ -617,8 +646,12 @@ pub fn cms_basic_validation(
     let mut trust_problem = None;
     let mut error_time_horizon = None;
     if let Err(msg) = enforce_algorithm_usage(si, cert, policy.as_ref(), time_indic) {
-        ades_status = Some(AdesSubIndication::CryptoConstraintsFailure);
-        trust_problem = Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm(msg)));
+        ades_status = Some(AdesSubIndic::Indeterminate(
+            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE,
+        ));
+        trust_problem = Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm(
+            msg,
+        )));
     }
     let (intact, valid) = validate_sig_integrity(si, cert, &sd.econtent_type, &raw_digest)?;
 
@@ -644,7 +677,9 @@ pub fn cms_basic_validation(
                 .ok(),
                 md_algorithm: si.digest(),
                 validation_path: None,
-                trust_problem_indic: Some(AdesSubIndication::CertificateChainGeneralFailure),
+                trust_problem_indic: Some(AdesSubIndic::Indeterminate(
+                    AdesIndeterminate::CERTIFICATE_CHAIN_GENERAL_FAILURE,
+                )),
                 pkcs7_signature_mechanism: mechanism_name,
                 md_algorithm_name: md_name,
                 revocation_details: None,
@@ -719,7 +754,7 @@ pub fn tst_info(sd: &SignedData) -> CmsResult<TstInfo> {
     let not_tst = || {
         CmsError::validation(
             "SignedData does not encapsulate TSTInfo",
-            AdesSubIndication::FormatFailure,
+            AdesSubIndic::Failure(AdesFailure::FORMAT_FAILURE),
         )
     };
     if !sd.econtent_type.is(&oids::CT_TST_INFO) {

@@ -177,7 +177,11 @@ impl ValidationPath {
         };
         if names_chain(anchor) && keys_agree(anchor) {
             let leaf = (cert != anchor).then(|| cert.clone());
-            return Some(ValidationPath::new(self.trust_anchor.clone(), Vec::new(), leaf));
+            return Some(ValidationPath::new(
+                self.trust_anchor.clone(),
+                Vec::new(),
+                leaf,
+            ));
         }
         let index = self
             .intermediates
