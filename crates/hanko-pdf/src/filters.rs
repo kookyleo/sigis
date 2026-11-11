@@ -50,7 +50,12 @@ impl Decoder {
     }
 
     /// Decode without limits.
-    pub fn decode(self, data: &[u8], params: Option<&Dictionary>, deref: Deref<'_>) -> PdfResult<Vec<u8>> {
+    pub fn decode(
+        self,
+        data: &[u8],
+        params: Option<&Dictionary>,
+        deref: Deref<'_>,
+    ) -> PdfResult<Vec<u8>> {
         self.decode_bounded(data, params, None, deref)
     }
 
@@ -125,7 +130,11 @@ pub fn bounded_decompress(data: &[u8], max: Option<u64>) -> PdfResult<Vec<u8>> {
         let consumed = d.total_in() as usize;
         let before_out = out.len();
         let status = d
-            .decompress_vec(&data[consumed.min(data.len())..], &mut out, FlushDecompress::None)
+            .decompress_vec(
+                &data[consumed.min(data.len())..],
+                &mut out,
+                FlushDecompress::None,
+            )
             .map_err(|e| zlib_error(&e.to_string()))?;
         if let Some(l) = limit {
             if out.len() as u64 > l {
@@ -188,7 +197,9 @@ fn flate_decode_bounded(
 fn png_decode(data: &[u8], columns: usize) -> PdfResult<Vec<u8>> {
     let rowlength = columns + 1;
     if !data.len().is_multiple_of(rowlength) {
-        return Err(PdfError::value("PNG predictor: data is not a whole number of rows"));
+        return Err(PdfError::value(
+            "PNG predictor: data is not a whole number of rows",
+        ));
     }
     let mut out = Vec::with_capacity(data.len());
     let mut prev = vec![0u8; columns];
@@ -228,7 +239,10 @@ fn is_re_ws(b: u8) -> bool {
 
 /// `ASCIIHexDecode.encode`.
 pub fn ascii_hex_encode(data: &[u8]) -> Vec<u8> {
-    let mut out: Vec<u8> = data.iter().flat_map(|b| format!("{b:02x}").into_bytes()).collect();
+    let mut out: Vec<u8> = data
+        .iter()
+        .flat_map(|b| format!("{b:02x}").into_bytes())
+        .collect();
     out.push(b'>');
     out
 }
@@ -238,7 +252,11 @@ pub fn ascii_hex_decode(data: &[u8]) -> PdfResult<Vec<u8>> {
     let Some(end) = data.iter().position(|&b| b == b'>') else {
         return Err(PdfError::value("ASCIIHex data lacks an EOD marker"));
     };
-    let mut digits: Vec<u8> = data[..end].iter().copied().filter(|&b| !is_re_ws(b)).collect();
+    let mut digits: Vec<u8> = data[..end]
+        .iter()
+        .copied()
+        .filter(|&b| !is_re_ws(b))
+        .collect();
     if !digits.len().is_multiple_of(2) {
         digits.push(b'0');
     }
@@ -246,7 +264,9 @@ pub fn ascii_hex_decode(data: &[u8]) -> PdfResult<Vec<u8>> {
         return Err(PdfError::value("Non-hexadecimal digit found"));
     }
     Ok(digits
-        .as_chunks::<2>().0.iter()
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| {
             let h = |d: u8| (d as char).to_digit(16).unwrap_or(0) as u8;
             (h(c[0]) << 4) | h(c[1])
@@ -284,7 +304,11 @@ pub fn ascii85_decode(data: &[u8]) -> PdfResult<Vec<u8>> {
     let Some(end) = data.windows(2).position(|w| w == b"~>") else {
         return Err(PdfError::value("ASCII85 data lacks an EOD marker"));
     };
-    let clean: Vec<u8> = data[..end].iter().copied().filter(|&b| !is_re_ws(b)).collect();
+    let clean: Vec<u8> = data[..end]
+        .iter()
+        .copied()
+        .filter(|&b| !is_re_ws(b))
+        .collect();
     let mut out = Vec::new();
     let mut i = 0;
     while i < clean.len() {
@@ -318,8 +342,7 @@ pub fn ascii85_decode(data: &[u8]) -> PdfResult<Vec<u8>> {
         if grp.len() < 5 {
             result += p;
         }
-        let v = u32::try_from(result)
-            .map_err(|_| PdfError::value("ASCII85 group out of range"))?;
+        let v = u32::try_from(result).map_err(|_| PdfError::value("ASCII85 group out of range"))?;
         out.extend_from_slice(&v.to_be_bytes()[..grp.len() - 1]);
     }
     Ok(out)

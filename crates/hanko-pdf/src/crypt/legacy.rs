@@ -68,7 +68,12 @@ pub(crate) fn legacy_normalise_pw_bytes(password: &[u8]) -> Vec<u8> {
 }
 
 /// Algorithm 3 (3.3), the `/O` value (`compute_o_value_legacy`).
-pub(crate) fn compute_o_value_legacy(owner_pwd: &[u8], user_pwd: &[u8], rev: i64, keylen: usize) -> Vec<u8> {
+pub(crate) fn compute_o_value_legacy(
+    owner_pwd: &[u8],
+    user_pwd: &[u8],
+    rev: i64,
+    keylen: usize,
+) -> Vec<u8> {
     let key = compute_o_value_legacy_prep(owner_pwd, rev, keylen);
     let mut val = rc4_encrypt(&key, &padded(user_pwd));
     if rev >= 3 {
@@ -114,7 +119,15 @@ pub(crate) fn compute_u_value_r34(
     id1_entry: &[u8],
     encrypt_metadata: bool,
 ) -> (Vec<u8>, Vec<u8>) {
-    let key = derive_legacy_file_key(password, rev, keylen, owner_entry, p_entry, id1_entry, encrypt_metadata);
+    let key = derive_legacy_file_key(
+        password,
+        rev,
+        keylen,
+        owner_entry,
+        p_entry,
+        id1_entry,
+        encrypt_metadata,
+    );
     let mut m = Md5::new();
     m.update(ENCRYPTION_PADDING);
     m.update(id1_entry);
@@ -130,7 +143,12 @@ pub(crate) fn compute_u_value_r34(
 
 /// Object key derivation of the legacy handlers (Algorithm 1,
 /// `legacy_derive_object_key`).
-pub(crate) fn legacy_derive_object_key(shared_key: &[u8], idnum: u32, generation: u16, use_aes: bool) -> Vec<u8> {
+pub(crate) fn legacy_derive_object_key(
+    shared_key: &[u8],
+    idnum: u32,
+    generation: u16,
+    use_aes: bool,
+) -> Vec<u8> {
     let mut key = shared_key.to_vec();
     key.extend_from_slice(&idnum.to_le_bytes()[..3]);
     key.extend_from_slice(&generation.to_le_bytes()[..2]);

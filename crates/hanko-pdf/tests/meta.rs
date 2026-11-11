@@ -16,7 +16,9 @@ use hanko_pdf::metadata::model::{
 };
 use hanko_pdf::metadata::xmp_xml::{meta_from_xmp, parse_xmp, serialise_xmp, stream_xmp};
 use hanko_pdf::writer::copy_into_new_writer;
-use hanko_pdf::{IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, PdfWriter};
+use hanko_pdf::{
+    IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, PdfWriter,
+};
 
 fn date(y: i32, m: u8, d: u8, h: u8, mi: u8, s: u8, off: Option<i32>) -> PdfDate {
     PdfDate {
@@ -51,7 +53,9 @@ fn info_of(r: &PdfFile) -> Dictionary {
 
 fn root_xmp(r: &PdfFile) -> Vec<XmpStructure> {
     let root = r.root().unwrap();
-    let Object::Stream(s) = get(r, &root, "Metadata") else { panic!() };
+    let Object::Stream(s) = get(r, &root, "Metadata") else {
+        panic!()
+    };
     stream_xmp(r, &s).unwrap()
 }
 
@@ -77,7 +81,10 @@ fn test_copy_into_new_writer_sets_info() {
     let out = w.write().unwrap();
     let r = read(&out);
     let meta = meta_view(&r);
-    assert_eq!(instant(&meta.last_modified), Some(frozen().unix_timestamp()));
+    assert_eq!(
+        instant(&meta.last_modified),
+        Some(frozen().unix_timestamp())
+    );
     assert!(text(&get(&r, &info_of(&r), "Producer")).contains(VENDOR));
 }
 
@@ -98,10 +105,14 @@ fn test_date_parse_failure() {
 #[test]
 fn test_incremental_update_meta_view() {
     let mut w = IncrementalWriter::new(read(&pdf("scribble.pdf")));
-    let MetaDate::At(c) = w.document_meta_view().unwrap().created.unwrap() else { panic!() };
+    let MetaDate::At(c) = w.document_meta_view().unwrap().created.unwrap() else {
+        panic!()
+    };
     assert_eq!(c.year, 2020);
     w.document_meta().created = Some(MetaDate::At(date(2022, 9, 7, 0, 0, 0, None)));
-    let MetaDate::At(c) = w.document_meta_view().unwrap().created.unwrap() else { panic!() };
+    let MetaDate::At(c) = w.document_meta_view().unwrap().created.unwrap() else {
+        panic!()
+    };
     assert_eq!(c.year, 2022);
 }
 
@@ -112,7 +123,9 @@ fn test_writer_meta_view_does_not_persist_changes() {
         let (w, expected): (PdfWriter, Option<i64>) = match writer_type {
             "fresh" => (PdfFileWriter::new(true, true).unwrap().into_inner(), None),
             "from_data" => (
-                copy_into_new_writer(&read(&pdf("scribble.pdf"))).unwrap().into_inner(),
+                copy_into_new_writer(&read(&pdf("scribble.pdf")))
+                    .unwrap()
+                    .into_inner(),
                 Some(exp.unix_timestamp()),
             ),
             _ => (
@@ -120,7 +133,11 @@ fn test_writer_meta_view_does_not_persist_changes() {
                 Some(exp.unix_timestamp()),
             ),
         };
-        assert_eq!(instant(&w.document_meta_view().unwrap().created), expected, "{writer_type}");
+        assert_eq!(
+            instant(&w.document_meta_view().unwrap().created),
+            expected,
+            "{writer_type}"
+        );
         let mut view = w.document_meta_view().unwrap();
         view.created = Some(MetaDate::At(frozen()));
         assert_eq!(instant(&w.document_meta_view().unwrap().created), expected);
@@ -174,7 +191,10 @@ fn test_metadata_info_round_trip() {
                     assert!(!r.trailer_view().has(b"Info"), "{kind} {ver:?}");
                 } else {
                     let got = meta_view(&r);
-                    assert_eq!(instant(&got.last_modified), instant(&expected.last_modified));
+                    assert_eq!(
+                        instant(&got.last_modified),
+                        instant(&expected.last_modified)
+                    );
                     assert_eq!(instant(&got.created), instant(&expected.created));
                     assert_eq!(got.title, expected.title);
                     assert_eq!(got.author, expected.author);
@@ -233,13 +253,25 @@ const XE: &str = "http://ns.adobe.com/xmp-example/";
 #[test]
 fn test_xmp_parsetype_resource() {
     let result = &parse_xmp(XMP_WITH_PARSETYPE_RESOURCE.as_bytes()).unwrap()[0];
-    let mps = result.get(&en("MaxPageSize", "http://ns.adobe.com/xap/1.0/t/pg/")).unwrap();
-    let XmpValueKind::Structure(s) = &mps.value else { panic!() };
-    let unit = s.get(&en("unit", "http://ns.adobe.com/xap/1.0/sType/Dimensions#")).unwrap();
+    let mps = result
+        .get(&en("MaxPageSize", "http://ns.adobe.com/xap/1.0/t/pg/"))
+        .unwrap();
+    let XmpValueKind::Structure(s) = &mps.value else {
+        panic!()
+    };
+    let unit = s
+        .get(&en("unit", "http://ns.adobe.com/xap/1.0/sType/Dimensions#"))
+        .unwrap();
     assert_eq!(unit.as_str(), Some("inch"));
     let base = result.get(&en("BaseURL", model::ns("xmp"))).unwrap();
-    assert_eq!(base.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(), Some("artificial example"));
-    assert_eq!(base.value, XmpValueKind::Uri(XmpUri("https://www.adobe.com/".into())));
+    assert_eq!(
+        base.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(),
+        Some("artificial example")
+    );
+    assert_eq!(
+        base.value,
+        XmpValueKind::Uri(XmpUri("https://www.adobe.com/".into()))
+    );
 }
 
 #[test]
@@ -249,7 +281,9 @@ fn test_ensure_uri_is_rdf_resource() {
         XmpValue::new(XmpValueKind::Uri(XmpUri("https://example.com".into()))),
     )]);
     let out = serialise_xmp(&[root]);
-    assert!(String::from_utf8(out).unwrap().contains("rdf:resource=\"https://example.com\""));
+    assert!(String::from_utf8(out)
+        .unwrap()
+        .contains("rdf:resource=\"https://example.com\""));
 }
 
 fn conformance() -> ExpandedName {
@@ -257,7 +291,9 @@ fn conformance() -> ExpandedName {
 }
 
 fn description_text(x: &XmpStructure) -> String {
-    let XmpValueKind::Array(a) = &x.get(&dc_description()).unwrap().value else { panic!() };
+    let XmpValueKind::Array(a) = &x.get(&dc_description()).unwrap().value else {
+        panic!()
+    };
     a.entries[0].as_str().unwrap().to_owned()
 }
 
@@ -274,7 +310,13 @@ fn test_incremental_update_doc_with_xmp() {
     let x = &root_xmp(&r)[0];
     assert_eq!(description_text(x), "Update test");
     assert_eq!(x.get(&conformance()).unwrap().as_str(), Some("B"));
-    assert_eq!(r.historical_resolver(0).document_meta_view().unwrap().subject, None);
+    assert_eq!(
+        r.historical_resolver(0)
+            .document_meta_view()
+            .unwrap()
+            .subject,
+        None
+    );
 }
 
 #[test]
@@ -318,8 +360,17 @@ fn test_upgrade_pdf2_no_info_dict() {
     assert_eq!(mv.title.unwrap().value, "Test document");
     assert_eq!(mv.author, Some(MetaString::plain("John Doe")));
     assert_eq!(mv.subject.unwrap().value, "Test subject");
-    assert_eq!(mv.keywords, ["these", "are", "key", "words"].map(String::from).to_vec());
-    assert_eq!(r.historical_resolver(0).document_meta_view().unwrap().subject, None);
+    assert_eq!(
+        mv.keywords,
+        ["these", "are", "key", "words"].map(String::from).to_vec()
+    );
+    assert_eq!(
+        r.historical_resolver(0)
+            .document_meta_view()
+            .unwrap()
+            .subject,
+        None
+    );
 }
 
 fn extra_struct() -> XmpStructure {
@@ -327,15 +378,24 @@ fn extra_struct() -> XmpStructure {
         en("BaseURL", model::ns("xmp")),
         XmpValue::with_quals(
             XmpValueKind::Uri(XmpUri("https://example.com/".into())),
-            Qualifiers::of(vec![(en("qualifier", XE), XmpValue::text("artificial example"))]),
+            Qualifiers::of(vec![(
+                en("qualifier", XE),
+                XmpValue::text("artificial example"),
+            )]),
         ),
     )])
 }
 
 fn check_extra(x: &XmpStructure) {
     let v = x.get(&en("BaseURL", model::ns("xmp"))).unwrap();
-    assert_eq!(v.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(), Some("artificial example"));
-    assert_eq!(v.value, XmpValueKind::Uri(XmpUri("https://example.com/".into())));
+    assert_eq!(
+        v.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(),
+        Some("artificial example")
+    );
+    assert_eq!(
+        v.value,
+        XmpValueKind::Uri(XmpUri("https://example.com/".into()))
+    );
 }
 
 #[test]
@@ -394,8 +454,18 @@ const XMP_WITH_RESOURCE_WITH_MULTIPLE_QUALS: &str = r#"
 
 #[test]
 fn test_xmp_with_resource_with_multiple_quals() {
-    let result = parse_xmp(XMP_WITH_RESOURCE_WITH_MULTIPLE_QUALS.as_bytes()).unwrap().remove(0);
-    assert_eq!(result.get(&dc_title()).unwrap().qualifiers.iter_quals(true).len(), 2);
+    let result = parse_xmp(XMP_WITH_RESOURCE_WITH_MULTIPLE_QUALS.as_bytes())
+        .unwrap()
+        .remove(0);
+    assert_eq!(
+        result
+            .get(&dc_title())
+            .unwrap()
+            .qualifiers
+            .iter_quals(true)
+            .len(),
+        2
+    );
     let expected = XmpStructure::of(vec![
         (
             dc_title(),
@@ -417,7 +487,10 @@ fn test_xmp_with_resource_with_multiple_quals() {
     ]);
     assert_eq!(result, expected);
     let title = result.get(&dc_title()).unwrap();
-    assert_eq!(title.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(), Some("artificial example"));
+    assert_eq!(
+        title.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(),
+        Some("artificial example")
+    );
     assert_eq!(
         meta_from_xmp(&[result]).unwrap().title,
         Some(MetaString::with_lang("This is a test", "en", None))
@@ -426,7 +499,9 @@ fn test_xmp_with_resource_with_multiple_quals() {
 
 #[test]
 fn test_xmp_str() {
-    let result = parse_xmp(XMP_WITH_RESOURCE_WITH_MULTIPLE_QUALS.as_bytes()).unwrap().remove(0);
+    let result = parse_xmp(XMP_WITH_RESOURCE_WITH_MULTIPLE_QUALS.as_bytes())
+        .unwrap()
+        .remove(0);
     let r = format!("{result:?}");
     assert!(r.contains("artificial"));
     assert!(r.contains("lang: Some(\"en\")"));
@@ -459,7 +534,10 @@ fn texts(v: &[&str]) -> Vec<XmpValue> {
 fn test_xmp_with_bag() {
     let result = parse_xmp(XMP_WITH_BAG.as_bytes()).unwrap().remove(0);
     let kw = result.get(&en("keywords", XE)).unwrap();
-    assert_eq!(kw.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(), Some("artificial example"));
+    assert_eq!(
+        kw.qualifiers.get(&en("qualifier", XE)).unwrap().as_str(),
+        Some("artificial example")
+    );
     assert_eq!(
         kw.value,
         XmpValueKind::Array(XmpArray::unordered(texts(&["apple", "banana", "pear"])))
@@ -557,7 +635,10 @@ fn test_xmp_invalid_date1() {
  </rdf:RDF>
 </x:xmpmeta>
 "#;
-    is_xmp_err(meta_from_xmp(&parse_xmp(x.as_bytes()).unwrap()), "Failed to parse.*as a date");
+    is_xmp_err(
+        meta_from_xmp(&parse_xmp(x.as_bytes()).unwrap()),
+        "Failed to parse.*as a date",
+    );
 }
 
 #[test]
@@ -571,7 +652,10 @@ fn test_xmp_invalid_date2() {
  </rdf:RDF>
 </x:xmpmeta>
 "#;
-    is_xmp_err(meta_from_xmp(&parse_xmp(x.as_bytes()).unwrap()), "Wrong type");
+    is_xmp_err(
+        meta_from_xmp(&parse_xmp(x.as_bytes()).unwrap()),
+        "Wrong type",
+    );
 }
 
 const PDFA_HEAD: &str = r#"
@@ -686,27 +770,50 @@ const PDFA_ITEXT_PRE804: &str = r#"
 "#;
 
 fn field<'a>(v: &'a XmpValue, name: &ExpandedName) -> &'a XmpValue {
-    let XmpValueKind::Structure(s) = &v.value else { panic!("not a struct: {v:?}") };
+    let XmpValueKind::Structure(s) = &v.value else {
+        panic!("not a struct: {v:?}")
+    };
     s.get(name).unwrap()
 }
 
 #[test]
 fn test_parse_pdfa_ext_schema() {
-    for sample in [pdfa_correct_uri_type(), pdfa_wrong_uri_type(), PDFA_ITEXT_PRE804.to_owned()] {
+    for sample in [
+        pdfa_correct_uri_type(),
+        pdfa_wrong_uri_type(),
+        PDFA_ITEXT_PRE804.to_owned(),
+    ] {
         let roots = parse_xmp(sample.as_bytes()).unwrap();
         let root = &roots[0];
-        let ext = root.get(&en("schemas", model::ns("pdfaExtension"))).unwrap();
-        let XmpValueKind::Array(arr) = &ext.value else { panic!() };
+        let ext = root
+            .get(&en("schemas", model::ns("pdfaExtension")))
+            .unwrap();
+        let XmpValueKind::Array(arr) = &ext.value else {
+            panic!()
+        };
         let schema = &arr.entries[0];
-        assert_eq!(field(schema, &en("prefix", model::ns("pdfaSchema"))).as_str(), Some("pdfuaid"));
+        assert_eq!(
+            field(schema, &en("prefix", model::ns("pdfaSchema"))).as_str(),
+            Some("pdfuaid")
+        );
         let prop = field(schema, &en("property", model::ns("pdfaSchema")));
-        let XmpValueKind::Array(seq) = &prop.value else { panic!() };
-        let desc = field(&seq.entries[0], &en("description", model::ns("pdfaProperty")));
+        let XmpValueKind::Array(seq) = &prop.value else {
+            panic!()
+        };
+        let desc = field(
+            &seq.entries[0],
+            &en("description", model::ns("pdfaProperty")),
+        );
         assert_eq!(desc.as_str(), Some("PDF/UA version identifier"));
-        let XmpValueKind::Structure(first) = &seq.entries[0].value else { panic!() };
+        let XmpValueKind::Structure(first) = &seq.entries[0].value else {
+            panic!()
+        };
         assert_eq!(first.len(), 4);
         let ns_uri = field(schema, &en("namespaceURI", model::ns("pdfaSchema")));
-        assert_eq!(ns_uri.value, XmpValueKind::Uri(XmpUri(model::ns("pdfuaid").into())));
+        assert_eq!(
+            ns_uri.value,
+            XmpValueKind::Uri(XmpUri(model::ns("pdfuaid").into()))
+        );
     }
 }
 
@@ -738,7 +845,9 @@ fn test_empty_string() {
 </x:xmpmeta>
 "#;
     let roots = parse_xmp(x.as_bytes()).unwrap();
-    let XmpValueKind::Array(a) = &roots[0].get(&dc_creator()).unwrap().value else { panic!() };
+    let XmpValueKind::Array(a) = &roots[0].get(&dc_creator()).unwrap().value else {
+        panic!()
+    };
     assert_eq!(a.entries[0].as_str(), Some(""));
 }
 
@@ -750,10 +859,16 @@ fn test_xmp_lang_explicit_xdefault() {
     let out = w.write().unwrap();
     let r = read(&out);
     let root = r.root().unwrap();
-    let Object::Stream(s) = get(&r, &root, "Metadata") else { panic!() };
+    let Object::Stream(s) = get(&r, &root, "Metadata") else {
+        panic!()
+    };
     let data = r.stream_data(&s).unwrap();
     let needle = b"<rdf:li xml:lang=\"x-default\">Blah</rdf:li>";
-    assert!(data.windows(needle.len()).any(|w| w == needle), "{}", String::from_utf8_lossy(&data));
+    assert!(
+        data.windows(needle.len()).any(|w| w == needle),
+        "{}",
+        String::from_utf8_lossy(&data)
+    );
 }
 
 fn producer_starts_with_vendor(out: &[u8]) {
@@ -806,14 +921,19 @@ fn test_xmp_with_dangerous_xml() {
     ] {
         let data = hanko_testdata::read(&["pyhanko", "xml", "bad-xml", f]);
         let e = parse_xmp(&data).unwrap_err();
-        assert!(e.message().starts_with("XmpXmlProcessingError"), "{f}: {e:?}");
+        assert!(
+            e.message().starts_with("XmpXmlProcessingError"),
+            "{f}: {e:?}"
+        );
     }
 }
 
 fn raw_metadata(r: &PdfFile) -> hanko_pdf::lopdf::Stream {
     let root_ref = r.root_ref().unwrap();
     let root = as_dict(r.get_object_raw(root_ref, None).unwrap());
-    let Ok(Object::Reference(mref)) = root.get(b"Metadata") else { panic!() };
+    let Ok(Object::Reference(mref)) = root.get(b"Metadata") else {
+        panic!()
+    };
     match r.get_object_raw(*mref, None).unwrap() {
         Object::Stream(s) => s,
         _ => panic!(),
@@ -842,11 +962,17 @@ fn test_encrypt_skipping_managed_metadata() {
     let r = read(&out);
     let raw = raw_metadata(&r);
     let parms = as_dict(raw.dict.get(b"DecodeParms").unwrap().clone());
-    assert_eq!(parms.get(b"Name").unwrap(), &Object::Name(b"Identity".to_vec()));
+    assert_eq!(
+        parms.get(b"Name").unwrap(),
+        &Object::Name(b"Identity".to_vec())
+    );
     assert!(contains(&raw.content, b"Metadata is unencrypted"));
     let r = read(&out);
     r.decrypt("secret").unwrap();
-    assert_eq!(meta_view(&r).title.unwrap().value, "Metadata is unencrypted");
+    assert_eq!(
+        meta_view(&r).title.unwrap().value,
+        "Metadata is unencrypted"
+    );
 }
 
 #[test]
@@ -856,7 +982,10 @@ fn test_encrypt_with_managed_metadata() {
     w.document_meta().title = Some(MetaString::plain("Metadata is encrypted"));
     let out = w.write().unwrap();
     let r = read(&out);
-    assert!(!contains(&raw_metadata(&r).content, b"Metadata is encrypted"));
+    assert!(!contains(
+        &raw_metadata(&r).content,
+        b"Metadata is encrypted"
+    ));
     let r = read(&out);
     r.decrypt("secret").unwrap();
     assert_eq!(meta_view(&r).title.unwrap().value, "Metadata is encrypted");

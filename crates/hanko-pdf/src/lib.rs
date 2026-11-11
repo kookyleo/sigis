@@ -118,7 +118,9 @@ fn startxref_markers(bytes: &[u8]) -> Vec<(i64, usize, usize)> {
         while end < bytes.len() && bytes[end].is_ascii_digit() {
             end += 1;
         }
-        let Some(v) = generic::parse_py_int(&bytes[start..end]) else { continue };
+        let Some(v) = generic::parse_py_int(&bytes[start..end]) else {
+            continue;
+        };
         let eof = skip_ws(end);
         if bytes[eof.min(bytes.len())..].starts_with(b"%%EOF") {
             out.push((v, kw, skip_eol(bytes, eof + 5)));
@@ -178,7 +180,11 @@ impl PdfFile {
         if revision >= self.total_revisions() {
             return Err(PdfError::value(format!("No revision {revision}")).into());
         }
-        Ok(self.xrefs().explicit_refs_in_revision(revision).into_iter().collect())
+        Ok(self
+            .xrefs()
+            .explicit_refs_in_revision(revision)
+            .into_iter()
+            .collect())
     }
 
     /// The trailer dictionary written in `revision` itself (for xref

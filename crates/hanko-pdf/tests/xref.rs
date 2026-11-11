@@ -79,9 +79,17 @@ fn test_xref_locate_fail_strict() {
 #[test]
 fn test_broken_objstream() {
     for (fname, err, obj) in [
-        ("broken-objstream1.pdf", "Object stream does not contain index", 4),
+        (
+            "broken-objstream1.pdf",
+            "Object stream does not contain index",
+            4,
+        ),
         ("broken-objstream2.pdf", "Object is in wrong index.", 4),
-        ("broken-objstream3.pdf", "Object stream header possibly corrupted", 6),
+        (
+            "broken-objstream3.pdf",
+            "Object stream header possibly corrupted",
+            6,
+        ),
         ("broken-objstream4.pdf", "not found in stream", 6),
         ("broken-objstream5.pdf", "forbidden object type", 9),
         ("broken-objstream6.pdf", "Can't read", 4),
@@ -123,7 +131,8 @@ fn test_preallocate() {
     assert!(matches!(e, PdfError::Write(_)));
     let alloc = w.allocate_placeholder().unwrap();
     assert_eq!(w.get_object(alloc).unwrap(), Object::Null);
-    w.add_object_ext(text_string("Test Test"), None, Some(alloc.0)).unwrap();
+    w.add_object_ext(text_string("Test Test"), None, Some(alloc.0))
+        .unwrap();
     assert_eq!(text(&w.get_object(alloc).unwrap()), "Test Test");
 }
 
@@ -141,7 +150,12 @@ fn test_illegal_generation() {
 fn test_illegal_generation_nonstrict() {
     let x = dummy(&[&[b"0 2", b"0000000000 65535 f", b"0000000100 99999 n"]]);
     let r = read_lenient(&x);
-    assert!(r.xrefs().get_xref_data(0).unwrap().explicit_refs_in_revision.is_empty());
+    assert!(r
+        .xrefs()
+        .get_xref_data(0)
+        .unwrap()
+        .explicit_refs_in_revision
+        .is_empty());
 }
 
 #[test]
@@ -172,13 +186,23 @@ fn test_unparseable_marker() {
 fn test_unparseable_marker_nonstrict() {
     let x = dummy(&[&[b"0 2", b"0000000000 65535 f", b"0000000100 00000 z"]]);
     let r = read_lenient(&x);
-    assert!(r.xrefs().get_xref_data(0).unwrap().explicit_refs_in_revision.is_empty());
+    assert!(r
+        .xrefs()
+        .get_xref_data(0)
+        .unwrap()
+        .explicit_refs_in_revision
+        .is_empty());
 }
 
 #[test]
 fn test_xref_table_too_many_entries() {
     let x = fmt_dummy_xrefs(
-        &[&[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"]],
+        &[&[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ]],
         b"\r\n",
         Some(2),
     );
@@ -203,7 +227,12 @@ fn test_xref_table_truncated_after_eol() {
 #[test]
 fn test_object_free() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00001 f"],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00001 n"],
     ]);
@@ -218,7 +247,12 @@ fn test_object_free() {
 #[test]
 fn test_object_free_no_override() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00001 f"],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00001 n"],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00002 f"],
@@ -235,7 +269,12 @@ fn test_object_free_no_override() {
 #[test]
 fn test_refree_dead_object() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000000 00000 f", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000000 00000 f",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00001 f"],
     ]);
     let r = read(&x);
@@ -249,7 +288,12 @@ fn test_refree_dead_object() {
 #[test]
 fn test_forbid_obj_kill() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00000 f"],
     ]);
     assert_err_matches(try_read(&x, true), "free xref with next generation 0");
@@ -258,7 +302,12 @@ fn test_forbid_obj_kill() {
 #[test]
 fn test_no_resurrection_allowed() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000000 00000 f", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000000 00000 f",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00001 n"],
     ]);
     assert_err_matches(try_read(&x, true), "listed as dead");
@@ -267,7 +316,12 @@ fn test_no_resurrection_allowed() {
 #[test]
 fn test_increase_gen_without_free() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00001 n"],
     ]);
     assert!(try_read(&x, true).unwrap_err().is_read_error());
@@ -276,7 +330,12 @@ fn test_increase_gen_without_free() {
 #[test]
 fn test_orphan_high_gen() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00000 n"],
         &[b"0 1", b"0000000000 65535 f", b"3 1", b"0000000500 00001 n"],
     ]);
@@ -286,7 +345,12 @@ fn test_orphan_high_gen() {
 #[test]
 fn test_generation_rollback() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00001 f"],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00000 n"],
     ]);
@@ -295,10 +359,20 @@ fn test_generation_rollback() {
 
 #[test]
 fn test_free_nonexistent() {
-    let x = dummy(&[&[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000000 00001 f"]]);
+    let x = dummy(&[&[
+        b"0 3",
+        b"0000000000 65535 f",
+        b"0000000100 00000 n",
+        b"0000000000 00001 f",
+    ]]);
     read(&x);
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000000 00001 f"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000000 00001 f",
+        ],
         &[b"0 1", b"0000000000 65535 f", b"2 1", b"0000000300 00000 n"],
     ]);
     assert!(try_read(&x, true).unwrap_err().is_read_error());
@@ -307,8 +381,18 @@ fn test_free_nonexistent() {
 #[test]
 fn test_free_unexpected_jump() {
     let x = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
-        &[b"0 3", b"0000000000 65535 f", b"0000000200 00000 n", b"0000000000 00001 f"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000200 00000 n",
+            b"0000000000 00001 f",
+        ],
         &[b"0 1", b"0000000000 65535 f", b"2 1", b"0000000300 00005 n"],
     ]);
     assert!(try_read(&x, true).unwrap_err().is_read_error());
@@ -331,7 +415,10 @@ fn test_xref_access_no_decrypt() {
     // the xref stream is never decrypted, even without credentials
     let obj = r.get_object_at((7, 0), None).unwrap();
     assert!(matches!(obj, Object::Stream(_)));
-    assert!(matches!(r.get_object_raw((7, 0), None).unwrap(), Object::Stream(_)));
+    assert!(matches!(
+        r.get_object_raw((7, 0), None).unwrap(),
+        Object::Stream(_)
+    ));
 }
 
 #[test]
@@ -357,7 +444,12 @@ fn test_xref_stream_null_update() {
 #[test]
 fn test_no_clobbering_xref_streams() {
     let base = read(&pdf("minimal-xref.pdf"));
-    let stream_ref = base.xrefs().get_xref_container_info(0).unwrap().stream_ref.unwrap();
+    let stream_ref = base
+        .xrefs()
+        .get_xref_container_info(0)
+        .unwrap()
+        .stream_ref
+        .unwrap();
     let mut w = IncrementalWriter::new(base);
     w.mark_update(stream_ref).unwrap();
     let out = w.write_in_place().unwrap();
@@ -441,7 +533,10 @@ fn test_no_stms_in_obj_stm() {
     let mut w = PdfFileWriter::new(true, true).unwrap();
     let stm = w.prepare_object_stream(true).unwrap();
     let s = hanko_pdf::stream::encoded_stream(Dictionary::new(), b"Hello world!".to_vec());
-    assert_err_matches(w.add_object_ext(s, Some(stm), None), "Stream obj.*references");
+    assert_err_matches(
+        w.add_object_ext(s, Some(stm), None),
+        "Stream obj.*references",
+    );
 }
 
 #[test]
@@ -470,7 +565,10 @@ fn test_xref_orphaned_strict() {
 
 fn xref_stream_dict(w: &[i64], size: i64) -> Dictionary {
     let mut d = Dictionary::new();
-    d.set("W", Object::Array(w.iter().map(|&x| Object::Integer(x)).collect()));
+    d.set(
+        "W",
+        Object::Array(w.iter().map(|&x| Object::Integer(x)).collect()),
+    );
     d.set("Size", Object::Integer(size));
     d
 }
@@ -510,9 +608,18 @@ fn test_xref_stream_parse_entry_types() {
 
 #[test]
 fn test_xref_stream_parse_width_value_default_ix0() {
-    let data: Vec<u8> = ["00000000ffff", "000000110000"].iter().flat_map(|e| hex(e)).collect();
+    let data: Vec<u8> = ["00000000ffff", "000000110000"]
+        .iter()
+        .flat_map(|e| hex(e))
+        .collect();
     let out = parse_entries(&xref_stream_dict(&[0, 4, 2], 2), &data).unwrap();
-    assert_eq!(out, vec![XRefEntry::standard(0, 0, 0xffff), XRefEntry::standard(1, 0x11, 0)]);
+    assert_eq!(
+        out,
+        vec![
+            XRefEntry::standard(0, 0, 0xffff),
+            XRefEntry::standard(1, 0x11, 0)
+        ]
+    );
 }
 
 #[test]
@@ -524,21 +631,36 @@ fn test_xref_stream_parse_long_width_value() {
     let out = parse_entries(&xref_stream_dict(&[1, 10, 2], 2), &data).unwrap();
     assert_eq!(
         out,
-        vec![XRefEntry::free(0, 0xffff), XRefEntry::standard(1, 0x1100000011, 0)]
+        vec![
+            XRefEntry::free(0, 0xffff),
+            XRefEntry::standard(1, 0x1100000011, 0)
+        ]
     );
 }
 
 #[test]
 fn test_xref_stream_parse_width_value_default_ix2() {
-    let data: Vec<u8> = ["0000000000", "0100000011"].iter().flat_map(|e| hex(e)).collect();
+    let data: Vec<u8> = ["0000000000", "0100000011"]
+        .iter()
+        .flat_map(|e| hex(e))
+        .collect();
     let out = parse_entries(&xref_stream_dict(&[1, 4, 0], 2), &data).unwrap();
-    assert_eq!(out, vec![XRefEntry::free(0, 0), XRefEntry::standard(1, 0x11, 0)]);
+    assert_eq!(
+        out,
+        vec![XRefEntry::free(0, 0), XRefEntry::standard(1, 0x11, 0)]
+    );
 }
 
 #[test]
 fn test_premature_xref_stream_end() {
-    let data: Vec<u8> = ["000000ffff", "0100110000"].iter().flat_map(|e| hex(e)).collect();
-    assert_err_matches(parse_entries(&xref_stream_dict(&[1, 2, 2], 3), &data), "incomplete entry");
+    let data: Vec<u8> = ["000000ffff", "0100110000"]
+        .iter()
+        .flat_map(|e| hex(e))
+        .collect();
+    assert_err_matches(
+        parse_entries(&xref_stream_dict(&[1, 2, 2], 3), &data),
+        "incomplete entry",
+    );
 }
 
 #[test]
@@ -547,7 +669,10 @@ fn test_xref_stream_trailing_data() {
         .iter()
         .flat_map(|e| hex(e))
         .collect();
-    assert_err_matches(parse_entries(&xref_stream_dict(&[1, 4, 2], 2), &data), "Trailing");
+    assert_err_matches(
+        parse_entries(&xref_stream_dict(&[1, 4, 2], 2), &data),
+        "Trailing",
+    );
 }
 
 fn info_title(r: &dyn PdfHandler, info: Object) -> String {
@@ -568,7 +693,10 @@ fn test_hybrid_xref() {
         let info = r.trailer().raw_get(b"Info", None).unwrap();
         assert_eq!(info_title(&r, info), "TestTest", "{fname}");
         assert_eq!(
-            r.xrefs().get_xref_container_info(1).unwrap().xref_section_type,
+            r.xrefs()
+                .get_xref_container_info(1)
+                .unwrap()
+                .xref_section_type,
             XRefSectionType::HybridMain
         );
     }
@@ -576,14 +704,22 @@ fn test_hybrid_xref() {
 
 #[test]
 fn test_xref_size_nondecreasing() {
-    assert_err_matches(try_read(&pdf("minimal-broken-xref-size.pdf"), true), "nondecreasing");
+    assert_err_matches(
+        try_read(&pdf("minimal-broken-xref-size.pdf"), true),
+        "nondecreasing",
+    );
 }
 
 fn update_title(data: &[u8]) -> Vec<u8> {
     let mut w = IncrementalWriter::new(read(data));
     assert!(w.trailer().unwrap().contains(b"XRefStm"));
-    let info = as_dict(w.resolve(&w.trailer().unwrap().raw_get(b"Info", None).unwrap()).unwrap());
-    let Ok(Object::Reference(t)) = info.get(b"Title") else { panic!() };
+    let info = as_dict(
+        w.resolve(&w.trailer().unwrap().raw_get(b"Info", None).unwrap())
+            .unwrap(),
+    );
+    let Ok(Object::Reference(t)) = info.get(b"Title") else {
+        panic!()
+    };
     let t = *t;
     w.update_object(t, text_string("Updated"));
     w.write().unwrap()
@@ -591,7 +727,10 @@ fn update_title(data: &[u8]) -> Vec<u8> {
 
 #[test]
 fn test_update_hybrid() {
-    for fname in ["minimal-hybrid-xref.pdf", "minimal-hybrid-xref-mswordstyle.pdf"] {
+    for fname in [
+        "minimal-hybrid-xref.pdf",
+        "minimal-hybrid-xref-mswordstyle.pdf",
+    ] {
         let out = update_title(&pdf(fname));
         let r = read(&out);
         assert!(!r.trailer().contains(b"XRefStm"));
@@ -599,8 +738,14 @@ fn test_update_hybrid() {
         let info = r.trailer().raw_get(b"Info", None).unwrap();
         assert_eq!(info_title(&r, info), "Updated");
         let xr = r.xrefs();
-        assert_eq!(xr.get_xref_container_info(1).unwrap().xref_section_type, XRefSectionType::HybridMain);
-        assert_eq!(xr.get_xref_container_info(2).unwrap().xref_section_type, XRefSectionType::Standard);
+        assert_eq!(
+            xr.get_xref_container_info(1).unwrap().xref_section_type,
+            XRefSectionType::HybridMain
+        );
+        assert_eq!(
+            xr.get_xref_container_info(2).unwrap().xref_section_type,
+            XRefSectionType::Standard
+        );
     }
 }
 
@@ -608,14 +753,23 @@ fn test_update_hybrid() {
 fn test_count_refs_in_hybrid() {
     let r = read(&pdf("minimal-hybrid-xref-mswordstyle.pdf"));
     let xr = r.xrefs();
-    assert_eq!(xr.get_xref_container_info(1).unwrap().xref_section_type, XRefSectionType::HybridMain);
-    assert_eq!(xr.get_xref_data(1).unwrap().explicit_refs_in_revision.len(), 0);
+    assert_eq!(
+        xr.get_xref_container_info(1).unwrap().xref_section_type,
+        XRefSectionType::HybridMain
+    );
+    assert_eq!(
+        xr.get_xref_data(1).unwrap().explicit_refs_in_revision.len(),
+        0
+    );
     assert_eq!(xr.explicit_refs_in_revision(1).len(), 6);
 }
 
 #[test]
 fn test_update_hybrid_twice() {
-    for fname in ["minimal-hybrid-xref.pdf", "minimal-hybrid-xref-mswordstyle.pdf"] {
+    for fname in [
+        "minimal-hybrid-xref.pdf",
+        "minimal-hybrid-xref-mswordstyle.pdf",
+    ] {
         let out = update_title(&pdf(fname));
         let r = read(&out);
         let info = r.trailer().raw_get(b"Info", None).unwrap();
@@ -629,9 +783,18 @@ fn test_update_hybrid_twice() {
         let info = r.trailer().raw_get(b"Info", None).unwrap();
         assert_eq!(info_title(&r, info), "Updated");
         let xr = r.xrefs();
-        assert_eq!(xr.get_xref_container_info(1).unwrap().xref_section_type, XRefSectionType::HybridMain);
-        assert_eq!(xr.get_xref_container_info(2).unwrap().xref_section_type, XRefSectionType::Standard);
-        assert_eq!(xr.get_xref_container_info(3).unwrap().xref_section_type, XRefSectionType::Standard);
+        assert_eq!(
+            xr.get_xref_container_info(1).unwrap().xref_section_type,
+            XRefSectionType::HybridMain
+        );
+        assert_eq!(
+            xr.get_xref_container_info(2).unwrap().xref_section_type,
+            XRefSectionType::Standard
+        );
+        assert_eq!(
+            xr.get_xref_container_info(3).unwrap().xref_section_type,
+            XRefSectionType::Standard
+        );
     }
 }
 
@@ -643,13 +806,20 @@ fn test_xref_space_padded_offsets() {
 
 #[test]
 fn test_xref_space_padded_offsets_strict() {
-    let e = assert_err_matches(try_read(&pdf("malformed-xref-space-padded.pdf"), true), "Unknown marker");
+    let e = assert_err_matches(
+        try_read(&pdf("malformed-xref-space-padded.pdf"), true),
+        "Unknown marker",
+    );
     assert!(e.is_strict_read_error());
 }
 
 fn last_change_by_scan(xrefs: &XRefCache, id: (u32, u16)) -> (Option<usize>, Option<XRefLocation>) {
     for ix in (0..xrefs.total_revisions()).rev() {
-        if let Some(r) = xrefs.get_xref_data(ix).unwrap().try_resolve(id.0, i64::from(id.1)) {
+        if let Some(r) = xrefs
+            .get_xref_data(ix)
+            .unwrap()
+            .try_resolve(id.0, i64::from(id.1))
+        {
             return (Some(ix), r);
         }
     }
@@ -663,7 +833,10 @@ fn assert_last_change_matches_scan(xrefs: &XRefCache) {
     }
     let neighbours: Vec<_> = refs.iter().map(|&(i, g)| (i, g + 1)).collect();
     refs.extend(neighbours);
-    let scans: Vec<_> = refs.iter().map(|&r| (r, last_change_by_scan(xrefs, r))).collect();
+    let scans: Vec<_> = refs
+        .iter()
+        .map(|&r| (r, last_change_by_scan(xrefs, r)))
+        .collect();
     for (r, (_, loc)) in &scans {
         assert_eq!(xrefs.get(*r), *loc, "{r:?}");
     }
@@ -686,7 +859,12 @@ fn assert_last_changes(xrefs: &XRefCache, expected: &[((u32, u16), Option<usize>
 #[test]
 fn test_last_change_matches_scan() {
     let x1 = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000200 00000 n"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000200 00000 n",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000000 00001 f"],
         &[b"0 2", b"0000000000 65535 f", b"0000000300 00001 n"],
         &[b"0 1", b"0000000000 65535 f", b"2 1", b"0000000400 00000 n"],
@@ -695,10 +873,20 @@ fn test_last_change_matches_scan() {
     assert_last_change_matches_scan(r.xrefs());
     assert_last_changes(
         r.xrefs(),
-        &[((1, 0), Some(1)), ((1, 1), Some(2)), ((1, 2), None), ((2, 0), Some(3))],
+        &[
+            ((1, 0), Some(1)),
+            ((1, 1), Some(2)),
+            ((1, 2), None),
+            ((2, 0), Some(3)),
+        ],
     );
     let x2 = dummy(&[
-        &[b"0 3", b"0000000000 65535 f", b"0000000100 00000 n", b"0000000000 00000 f"],
+        &[
+            b"0 3",
+            b"0000000000 65535 f",
+            b"0000000100 00000 n",
+            b"0000000000 00000 f",
+        ],
         &[b"0 2", b"0000000000 65535 f", b"0000000100 00000 n"],
     ]);
     let r = read(&x2);
@@ -723,7 +911,8 @@ fn xref_section(entries: &[XRefEntry], hybrid: Option<&[XRefEntry]>) -> XRefSect
             xref_data: data,
         },
         Some(h) => {
-            data.process_hybrid_entries(h, meta(XRefSectionType::HybridStream), false).unwrap();
+            data.process_hybrid_entries(h, meta(XRefSectionType::HybridStream), false)
+                .unwrap();
             XRefSection {
                 meta_info: meta(XRefSectionType::HybridMain),
                 xref_data: data,
@@ -744,7 +933,11 @@ fn test_last_change_hybrid_main_table_shadows_stream() {
             None,
         ),
         xref_section(
-            &[XRefEntry::standard(1, 300, 1), XRefEntry::standard(3, 350, 0), XRefEntry::free(4, 1)],
+            &[
+                XRefEntry::standard(1, 300, 1),
+                XRefEntry::standard(3, 350, 0),
+                XRefEntry::free(4, 1),
+            ],
             Some(&[
                 XRefEntry::in_obj_stream(1, 2, 0),
                 XRefEntry::standard(2, 200, 0),
@@ -757,7 +950,13 @@ fn test_last_change_hybrid_main_table_shadows_stream() {
     assert_last_change_matches_scan(&xrefs);
     assert_last_changes(
         &xrefs,
-        &[((1, 0), Some(0)), ((1, 1), Some(1)), ((2, 0), Some(1)), ((3, 0), Some(1)), ((4, 0), Some(1))],
+        &[
+            ((1, 0), Some(0)),
+            ((1, 1), Some(1)),
+            ((2, 0), Some(1)),
+            ((3, 0), Some(1)),
+            ((4, 0), Some(1)),
+        ],
     );
     assert_eq!(xrefs.get((1, 0)), Some(XRefLocation::Offset(100)));
     assert_eq!(xrefs.get((1, 1)), Some(XRefLocation::Offset(300)));
@@ -783,10 +982,14 @@ fn test_last_change_objstm_then_direct() {
     let objstm = w.prepare_object_stream(true).unwrap();
     let mut d = Dictionary::new();
     d.set("A", Object::Integer(1));
-    let r1 = w.add_object_ext(Object::Dictionary(d), Some(objstm), None).unwrap();
+    let r1 = w
+        .add_object_ext(Object::Dictionary(d), Some(objstm), None)
+        .unwrap();
     let mut d = Dictionary::new();
     d.set("B", Object::Integer(1));
-    let kept = w.add_object_ext(Object::Dictionary(d), Some(objstm), None).unwrap();
+    let kept = w
+        .add_object_ext(Object::Dictionary(d), Some(objstm), None)
+        .unwrap();
     let mut root = w.root().unwrap();
     root.set("Test", Object::Reference(r1));
     root.set("Kept", Object::Reference(kept));
@@ -801,8 +1004,16 @@ fn test_last_change_objstm_then_direct() {
 
     let r = read(&out);
     let xr = r.xrefs();
-    assert!(xr.get_xref_data(0).unwrap().xrefs_in_objstm.contains_key(&r1.0));
-    assert!(xr.get_xref_data(1).unwrap().standard_xrefs.contains_key(&r1.0));
+    assert!(xr
+        .get_xref_data(0)
+        .unwrap()
+        .xrefs_in_objstm
+        .contains_key(&r1.0));
+    assert!(xr
+        .get_xref_data(1)
+        .unwrap()
+        .standard_xrefs
+        .contains_key(&r1.0));
     assert_last_change_matches_scan(xr);
     assert_eq!(xr.get_last_change(r1), Some(1));
     assert_eq!(xr.get_last_change(kept), Some(0));

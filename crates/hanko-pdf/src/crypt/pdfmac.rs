@@ -19,7 +19,9 @@ use hmac::{KeyInit, Mac};
 use lopdf::{Dictionary, Object};
 
 use super::asn1::{self, tag, AlgId, Tlv};
-use super::iso32004_asn1::{PdfMacIntegrityInfo, PDF_MAC_DATA, PDF_MAC_INTEGRITY_INFO, PDF_MAC_WRAP_KDF};
+use super::iso32004_asn1::{
+    PdfMacIntegrityInfo, PDF_MAC_DATA, PDF_MAC_INTEGRITY_INFO, PDF_MAC_WRAP_KDF,
+};
 use super::util::{aes_key_unwrap, aes_key_wrap, random_bytes};
 use crate::error::{PdfError, PdfResult};
 use crate::extensions::{DevExtensionMultivalued, DeveloperExtension};
@@ -161,7 +163,8 @@ pub fn hmac_sha256_algorithm() -> Vec<u8> {
 
 /// `DigestAlgorithm({'algorithm': name})`.
 pub fn digest_algorithm(name: &str) -> PdfResult<Vec<u8>> {
-    let oid = digest_oid(name).ok_or_else(|| PdfError::Value(format!("Unknown digest algorithm {name}")))?;
+    let oid = digest_oid(name)
+        .ok_or_else(|| PdfError::Value(format!("Unknown digest algorithm {name}")))?;
     Ok(asn1::alg_id(oid, None))
 }
 
@@ -233,7 +236,10 @@ impl AuthDataParts {
 
     /// The token: a `ContentInfo` of type `authenticated_data`.
     pub fn to_content_info(&self) -> Vec<u8> {
-        asn1::seq(&[&asn1::oid(oids::AUTHENTICATED_DATA), &asn1::tlv(0xa0, &self.to_der())])
+        asn1::seq(&[
+            &asn1::oid(oids::AUTHENTICATED_DATA),
+            &asn1::tlv(0xa0, &self.to_der()),
+        ])
     }
 }
 
@@ -250,12 +256,24 @@ pub fn derive_mac_kek(file_encryption_key: &[u8], kdf_salt: &[u8]) -> PdfResult<
 /// `PdfMacTokenHandler` methods; implementors override what they need).
 pub trait PdfMacTokenHandlerFactory: Send + Sync + std::fmt::Debug {
     /// `from_key_mat`: the MAC key encryption key and digest algorithm.
-    fn derive_key_material(&self, file_encryption_key: &[u8], kdf_salt: &[u8], md_algorithm: &str) -> PdfResult<(Vec<u8>, String)> {
-        Ok((derive_mac_kek(file_encryption_key, kdf_salt)?, md_algorithm.to_string()))
+    fn derive_key_material(
+        &self,
+        file_encryption_key: &[u8],
+        kdf_salt: &[u8],
+        md_algorithm: &str,
+    ) -> PdfResult<(Vec<u8>, String)> {
+        Ok((
+            derive_mac_kek(file_encryption_key, kdf_salt)?,
+            md_algorithm.to_string(),
+        ))
     }
 
     /// `_get_mac_keying_info`: the MAC key and its `RecipientInfo`.
-    fn get_mac_keying_info(&self, h: &PdfMacTokenHandler, dry_run: bool) -> PdfResult<(Vec<u8>, Vec<u8>)> {
+    fn get_mac_keying_info(
+        &self,
+        h: &PdfMacTokenHandler,
+        dry_run: bool,
+    ) -> PdfResult<(Vec<u8>, Vec<u8>)> {
         default_get_mac_keying_info(h, dry_run)
     }
 
@@ -270,7 +288,11 @@ pub trait PdfMacTokenHandlerFactory: Send + Sync + std::fmt::Debug {
     }
 
     /// `_format_auth_attrs`: the authenticated attributes (`SET OF`).
-    fn format_auth_attrs(&self, h: &PdfMacTokenHandler, message_digest: &[u8]) -> PdfResult<Vec<u8>> {
+    fn format_auth_attrs(
+        &self,
+        h: &PdfMacTokenHandler,
+        message_digest: &[u8],
+    ) -> PdfResult<Vec<u8>> {
         default_format_auth_attrs(h, message_digest)
     }
 
@@ -287,7 +309,12 @@ pub trait PdfMacTokenHandlerFactory: Send + Sync + std::fmt::Debug {
     }
 
     /// `compute_mac`: HMAC-SHA256.
-    fn compute_mac(&self, _h: &PdfMacTokenHandler, mac_key: &[u8], data_to_mac: &[u8]) -> PdfResult<Vec<u8>> {
+    fn compute_mac(
+        &self,
+        _h: &PdfMacTokenHandler,
+        mac_key: &[u8],
+        data_to_mac: &[u8],
+    ) -> PdfResult<Vec<u8>> {
         hmac_sha256(mac_key, data_to_mac)
     }
 
@@ -299,7 +326,10 @@ pub trait PdfMacTokenHandlerFactory: Send + Sync + std::fmt::Debug {
         signature_digest: Option<&[u8]>,
         dry_run: bool,
     ) -> PdfResult<Vec<u8>> {
-        Ok(default_build_auth_data(self, h, document_digest, signature_digest, dry_run)?.to_content_info())
+        Ok(
+            default_build_auth_data(self, h, document_digest, signature_digest, dry_run)?
+                .to_content_info(),
+        )
     }
 }
 
@@ -317,8 +347,15 @@ fn hmac_sha256(key: &[u8], data: &[u8]) -> PdfResult<Vec<u8>> {
 }
 
 /// Default `_get_mac_keying_info`.
-pub fn default_get_mac_keying_info(h: &PdfMacTokenHandler, dry_run: bool) -> PdfResult<(Vec<u8>, Vec<u8>)> {
-    let mac_key = if dry_run { vec![0u8; 32] } else { random_bytes(32)? };
+pub fn default_get_mac_keying_info(
+    h: &PdfMacTokenHandler,
+    dry_run: bool,
+) -> PdfResult<(Vec<u8>, Vec<u8>)> {
+    let mac_key = if dry_run {
+        vec![0u8; 32]
+    } else {
+        random_bytes(32)?
+    };
     let encrypted_key = aes_key_wrap(&h.mac_kek, &mac_key)?;
     Ok((mac_key, password_recipient_info(&encrypted_key, true)))
 }
@@ -340,8 +377,14 @@ pub fn default_format_message(
 }
 
 /// Default `_format_auth_attrs`.
-pub fn default_format_auth_attrs(h: &PdfMacTokenHandler, message_digest: &[u8]) -> PdfResult<Vec<u8>> {
-    let protection = cms_algorithm_protection(&digest_algorithm(&h.md_algorithm)?, Some(&hmac_sha256_algorithm()));
+pub fn default_format_auth_attrs(
+    h: &PdfMacTokenHandler,
+    message_digest: &[u8],
+) -> PdfResult<Vec<u8>> {
+    let protection = cms_algorithm_protection(
+        &digest_algorithm(&h.md_algorithm)?,
+        Some(&hmac_sha256_algorithm()),
+    );
     Ok(cms_attributes(&[
         cms_attribute(oids::CONTENT_TYPE, &[&asn1::oid(PDF_MAC_INTEGRITY_INFO)]),
         cms_attribute(oids::MESSAGE_DIGEST, &[&asn1::octets(message_digest)]),
@@ -413,7 +456,8 @@ impl PdfMacTokenHandler {
         hooks: Option<Arc<dyn PdfMacTokenHandlerFactory>>,
     ) -> PdfResult<Self> {
         let hooks = hooks.unwrap_or_else(|| Arc::new(DefaultPdfMacTokenHandler));
-        let (mac_kek, md) = hooks.derive_key_material(file_encryption_key, kdf_salt, md_algorithm)?;
+        let (mac_kek, md) =
+            hooks.derive_key_material(file_encryption_key, kdf_salt, md_algorithm)?;
         Ok(Self {
             mac_kek,
             md_algorithm: md,
@@ -422,8 +466,14 @@ impl PdfMacTokenHandler {
     }
 
     /// Build a token (`build_pdfmac_token`), as DER.
-    pub fn build_pdfmac_token(&self, document_digest: &[u8], signature_digest: Option<&[u8]>, dry_run: bool) -> PdfResult<Vec<u8>> {
-        self.hooks.build_pdfmac_token(self, document_digest, signature_digest, dry_run)
+    pub fn build_pdfmac_token(
+        &self,
+        document_digest: &[u8],
+        signature_digest: Option<&[u8]>,
+        dry_run: bool,
+    ) -> PdfResult<Vec<u8>> {
+        self.hooks
+            .build_pdfmac_token(self, document_digest, signature_digest, dry_run)
     }
 
     /// Size of a token in bytes (`determine_token_size`).
@@ -499,18 +549,26 @@ struct AuthData<'a> {
 fn parse_auth_data(ad: Tlv<'_>) -> PdfResult<AuthData<'_>> {
     let bad = || PdfError::Value("Malformed AuthenticatedData".into());
     let mut it = ad.children()?.into_iter().peekable();
-    it.next().filter(|t| t.tag == tag::INTEGER).ok_or_else(bad)?;
+    it.next()
+        .filter(|t| t.tag == tag::INTEGER)
+        .ok_or_else(bad)?;
     if it.peek().is_some_and(|t| t.tag == 0xa0) {
         it.next();
     }
     let ris = it.next().filter(|t| t.tag == tag::SET).ok_or_else(bad)?;
-    let mac_algorithm = it.next().filter(|t| t.tag == tag::SEQUENCE).ok_or_else(bad)?;
+    let mac_algorithm = it
+        .next()
+        .filter(|t| t.tag == tag::SEQUENCE)
+        .ok_or_else(bad)?;
     let digest_algorithm = if it.peek().is_some_and(|t| t.tag == 0xa1) {
         it.next().map(|t| t.retagged(tag::SEQUENCE))
     } else {
         None
     };
-    let eci = it.next().filter(|t| t.tag == tag::SEQUENCE).ok_or_else(bad)?;
+    let eci = it
+        .next()
+        .filter(|t| t.tag == tag::SEQUENCE)
+        .ok_or_else(bad)?;
     let eci_ch = eci.children()?;
     let encap_content_type = eci_ch.first().ok_or_else(bad)?.oid()?;
     let encap_content = match eci_ch.get(1) {
@@ -528,7 +586,11 @@ fn parse_auth_data(ad: Tlv<'_>) -> PdfResult<AuthData<'_>> {
     } else {
         None
     };
-    let mac = it.next().filter(|t| t.tag == tag::OCTET_STRING).ok_or_else(bad)?.value;
+    let mac = it
+        .next()
+        .filter(|t| t.tag == tag::OCTET_STRING)
+        .ok_or_else(bad)?
+        .value;
     let has_unauth_attrs = it.next().is_some_and(|t| t.tag == 0xa3);
     Ok(AuthData {
         recipient_infos: ris.children()?,
@@ -565,7 +627,12 @@ impl PdfMacTokenHandler {
             ))
             .into());
         }
-        Ok(Self::from_key_mat(file_encryption_key, kdf_salt, &md, None)?)
+        Ok(Self::from_key_mat(
+            file_encryption_key,
+            kdf_salt,
+            &md,
+            None,
+        )?)
     }
 
     fn retrieve_mac_key(&self, recipient_infos: &[Tlv<'_>]) -> MacResult<Vec<u8>> {
@@ -585,7 +652,10 @@ impl PdfMacTokenHandler {
             None
         };
         let kdf_ok = match kdf {
-            Some(k) => AlgId::parse(&Tlv::parse_exact(&k.retagged(tag::SEQUENCE))?)?.oid == PDF_MAC_WRAP_KDF,
+            Some(k) => {
+                AlgId::parse(&Tlv::parse_exact(&k.retagged(tag::SEQUENCE))?)?.oid
+                    == PDF_MAC_WRAP_KDF
+            }
             None => false,
         };
         if !kdf_ok {
@@ -593,7 +663,10 @@ impl PdfMacTokenHandler {
                 "PDF MAC tokens must have their key derivation algorithm explicitly identified as pdfMacWrapKdf.",
             );
         }
-        let kea = AlgId::parse(&it.next().ok_or_else(|| PdfError::Value("Malformed PWRI".into()))?)?;
+        let kea = AlgId::parse(
+            &it.next()
+                .ok_or_else(|| PdfError::Value("Malformed PWRI".into()))?,
+        )?;
         if kea.oid != oids::AES256_WRAP {
             return Err(PdfError::NotImplemented(format!(
                 "PDF MAC only supports unpadded 256-bit AES key wrapping for key encryption; not '{}'.",
@@ -633,12 +706,17 @@ impl PdfMacTokenHandler {
         match find_unique_attr(attrs, oids::CMS_ALGORITHM_PROTECTION)? {
             AttrLookup::Missing => {}
             AttrLookup::Multiple => {
-                return invalid("CMS structural error: Multiple CMS algorithm protection attributes present")
+                return invalid(
+                    "CMS structural error: Multiple CMS algorithm protection attributes present",
+                )
             }
             AttrLookup::Found(prot) => {
                 let pfx = "CMS alg protection validation error: ";
                 let ch = prot.children()?;
-                let digest = AlgId::parse(ch.first().ok_or_else(|| PdfError::Value("Malformed CMSAlgorithmProtection".into()))?)?;
+                let digest =
+                    AlgId::parse(ch.first().ok_or_else(|| {
+                        PdfError::Value("Malformed CMSAlgorithmProtection".into())
+                    })?)?;
                 let claimed_digest = match &auth_data.digest_algorithm {
                     Some(d) => Some(Tlv::parse_exact(d)?),
                     None => None,
@@ -649,7 +727,10 @@ impl PdfMacTokenHandler {
                         "{pfx}Digest algorithm does not match CMS algorithm protection attribute."
                     ));
                 }
-                let mac = ch.iter().find(|t| t.tag == 0xa2).map(|t| t.retagged(tag::SEQUENCE));
+                let mac = ch
+                    .iter()
+                    .find(|t| t.tag == 0xa2)
+                    .map(|t| t.retagged(tag::SEQUENCE));
                 let Some(mac) = mac else {
                     return invalid(format!(
                         "{pfx}CMS algorithm protection attribute not valid for authenticated data"
@@ -681,15 +762,17 @@ impl PdfMacTokenHandler {
         }
     }
 
-    fn validate_and_extract_encap_content(&self, auth_data: &AuthData<'_>) -> MacResult<PdfMacIntegrityInfo> {
+    fn validate_and_extract_encap_content(
+        &self,
+        auth_data: &AuthData<'_>,
+    ) -> MacResult<PdfMacIntegrityInfo> {
         if auth_data.has_unauth_attrs {
             return invalid("PDF MAC tokens cannot have unauthenticated attributes");
         }
         let mac_key = self.retrieve_mac_key(&auth_data.recipient_infos)?;
-        let attrs = auth_data
-            .auth_attrs
-            .as_deref()
-            .ok_or_else(|| PdfError::Value("PDF MAC token without authenticated attributes".into()))?;
+        let attrs = auth_data.auth_attrs.as_deref().ok_or_else(|| {
+            PdfError::Value("PDF MAC token without authenticated attributes".into())
+        })?;
         let computed = hmac_sha256(&mac_key, attrs)?;
         if !constant_time_eq(&computed, auth_data.mac) {
             return invalid("PDF MAC token has invalid MAC");
@@ -744,7 +827,12 @@ fn int_of(o: &Object) -> Option<i64> {
 
 /// `_validate_byte_range`: the range must cover the whole file except the
 /// hex string holding the token.
-fn validate_byte_range(dict: &Dictionary, file_len: usize, payload_len: usize, what: &str) -> MacResult<Vec<i64>> {
+fn validate_byte_range(
+    dict: &Dictionary,
+    file_len: usize,
+    payload_len: usize,
+    what: &str,
+) -> MacResult<Vec<i64>> {
     let Ok(Object::Array(br)) = dict.get(b"ByteRange") else {
         return invalid(format!("No sensible /ByteRange found in {what}"));
     };
@@ -760,25 +848,36 @@ fn validate_byte_range(dict: &Dictionary, file_len: usize, payload_len: usize, w
 }
 
 /// `byte_range_digest`: digest of the given `(offset, length)` pairs.
-pub fn byte_range_digest(data: &[u8], byte_range: &[i64], md_algorithm: &str) -> PdfResult<Vec<u8>> {
+pub fn byte_range_digest(
+    data: &[u8],
+    byte_range: &[i64],
+    md_algorithm: &str,
+) -> PdfResult<Vec<u8>> {
     let mut chunks = Vec::new();
     for pair in byte_range.chunks(2) {
         let [lo, len] = pair else {
             return Err(PdfError::Value("Byte range must consist of pairs".into()));
         };
-        let lo = usize::try_from(*lo).map_err(|_| PdfError::Value("Negative byte range offset".into()))?;
-        let len = usize::try_from(*len).map_err(|_| PdfError::Value("Negative byte range length".into()))?;
+        let lo = usize::try_from(*lo)
+            .map_err(|_| PdfError::Value("Negative byte range offset".into()))?;
+        let len = usize::try_from(*len)
+            .map_err(|_| PdfError::Value("Negative byte range length".into()))?;
         let end = lo
             .checked_add(len)
             .filter(|e| *e <= data.len())
-            .ok_or_else(|| PdfError::Read("Byte range extends beyond the end of the file".into()))?;
+            .ok_or_else(|| {
+                PdfError::Read("Byte range extends beyond the end of the file".into())
+            })?;
         chunks.push(&data[lo..end]);
     }
     md_hash(md_algorithm, &chunks)
 }
 
 /// `_extract_mac_in_sig`: the token and the signature value.
-fn extract_mac_in_sig(sig_dict: &Dictionary, file_len: usize) -> MacResult<(Vec<u8>, Vec<u8>, Vec<i64>)> {
+fn extract_mac_in_sig(
+    sig_dict: &Dictionary,
+    file_len: usize,
+) -> MacResult<(Vec<u8>, Vec<u8>, Vec<i64>)> {
     let Ok(Object::String(sig_bytes, _)) = sig_dict.get(b"Contents") else {
         return invalid("Failed to retrieve signature contents");
     };
@@ -803,7 +902,9 @@ fn extract_mac_in_sig(sig_dict: &Dictionary, file_len: usize) -> MacResult<(Vec<
         })
     })()?;
     let Some(si) = signer_info else {
-        return invalid("Signature dictionary must contain a SignedData message with exactly 1 signerInfo.");
+        return invalid(
+            "Signature dictionary must contain a SignedData message with exactly 1 signerInfo.",
+        );
     };
     let si_ch = si.children()?;
     let signature = si_ch
@@ -812,7 +913,10 @@ fn extract_mac_in_sig(sig_dict: &Dictionary, file_len: usize) -> MacResult<(Vec<
         .ok_or_else(|| PdfError::Value("SignerInfo without signature".into()))?
         .value
         .to_vec();
-    let unsigned = si_ch.iter().find(|t| t.tag == 0xa1).map(|t| t.retagged(tag::SET));
+    let unsigned = si_ch
+        .iter()
+        .find(|t| t.tag == 0xa1)
+        .map(|t| t.retagged(tag::SET));
     match find_unique_attr(unsigned.as_deref(), PDF_MAC_DATA)? {
         AttrLookup::Found(ci) => Ok((ci.raw.to_vec(), signature, byte_range)),
         _ => invalid("Signature must have exactly 1 pdfMacData unsigned attribute"),
@@ -821,7 +925,10 @@ fn extract_mac_in_sig(sig_dict: &Dictionary, file_len: usize) -> MacResult<(Vec<
 
 /// Validate the PDF MAC of a document (`validate_pdf_mac`), with the
 /// file encryption key and KDF salt of its (authenticated) security handler.
-pub fn validate_pdf_mac(reader: &PdfFile, allowed_mds: &[&str]) -> Result<(), MacValidationFailure> {
+pub fn validate_pdf_mac(
+    reader: &PdfFile,
+    allowed_mds: &[&str],
+) -> Result<(), MacValidationFailure> {
     let trailer = reader.trailer_view();
     let ac_dict = match trailer.get(b"AuthCode") {
         Ok(Object::Reference(_)) => return invalid("AuthCode dictionary cannot be indirect"),
@@ -913,7 +1020,8 @@ pub(crate) fn prepare_standalone_mac(
 ) -> PdfResult<(Object, PendingStandaloneMac)> {
     let fek = sh.get_file_encryption_key()?;
     let salt = sh.get_kdf_salt()?;
-    let handler = PdfMacTokenHandler::from_key_mat(&fek, &salt, md_algorithm, sh.mac_token_handler())?;
+    let handler =
+        PdfMacTokenHandler::from_key_mat(&fek, &salt, md_algorithm, sh.mac_token_handler())?;
     let token_size = handler.determine_token_size(false)?;
     let br = Object::Array(vec![
         Object::Integer(0),
@@ -944,14 +1052,17 @@ fn rfind(hay: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.is_empty() || needle.len() > hay.len() {
         return None;
     }
-    (0..=hay.len() - needle.len()).rev().find(|&i| &hay[i..i + needle.len()] == needle)
+    (0..=hay.len() - needle.len())
+        .rev()
+        .find(|&i| &hay[i..i + needle.len()] == needle)
 }
 
 impl PendingStandaloneMac {
     /// Fill the byte range and the token into the written file
     /// (`add_standalone_mac`, second half).
     pub(crate) fn fill(&self, out: &mut [u8]) -> PdfResult<()> {
-        let not_found = || PdfError::Write("Could not locate the PDF MAC placeholder in the output".into());
+        let not_found =
+            || PdfError::Write("Could not locate the PDF MAC placeholder in the output".into());
         let start = rfind(out, &self.placeholder).ok_or_else(not_found)?;
         let region = &out[start..start + self.placeholder.len()];
         let br_off = start + rfind(region, &self.br_placeholder).ok_or_else(not_found)?;
@@ -965,7 +1076,9 @@ impl PendingStandaloneMac {
         let eof = out.len();
         let filled = format!("[0 {} {} {}]", sig_start, sig_end, eof - sig_end).into_bytes();
         if filled.len() > self.br_placeholder.len() {
-            return Err(PdfError::Write("Byte range does not fit in its placeholder".into()));
+            return Err(PdfError::Write(
+                "Byte range does not fit in its placeholder".into(),
+            ));
         }
         let br_slot = &mut out[br_off..br_off + self.br_placeholder.len()];
         br_slot.fill(b' ');
@@ -973,7 +1086,10 @@ impl PendingStandaloneMac {
         let br = [0, sig_start as i64, sig_end as i64, (eof - sig_end) as i64];
         let digest = byte_range_digest(out, &br, &self.handler.md_algorithm)?;
         let token = self.handler.build_pdfmac_token(&digest, None, false)?;
-        let hex: Vec<u8> = token.iter().flat_map(|b| format!("{b:02X}").into_bytes()).collect();
+        let hex: Vec<u8> = token
+            .iter()
+            .flat_map(|b| format!("{b:02X}").into_bytes())
+            .collect();
         if hex.len() > 2 * self.token_size {
             return Err(PdfError::Write(format!(
                 "Final ByteRange payload larger than expected: allocated {} bytes, but contents required {} bytes.",

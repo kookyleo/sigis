@@ -56,12 +56,13 @@ pub use api::{
 pub use cred_ser::{SerialisableCredential, SerialisedCredential};
 pub use permissions::{PdfPermissions, PubKeyPermissions, StandardPermissions};
 pub use pubkey::{
-    CertInfo, EnvelopeKeyDecrypter, KeyDecryptError, PubKeyAdbeSubFilter, PubKeyCfData, PubKeyEncryptOptions,
-    RecipientEncryptionPolicy, SimpleEnvelopeKeyDecrypter, DEFAULT_CRYPT_FILTER, DEF_EMBEDDED_FILE,
+    CertInfo, EnvelopeKeyDecrypter, KeyDecryptError, PubKeyAdbeSubFilter, PubKeyCfData,
+    PubKeyEncryptOptions, RecipientEncryptionPolicy, SimpleEnvelopeKeyDecrypter,
+    DEFAULT_CRYPT_FILTER, DEF_EMBEDDED_FILE,
 };
 pub use standard::{
-    LegacyEncryptOptions, Password, PasswordCredential, StandardEncryptOptions, StandardHandlerParams,
-    StandardSecuritySettingsRevision, STD_CF,
+    LegacyEncryptOptions, Password, PasswordCredential, StandardEncryptOptions,
+    StandardHandlerParams, StandardSecuritySettingsRevision, STD_CF,
 };
 
 use crate::error::{PdfError, PdfResult};
@@ -86,7 +87,11 @@ pub enum Credential {
 impl SecurityHandler {
     /// Authenticate with any credential (`authenticate`); `id1` is the first
     /// part of the document ID (required by legacy standard handlers).
-    pub fn authenticate(&self, credential: Credential, id1: Option<&[u8]>) -> PdfResult<AuthResult> {
+    pub fn authenticate(
+        &self,
+        credential: Credential,
+        id1: Option<&[u8]>,
+    ) -> PdfResult<AuthResult> {
         let credential = match credential {
             Credential::Serialised(s) => match SerialisableCredential::deserialise(&s)? {
                 SerialisableCredential::Password(p) => Credential::PasswordCredential(p),
@@ -140,7 +145,12 @@ fn has_crypt_filter(d: &Dictionary) -> bool {
     crate::stream::has_crypt_filter(d, &deref).unwrap_or(false)
 }
 
-fn decrypt_dict(sh: &SecurityHandler, d: Dictionary, id: ObjectId, depth: usize) -> PdfResult<Dictionary> {
+fn decrypt_dict(
+    sh: &SecurityHandler,
+    d: Dictionary,
+    id: ObjectId,
+    depth: usize,
+) -> PdfResult<Dictionary> {
     let keep_contents = is_signature_dict(&d);
     let mut out = Dictionary::new();
     for (k, v) in d.into_iter() {
@@ -173,7 +183,8 @@ fn decrypt_obj(sh: &SecurityHandler, obj: Object, id: ObjectId, depth: usize) ->
                 // explicit /Crypt filters are applied while decoding
                 std::mem::take(&mut s.content)
             } else {
-                let embedded = matches!(dict.get(b"Type"), Ok(Object::Name(n)) if n == b"EmbeddedFile");
+                let embedded =
+                    matches!(dict.get(b"Type"), Ok(Object::Name(n)) if n == b"EmbeddedFile");
                 sh.decrypt_stream_data(&s.content, id, embedded)?
             };
             s.dict = decrypt_dict(sh, dict, id, depth)?;
@@ -220,7 +231,12 @@ impl Encryptor for HandlerEncryptor {
         self.sh.encrypt_string(data, container)
     }
 
-    fn encrypt_stream(&self, _dict: &Dictionary, data: &[u8], container: ObjectId) -> PdfResult<Vec<u8>> {
+    fn encrypt_stream(
+        &self,
+        _dict: &Dictionary,
+        data: &[u8],
+        container: ObjectId,
+    ) -> PdfResult<Vec<u8>> {
         self.sh.encrypt_stream_data(data, container)
     }
 
@@ -248,7 +264,11 @@ impl Encryptor for HandlerEncryptor {
     }
 
     fn fill_standalone_mac(&self, out: &mut [u8]) -> PdfResult<()> {
-        let pending = self.pending_mac.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let pending = self
+            .pending_mac
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
         match pending {
             Some(p) => p.fill(out),
             None => Ok(()),
@@ -260,7 +280,9 @@ impl Encryptor for HandlerEncryptor {
 /// decryption.
 fn resolve_raw(reader: &PdfFile, obj: Object, depth: usize) -> PdfResult<Object> {
     if depth > 32 {
-        return Err(PdfError::Read("Encryption dictionary nested too deeply".into()));
+        return Err(PdfError::Read(
+            "Encryption dictionary nested too deeply".into(),
+        ));
     }
     Ok(match obj {
         Object::Reference(r) => resolve_raw(reader, reader.get_object_raw(r, None)?, depth + 1)?,
@@ -291,12 +313,16 @@ pub(crate) fn default_decryptor(reader: &PdfFile) -> PdfResult<Arc<dyn Decryptor
 }
 
 /// The encryptor for an incremental update of `reader`, if it is encrypted.
-pub(crate) fn encryptor_for_update(reader: &PdfFile) -> PdfResult<Option<(ObjectId, Box<dyn Encryptor>)>> {
+pub(crate) fn encryptor_for_update(
+    reader: &PdfFile,
+) -> PdfResult<Option<(ObjectId, Box<dyn Encryptor>)>> {
     let Some(enc) = reader.trailer().raw_get(b"Encrypt", None) else {
         return Ok(None);
     };
     let Object::Reference(r) = enc else {
-        return Err(PdfError::Read("Encryption settings must be an indirect reference".into()));
+        return Err(PdfError::Read(
+            "Encryption settings must be an indirect reference".into(),
+        ));
     };
     let Some(sh) = reader.security_handler()? else {
         return Ok(None);
@@ -321,7 +347,9 @@ impl PdfFile {
             .encrypt_dict()?
             .ok_or_else(|| PdfError::Read("Document is not encrypted".into()))?;
         let Object::Dictionary(dict) = resolve_raw(self, Object::Dictionary(dict), 0)? else {
-            return Err(PdfError::Read("Encryption settings must be a dictionary".into()));
+            return Err(PdfError::Read(
+                "Encryption settings must be a dictionary".into(),
+            ));
         };
         let sh = SecurityHandler::build(&dict)?;
         self.set_decryptor(Some(Arc::new(sh.clone())));
@@ -339,11 +367,14 @@ impl PdfFile {
     /// require one.
     pub fn decrypt(&self, password: impl Into<Password>) -> PdfResult<AuthResult> {
         let sh = self.security_handler()?.ok_or_else(|| {
-            PdfError::Read("Security handler is of type 'NoneType', not StandardSecurityHandler".into())
+            PdfError::Read(
+                "Security handler is of type 'NoneType', not StandardSecurityHandler".into(),
+            )
         })?;
         if sh.handler_type() != HandlerType::Standard {
             return Err(PdfError::Read(
-                "Security handler is of type 'PubKeySecurityHandler', not StandardSecurityHandler".into(),
+                "Security handler is of type 'PubKeySecurityHandler', not StandardSecurityHandler"
+                    .into(),
             ));
         }
         let id1 = self.document_id()?.0;
@@ -355,11 +386,14 @@ impl PdfFile {
     /// `decrypt_pubkey`), then validate the PDF MAC if required.
     pub fn decrypt_pubkey(&self, credential: &dyn EnvelopeKeyDecrypter) -> PdfResult<AuthResult> {
         let sh = self.security_handler()?.ok_or_else(|| {
-            PdfError::Read("Security handler is of type 'NoneType', not PubKeySecurityHandler".into())
+            PdfError::Read(
+                "Security handler is of type 'NoneType', not PubKeySecurityHandler".into(),
+            )
         })?;
         if sh.handler_type() != HandlerType::PubKey {
             return Err(PdfError::Read(
-                "Security handler is of type 'StandardSecurityHandler', not PubKeySecurityHandler".into(),
+                "Security handler is of type 'StandardSecurityHandler', not PubKeySecurityHandler"
+                    .into(),
             ));
         }
         let res = sh.authenticate_pubkey(credential)?;
@@ -369,9 +403,15 @@ impl PdfFile {
     /// `_validate_pdf_mac`: a MAC is validated whenever there are traces of
     /// one (`/AuthCode` in the trailer, a KDF salt) or the permissions
     /// require one; validation failure turns the result into a failure.
-    pub fn validate_pdf_mac_after_auth(&self, sh: &SecurityHandler, prelim: AuthResult) -> PdfResult<AuthResult> {
+    pub fn validate_pdf_mac_after_auth(
+        &self,
+        sh: &SecurityHandler,
+        prelim: AuthResult,
+    ) -> PdfResult<AuthResult> {
         let traces_of_mac = self.trailer_view().has(b"AuthCode") || sh.pdf_mac_enabled();
-        let mac_required = prelim.permission_flags.is_some_and(PdfPermissions::mac_required);
+        let mac_required = prelim
+            .permission_flags
+            .is_some_and(PdfPermissions::mac_required);
         if prelim.status == AuthStatus::Failed || !(traces_of_mac || mac_required) {
             return Ok(prelim);
         }
@@ -413,7 +453,11 @@ impl PdfWriter {
 
     /// Encrypt with PDF 2.0 password encryption (AES-256; `encrypt`),
     /// with the default options (PDF MAC enabled).
-    pub fn encrypt(&mut self, owner_pass: &str, user_pass: Option<&str>) -> PdfResult<SecurityHandler> {
+    pub fn encrypt(
+        &mut self,
+        owner_pass: &str,
+        user_pass: Option<&str>,
+    ) -> PdfResult<SecurityHandler> {
         self.encrypt_with(owner_pass, user_pass, StandardEncryptOptions::default())
     }
 
@@ -436,7 +480,11 @@ impl PdfWriter {
     }
 
     /// [`Self::encrypt_pubkey`] with explicit options.
-    pub fn encrypt_pubkey_with(&mut self, recipients: &[Vec<u8>], opts: PubKeyEncryptOptions) -> PdfResult<SecurityHandler> {
+    pub fn encrypt_pubkey_with(
+        &mut self,
+        recipients: &[Vec<u8>],
+        opts: PubKeyEncryptOptions,
+    ) -> PdfResult<SecurityHandler> {
         self.output_version = (2, 0);
         let sh = SecurityHandler::build_from_certs(recipients, opts)?;
         self.assign_security_handler(&sh)?;
@@ -464,7 +512,10 @@ impl IncrementalWriter {
     }
 
     /// Authenticate to a public-key encrypted original (`encrypt_pubkey`).
-    pub fn encrypt_pubkey(&mut self, credential: &dyn EnvelopeKeyDecrypter) -> PdfResult<AuthResult> {
+    pub fn encrypt_pubkey(
+        &mut self,
+        credential: &dyn EnvelopeKeyDecrypter,
+    ) -> PdfResult<AuthResult> {
         let result = self.base().decrypt_pubkey(credential)?;
         self.reuse_encryption()?;
         Ok(result)
@@ -480,7 +531,9 @@ pub fn add_crypt_filter(
     handler: Option<&SecurityHandler>,
 ) -> PdfResult<()> {
     let Some(handler) = handler else {
-        return Err(PdfError::Stream("There is no security handler around".into()));
+        return Err(PdfError::Stream(
+            "There is no security handler around".into(),
+        ));
     };
     let n = name.trim_start_matches('/');
     if !handler.crypt_filter_config().contains(n.as_bytes()) {
@@ -496,8 +549,16 @@ pub fn add_crypt_filter(
 
 /// Encode a stream, applying explicit `/Crypt` filters with `handler`
 /// (`StreamObject.encoded_data` with a handler attached).
-pub fn encode_stream_with(stream: &DecodedStream, handler: &SecurityHandler) -> PdfResult<lopdf::Stream> {
-    let content = crate::stream::encode_stream_data(&stream.dict, &stream.data, &crate::stream::no_deref, Some(handler))?;
+pub fn encode_stream_with(
+    stream: &DecodedStream,
+    handler: &SecurityHandler,
+) -> PdfResult<lopdf::Stream> {
+    let content = crate::stream::encode_stream_data(
+        &stream.dict,
+        &stream.data,
+        &crate::stream::no_deref,
+        Some(handler),
+    )?;
     Ok(lopdf::Stream {
         dict: stream.dict.clone(),
         content,

@@ -97,7 +97,9 @@ impl DocumentMetadata {
     /// Overlay `self` over `base` (`view_over`).
     pub fn view_over(&self, base: &DocumentMetadata) -> DocumentMetadata {
         let or = |a: &Option<MetaString>, b: &Option<MetaString>| {
-            a.clone().filter(|s| !s.value.is_empty()).or_else(|| b.clone())
+            a.clone()
+                .filter(|s| !s.value.is_empty())
+                .or_else(|| b.clone())
         };
         DocumentMetadata {
             title: or(&self.title, &base.title),
@@ -142,7 +144,11 @@ impl ExpandedName {
 
 impl std::fmt::Display for ExpandedName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let sep = if self.ns.ends_with('/') || self.ns.ends_with('#') { "" } else { "/" };
+        let sep = if self.ns.ends_with('/') || self.ns.ends_with('#') {
+            ""
+        } else {
+            "/"
+        };
         write!(f, "{}{sep}{}", self.ns, self.local_name)
     }
 }
@@ -164,7 +170,10 @@ pub const NS: [(&str, &str); 11] = [
 
 /// The URI of a known namespace prefix.
 pub fn ns(prefix: &str) -> &'static str {
-    NS.iter().find(|(p, _)| *p == prefix).map(|(_, u)| *u).unwrap_or("")
+    NS.iter()
+        .find(|(p, _)| *p == prefix)
+        .map(|(_, u)| *u)
+        .unwrap_or("")
 }
 
 fn rdf(local: &str) -> ExpandedName {
@@ -274,7 +283,11 @@ impl Qualifiers {
 
     /// All qualifiers (`iter_quals`).
     pub fn iter_quals(&self, with_lang: bool) -> Vec<(ExpandedName, XmpValue)> {
-        let mut out: Vec<_> = self.quals.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+        let mut out: Vec<_> = self
+            .quals
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
         if with_lang {
             if let Some(l) = &self.lang {
                 out.push((xml_lang(), XmpValue::text(l)));

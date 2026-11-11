@@ -90,7 +90,10 @@ impl PdfError {
 
     /// `isinstance(e, PdfError)` (all PDF errors, but not `ValueError` & co).
     pub fn is_pdf_error(&self) -> bool {
-        !matches!(self, Self::NotImplemented(_) | Self::Value(_) | Self::FormFilling(_))
+        !matches!(
+            self,
+            Self::NotImplemented(_) | Self::Value(_) | Self::FormFilling(_)
+        )
     }
 
     /// The message.

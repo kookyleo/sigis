@@ -10,22 +10,26 @@ use std::sync::Arc;
 use common::crypt::*;
 use common::*;
 use hanko_pdf::crypt::{
-    add_crypt_filter, build_crypt_filter, encode_stream_with, AuthStatus, CipherKind, Credential, CryptFilter,
-    CryptFilterConfiguration, CryptFilterRegistry, EnvelopeKeyDecrypter, HandlerType, LegacyEncryptOptions,
-    PasswordCredential, PdfPermissions, PubKeyAdbeSubFilter, PubKeyCfData, PubKeyEncryptOptions, PubKeyPermissions,
-    RecipientEncryptionPolicy, SecurityHandler, SecurityHandlerRegistry, SecurityHandlerVersion,
-    SerialisableCredential, SerialisedCredential, SimpleEnvelopeKeyDecrypter, StandardEncryptOptions,
-    StandardPermissions, StandardSecuritySettingsRevision, DEFAULT_CRYPT_FILTER, STD_CF,
+    add_crypt_filter, build_crypt_filter, encode_stream_with, AuthStatus, CipherKind, Credential,
+    CryptFilter, CryptFilterConfiguration, CryptFilterRegistry, EnvelopeKeyDecrypter, HandlerType,
+    LegacyEncryptOptions, PasswordCredential, PdfPermissions, PubKeyAdbeSubFilter, PubKeyCfData,
+    PubKeyEncryptOptions, PubKeyPermissions, RecipientEncryptionPolicy, SecurityHandler,
+    SecurityHandlerRegistry, SecurityHandlerVersion, SerialisableCredential, SerialisedCredential,
+    SimpleEnvelopeKeyDecrypter, StandardEncryptOptions, StandardPermissions,
+    StandardSecuritySettingsRevision, DEFAULT_CRYPT_FILTER, STD_CF,
 };
 use hanko_pdf::generic::{byte_string, pdf_name, text_string};
 use hanko_pdf::lopdf::{Dictionary, Object, ObjectId};
 use hanko_pdf::stream::{apply_filter_to_stream, DecodedStream, DuplicateFilter};
 use hanko_pdf::writer::Encryptor;
 use hanko_pdf::xref::XRefLocation;
-use hanko_pdf::{IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, ReaderOptions};
+use hanko_pdf::{
+    IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, ReaderOptions,
+};
 
 fn std_perms() -> StandardPermissions {
-    !StandardPermissions::ALLOW_MODIFICATION_GENERIC & !StandardPermissions::ALLOW_ANNOTS_FORM_FILLING
+    !StandardPermissions::ALLOW_MODIFICATION_GENERIC
+        & !StandardPermissions::ALLOW_ANNOTS_FORM_FILLING
 }
 
 fn pubkey_perms() -> PubKeyPermissions {
@@ -116,7 +120,10 @@ fn check_vector_image_page(r: &PdfFile) {
 
 fn validate_pubkey_decryption(r: &PdfFile, result: &hanko_pdf::crypt::AuthResult) {
     assert_eq!(result.status, AuthStatus::User);
-    assert_eq!(result.permission_flags, Some(PdfPermissions::PubKey(pubkey_perms())));
+    assert_eq!(
+        result.permission_flags,
+        Some(PdfPermissions::PubKey(pubkey_perms()))
+    );
     check_vector_image_page(r);
 }
 
@@ -141,12 +148,23 @@ fn test_legacy_encryption() {
         let out = produce_legacy_encrypted_file(rev, keylen, use_aes).unwrap();
         let r = read(&out);
         let result = r
-            .decrypt(if use_owner_pass { "ownersecret" } else { "usersecret" })
+            .decrypt(if use_owner_pass {
+                "ownersecret"
+            } else {
+                "usersecret"
+            })
             .unwrap();
-        let expected = if use_owner_pass { AuthStatus::Owner } else { AuthStatus::User };
+        let expected = if use_owner_pass {
+            AuthStatus::Owner
+        } else {
+            AuthStatus::User
+        };
         assert_eq!(result.status, expected, "{rev:?} {keylen} {use_aes}");
         assert_eq!(auth_result_perms_sint(result.permission_flags), -44);
-        assert_eq!(encrypt_dict_of(&r).get(b"P").unwrap(), &Object::Integer(-44));
+        assert_eq!(
+            encrypt_dict_of(&r).get(b"P").unwrap(),
+            &Object::Integer(-44)
+        );
         check_vector_image_page(&r);
     }
 }
@@ -167,16 +185,27 @@ fn test_wrong_password() {
             )
             .unwrap()
         } else {
-            SecurityHandler::build_from_pw("ownersecret", Some("usersecret".into()), Default::default()).unwrap()
+            SecurityHandler::build_from_pw(
+                "ownersecret",
+                Some("usersecret".into()),
+                Default::default(),
+            )
+            .unwrap()
         };
         // w.security_handler = sh; w._encrypt = w.add_object(sh.as_pdf_object())
-        w.set_encryption(Object::Dictionary(sh.as_pdf_object().unwrap()), sh.encryptor())
-            .unwrap();
+        w.set_encryption(
+            Object::Dictionary(sh.as_pdf_object().unwrap()),
+            sh.encryptor(),
+        )
+        .unwrap();
         let out = w.write().unwrap();
         let r = read(&out);
         let e = r.get_object(r#ref).unwrap_err();
         assert!(e.is_read_error(), "{e:?}");
-        assert_eq!(r.decrypt("thispasswordiswrong").unwrap().status, AuthStatus::Failed);
+        assert_eq!(
+            r.decrypt("thispasswordiswrong").unwrap().status,
+            AuthStatus::Failed
+        );
         let sh = r.security_handler().unwrap().unwrap();
         assert!(sh.auth_failed());
         assert!(sh.string_filter_auth_failed());
@@ -206,10 +235,18 @@ fn test_identity_crypt_filter() {
     for (use_alias, with_never_decrypt) in [(true, false), (false, true), (false, false)] {
         let mut w = new_writer();
         let sh = SecurityHandler::build_from_pw("secret", None, Default::default()).unwrap();
-        assert!(sh.crypt_filter_config().get("/Identity").unwrap().is_identity());
+        assert!(sh
+            .crypt_filter_config()
+            .get("/Identity")
+            .unwrap()
+            .is_identity());
         if use_alias {
             sh.insert_crypt_filter("/IdentityAlias", CryptFilter::identity());
-            assert!(sh.crypt_filter_config().get("/IdentityAlias").unwrap().is_identity());
+            assert!(sh
+                .crypt_filter_config()
+                .get("/IdentityAlias")
+                .unwrap()
+                .is_identity());
             // identity filter can't be serialised
             let e = w.assign_security_handler(&sh).unwrap_err();
             assert!(e.is_pdf_error());
@@ -220,7 +257,8 @@ fn test_identity_crypt_filter() {
         let mut ds = DecodedStream::new(Dictionary::new(), test_bytes.clone());
         let mut params = Dictionary::new();
         params.set("Name", pdf_name("/Identity"));
-        ds.apply_filter("/Crypt", Some(params), DuplicateFilter::Allow).unwrap();
+        ds.apply_filter("/Crypt", Some(params), DuplicateFilter::Allow)
+            .unwrap();
         let stream = encode_stream_with(&ds, &sh).unwrap();
         let r#ref = w.add_object(Object::Stream(stream)).unwrap();
         let out = w.write().unwrap();
@@ -276,7 +314,9 @@ fn first_recipient_info(r: &PdfFile) -> cms::enveloped_data::RecipientInfo {
         Object::Array(a) => a.clone(),
         other => vec![other.clone()],
     };
-    let Object::String(recp, _) = &recps[0] else { panic!() };
+    let Object::String(recp, _) = &recps[0] else {
+        panic!()
+    };
     let ci = cms::content_info::ContentInfo::from_der(recp).unwrap();
     let ed: cms::enveloped_data::EnvelopedData = ci.content.decode_as().unwrap();
     ed.recip_infos.0.iter().next().unwrap().clone()
@@ -311,9 +351,15 @@ fn pubkey_cases() -> Vec<(SecurityHandlerVersion, usize, bool, bool)> {
 #[test]
 fn test_pubkey_encryption() {
     for (version, keylen, use_aes, use_crypt_filters) in pubkey_cases() {
-        let out =
-            produce_pubkey_encrypted_file(version, keylen, use_aes, use_crypt_filters, Default::default(), None)
-                .unwrap();
+        let out = produce_pubkey_encrypted_file(
+            version,
+            keylen,
+            use_aes,
+            use_crypt_filters,
+            Default::default(),
+            None,
+        )
+        .unwrap();
         let r = read(&out);
         if version == SecurityHandlerVersion::Aes256 {
             assert_eq!(r.input_version(), (2, 0));
@@ -326,7 +372,13 @@ fn test_pubkey_encryption() {
     }
 }
 
-const ECC_LABELS: [&str; 5] = ["decrypter1", "decrypter2", "decrypter3", "decrypter-x25519", "decrypter-x448"];
+const ECC_LABELS: [&str; 5] = [
+    "decrypter1",
+    "decrypter2",
+    "decrypter3",
+    "decrypter-x25519",
+    "decrypter-x448",
+];
 
 #[test]
 fn test_ecdh_encryption() {
@@ -381,7 +433,10 @@ fn test_ecdh_decryption_smoke() {
 fn assert_inappropriate_credential(e: PdfError) {
     // InappropriateCredentialError (a TypeError)
     assert!(matches!(e, PdfError::Value(_)), "{e:?}");
-    assert!(e.message().contains("InappropriateCredentialError"), "{e:?}");
+    assert!(
+        e.message().contains("InappropriateCredentialError"),
+        "{e:?}"
+    );
 }
 
 #[test]
@@ -398,8 +453,11 @@ fn test_ecdh_decryption_wrong_key_type() {
 #[test]
 fn test_ecdh_decryption_wrong_curve() {
     let r = read(&pdf("pubkey-ecc-test.pdf"));
-    let decrypter =
-        SimpleEnvelopeKeyDecrypter::new(&ecc_decrypter_cert("decrypter3"), &ecc_decrypter_key("decrypter1")).unwrap();
+    let decrypter = SimpleEnvelopeKeyDecrypter::new(
+        &ecc_decrypter_cert("decrypter3"),
+        &ecc_decrypter_key("decrypter1"),
+    )
+    .unwrap();
     let e = assert_err_matches(r.decrypt_pubkey(&decrypter), "Failed to decrypt");
     assert!(e.is_read_error());
 }
@@ -419,12 +477,16 @@ fn test_rsa_decryption_wrong_key_type() {
 /// recipient CMS object in the default crypt filter (pyHanko monkeypatches
 /// `_format_kari`).
 fn swap_originator_key(enc: &mut Dictionary, new_spki: &[u8]) {
-    use cms::enveloped_data::{EnvelopedData, OriginatorIdentifierOrKey, OriginatorPublicKey, RecipientInfo};
+    use cms::enveloped_data::{
+        EnvelopedData, OriginatorIdentifierOrKey, OriginatorPublicKey, RecipientInfo,
+    };
     use der::{Decode, Encode};
     let spki = spki::SubjectPublicKeyInfoOwned::from_der(new_spki).unwrap();
     let mut cf = as_dict(enc.get(b"CF").unwrap().clone());
     let mut dcf = as_dict(cf.get(DEFAULT_CRYPT_FILTER.as_bytes()).unwrap().clone());
-    let Object::Array(recps) = dcf.get(b"Recipients").unwrap().clone() else { panic!() };
+    let Object::Array(recps) = dcf.get(b"Recipients").unwrap().clone() else {
+        panic!()
+    };
     let mut new_recps = Vec::new();
     for r in recps {
         let Object::String(r, _) = r else { panic!() };
@@ -466,10 +528,11 @@ fn test_invalid_originator_key() {
         .unwrap();
         let eid = w.assign_security_handler(&sh).unwrap();
         let mut enc = as_dict(w.get_object(eid).unwrap());
-        let rsa_spki = hanko_pdf::crypt::CertInfo::from_der(pubkey_test_decrypter().cert_info().der())
-            .unwrap()
-            .spki_der()
-            .to_vec();
+        let rsa_spki =
+            hanko_pdf::crypt::CertInfo::from_der(pubkey_test_decrypter().cert_info().der())
+                .unwrap()
+                .spki_der()
+                .to_vec();
         swap_originator_key(&mut enc, &rsa_spki);
         w.update_object(eid, Object::Dictionary(enc));
         import_page_tree(&mut w, &r);
@@ -541,7 +604,9 @@ fn test_cert() -> Vec<u8> {
 fn read_first_page_contents(out: &[u8]) -> Result<(), PdfError> {
     let r = PdfFile::parse_with(out, ReaderOptions::default())?;
     let root = r.root()?;
-    let pages = r.get_dict(&root, b"Pages")?.ok_or_else(|| PdfError::Value("no pages".into()))?;
+    let pages = r
+        .get_dict(&root, b"Pages")?
+        .ok_or_else(|| PdfError::Value("no pages".into()))?;
     let kids = r.get_array(&pages, b"Kids")?.unwrap_or_default();
     if let Some(k) = kids.first() {
         let page = r.resolve(k)?;
@@ -558,7 +623,10 @@ fn test_pubkey_alternative_filter() {
     modify_encrypt_dict(&mut w, |d| d.set("Filter", pdf_name("/FooBar")));
     let out = w.write().unwrap();
     let r = read(&out);
-    assert_eq!(r.security_handler().unwrap().unwrap().handler_type(), HandlerType::PubKey);
+    assert_eq!(
+        r.security_handler().unwrap().unwrap().handler_type(),
+        HandlerType::PubKey
+    );
 }
 
 #[test]
@@ -655,12 +723,18 @@ fn crypt_params_name(stream: &hanko_pdf::lopdf::Stream, with_hex_filter: bool) -
 
 #[test]
 fn test_custom_crypt_filter() {
-    for (with_hex_filter, main_unencrypted) in [(true, false), (true, true), (false, true), (false, false)] {
+    for (with_hex_filter, main_unencrypted) in
+        [(true, false), (true, true), (false, true), (false, false)]
+    {
         let mut w = new_writer();
         let custom = "/Custom";
         let cfc = if main_unencrypted {
             // streams/strings are unencrypted by default
-            let cfc = CryptFilterConfiguration::with_filters(vec![(custom, CryptFilter::standard_rc4(16))]).unwrap();
+            let cfc = CryptFilterConfiguration::with_filters(vec![(
+                custom,
+                CryptFilter::standard_rc4(16),
+            )])
+            .unwrap();
             assert_eq!(cfc.len(), 1);
             cfc
         } else {
@@ -695,17 +769,30 @@ fn test_custom_crypt_filter() {
         let mut dummy = DecodedStream::new(Dictionary::new(), test_data.clone());
         add_crypt_filter(&mut dummy, custom, None, Some(&sh)).unwrap();
         if with_hex_filter {
-            dummy.apply_filter("/AHx", None, DuplicateFilter::Allow).unwrap();
+            dummy
+                .apply_filter("/AHx", None, DuplicateFilter::Allow)
+                .unwrap();
         }
-        let r#ref = w.add_object(Object::Stream(encode_stream_with(&dummy, &sh).unwrap())).unwrap();
-        let ref2 = w.add_object(Object::Stream(DecodedStream::new(Dictionary::new(), test_data.clone()).to_stream().unwrap())).unwrap();
+        let r#ref = w
+            .add_object(Object::Stream(encode_stream_with(&dummy, &sh).unwrap()))
+            .unwrap();
+        let ref2 = w
+            .add_object(Object::Stream(
+                DecodedStream::new(Dictionary::new(), test_data.clone())
+                    .to_stream()
+                    .unwrap(),
+            ))
+            .unwrap();
         let out = w.write().unwrap();
 
         let r = read(&out);
         r.decrypt("ownersecret").unwrap();
         let obj = stream_of(r.get_object(r#ref).unwrap());
         assert_eq!(r.stream_data(&obj).unwrap(), test_data);
-        assert_eq!(crypt_params_name(&obj, with_hex_filter), pdf_name("/Custom"));
+        assert_eq!(
+            crypt_params_name(&obj, with_hex_filter),
+            pdf_name("/Custom")
+        );
         let raw = stream_of(r.get_object_raw(ref2, None).unwrap());
         assert_eq!(raw.content == test_data, main_unencrypted);
     }
@@ -713,10 +800,15 @@ fn test_custom_crypt_filter() {
 
 #[test]
 fn test_custom_pubkey_crypt_filter() {
-    for (with_hex_filter, main_unencrypted) in [(true, false), (true, true), (false, true), (false, false)] {
+    for (with_hex_filter, main_unencrypted) in
+        [(true, false), (true, true), (false, true), (false, false)]
+    {
         let mut w = new_writer();
         let custom = "/Custom";
-        let mut filters = vec![(custom, CryptFilter::pubkey_rc4(16, PubKeyCfData::new(None, false, true)))];
+        let mut filters = vec![(
+            custom,
+            CryptFilter::pubkey_rc4(16, PubKeyCfData::new(None, false, true)),
+        )];
         let cfc = if main_unencrypted {
             CryptFilterConfiguration::with_filters(filters).unwrap()
         } else {
@@ -724,7 +816,8 @@ fn test_custom_pubkey_crypt_filter() {
                 DEFAULT_CRYPT_FILTER,
                 CryptFilter::pubkey_aes(16, PubKeyCfData::new(None, true, true)).unwrap(),
             ));
-            CryptFilterConfiguration::new(filters, DEFAULT_CRYPT_FILTER, DEFAULT_CRYPT_FILTER, None).unwrap()
+            CryptFilterConfiguration::new(filters, DEFAULT_CRYPT_FILTER, DEFAULT_CRYPT_FILTER, None)
+                .unwrap()
         };
         let sh = SecurityHandler::new_pubkey(
             SecurityHandlerVersion::Rc4OrAes128,
@@ -739,9 +832,11 @@ fn test_custom_pubkey_crypt_filter() {
         .unwrap();
         let all = PubKeyPermissions::allow_everything();
         // if main_unencrypted, these should be no-ops
-        sh.add_recipients(&[test_cert()], all, Default::default()).unwrap();
+        sh.add_recipients(&[test_cert()], all, Default::default())
+            .unwrap();
         // (this is always pointless, but it should be allowed)
-        sh.add_recipients(&[test_cert()], all, Default::default()).unwrap();
+        sh.add_recipients(&[test_cert()], all, Default::default())
+            .unwrap();
         sh.add_crypt_filter_recipients(custom, &[test_cert()], Default::default(), all)
             .unwrap();
         let eid = w.assign_security_handler(&sh).unwrap();
@@ -751,12 +846,17 @@ fn test_custom_pubkey_crypt_filter() {
         // no /Recipients in S5 mode
         assert!(!encrypt_dict.has(b"Recipients"));
         let custom_cf = as_dict(cfs.get(b"Custom").unwrap().clone());
-        assert!(matches!(custom_cf.get(b"Recipients").unwrap(), Object::String(..)));
+        assert!(matches!(
+            custom_cf.get(b"Recipients").unwrap(),
+            Object::String(..)
+        ));
         if main_unencrypted {
             assert!(!cfs.has(DEFAULT_CRYPT_FILTER.as_bytes()));
         } else {
             let dcf = as_dict(cfs.get(DEFAULT_CRYPT_FILTER.as_bytes()).unwrap().clone());
-            let Object::Array(rs) = dcf.get(b"Recipients").unwrap() else { panic!() };
+            let Object::Array(rs) = dcf.get(b"Recipients").unwrap() else {
+                panic!()
+            };
             assert_eq!(rs.len(), 2);
         }
         // custom crypt filters can only have one set of recipients
@@ -769,10 +869,20 @@ fn test_custom_pubkey_crypt_filter() {
         let mut dummy = DecodedStream::new(Dictionary::new(), test_data.clone());
         add_crypt_filter(&mut dummy, custom, None, Some(&sh)).unwrap();
         if with_hex_filter {
-            dummy.apply_filter("/AHx", None, DuplicateFilter::Allow).unwrap();
+            dummy
+                .apply_filter("/AHx", None, DuplicateFilter::Allow)
+                .unwrap();
         }
-        let r#ref = w.add_object(Object::Stream(encode_stream_with(&dummy, &sh).unwrap())).unwrap();
-        let ref2 = w.add_object(Object::Stream(DecodedStream::new(Dictionary::new(), test_data.clone()).to_stream().unwrap())).unwrap();
+        let r#ref = w
+            .add_object(Object::Stream(encode_stream_with(&dummy, &sh).unwrap()))
+            .unwrap();
+        let ref2 = w
+            .add_object(Object::Stream(
+                DecodedStream::new(Dictionary::new(), test_data.clone())
+                    .to_stream()
+                    .unwrap(),
+            ))
+            .unwrap();
         let out = w.write().unwrap();
 
         let r = read(&out);
@@ -789,7 +899,10 @@ fn test_custom_pubkey_crypt_filter() {
         // a fresh copy of the stream (decoded data is cached per stream)
         let obj = stream_of(r.get_object(r#ref).unwrap());
         assert_eq!(r.stream_data(&obj).unwrap(), test_data);
-        assert_eq!(crypt_params_name(&obj, with_hex_filter), pdf_name("/Custom"));
+        assert_eq!(
+            crypt_params_name(&obj, with_hex_filter),
+            pdf_name("/Custom")
+        );
         let raw = stream_of(r.get_object_raw(ref2, None).unwrap());
         assert_eq!(raw.content == test_data, main_unencrypted);
     }
@@ -841,7 +954,8 @@ fn standard_opts(pdf_mac: bool) -> StandardEncryptOptions {
 fn encrypted_with_test_entry(pdf_mac: bool) -> Vec<u8> {
     let mut w = new_writer();
     set_root_entry(&mut w, "Test", text_string("Blah blah"));
-    w.encrypt_with("ownersecret", Some("usersecret"), standard_opts(pdf_mac)).unwrap();
+    w.encrypt_with("ownersecret", Some("usersecret"), standard_opts(pdf_mac))
+        .unwrap();
     w.write().unwrap()
 }
 
@@ -874,7 +988,10 @@ fn test_continue_encrypted_file_without_auth() {
         let e = continue_without_auth(&out, true).unwrap_err();
         // with pdf_mac=False, pyHanko fails while updating the XMP metadata
         // stream; so does the port
-        assert!(matches!(e, PdfError::KeyNotAvailable(_)), "pdf_mac={pdf_mac}: {e:?}");
+        assert!(
+            matches!(e, PdfError::KeyNotAvailable(_)),
+            "pdf_mac={pdf_mac}: {e:?}"
+        );
     }
 }
 
@@ -913,11 +1030,17 @@ fn test_aes256_perm_read() {
     let r = read(&data);
     let result = r.decrypt("ownersecret").unwrap();
     assert_eq!(result.status, AuthStatus::Owner);
-    assert_eq!(result.permission_flags, Some(StandardPermissions::allow_everything().into()));
+    assert_eq!(
+        result.permission_flags,
+        Some(StandardPermissions::allow_everything().into())
+    );
     let r = read(&data);
     let result = r.decrypt("usersecret").unwrap();
     assert_eq!(result.status, AuthStatus::User);
-    assert_eq!(result.permission_flags, Some(StandardPermissions::allow_everything().into()));
+    assert_eq!(
+        result.permission_flags,
+        Some(StandardPermissions::allow_everything().into())
+    );
     assert_eq!(encrypt_dict_of(&r).get(b"P").unwrap(), &Object::Integer(-4));
 }
 
@@ -989,7 +1112,12 @@ fn test_default_no_gcm() {
     let out = w.write().unwrap();
     let r = read(&out);
     assert_eq!(r.decrypt("usersecret").unwrap().status, AuthStatus::User);
-    let cf = r.security_handler().unwrap().unwrap().get_stream_filter(None).unwrap();
+    let cf = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .get_stream_filter(None)
+        .unwrap();
     assert_eq!(cf.cipher(), CipherKind::AesCbc);
     assert!(!cf.is_pubkey());
 }
@@ -1010,7 +1138,12 @@ fn test_gcm_via_encrypt_call() {
     let out = w.write().unwrap();
     let r = read(&out);
     assert_eq!(r.decrypt("usersecret").unwrap().status, AuthStatus::User);
-    let cf = r.security_handler().unwrap().unwrap().get_stream_filter(None).unwrap();
+    let cf = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .get_stream_filter(None)
+        .unwrap();
     assert_eq!(cf.cipher(), CipherKind::AesGcm);
     assert!(!cf.is_pubkey());
 }
@@ -1049,7 +1182,11 @@ fn test_reauthenticate() {
 
 #[test]
 fn test_load_pkcs12() {
-    let sedk = SimpleEnvelopeKeyDecrypter::load_pkcs12(&crypto(&["selfsigned.pfx"]), Some(b"exportsecret")).unwrap();
+    let sedk = SimpleEnvelopeKeyDecrypter::load_pkcs12(
+        &crypto(&["selfsigned.pfx"]),
+        Some(b"exportsecret"),
+    )
+    .unwrap();
     assert_eq!(
         sedk.cert_info().subject_der(),
         pubkey_selfsigned_decrypter().cert_info().subject_der()
@@ -1074,17 +1211,23 @@ fn test_pubkey_wrong_content_type() {
     let mut enc = sh.as_pdf_object().unwrap();
     // ContentInfo { data, OCTET STRING deadbeef }
     let cms_bytes = vec![
-        0x30, 0x13, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01, 0xa0, 0x06, 0x04, 0x04, 0xde,
-        0xad, 0xbe, 0xef,
+        0x30, 0x13, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01, 0xa0, 0x06,
+        0x04, 0x04, 0xde, 0xad, 0xbe, 0xef,
     ];
-    let Object::Array(mut recps) = enc.get(b"Recipients").unwrap().clone() else { panic!() };
+    let Object::Array(mut recps) = enc.get(b"Recipients").unwrap().clone() else {
+        panic!()
+    };
     recps[0] = byte_string(cms_bytes);
     enc.set("Recipients", Object::Array(recps));
-    w.set_encryption(Object::Dictionary(enc), sh.encryptor()).unwrap();
+    w.set_encryption(Object::Dictionary(enc), sh.encryptor())
+        .unwrap();
     import_page_tree(&mut w, &r);
     let out = w.write().unwrap();
     let r = read(&out);
-    let e = assert_err_matches(r.decrypt_pubkey(&pubkey_test_decrypter()), "must be enveloped");
+    let e = assert_err_matches(
+        r.decrypt_pubkey(&pubkey_test_decrypter()),
+        "must be enveloped",
+    );
     assert!(e.is_read_error());
 }
 
@@ -1094,12 +1237,21 @@ fn test_pubkey_wrong_cert() {
     let recpt_cert = hanko_pdf::crypt::CertInfo::from_der(&{
         let pem = crypto(&["testing-ca", "interm", "decrypter2.cert.pem"]);
         let text = String::from_utf8(pem).unwrap();
-        base64_decode(&text.lines().filter(|l| !l.starts_with("-----")).collect::<String>())
+        base64_decode(
+            &text
+                .lines()
+                .filter(|l| !l.starts_with("-----"))
+                .collect::<String>(),
+        )
     })
     .unwrap();
     let test_data = b"This is test data!".to_vec();
     let r#ref = w
-        .add_object(Object::Stream(DecodedStream::new(Dictionary::new(), test_data).to_stream().unwrap()))
+        .add_object(Object::Stream(
+            DecodedStream::new(Dictionary::new(), test_data)
+                .to_stream()
+                .unwrap(),
+        ))
         .unwrap();
     w.encrypt_pubkey(&[recpt_cert.der().to_vec()]).unwrap();
     let out = w.write().unwrap();
@@ -1142,7 +1294,8 @@ fn test_custom_crypt_filter_type() {
                 .unwrap()
                 .register("/CustomCFType", Arc::new(move |_, _| Ok(custom_cf())));
         }
-        let cfc = CryptFilterConfiguration::new(vec![(STD_CF, custom_cf())], STD_CF, STD_CF, None).unwrap();
+        let cfc = CryptFilterConfiguration::new(vec![(STD_CF, custom_cf())], STD_CF, STD_CF, None)
+            .unwrap();
         let id1 = w.document_id().0.to_vec();
         let sh = SecurityHandler::build_from_pw_legacy(
             StandardSecuritySettingsRevision::Rc4OrAes128,
@@ -1159,7 +1312,11 @@ fn test_custom_crypt_filter_type() {
         w.assign_security_handler(&sh).unwrap();
         let test_data = b"This is test data!".to_vec();
         let r#ref = w
-            .add_object(Object::Stream(DecodedStream::new(Dictionary::new(), test_data.clone()).to_stream().unwrap()))
+            .add_object(Object::Stream(
+                DecodedStream::new(Dictionary::new(), test_data.clone())
+                    .to_stream()
+                    .unwrap(),
+            ))
             .unwrap();
         let out = w.write().unwrap();
 
@@ -1169,7 +1326,9 @@ fn test_custom_crypt_filter_type() {
         assert!(matches!(e, PdfError::NotImplemented(_)), "{e:?}");
 
         let r = read(&out);
-        r.set_security_handler(SecurityHandler::build_with(&encrypt_dict_of(&r), &registry).unwrap());
+        r.set_security_handler(
+            SecurityHandler::build_with(&encrypt_dict_of(&r), &registry).unwrap(),
+        );
         r.decrypt("ownersecret").unwrap();
         let cfc = r.security_handler().unwrap().unwrap().crypt_filter_config();
         assert_eq!(cfc.stream_filter_name(), cfc.string_filter_name());
@@ -1182,9 +1341,18 @@ fn test_custom_crypt_filter_type() {
 
 #[test]
 fn test_security_handler_version_deser() {
-    assert_eq!(SecurityHandlerVersion::from_number(Some(5)), SecurityHandlerVersion::Aes256);
-    assert_eq!(SecurityHandlerVersion::from_number(Some(0)), SecurityHandlerVersion::Other);
-    assert_eq!(SecurityHandlerVersion::from_number(None), SecurityHandlerVersion::Other);
+    assert_eq!(
+        SecurityHandlerVersion::from_number(Some(5)),
+        SecurityHandlerVersion::Aes256
+    );
+    assert_eq!(
+        SecurityHandlerVersion::from_number(Some(0)),
+        SecurityHandlerVersion::Other
+    );
+    assert_eq!(
+        SecurityHandlerVersion::from_number(None),
+        SecurityHandlerVersion::Other
+    );
     assert_eq!(
         StandardSecuritySettingsRevision::from_number(Some(6)),
         StandardSecuritySettingsRevision::Aes256
@@ -1197,11 +1365,30 @@ fn test_security_handler_version_deser() {
 
 #[test]
 fn test_key_len() {
-    assert!(SecurityHandlerVersion::Rc4OrAes128.check_key_length(20).unwrap_err().is_pdf_error());
-    assert_eq!(SecurityHandlerVersion::Rc4OrAes128.check_key_length(6).unwrap(), 6);
-    assert_eq!(SecurityHandlerVersion::Aes256.check_key_length(6).unwrap(), 32);
-    assert_eq!(SecurityHandlerVersion::Rc4_40.check_key_length(32).unwrap(), 5);
-    assert_eq!(SecurityHandlerVersion::Rc4LongerKeys.check_key_length(16).unwrap(), 16);
+    assert!(SecurityHandlerVersion::Rc4OrAes128
+        .check_key_length(20)
+        .unwrap_err()
+        .is_pdf_error());
+    assert_eq!(
+        SecurityHandlerVersion::Rc4OrAes128
+            .check_key_length(6)
+            .unwrap(),
+        6
+    );
+    assert_eq!(
+        SecurityHandlerVersion::Aes256.check_key_length(6).unwrap(),
+        32
+    );
+    assert_eq!(
+        SecurityHandlerVersion::Rc4_40.check_key_length(32).unwrap(),
+        5
+    );
+    assert_eq!(
+        SecurityHandlerVersion::Rc4LongerKeys
+            .check_key_length(16)
+            .unwrap(),
+        16
+    );
 }
 
 fn password_cred(r: &PdfFile) -> PasswordCredential {
@@ -1228,16 +1415,32 @@ fn test_ser_deser_credential_standard_sh() {
         let cred = password_cred(&r);
         assert_eq!(cred.pwd_bytes, pw.as_bytes());
         let cred_data = cred.serialise();
-        let result = fresh_handler(&data).authenticate(Credential::Serialised(cred_data), None).unwrap();
-        let exp = if pw.starts_with("user") { AuthStatus::User } else { AuthStatus::Owner };
+        let result = fresh_handler(&data)
+            .authenticate(Credential::Serialised(cred_data), None)
+            .unwrap();
+        let exp = if pw.starts_with("user") {
+            AuthStatus::User
+        } else {
+            AuthStatus::Owner
+        };
         assert_eq!(result.status, exp);
     }
 }
 
 #[test]
 fn test_ser_deser_credential_standard_sh_extract_from_builder() {
-    let sh = SecurityHandler::build_from_pw("ownersecret", Some("usersecret".into()), Default::default()).unwrap();
-    let cred = sh.extract_credential().unwrap().as_password().unwrap().clone();
+    let sh = SecurityHandler::build_from_pw(
+        "ownersecret",
+        Some("usersecret".into()),
+        Default::default(),
+    )
+    .unwrap();
+    let cred = sh
+        .extract_credential()
+        .unwrap()
+        .as_password()
+        .unwrap()
+        .clone();
     assert_eq!(cred.pwd_bytes, b"ownersecret");
     assert_eq!(cred.id1, None);
 }
@@ -1249,7 +1452,9 @@ fn test_ser_deser_credential_wrong_pw() {
     r.decrypt("ownersecret").unwrap();
     let mut cred = password_cred(&r);
     cred.pwd_bytes = b"This is the wrong password".to_vec();
-    let result = fresh_handler(&data).authenticate(Credential::Serialised(cred.serialise()), None).unwrap();
+    let result = fresh_handler(&data)
+        .authenticate(Credential::Serialised(cred.serialise()), None)
+        .unwrap();
     assert_eq!(result.status, AuthStatus::Failed);
 }
 
@@ -1289,7 +1494,9 @@ fn test_ser_deser_credential_unknown_cred_type() {
 
 #[test]
 fn test_ser_deser_credential_standard_sh_legacy() {
-    let out = produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Rc4OrAes128, 16, true).unwrap();
+    let out =
+        produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Rc4OrAes128, 16, true)
+            .unwrap();
     for pw in ["usersecret", "ownersecret"] {
         let r = read(&out);
         r.decrypt(pw).unwrap();
@@ -1299,14 +1506,20 @@ fn test_ser_deser_credential_standard_sh_legacy() {
         let result = fresh_handler(&pdf("minimal-aes256.pdf"))
             .authenticate(Credential::Serialised(cred.serialise()), None)
             .unwrap();
-        let exp = if pw.starts_with("user") { AuthStatus::User } else { AuthStatus::Owner };
+        let exp = if pw.starts_with("user") {
+            AuthStatus::User
+        } else {
+            AuthStatus::Owner
+        };
         assert_eq!(result.status, exp);
     }
 }
 
 #[test]
 fn test_ser_deser_credential_standard_sh_legacy_no_id1() {
-    let out = produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Rc4OrAes128, 16, true).unwrap();
+    let out =
+        produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Rc4OrAes128, 16, true)
+            .unwrap();
     for pw in ["usersecret", "ownersecret"] {
         let r = read(&out);
         r.decrypt(pw).unwrap();
@@ -1333,14 +1546,26 @@ fn test_ser_deser_credential_standard_legacy_sh_extract_from_builder() {
         },
     )
     .unwrap();
-    let cred = sh.extract_credential().unwrap().as_password().unwrap().clone();
+    let cred = sh
+        .extract_credential()
+        .unwrap()
+        .as_password()
+        .unwrap()
+        .clone();
     assert_eq!(cred.pwd_bytes, b"ownersecret");
     assert_eq!(cred.id1.as_deref(), Some(&b"\xde\xad\xbe\xef"[..]));
 }
 
 fn rc4_or_aes128_pubkey_file() -> Vec<u8> {
-    produce_pubkey_encrypted_file(SecurityHandlerVersion::Rc4OrAes128, 16, true, true, Default::default(), None)
-        .unwrap()
+    produce_pubkey_encrypted_file(
+        SecurityHandlerVersion::Rc4OrAes128,
+        16,
+        true,
+        true,
+        Default::default(),
+        None,
+    )
+    .unwrap()
 }
 
 #[test]
@@ -1348,8 +1573,16 @@ fn test_ser_deser_credential_pubkey() {
     let out = rc4_or_aes128_pubkey_file();
     let r = read(&out);
     r.decrypt_pubkey(&pubkey_test_decrypter()).unwrap();
-    let cred_data = r.security_handler().unwrap().unwrap().extract_credential().unwrap().serialise();
-    let result = fresh_handler(&out).authenticate(Credential::Serialised(cred_data), None).unwrap();
+    let cred_data = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .extract_credential()
+        .unwrap()
+        .serialise();
+    let result = fresh_handler(&out)
+        .authenticate(Credential::Serialised(cred_data), None)
+        .unwrap();
     assert_eq!(result.status, AuthStatus::User);
 }
 
@@ -1372,7 +1605,13 @@ fn test_ser_deser_credential_pubkey_sh_cannot_extract_from_builder() {
 fn test_ser_deser_credential_wrong_cred_type_pubkey() {
     let r = read(&pdf("minimal-aes256.pdf"));
     r.decrypt("ownersecret").unwrap();
-    let cred_data = r.security_handler().unwrap().unwrap().extract_credential().unwrap().serialise();
+    let cred_data = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .extract_credential()
+        .unwrap()
+        .serialise();
     let out = rc4_or_aes128_pubkey_file();
     let e = assert_err_matches(
         fresh_handler(&out).authenticate(Credential::Serialised(cred_data), None),
@@ -1386,9 +1625,16 @@ fn test_ser_deser_credential_wrong_cred_type_standard() {
     let out = rc4_or_aes128_pubkey_file();
     let r = read(&out);
     r.decrypt_pubkey(&pubkey_test_decrypter()).unwrap();
-    let cred_data = r.security_handler().unwrap().unwrap().extract_credential().unwrap().serialise();
+    let cred_data = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .extract_credential()
+        .unwrap()
+        .serialise();
     let e = assert_err_matches(
-        fresh_handler(&pdf("minimal-aes256.pdf")).authenticate(Credential::Serialised(cred_data), None),
+        fresh_handler(&pdf("minimal-aes256.pdf"))
+            .authenticate(Credential::Serialised(cred_data), None),
         "Standard auth.*must be a",
     );
     assert!(e.is_read_error());
@@ -1399,7 +1645,12 @@ fn test_ser_deser_credential_pubkey_corrupted() {
     let out = rc4_or_aes128_pubkey_file();
     let r = read(&out);
     r.decrypt_pubkey(&pubkey_test_decrypter()).unwrap();
-    let cred = r.security_handler().unwrap().unwrap().extract_credential().unwrap();
+    let cred = r
+        .security_handler()
+        .unwrap()
+        .unwrap()
+        .extract_credential()
+        .unwrap();
     let cred_data = SerialisedCredential {
         credential_type: cred.serialise().credential_type,
         data: b"\xde\xad\xbe\xef".to_vec(),
@@ -1420,7 +1671,9 @@ fn test_ser_deser_credential_wrong_cert() {
     .unwrap()
     .serialise();
     let out = rc4_or_aes128_pubkey_file();
-    let result = fresh_handler(&out).authenticate(Credential::Serialised(wrong_cert), None).unwrap();
+    let result = fresh_handler(&out)
+        .authenticate(Credential::Serialised(wrong_cert), None)
+        .unwrap();
     assert_eq!(result.status, AuthStatus::Failed);
 }
 
@@ -1444,7 +1697,9 @@ fn test_ser_deser_credential_wrong_key() {
 /// `w.root['/Metadata'].apply_filter("/Crypt", {/Name: /Identity})`.
 fn mark_metadata_identity(w: &mut hanko_pdf::PdfWriter) {
     let root = w.root().unwrap();
-    let Ok(Object::Reference(mref)) = root.get(b"Metadata").cloned() else { panic!() };
+    let Ok(Object::Reference(mref)) = root.get(b"Metadata").cloned() else {
+        panic!()
+    };
     let s = stream_of(w.get_object(mref).unwrap());
     let mut params = Dictionary::new();
     params.set("Name", pdf_name("/Identity"));
@@ -1457,7 +1712,9 @@ fn mark_metadata_identity(w: &mut hanko_pdf::PdfWriter) {
 fn check_unencrypted_metadata(r: &PdfFile) {
     let root_id = r.root_ref().unwrap();
     let root = as_dict(r.get_object_raw(root_id, None).unwrap());
-    let Ok(Object::Reference(mref)) = root.get(b"Metadata").cloned() else { panic!() };
+    let Ok(Object::Reference(mref)) = root.get(b"Metadata").cloned() else {
+        panic!()
+    };
     // the metadata stream itself is readable before authentication
     let mtd = stream_of(r.get_object(mref).unwrap());
     let has = |d: &[u8]| d.windows(13).any(|w| w == b"Test document");
@@ -1509,7 +1766,10 @@ fn test_encrypt_skipping_metadata() {
 
         let r = read(&out);
         check_unencrypted_metadata(&r);
-        assert_eq!(encrypt_dict_of(&r).get(b"EncryptMetadata").unwrap(), &Object::Boolean(false));
+        assert_eq!(
+            encrypt_dict_of(&r).get(b"EncryptMetadata").unwrap(),
+            &Object::Boolean(false)
+        );
         let result = r.decrypt("secret").unwrap();
         assert_eq!(result.status, AuthStatus::Owner);
         assert_eq!(info_title(&r), "Test document");
@@ -1552,18 +1812,27 @@ fn test_pubkey_rc4_envelope() {
     let r = read(&pdf("minimal-pubkey-rc4-envelope.pdf"));
     let result = r.decrypt_pubkey(&pubkey_test_decrypter_old()).unwrap();
     assert_eq!(result.status, AuthStatus::User);
-    assert!(first_page_data(&r).unwrap().windows(5).any(|w| w == b"Hello"));
+    assert!(first_page_data(&r)
+        .unwrap()
+        .windows(5)
+        .any(|w| w == b"Hello"));
 }
 
 #[test]
 fn test_unknown_envelope_enc_type() {
     let r = read(&pdf("minimal-pubkey-unknown-envelope-alg.pdf"));
-    let e = assert_err_matches(r.decrypt_pubkey(&pubkey_test_decrypter_old()), "Cipher.*not allowed");
+    let e = assert_err_matches(
+        r.decrypt_pubkey(&pubkey_test_decrypter_old()),
+        "Cipher.*not allowed",
+    );
     assert!(e.is_pdf_error());
 }
 
 fn unhex(s: &str) -> Vec<u8> {
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
 }
 
 fn basic_r6_enc_dict() -> Dictionary {
@@ -1583,13 +1852,20 @@ fn basic_r6_enc_dict() -> Dictionary {
     );
     d.set(
         "OE",
-        byte_string(unhex("65012afdd09b34431117b9fa5f557202940dece9758d53c61fc5ff436cf2515c")),
+        byte_string(unhex(
+            "65012afdd09b34431117b9fa5f557202940dece9758d53c61fc5ff436cf2515c",
+        )),
     );
     d.set(
         "UE",
-        byte_string(unhex("71071c8c117abc19d26b5efc44a080667ef3c3665ad3bc8f5f5b58126a15d931")),
+        byte_string(unhex(
+            "71071c8c117abc19d26b5efc44a080667ef3c3665ad3bc8f5f5b58126a15d931",
+        )),
     );
-    d.set("Perms", byte_string(unhex("b8729f735b0976d80f61d16bcfe09273")));
+    d.set(
+        "Perms",
+        byte_string(unhex("b8729f735b0976d80f61d16bcfe09273")),
+    );
     d.set("P", Object::Integer(-4));
     d.set("V", Object::Integer(5));
     d.set("R", Object::Integer(6));
@@ -1628,7 +1904,10 @@ fn test_r6_values() {
         } else {
             d.set(entry, byte_string(b"\xde\xad\xbe\xef".to_vec()));
         }
-        let e = assert_err_matches(SecurityHandler::instantiate_standard_from_pdf_object(&d), err);
+        let e = assert_err_matches(
+            SecurityHandler::instantiate_standard_from_pdf_object(&d),
+            err,
+        );
         assert!(e.is_pdf_error());
     }
 }
@@ -1654,7 +1933,8 @@ fn test_legacy_o_u_values() {
         .unwrap();
         let mut enc = sh.as_pdf_object().unwrap();
         enc.set(entry, byte_string(b"\xde\xad\xbe\xef".to_vec()));
-        w.set_encryption(Object::Dictionary(enc), sh.encryptor()).unwrap();
+        w.set_encryption(Object::Dictionary(enc), sh.encryptor())
+            .unwrap();
         import_page_tree(&mut w, &r);
         let out = w.write().unwrap();
         let e = assert_err_matches(read_first_page_contents(&out), "be 32 bytes long");
@@ -1684,7 +1964,8 @@ fn test_perms_decrypt_bogus() {
 
 #[test]
 fn test_legacy_no_r6() {
-    let e = produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Aes256, 32, true).unwrap_err();
+    let e = produce_legacy_encrypted_file(StandardSecuritySettingsRevision::Aes256, 32, true)
+        .unwrap_err();
     assert!(matches!(e, PdfError::Value(_)));
     assert!(e.message().contains("not supported"));
 }
@@ -1728,7 +2009,10 @@ fn test_add_recp_after_key_deriv() {
     let r = read(&out);
     r.decrypt_pubkey(&pubkey_test_decrypter()).unwrap();
     let sh = r.security_handler().unwrap().unwrap();
-    assert!(!sh.crypt_filter_shared_key(DEFAULT_CRYPT_FILTER).unwrap().is_empty());
+    assert!(!sh
+        .crypt_filter_shared_key(DEFAULT_CRYPT_FILTER)
+        .unwrap()
+        .is_empty());
     let e = assert_err_matches(
         sh.add_crypt_filter_recipients(
             DEFAULT_CRYPT_FILTER,
@@ -1746,7 +2030,9 @@ fn test_encrypted_obj_stm() {
     let r = read(&minimal());
     let mut w = hanko_pdf::writer::copy_into_new_writer_with(&r, true).unwrap();
     let obj_stm = w.prepare_object_stream(true).unwrap();
-    let objref = w.add_object_ext(text_string("Hello there"), Some(obj_stm), None).unwrap();
+    let objref = w
+        .add_object_ext(text_string("Hello there"), Some(obj_stm), None)
+        .unwrap();
     w.encrypt("ownersecret", Some("usersecret")).unwrap();
     let out = w.write().unwrap();
     let r = read(&out);
@@ -1755,7 +2041,9 @@ fn test_encrypted_obj_stm() {
 
     // the content is present in unencrypted form in the (decrypted) object
     // stream
-    let Some(XRefLocation::ObjStream(loc)) = r.xrefs().get(objref) else { panic!() };
+    let Some(XRefLocation::ObjStream(loc)) = r.xrefs().get(objref) else {
+        panic!()
+    };
     let stm = stream_of(r.get_object((loc.obj_stream_id, 0)).unwrap());
     let data = r.stream_data(&stm).unwrap();
     assert!(data.windows(13).any(|w| w == b"(Hello there)"));
@@ -1766,7 +2054,10 @@ fn test_encrypted_obj_stm() {
 #[test]
 fn test_add_crypt_filter_to_stream_without_security_handler() {
     let mut s = DecodedStream::new(Dictionary::new(), b"1001".to_vec());
-    let e = assert_err_matches(add_crypt_filter(&mut s, "/Identity", None, None), "no security handler");
+    let e = assert_err_matches(
+        add_crypt_filter(&mut s, "/Identity", None, None),
+        "no security handler",
+    );
     assert!(e.is_stream_error());
 }
 
@@ -1787,7 +2078,10 @@ fn test_malformed_crypt() {
 fn test_tolerate_direct_encryption_dict_in_nonstrict() {
     let r = read_lenient(&pdf("malformed-encrypt-dict1.pdf"));
     r.decrypt("ownersecret").unwrap();
-    assert!(first_page_data(&r).unwrap().windows(5).any(|w| w == b"Hello"));
+    assert!(first_page_data(&r)
+        .unwrap()
+        .windows(5)
+        .any(|w| w == b"Hello"));
 }
 
 fn iso_extension_levels(r: &PdfFile) -> Vec<i64> {
@@ -1796,9 +2090,14 @@ fn iso_extension_levels(r: &PdfFile) -> Vec<i64> {
     let iso = r.get_array(&exts, b"ISO_").unwrap().unwrap();
     let mut levels: Vec<i64> = iso
         .iter()
-        .map(|e| match as_dict(r.resolve(e).unwrap()).get(b"ExtensionLevel").unwrap() {
-            Object::Integer(i) => *i,
-            other => panic!("{other:?}"),
+        .map(|e| {
+            match as_dict(r.resolve(e).unwrap())
+                .get(b"ExtensionLevel")
+                .unwrap()
+            {
+                Object::Integer(i) => *i,
+                other => panic!("{other:?}"),
+            }
         })
         .collect();
     levels.sort();
@@ -1827,7 +2126,10 @@ fn test_gcm_standard() {
     let out = gcm_standard_file();
     let r = read(&out);
     r.decrypt("secret").unwrap();
-    assert!(first_page_data(&r).unwrap().windows(5).any(|w| w == b"Hello"));
+    assert!(first_page_data(&r)
+        .unwrap()
+        .windows(5)
+        .any(|w| w == b"Hello"));
     assert_eq!(iso_extension_levels(&r), vec![32003]);
 }
 
@@ -1837,10 +2139,19 @@ fn test_gcm_standard() {
 struct Passthrough;
 
 impl Encryptor for Passthrough {
-    fn encrypt_string(&self, _data: &[u8], _container: ObjectId) -> Result<Option<Vec<u8>>, PdfError> {
+    fn encrypt_string(
+        &self,
+        _data: &[u8],
+        _container: ObjectId,
+    ) -> Result<Option<Vec<u8>>, PdfError> {
         Ok(None)
     }
-    fn encrypt_stream(&self, _dict: &Dictionary, data: &[u8], _container: ObjectId) -> Result<Vec<u8>, PdfError> {
+    fn encrypt_stream(
+        &self,
+        _dict: &Dictionary,
+        data: &[u8],
+        _container: ObjectId,
+    ) -> Result<Vec<u8>, PdfError> {
         Ok(data.to_vec())
     }
 }
@@ -1848,10 +2159,18 @@ impl Encryptor for Passthrough {
 fn raw_first_page_contents_ref(r: &PdfFile) -> ObjectId {
     let raw = |id: ObjectId| as_dict(r.get_object_raw(id, None).unwrap());
     let root = raw(r.root_ref().unwrap());
-    let Object::Reference(pages) = root.get(b"Pages").unwrap() else { panic!() };
-    let Object::Array(kids) = raw(*pages).get(b"Kids").unwrap().clone() else { panic!() };
-    let Object::Reference(page) = kids[0] else { panic!() };
-    let Object::Reference(c) = raw(page).get(b"Contents").unwrap().clone() else { panic!() };
+    let Object::Reference(pages) = root.get(b"Pages").unwrap() else {
+        panic!()
+    };
+    let Object::Array(kids) = raw(*pages).get(b"Kids").unwrap().clone() else {
+        panic!()
+    };
+    let Object::Reference(page) = kids[0] else {
+        panic!()
+    };
+    let Object::Reference(c) = raw(page).get(b"Contents").unwrap().clone() else {
+        panic!()
+    };
     c
 }
 
@@ -1861,7 +2180,9 @@ fn gcm_standard_tamper(tamperer: impl Fn(Vec<u8>) -> Vec<u8>) {
     let content_ref = raw_first_page_contents_ref(&r);
     let mut content = stream_of(r.get_object_raw(content_ref, None).unwrap());
     content.content = tamperer(content.content);
-    let Some(Object::Reference(eref)) = r.trailer().raw_get(b"Encrypt", None) else { panic!() };
+    let Some(Object::Reference(eref)) = r.trailer().raw_get(b"Encrypt", None) else {
+        panic!()
+    };
     let mut w = IncrementalWriter::new(r);
     w.set_existing_encryption(eref, Box::new(Passthrough));
     w.update_meta_on_write = false;
@@ -1918,7 +2239,10 @@ fn test_gcm_pubkey() {
     let out = w.write().unwrap();
     let r = read(&out);
     r.decrypt_pubkey(&pubkey_test_decrypter()).unwrap();
-    assert!(first_page_data(&r).unwrap().windows(5).any(|w| w == b"Hello"));
+    assert!(first_page_data(&r)
+        .unwrap()
+        .windows(5)
+        .any(|w| w == b"Hello"));
     assert_eq!(iso_extension_levels(&r), vec![32003]);
 }
 
@@ -1949,17 +2273,27 @@ fn test_process_malformed_oe_entry() {
 #[test]
 fn test_std_permission_transformations() {
     for (perm, expected_sint, expected_bytes) in [
-        (StandardPermissions::allow_everything(), -4, [0xff, 0xff, 0xff, 0xfc]),
+        (
+            StandardPermissions::allow_everything(),
+            -4,
+            [0xff, 0xff, 0xff, 0xfc],
+        ),
         (std_perms(), -44, [0xff, 0xff, 0xff, 0xd4]),
     ] {
-        assert_eq!((perm.as_sint32(), perm.as_bytes()), (expected_sint, expected_bytes));
+        assert_eq!(
+            (perm.as_sint32(), perm.as_bytes()),
+            (expected_sint, expected_bytes)
+        );
     }
 }
 
 #[test]
 fn test_pubkey_permission_transformations() {
     for (perm, expected_bytes) in [
-        (PubKeyPermissions::allow_everything(), [0xff, 0xff, 0xff, 0xff]),
+        (
+            PubKeyPermissions::allow_everything(),
+            [0xff, 0xff, 0xff, 0xff],
+        ),
         (pubkey_perms(), [0xff, 0xff, 0xff, 0xd5]),
     ] {
         assert_eq!(perm.as_bytes(), expected_bytes);
@@ -2056,9 +2390,27 @@ fn differential_pyhanko_reads_our_encryption() {
     };
     let rsa = test_cert();
     let cases: Vec<(&str, Vec<u8>, String, &str, &str)> = vec![
-        ("aes256", aes256, "password:usersecret".into(), "USER", "SUCCESSFUL"),
-        ("gcm", gcm, "password:usersecret".into(), "USER", "SUCCESSFUL"),
-        ("update", updated, "password:usersecret".into(), "USER", "SUCCESSFUL"),
+        (
+            "aes256",
+            aes256,
+            "password:usersecret".into(),
+            "USER",
+            "SUCCESSFUL",
+        ),
+        (
+            "gcm",
+            gcm,
+            "password:usersecret".into(),
+            "USER",
+            "SUCCESSFUL",
+        ),
+        (
+            "update",
+            updated,
+            "password:usersecret".into(),
+            "USER",
+            "SUCCESSFUL",
+        ),
         (
             "rc4-r3",
             legacy(StandardSecuritySettingsRevision::Rc4Extended, 16, false),
@@ -2073,7 +2425,13 @@ fn differential_pyhanko_reads_our_encryption() {
             "USER",
             "NOT_APPLICABLE",
         ),
-        ("pubkey-rsa", pubkey(rsa.clone(), Default::default()), "pubkey:rsa".into(), "USER", "SUCCESSFUL"),
+        (
+            "pubkey-rsa",
+            pubkey(rsa.clone(), Default::default()),
+            "pubkey:rsa".into(),
+            "USER",
+            "SUCCESSFUL",
+        ),
         (
             "pubkey-oaep",
             pubkey(
@@ -2120,7 +2478,8 @@ fn differential_pyhanko_reads_our_encryption() {
     for (name, data, cred, status, mac) in cases.into_iter().chain(ecc) {
         let path = dir.join(format!("{name}.pdf"));
         std::fs::write(&path, &data).unwrap();
-        let v = hanko_testdata::oracle::run_json(&script, &[path.to_str().unwrap(), &cred]).unwrap();
+        let v =
+            hanko_testdata::oracle::run_json(&script, &[path.to_str().unwrap(), &cred]).unwrap();
         assert_eq!(v["status"].as_str(), Some(status), "{name}: {v}");
         assert_eq!(v["mac_status"].as_str(), Some(mac), "{name}: {v}");
         assert_eq!(v["hello"].as_bool(), Some(true), "{name}: {v}");

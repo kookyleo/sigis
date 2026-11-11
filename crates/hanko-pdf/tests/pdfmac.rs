@@ -17,10 +17,10 @@ use std::sync::Arc;
 use common::crypt::*;
 use common::*;
 use hanko_pdf::crypt::pdfmac::{
-    cms_algorithm_protection, cms_attribute, cms_attributes, default_build_auth_data, default_format_auth_attrs,
-    default_format_auth_data, default_format_message, default_get_mac_keying_info, derive_mac_kek,
-    digest_algorithm, hmac_sha256_algorithm, md_hash, password_recipient_info, AuthDataParts, PdfMacTokenHandler,
-    PdfMacTokenHandlerFactory,
+    cms_algorithm_protection, cms_attribute, cms_attributes, default_build_auth_data,
+    default_format_auth_attrs, default_format_auth_data, default_format_message,
+    default_get_mac_keying_info, derive_mac_kek, digest_algorithm, hmac_sha256_algorithm, md_hash,
+    password_recipient_info, AuthDataParts, PdfMacTokenHandler, PdfMacTokenHandlerFactory,
 };
 use hanko_pdf::crypt::{
     AuthResult, Credential, HandlerType, PdfMacStatus, PubKeyEncryptOptions, SecurityHandler,
@@ -102,14 +102,21 @@ fn init_sample_doc(encryption_type: EncryptionType) -> (PdfFileWriter, SecurityH
     let mut resources = Dictionary::new();
     resources.set("Font", Object::Dictionary(fonts));
     let content = b"\n    BT\n        /F1 12 Tf 40 700 Td 12 TL\n        (Hello ISO/TS 32004!) Tj\n    ET\n    ";
-    let stream = DecodedStream::new(Dictionary::new(), content.to_vec()).to_stream().unwrap();
+    let stream = DecodedStream::new(Dictionary::new(), content.to_vec())
+        .to_stream()
+        .unwrap();
     let contents = w.add_object(Object::Stream(stream)).unwrap();
     let mut page = Dictionary::new();
     page.set("Type", pdf_name("/Page"));
     page.set("Contents", Object::Reference(contents));
     page.set(
         "MediaBox",
-        Object::Array(vec![0.into(), 0.into(), Object::Real(595.28), Object::Real(841.89)]),
+        Object::Array(vec![
+            0.into(),
+            0.into(),
+            Object::Real(595.28),
+            Object::Real(841.89),
+        ]),
     );
     page.set("Resources", Object::Dictionary(resources));
     w.insert_page(page, None).unwrap();
@@ -147,7 +154,10 @@ fn dummy_decrypt(r: &PdfFile, ignore_mac: bool) -> Result<AuthResult, PdfError> 
     match (sh.handler_type(), ignore_mac) {
         (HandlerType::PubKey, false) => r.decrypt_pubkey(&pubkey_test_decrypter()),
         (HandlerType::Standard, false) => r.decrypt(DUMMY_PASSWORD),
-        (HandlerType::PubKey, true) => sh.authenticate(Credential::Decrypter(Arc::new(pubkey_test_decrypter())), None),
+        (HandlerType::PubKey, true) => sh.authenticate(
+            Credential::Decrypter(Arc::new(pubkey_test_decrypter())),
+            None,
+        ),
         (HandlerType::Standard, true) => {
             let id1 = r.document_id()?.0;
             sh.authenticate_password(DUMMY_PASSWORD, Some(&id1))
@@ -160,9 +170,14 @@ fn iso_extension_levels(r: &PdfFile) -> Vec<i64> {
     let exts = r.get_dict(&root, b"Extensions").unwrap().unwrap();
     let iso = r.get_array(&exts, b"ISO_").unwrap().unwrap();
     iso.iter()
-        .map(|e| match as_dict(r.resolve(e).unwrap()).get(b"ExtensionLevel").unwrap() {
-            Object::Integer(i) => *i,
-            other => panic!("{other:?}"),
+        .map(|e| {
+            match as_dict(r.resolve(e).unwrap())
+                .get(b"ExtensionLevel")
+                .unwrap()
+            {
+                Object::Integer(i) => *i,
+                other => panic!("{other:?}"),
+            }
         })
         .collect()
 }
@@ -172,7 +187,12 @@ fn iso_extension_levels(r: &PdfFile) -> Vec<i64> {
 fn assert_mac_good(out: &[u8]) {
     let r = read(out);
     let result = dummy_decrypt(&r, false).unwrap();
-    assert_eq!(result.mac_status, PdfMacStatus::Successful, "{:?}", result.mac_failure_reason);
+    assert_eq!(
+        result.mac_status,
+        PdfMacStatus::Successful,
+        "{:?}",
+        result.mac_failure_reason
+    );
     assert!(iso_extension_levels(&r).contains(&32004));
 }
 
@@ -190,7 +210,10 @@ fn assert_mac_bad(out: &[u8], error_message: &str) {
     );
 }
 
-fn write_with_handler(encryption_type: EncryptionType, handler: Option<Arc<dyn PdfMacTokenHandlerFactory>>) -> Vec<u8> {
+fn write_with_handler(
+    encryption_type: EncryptionType,
+    handler: Option<Arc<dyn PdfMacTokenHandlerFactory>>,
+) -> Vec<u8> {
     let (mut w, sh) = init_sample_doc(encryption_type);
     sh.set_mac_token_handler(handler);
     w.write().unwrap()
@@ -224,7 +247,11 @@ fn check_standalone_with_handler(handler: Arc<dyn PdfMacTokenHandlerFactory>, er
 
 /// `pdfmac_with_handler(error_message)`: standalone MACs written here,
 /// MACs in signatures from the pyHanko fixtures.
-fn check_with_handler(test: &str, handler: Arc<dyn PdfMacTokenHandlerFactory>, error_message: &str) {
+fn check_with_handler(
+    test: &str,
+    handler: Arc<dyn PdfMacTokenHandlerFactory>,
+    error_message: &str,
+) {
     for et in ENCRYPTION_TYPES {
         let out = write_with_handler(et, Some(handler.clone()));
         assert_mac_bad(&out, error_message);
@@ -244,7 +271,12 @@ fn test_simple_mac() {
 struct Md(&'static str);
 
 impl PdfMacTokenHandlerFactory for Md {
-    fn derive_key_material(&self, fek: &[u8], kdf_salt: &[u8], _md: &str) -> Result<(Vec<u8>, String), PdfError> {
+    fn derive_key_material(
+        &self,
+        fek: &[u8],
+        kdf_salt: &[u8],
+        _md: &str,
+    ) -> Result<(Vec<u8>, String), PdfError> {
         Ok((derive_mac_kek(fek, kdf_salt)?, self.0.to_string()))
     }
 }
@@ -291,12 +323,18 @@ impl std::fmt::Debug for Attrs {
 }
 
 impl PdfMacTokenHandlerFactory for Attrs {
-    fn format_auth_attrs(&self, h: &PdfMacTokenHandler, message_digest: &[u8]) -> Result<Vec<u8>, PdfError> {
+    fn format_auth_attrs(
+        &self,
+        h: &PdfMacTokenHandler,
+        message_digest: &[u8],
+    ) -> Result<Vec<u8>, PdfError> {
         Ok((self.0)(h, message_digest))
     }
 }
 
-fn attrs(f: impl Fn(&PdfMacTokenHandler, &[u8]) -> Vec<u8> + Send + Sync + 'static) -> Arc<dyn PdfMacTokenHandlerFactory> {
+fn attrs(
+    f: impl Fn(&PdfMacTokenHandler, &[u8]) -> Vec<u8> + Send + Sync + 'static,
+) -> Arc<dyn PdfMacTokenHandlerFactory> {
     Arc::new(Attrs(Box::new(f)))
 }
 
@@ -309,13 +347,18 @@ fn md_attr(md: &[u8]) -> Vec<u8> {
 }
 
 fn protection(h: &PdfMacTokenHandler) -> Vec<u8> {
-    cms_algorithm_protection(&digest_algorithm(&h.md_algorithm).unwrap(), Some(&hmac_sha256_algorithm()))
+    cms_algorithm_protection(
+        &digest_algorithm(&h.md_algorithm).unwrap(),
+        Some(&hmac_sha256_algorithm()),
+    )
 }
 
 #[test]
 fn test_cms_algorithm_protection_attr_missing() {
     // this is actually allowed, it's a 'should' in ISO 32004
-    let h = attrs(|_, md| cms_attributes(&[content_type_attr(OID_PDF_MAC_INTEGRITY_INFO), md_attr(md)]));
+    let h = attrs(|_, md| {
+        cms_attributes(&[content_type_attr(OID_PDF_MAC_INTEGRITY_INFO), md_attr(md)])
+    });
     for et in ENCRYPTION_TYPES {
         let out = write_with_handler(et, Some(h.clone()));
         assert_mac_good(&out);
@@ -342,7 +385,11 @@ impl std::fmt::Debug for KeyingInfo {
 }
 
 impl PdfMacTokenHandlerFactory for KeyingInfo {
-    fn get_mac_keying_info(&self, h: &PdfMacTokenHandler, dry_run: bool) -> Result<(Vec<u8>, Vec<u8>), PdfError> {
+    fn get_mac_keying_info(
+        &self,
+        h: &PdfMacTokenHandler,
+        dry_run: bool,
+    ) -> Result<(Vec<u8>, Vec<u8>), PdfError> {
         let (mac_key, ri) = default_get_mac_keying_info(h, dry_run)?;
         Ok((mac_key, (self.0)(ri)))
     }
@@ -371,7 +418,12 @@ fn test_alter_key() {
 struct AlterSalt;
 
 impl PdfMacTokenHandlerFactory for AlterSalt {
-    fn derive_key_material(&self, fek: &[u8], _kdf_salt: &[u8], md: &str) -> Result<(Vec<u8>, String), PdfError> {
+    fn derive_key_material(
+        &self,
+        fek: &[u8],
+        _kdf_salt: &[u8],
+        md: &str,
+    ) -> Result<(Vec<u8>, String), PdfError> {
         // do calculations with a different salt
         Ok((derive_mac_kek(fek, &[0u8; 32])?, md.to_string()))
     }
@@ -379,24 +431,35 @@ impl PdfMacTokenHandlerFactory for AlterSalt {
 
 #[test]
 fn test_alter_salt() {
-    check_with_handler(
-        "test_alter_salt",Arc::new(AlterSalt), "Failed to unwrap");
+    check_with_handler("test_alter_salt", Arc::new(AlterSalt), "Failed to unwrap");
 }
 
 #[derive(Debug)]
 struct AppendAuthAttr;
 
 impl PdfMacTokenHandlerFactory for AppendAuthAttr {
-    fn compute_mac(&self, h: &PdfMacTokenHandler, mac_key: &[u8], _data: &[u8]) -> Result<Vec<u8>, PdfError> {
+    fn compute_mac(
+        &self,
+        h: &PdfMacTokenHandler,
+        mac_key: &[u8],
+        _data: &[u8],
+    ) -> Result<Vec<u8>, PdfError> {
         // the MAC is computed over a different set of attributes
-        hanko_pdf::crypt::pdfmac::DefaultPdfMacTokenHandler.compute_mac(h, mac_key, &cms_attributes(&[]))
+        hanko_pdf::crypt::pdfmac::DefaultPdfMacTokenHandler.compute_mac(
+            h,
+            mac_key,
+            &cms_attributes(&[]),
+        )
     }
 }
 
 #[test]
 fn test_append_auth_attr() {
     check_with_handler(
-        "test_append_auth_attr",Arc::new(AppendAuthAttr), "token has invalid MAC");
+        "test_append_auth_attr",
+        Arc::new(AppendAuthAttr),
+        "token has invalid MAC",
+    );
 }
 
 #[test]
@@ -437,7 +500,10 @@ fn test_cms_algorithm_protection_digest_algo_mismatch() {
     check_with_handler(
         "test_cms_algorithm_protection_digest_algo_mismatch",
         attrs(|_, md| {
-            let p = cms_algorithm_protection(&digest_algorithm("sha3_512").unwrap(), Some(&hmac_sha256_algorithm()));
+            let p = cms_algorithm_protection(
+                &digest_algorithm("sha3_512").unwrap(),
+                Some(&hmac_sha256_algorithm()),
+            );
             cms_attributes(&[
                 content_type_attr(OID_PDF_MAC_INTEGRITY_INFO),
                 md_attr(md),
@@ -455,7 +521,10 @@ fn test_cms_algorithm_protection_mac_algo_mismatch() {
         attrs(|h, md| {
             // HmacAlgorithm({'algorithm': 'sha512'})
             let hmac_sha512 = tlv(0x30, &oid("1.2.840.113549.2.11"));
-            let p = cms_algorithm_protection(&digest_algorithm(&h.md_algorithm).unwrap(), Some(&hmac_sha512));
+            let p = cms_algorithm_protection(
+                &digest_algorithm(&h.md_algorithm).unwrap(),
+                Some(&hmac_sha512),
+            );
             cms_attributes(&[
                 content_type_attr(OID_PDF_MAC_INTEGRITY_INFO),
                 md_attr(md),
@@ -488,7 +557,10 @@ fn test_duplicate_content_type_attr() {
         "test_duplicate_content_type_attr",
         attrs(|_, md| {
             cms_attributes(&[
-                cms_attribute(OID_CONTENT_TYPE, &[&oid(OID_DATA), &oid(OID_PDF_MAC_INTEGRITY_INFO)]),
+                cms_attribute(
+                    OID_CONTENT_TYPE,
+                    &[&oid(OID_DATA), &oid(OID_PDF_MAC_INTEGRITY_INFO)],
+                ),
                 md_attr(md),
             ])
         }),
@@ -529,7 +601,10 @@ fn test_bad_md() {
         "test_bad_md",
         attrs(|_, _| {
             let dummy = md_hash("sha256", &[b"\xde\xad\xbe\xef"]).unwrap();
-            cms_attributes(&[content_type_attr(OID_PDF_MAC_INTEGRITY_INFO), md_attr(&dummy)])
+            cms_attributes(&[
+                content_type_attr(OID_PDF_MAC_INTEGRITY_INFO),
+                md_attr(&dummy),
+            ])
         }),
         "messageDigest attribute does not match",
     );
@@ -552,7 +627,8 @@ impl PdfMacTokenHandlerFactory for Token {
         signature_digest: Option<&[u8]>,
         dry_run: bool,
     ) -> Result<Vec<u8>, PdfError> {
-        let mut parts = default_build_auth_data(self, h, document_digest, signature_digest, dry_run)?;
+        let mut parts =
+            default_build_auth_data(self, h, document_digest, signature_digest, dry_run)?;
         Ok((self.0)(&mut parts, dry_run).unwrap_or_else(|| parts.to_content_info()))
     }
 }
@@ -578,7 +654,9 @@ fn test_with_unauth_attrs() {
 fn test_no_kdf() {
     check_with_handler(
         "test_no_kdf",
-        Arc::new(KeyingInfo(|ri| password_recipient_info(&wrapped_key(&ri), false))),
+        Arc::new(KeyingInfo(|ri| {
+            password_recipient_info(&wrapped_key(&ri), false)
+        })),
         "key derivation.*identified as pdfMacWrapKdf",
     );
 }
@@ -638,7 +716,11 @@ fn test_wrong_recipient_type() {
 struct WrongEncContentType;
 
 impl PdfMacTokenHandlerFactory for WrongEncContentType {
-    fn format_auth_attrs(&self, h: &PdfMacTokenHandler, _message_digest: &[u8]) -> Result<Vec<u8>, PdfError> {
+    fn format_auth_attrs(
+        &self,
+        h: &PdfMacTokenHandler,
+        _message_digest: &[u8],
+    ) -> Result<Vec<u8>, PdfError> {
         let md = md_hash(&h.md_algorithm, &[b"\xde\xad\xbe\xef"])?;
         default_format_auth_attrs(h, &md)
     }
@@ -661,7 +743,10 @@ impl PdfMacTokenHandlerFactory for WrongEncContentType {
 #[test]
 fn test_wrong_enc_content_type() {
     check_with_handler(
-        "test_wrong_enc_content_type",Arc::new(WrongEncContentType), "must be.*pdfMacIntegrityInfo");
+        "test_wrong_enc_content_type",
+        Arc::new(WrongEncContentType),
+        "must be.*pdfMacIntegrityInfo",
+    );
 }
 
 #[test]
@@ -669,7 +754,10 @@ fn test_wrong_token_content_type() {
     check_with_handler(
         "test_wrong_token_content_type",
         Arc::new(Token(|_, _| {
-            Some(tlv(0x30, &[oid(OID_DATA), tlv(0xa0, &octets(b"\xde\xad\xbe\xef"))].concat()))
+            Some(tlv(
+                0x30,
+                &[oid(OID_DATA), tlv(0xa0, &octets(b"\xde\xad\xbe\xef"))].concat(),
+            ))
         })),
         "must be.*type AuthenticatedData",
     );
@@ -697,17 +785,29 @@ fn test_unexpected_sig_digest() {
 
 #[test]
 fn test_missing_sig_digest() {
-    check_in_sig("test_missing_sig_digest", BOTH, Some("could not find signature digest"));
+    check_in_sig(
+        "test_missing_sig_digest",
+        BOTH,
+        Some("could not find signature digest"),
+    );
 }
 
 #[test]
 fn test_sig_wrong_sig_digest() {
-    check_in_sig("test_sig_wrong_sig_digest", BOTH, Some("Signature digest does not match value in"));
+    check_in_sig(
+        "test_sig_wrong_sig_digest",
+        BOTH,
+        Some("Signature digest does not match value in"),
+    );
 }
 
 #[test]
 fn test_sig_wrong_document_digest() {
-    check_in_sig("test_sig_wrong_document_digest", BOTH, Some("Document digest does not match value in"));
+    check_in_sig(
+        "test_sig_wrong_document_digest",
+        BOTH,
+        Some("Document digest does not match value in"),
+    );
 }
 
 #[test]
@@ -822,21 +922,36 @@ fn test_missing_sig_ref() {
 
 #[test]
 fn test_malformed_sig_ref_direct() {
-    check_in_sig("test_malformed_sig_ref_direct", BOTH, Some("must be an indirect reference"));
+    check_in_sig(
+        "test_malformed_sig_ref_direct",
+        BOTH,
+        Some("must be an indirect reference"),
+    );
 }
 
 #[test]
 fn test_malformed_sig_ref_not_dictionary() {
-    check_in_sig("test_malformed_sig_ref_not_dictionary", BOTH, Some("does not point to a dictionary"));
+    check_in_sig(
+        "test_malformed_sig_ref_not_dictionary",
+        BOTH,
+        Some("does not point to a dictionary"),
+    );
 }
 
 #[test]
 fn test_malformed_sig_ref_not_signature() {
-    check_in_sig("test_malformed_sig_ref_not_signature", BOTH, Some("Failed to retrieve signature contents"));
+    check_in_sig(
+        "test_malformed_sig_ref_not_signature",
+        BOTH,
+        Some("Failed to retrieve signature contents"),
+    );
 }
 
 fn rfind(hay: &[u8], needle: &[u8]) -> usize {
-    (0..=hay.len() - needle.len()).rev().find(|&i| &hay[i..i + needle.len()] == needle).unwrap()
+    (0..=hay.len() - needle.len())
+        .rev()
+        .find(|&i| &hay[i..i + needle.len()] == needle)
+        .unwrap()
 }
 
 /// Same-length byte replacement in the last trailer of the file.
@@ -850,14 +965,22 @@ fn patch_last(out: &mut [u8], from: &[u8], to: &[u8]) {
 fn test_mac_location_missing() {
     let mut out = write_with_handler(EncryptionType::Standard, None);
     // `del value['/MACLocation']`: rename the key
-    patch_last(&mut out, b"/MACLocation /Standalone", b"/MACLocatioX /Standalone");
+    patch_last(
+        &mut out,
+        b"/MACLocation /Standalone",
+        b"/MACLocatioX /Standalone",
+    );
     assert_mac_bad(&out, "Failed to locate MAC in document");
 }
 
 #[test]
 fn test_mac_location_unsupported() {
     let mut out = write_with_handler(EncryptionType::Standard, None);
-    patch_last(&mut out, b"/MACLocation /Standalone", b"/MACLocation /Bleh      ");
+    patch_last(
+        &mut out,
+        b"/MACLocation /Standalone",
+        b"/MACLocation /Bleh      ",
+    );
     assert_mac_bad(&out, "Failed to locate MAC in document");
 }
 
@@ -897,17 +1020,29 @@ fn test_byte_range_missing() {
 
 #[test]
 fn test_signer_info_cardinality_multi() {
-    check_in_sig("test_signer_info_cardinality_multi", &["standard"], Some("exactly 1 signerInfo"));
+    check_in_sig(
+        "test_signer_info_cardinality_multi",
+        &["standard"],
+        Some("exactly 1 signerInfo"),
+    );
 }
 
 #[test]
 fn test_signer_info_cardinality_zero() {
-    check_in_sig("test_signer_info_cardinality_zero", &["standard"], Some("exactly 1 signerInfo"));
+    check_in_sig(
+        "test_signer_info_cardinality_zero",
+        &["standard"],
+        Some("exactly 1 signerInfo"),
+    );
 }
 
 #[test]
 fn test_pdf_mac_attr_missing() {
-    check_in_sig("test_pdf_mac_attr_missing", &["standard"], Some("exactly 1 pdfMacData unsigned attribute"));
+    check_in_sig(
+        "test_pdf_mac_attr_missing",
+        &["standard"],
+        Some("exactly 1 pdfMacData unsigned attribute"),
+    );
 }
 
 #[test]

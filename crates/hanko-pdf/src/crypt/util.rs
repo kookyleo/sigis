@@ -124,7 +124,9 @@ fn maybe_unpad(mut plaintext: Vec<u8>, use_padding: bool, block_size: usize) -> 
     let n = plaintext.last().copied().map_or(0, usize::from);
     let ok = (1..=block_size).contains(&n)
         && n <= plaintext.len()
-        && plaintext[plaintext.len() - n..].iter().all(|&b| usize::from(b) == n);
+        && plaintext[plaintext.len() - n..]
+            .iter()
+            .all(|&b| usize::from(b) == n);
     if !ok {
         return Err(invalid("Invalid padding bytes."));
     }
@@ -139,14 +141,17 @@ fn pad(data: &[u8], block_size: usize) -> Vec<u8> {
     out
 }
 
-fn with_aes<T>(
-    key: &[u8],
-    f128: impl FnOnce(&dyn AesOps) -> T,
-) -> PdfResult<T> {
+fn with_aes<T>(key: &[u8], f128: impl FnOnce(&dyn AesOps) -> T) -> PdfResult<T> {
     match key.len() {
-        16 => Ok(f128(&AesImpl(Aes128B(aes::Aes128::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?)))),
-        24 => Ok(f128(&AesImpl(Aes192B(aes::Aes192::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?)))),
-        32 => Ok(f128(&AesImpl(Aes256B(aes::Aes256::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?)))),
+        16 => Ok(f128(&AesImpl(Aes128B(
+            aes::Aes128::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?,
+        )))),
+        24 => Ok(f128(&AesImpl(Aes192B(
+            aes::Aes192::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?,
+        )))),
+        32 => Ok(f128(&AesImpl(Aes256B(
+            aes::Aes256::new_from_slice(key).map_err(|_| invalid("Invalid key size"))?,
+        )))),
         n => Err(invalid(&format!("Invalid key size ({}) for AES.", n * 8))),
     }
 }
@@ -177,7 +182,12 @@ impl<B: Block> AesOps for AesImpl<B> {
 }
 
 /// AES-CBC decryption with optional PKCS#7 unpadding (`aes_cbc_decrypt`).
-pub(crate) fn aes_cbc_decrypt(key: &[u8], data: &[u8], iv: &[u8], use_padding: bool) -> PdfResult<Vec<u8>> {
+pub(crate) fn aes_cbc_decrypt(
+    key: &[u8],
+    data: &[u8],
+    iv: &[u8],
+    use_padding: bool,
+) -> PdfResult<Vec<u8>> {
     let pt = with_aes(key, |c| c.cbc_dec(iv, data))??;
     maybe_unpad(pt, use_padding, 16)
 }
@@ -194,7 +204,11 @@ pub(crate) fn aes_cbc_encrypt(
         Some(iv) => iv.to_vec(),
         None => random_bytes(16)?,
     };
-    let data = if use_padding { pad(data, 16) } else { data.to_vec() };
+    let data = if use_padding {
+        pad(data, 16)
+    } else {
+        data.to_vec()
+    };
     let ct = with_aes(key, |c| c.cbc_enc(&iv, &data))??;
     Ok((iv, ct))
 }
@@ -232,7 +246,12 @@ pub(crate) fn tripledes_decrypt(key: &[u8], data: &[u8], iv: &[u8]) -> PdfResult
             iv,
             data,
         )?,
-        n => return Err(invalid(&format!("Invalid key size ({}) for TripleDES.", n * 8))),
+        n => {
+            return Err(invalid(&format!(
+                "Invalid key size ({}) for TripleDES.",
+                n * 8
+            )))
+        }
     };
     maybe_unpad(pt, true, 8)
 }
@@ -257,9 +276,16 @@ pub(crate) fn rc4_encrypt(key: &[u8], data: &[u8]) -> Vec<u8> {
 pub(crate) fn aes_gcm_encrypt(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> PdfResult<Vec<u8>> {
     use aes_gcm::aead::{Aead, Payload};
     let nonce = aes_gcm::Nonce::try_from(nonce).map_err(|_| invalid("Invalid nonce length"))?;
-    let c = aes_gcm::Aes256Gcm::new_from_slice(key).map_err(|_| invalid("AESGCM key must be 256 bits."))?;
-    c.encrypt(&nonce, Payload { msg: plaintext, aad: b"" })
-        .map_err(|_| invalid("AES-GCM encryption failed"))
+    let c = aes_gcm::Aes256Gcm::new_from_slice(key)
+        .map_err(|_| invalid("AESGCM key must be 256 bits."))?;
+    c.encrypt(
+        &nonce,
+        Payload {
+            msg: plaintext,
+            aad: b"",
+        },
+    )
+    .map_err(|_| invalid("AES-GCM encryption failed"))
 }
 
 /// AES-GCM decryption; any failure is reported as an invalid tag.
@@ -267,17 +293,28 @@ pub(crate) fn aes_gcm_decrypt(key: &[u8], nonce: &[u8], data: &[u8]) -> PdfResul
     use aes_gcm::aead::{Aead, Payload};
     let bad = || PdfError::Read("Invalid GCM tag".into());
     let nonce = aes_gcm::Nonce::try_from(nonce).map_err(|_| bad())?;
-    let c = aes_gcm::Aes256Gcm::new_from_slice(key).map_err(|_| invalid("AESGCM key must be 256 bits."))?;
-    c.decrypt(&nonce, Payload { msg: data, aad: b"" }).map_err(|_| bad())
+    let c = aes_gcm::Aes256Gcm::new_from_slice(key)
+        .map_err(|_| invalid("AESGCM key must be 256 bits."))?;
+    c.decrypt(
+        &nonce,
+        Payload {
+            msg: data,
+            aad: b"",
+        },
+    )
+    .map_err(|_| bad())
 }
 
 /// AES key wrap (RFC 3394) with a KEK of 16, 24 or 32 bytes.
 pub(crate) fn aes_key_wrap(kek: &[u8], key: &[u8]) -> PdfResult<Vec<u8>> {
     let mut buf = vec![0u8; key.len() + 8];
     let r = match kek.len() {
-        16 => aes_kw::KwAes128::new_from_slice(kek).map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
-        24 => aes_kw::KwAes192::new_from_slice(kek).map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
-        32 => aes_kw::KwAes256::new_from_slice(kek).map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
+        16 => aes_kw::KwAes128::new_from_slice(kek)
+            .map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
+        24 => aes_kw::KwAes192::new_from_slice(kek)
+            .map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
+        32 => aes_kw::KwAes256::new_from_slice(kek)
+            .map(|k| k.wrap_key(key, &mut buf).map(<[u8]>::to_vec)),
         _ => return Err(invalid("The wrapping key must be a valid AES key length")),
     };
     r.map_err(|_| invalid("Invalid key length"))?
@@ -317,7 +354,10 @@ mod tests {
         let key = [7u8; 32];
         let (iv, ct) = aes_cbc_encrypt(&key, b"hello world", None, true).unwrap();
         assert_eq!(ct.len(), 16);
-        assert_eq!(aes_cbc_decrypt(&key, &ct, &iv, true).unwrap(), b"hello world");
+        assert_eq!(
+            aes_cbc_decrypt(&key, &ct, &iv, true).unwrap(),
+            b"hello world"
+        );
         // empty plaintext without padding is tolerated
         assert_eq!(aes_cbc_decrypt(&key, b"", &iv, true).unwrap(), b"");
         // bad padding

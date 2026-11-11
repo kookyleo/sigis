@@ -95,7 +95,10 @@ fn test_parse_content_stream_with_comments() {
         (vec![b"q %blah\n1 0 0 -1 0 100 cm Q"], 8),
         (vec![b"q %blah\n%foo bar baz\n1 0 0 -1 0 100 cm\nQ"], 21),
         (vec![b"q 1 0 0 -1 0 100 cm Q\n%end of stream comment"], 2),
-        (vec![b"q %blah\n\r%foo bar baz\r\n1 0 0 -1 0 100 cm\r\nQ"], 23),
+        (
+            vec![b"q %blah\n\r%foo bar baz\r\n1 0 0 -1 0 100 cm\r\nQ"],
+            23,
+        ),
         (vec![b"q %blah\n %foo bar baz\n 1 0 0 -1 0 100 cm\n Q"], 23),
         (vec![b"q %one", b"1 0 0 -1 0 100 cm %two", b"Q %three"], 0),
     ];
@@ -125,11 +128,26 @@ fn test_parse_dict_args() {
     ]);
     let cases: Vec<(&[u8], Object)> = vec![
         (b"<<>> BDC EMC", dict(vec![])),
-        (b"<</Foo /Bar>> BDC EMC", dict(vec![("Foo", pdf_name("Bar"))])),
-        (b"q <</Foo /Bar>> BDC EMC Q", dict(vec![("Foo", pdf_name("Bar"))])),
-        (b"q <</Foo <</Bar/Baz>> /Quux [1]>> BDC EMC Q", foo_quux.clone()),
-        (b"q <</Foo<</Bar/Baz>>\n/Quux [1]>>\n BDC EMC Q", foo_quux.clone()),
-        (b"q <</Foo<</Bar/Baz>> %with a comment\n/Quux [1]>>\n BDC EMC Q", foo_quux),
+        (
+            b"<</Foo /Bar>> BDC EMC",
+            dict(vec![("Foo", pdf_name("Bar"))]),
+        ),
+        (
+            b"q <</Foo /Bar>> BDC EMC Q",
+            dict(vec![("Foo", pdf_name("Bar"))]),
+        ),
+        (
+            b"q <</Foo <</Bar/Baz>> /Quux [1]>> BDC EMC Q",
+            foo_quux.clone(),
+        ),
+        (
+            b"q <</Foo<</Bar/Baz>>\n/Quux [1]>>\n BDC EMC Q",
+            foo_quux.clone(),
+        ),
+        (
+            b"q <</Foo<</Bar/Baz>> %with a comment\n/Quux [1]>>\n BDC EMC Q",
+            foo_quux,
+        ),
     ];
     for (d, expected) in cases {
         let (_, res) = parse(&[d]);
@@ -145,7 +163,10 @@ fn test_parse_arr_args() {
     let fbb = Object::Array(vec![s("foo"), 100.into(), s("bar"), (-20).into(), s("baz")]);
     let cases: Vec<(&[u8], Object)> = vec![
         (b"[] TJ", Object::Array(vec![])),
-        (b"[null null] TJ", Object::Array(vec![Object::Null, Object::Null])),
+        (
+            b"[null null] TJ",
+            Object::Array(vec![Object::Null, Object::Null]),
+        ),
         (b"[(foo) 100 (bar) -20 (baz)] TJ", fbb.clone()),
         (b"BT [(foo) 100 (bar) -20 (baz)] TJ ET", fbb.clone()),
         (b"[(foo)\n100\n(bar)\n-20 (baz)] TJ", fbb.clone()),

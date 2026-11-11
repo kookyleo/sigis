@@ -38,11 +38,15 @@ fn asn1_err(msg: &str) -> PdfError {
 impl<'a> Tlv<'a> {
     /// Parse the first TLV of `input`, returning it and the remaining bytes.
     pub fn parse(input: &'a [u8]) -> PdfResult<(Tlv<'a>, &'a [u8])> {
-        let (&tag, rest) = input.split_first().ok_or_else(|| asn1_err("unexpected end of data"))?;
+        let (&tag, rest) = input
+            .split_first()
+            .ok_or_else(|| asn1_err("unexpected end of data"))?;
         if tag & 0x1f == 0x1f {
             return Err(asn1_err("high tag numbers are not supported"));
         }
-        let (&l0, mut rest) = rest.split_first().ok_or_else(|| asn1_err("missing length"))?;
+        let (&l0, mut rest) = rest
+            .split_first()
+            .ok_or_else(|| asn1_err("missing length"))?;
         let len = if l0 < 0x80 {
             usize::from(l0)
         } else {
@@ -88,7 +92,10 @@ impl<'a> Tlv<'a> {
     pub fn expect(input: &'a [u8], tag: u8) -> PdfResult<(Tlv<'a>, &'a [u8])> {
         let (t, rest) = Self::parse(input)?;
         if t.tag != tag {
-            return Err(asn1_err(&format!("expected tag {tag:#04x}, found {:#04x}", t.tag)));
+            return Err(asn1_err(&format!(
+                "expected tag {tag:#04x}, found {:#04x}",
+                t.tag
+            )));
         }
         Ok((t, rest))
     }
@@ -153,7 +160,10 @@ pub(crate) fn oid_to_string(v: &[u8]) -> PdfResult<String> {
         if cur == 0 && b == 0x80 {
             return Err(asn1_err("non-minimal OID encoding"));
         }
-        cur = cur.checked_mul(128).ok_or_else(|| asn1_err("OID arc too large"))? | u128::from(b & 0x7f);
+        cur = cur
+            .checked_mul(128)
+            .ok_or_else(|| asn1_err("OID arc too large"))?
+            | u128::from(b & 0x7f);
         if b & 0x80 == 0 {
             if arcs.is_empty() {
                 let (a, b) = if cur < 40 {
@@ -173,7 +183,11 @@ pub(crate) fn oid_to_string(v: &[u8]) -> PdfResult<String> {
             return Err(asn1_err("truncated OID"));
         }
     }
-    Ok(arcs.iter().map(u128::to_string).collect::<Vec<_>>().join("."))
+    Ok(arcs
+        .iter()
+        .map(u128::to_string)
+        .collect::<Vec<_>>()
+        .join("."))
 }
 
 /// Encode a TLV.
@@ -263,7 +277,9 @@ impl<'a> AlgId<'a> {
             return Err(asn1_err("expected AlgorithmIdentifier"));
         }
         let ch = t.children()?;
-        let first = ch.first().ok_or_else(|| asn1_err("empty AlgorithmIdentifier"))?;
+        let first = ch
+            .first()
+            .ok_or_else(|| asn1_err("empty AlgorithmIdentifier"))?;
         if ch.len() > 2 {
             return Err(asn1_err("malformed AlgorithmIdentifier"));
         }
@@ -291,7 +307,12 @@ mod tests {
 
     #[test]
     fn oid_roundtrip() {
-        for o in ["1.2.840.113549.1.9.16.1.2", "1.0.32004.1.0", "2.16.840.1.101.3.4.2.1", "2.999"] {
+        for o in [
+            "1.2.840.113549.1.9.16.1.2",
+            "1.0.32004.1.0",
+            "2.16.840.1.101.3.4.2.1",
+            "2.999",
+        ] {
             let enc = oid(o);
             let (t, rest) = Tlv::parse(&enc).unwrap();
             assert!(rest.is_empty());
@@ -305,7 +326,10 @@ mod tests {
         let enc = octets(&v);
         let t = Tlv::parse_exact(&enc).unwrap();
         assert_eq!(t.value, &v[..]);
-        assert_eq!(Tlv::parse(&[0x30, 0x80, 0, 0]).unwrap_err().class_name(), "ValueError");
+        assert_eq!(
+            Tlv::parse(&[0x30, 0x80, 0, 0]).unwrap_err().class_name(),
+            "ValueError"
+        );
         assert_eq!(uint(0), [2, 1, 0]);
         assert_eq!(uint(128), [2, 2, 0, 128]);
     }

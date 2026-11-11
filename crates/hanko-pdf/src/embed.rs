@@ -146,10 +146,16 @@ impl FileSpec {
         if !self.f_related_files.is_empty() || !self.uf_related_files.is_empty() {
             let mut rf = Dictionary::new();
             if !self.f_related_files.is_empty() {
-                rf.set("F", RelatedFileSpec::fmt_related_files(&self.f_related_files));
+                rf.set(
+                    "F",
+                    RelatedFileSpec::fmt_related_files(&self.f_related_files),
+                );
             }
             if !self.uf_related_files.is_empty() && self.file_name.is_some() {
-                rf.set("UF", RelatedFileSpec::fmt_related_files(&self.uf_related_files));
+                rf.set(
+                    "UF",
+                    RelatedFileSpec::fmt_related_files(&self.uf_related_files),
+                );
             }
             r.set("RF", Object::Dictionary(rf));
         }
@@ -164,7 +170,11 @@ enum Loc {
     InParent,
 }
 
-fn get_or_create_dict(w: &mut PdfWriter, parent: &mut Dictionary, key: &[u8]) -> PdfResult<(Dictionary, Loc, bool)> {
+fn get_or_create_dict(
+    w: &mut PdfWriter,
+    parent: &mut Dictionary,
+    key: &[u8],
+) -> PdfResult<(Dictionary, Loc, bool)> {
     match parent.get(key).cloned() {
         Ok(Object::Reference(r)) => match w.resolve(&Object::Reference(r))? {
             Object::Dictionary(d) => Ok((d, Loc::Indirect(r), false)),
@@ -189,7 +199,9 @@ fn get_or_create_dict(w: &mut PdfWriter, parent: &mut Dictionary, key: &[u8]) ->
 /// (`embed_file`).
 pub fn embed_file(w: &mut PdfWriter, spec: &FileSpec) -> PdfResult<()> {
     if spec.embedded_data.is_none() {
-        return Err(PdfError::write("File spec does not have an embedded file stream"));
+        return Err(PdfError::write(
+            "File spec does not have an embedded file stream",
+        ));
     }
     let spec_obj = spec.as_pdf_object();
     let mut root = w.root()?;
@@ -201,10 +213,15 @@ pub fn embed_file(w: &mut PdfWriter, spec: &FileSpec) -> PdfResult<()> {
     };
     let (mut ef_tree, ef_loc, _) = get_or_create_dict(w, &mut names, b"EmbeddedFiles")?;
     if ef_tree.has(b"Kids") {
-        return Err(PdfError::NotImplemented("Only flat name trees are supported right now".into()));
+        return Err(PdfError::NotImplemented(
+            "Only flat name trees are supported right now".into(),
+        ));
     }
     let spec_ref = w.add_object(Object::Dictionary(spec_obj))?;
-    let new_entries = [text_string(&spec.file_spec_string), Object::Reference(spec_ref)];
+    let new_entries = [
+        text_string(&spec.file_spec_string),
+        Object::Reference(spec_ref),
+    ];
     match ef_tree.get(b"Names").cloned() {
         Ok(Object::Reference(r)) => {
             let mut arr = match w.resolve(&Object::Reference(r))? {
@@ -299,9 +316,9 @@ pub fn wrap_encrypted_payload(
     include_explanation_page: bool,
 ) -> PdfResult<crate::writer::PdfFileWriter> {
     use crate::crypt::{
-        CryptFilter, CryptFilterConfiguration, PubKeyAdbeSubFilter, PubKeyCfData, PubKeyPermissions,
-        RecipientEncryptionPolicy, SecurityHandler, SecurityHandlerVersion, StandardEncryptOptions,
-        DEF_EMBEDDED_FILE, STD_CF,
+        CryptFilter, CryptFilterConfiguration, PubKeyAdbeSubFilter, PubKeyCfData,
+        PubKeyPermissions, RecipientEncryptionPolicy, SecurityHandler, SecurityHandlerVersion,
+        StandardEncryptOptions, DEF_EMBEDDED_FILE, STD_CF,
     };
     let mut w = crate::writer::PdfFileWriter::new(true, true)?;
     let sh = match encryption {
@@ -325,13 +342,22 @@ pub fn wrap_encrypted_payload(
                 true,
                 None,
             )?;
-            sh.add_recipients(&certs, PubKeyPermissions::allow_everything(), RecipientEncryptionPolicy::default())?;
+            sh.add_recipients(
+                &certs,
+                PubKeyPermissions::allow_everything(),
+                RecipientEncryptionPolicy::default(),
+            )?;
             sh
         }
         WrapEncryption::Password(pw) => {
             let mut cf = CryptFilter::standard_aes(32)?;
             cf.set_embedded_only();
-            let cfc = CryptFilterConfiguration::new(vec![(STD_CF, cf)], "Identity", "Identity", Some(STD_CF))?;
+            let cfc = CryptFilterConfiguration::new(
+                vec![(STD_CF, cf)],
+                "Identity",
+                "Identity",
+                Some(STD_CF),
+            )?;
             SecurityHandler::build_from_pw(
                 pw.as_str(),
                 None,
@@ -387,13 +413,19 @@ pub fn wrap_encrypted_payload(
             (scoped to embedded files.) Tj
         ET
         ";
-        let stream = DecodedStream::new(Dictionary::new(), content.as_bytes().to_vec()).to_stream()?;
+        let stream =
+            DecodedStream::new(Dictionary::new(), content.as_bytes().to_vec()).to_stream()?;
         let contents = w.add_object(Object::Stream(stream))?;
         let mut page = Dictionary::new();
         page.set("Type", Object::Name(b"Page".to_vec()));
         page.set(
             "MediaBox",
-            Object::Array(vec![0.into(), 0.into(), Object::Real(595.28), Object::Real(841.89)]),
+            Object::Array(vec![
+                0.into(),
+                0.into(),
+                Object::Real(595.28),
+                Object::Real(841.89),
+            ]),
         );
         page.set("Resources", Object::Dictionary(resources));
         page.set("Contents", Object::Reference(contents));

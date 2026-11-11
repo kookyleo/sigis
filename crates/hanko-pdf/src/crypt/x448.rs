@@ -49,7 +49,11 @@ pub(crate) fn x448(k: &[u8; 56], u: &[u8; 56]) -> PdfResult<[u8; 56]> {
     k[55] |= 128;
     // decodeUCoordinate: all 448 bits, reduced modulo p (u < 2^448 < 2p)
     let u = U448::from_le_slice(u);
-    let u = U448::ct_select(&u, &u.wrapping_sub(&p), Choice::from_u8_lsb(u8::from(u >= p)));
+    let u = U448::ct_select(
+        &u,
+        &u.wrapping_sub(&p),
+        Choice::from_u8_lsb(u8::from(u >= p)),
+    );
     let x1 = Fe::new(&u, &params);
     let one = Fe::new(&U448::ONE, &params);
     let zero = Fe::new(&U448::ZERO, &params);
@@ -90,7 +94,10 @@ mod tests {
     use super::x448;
 
     fn unhex(s: &str) -> [u8; 56] {
-        let v: Vec<u8> = (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect();
+        let v: Vec<u8> = (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+            .collect();
         v.try_into().unwrap()
     }
 

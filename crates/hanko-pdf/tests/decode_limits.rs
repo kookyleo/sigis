@@ -16,7 +16,9 @@ use hanko_pdf::filters::{bounded_decompress, flate_compress, Decoder};
 use hanko_pdf::lopdf::{Dictionary, Object, Stream};
 use hanko_pdf::stream::{encoded_stream, no_deref, DecodedStream};
 use hanko_pdf::xref::{expected_xref_stream_size_of, parse_xref_stream};
-use hanko_pdf::{IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, ReaderOptions};
+use hanko_pdf::{
+    IncrementalWriter, PdfError, PdfFile, PdfFileWriter, PdfHandler, PdfHandlerExt, ReaderOptions,
+};
 
 const MIB: u64 = 1024 * 1024;
 
@@ -32,7 +34,12 @@ fn make_stream(encoded: Vec<u8>, filters: &[&str], extra: &[(&str, Object)]) -> 
     let mut d = Dictionary::new();
     d.set(
         "Filter",
-        Object::Array(filters.iter().map(|f| hanko_pdf::generic::pdf_name(f)).collect()),
+        Object::Array(
+            filters
+                .iter()
+                .map(|f| hanko_pdf::generic::pdf_name(f))
+                .collect(),
+        ),
     );
     for (k, v) in extra {
         d.set(*k, v.clone());
@@ -42,12 +49,19 @@ fn make_stream(encoded: Vec<u8>, filters: &[&str], extra: &[(&str, Object)]) -> 
 
 fn pdf_with_streams(streams: Vec<Object>) -> (Vec<u8>, Vec<u32>) {
     let mut w = PdfFileWriter::new(true, true).unwrap();
-    let ids = streams.into_iter().map(|s| w.add_object(s).unwrap().0).collect();
+    let ids = streams
+        .into_iter()
+        .map(|s| w.add_object(s).unwrap().0)
+        .collect();
     (w.write().unwrap(), ids)
 }
 
 fn flate_pdf(payload: &[u8]) -> (Vec<u8>, u32) {
-    let (out, ids) = pdf_with_streams(vec![make_stream(flate_compress(payload), &["FlateDecode"], &[])]);
+    let (out, ids) = pdf_with_streams(vec![make_stream(
+        flate_compress(payload),
+        &["FlateDecode"],
+        &[],
+    )]);
     (out, ids[0])
 }
 
@@ -156,9 +170,19 @@ fn test_stream_output_cap() {
         (d(), DecodePurpose::Crl, None, Some(50_000_000)),
         (d(), DecodePurpose::Generic, None, Some(256 * MIB)),
         (d(), DecodePurpose::XrefStream, None, Some(256 * MIB)),
-        (DecodeLimits::for_untrusted_input(), DecodePurpose::Generic, Some(100), Some(4196)),
+        (
+            DecodeLimits::for_untrusted_input(),
+            DecodePurpose::Generic,
+            Some(100),
+            Some(4196),
+        ),
         (d(), DecodePurpose::Generic, Some(-50), Some(4096)),
-        (DecodeLimits::for_trusted_input(), DecodePurpose::Generic, Some(100), None),
+        (
+            DecodeLimits::for_trusted_input(),
+            DecodePurpose::Generic,
+            Some(100),
+            None,
+        ),
         (
             DecodeLimits {
                 per_stream: StreamDecodeLimits {
@@ -176,7 +200,10 @@ fn test_stream_output_cap() {
     ];
     for (limits, purpose, expected_size, expected) in cases {
         let ctx = DecodeContext::new(limits, None);
-        assert_eq!(ctx.stream_output_cap(1_000_000, purpose, expected_size), expected);
+        assert_eq!(
+            ctx.stream_output_cap(1_000_000, purpose, expected_size),
+            expected
+        );
     }
 }
 
@@ -220,7 +247,12 @@ fn test_context_without_budget() {
 
 #[test]
 fn test_context_stage_cap() {
-    for (cap, expected) in [(None, 1000), (Some(500), 500), (Some(1000), 1000), (Some(5000), 1000)] {
+    for (cap, expected) in [
+        (None, 1000),
+        (Some(500), 500),
+        (Some(1000), 1000),
+        (Some(5000), 1000),
+    ] {
         let ctx = DecodeContext::new(budget_limits(1000), Some(10));
         assert_eq!(ctx.stage_output_cap(cap), Some(expected));
     }
@@ -255,7 +287,9 @@ fn test_flate_truncated() {
         let encoded = flate_compress(&[0u8; 1000]);
         let encoded = &encoded[..encoded.len() - 6];
         // zlib.error in pyHanko
-        assert!(bounded_decompress(encoded, cap).unwrap_err().is_stream_error());
+        assert!(bounded_decompress(encoded, cap)
+            .unwrap_err()
+            .is_stream_error());
     }
 }
 
@@ -276,7 +310,9 @@ fn test_flate_decode_params() {
     for (params, expected) in cases {
         for cap in [None, Some(MIB)] {
             let encoded = flate_compress(PNG_UP_ROWS);
-            let out = Decoder::Flate.decode_bounded(&encoded, params.as_ref(), cap, &no_deref).unwrap();
+            let out = Decoder::Flate
+                .decode_bounded(&encoded, params.as_ref(), cap, &no_deref)
+                .unwrap();
             assert_eq!(out, expected);
         }
     }
@@ -287,16 +323,32 @@ fn test_flate_unsupported_predictor() {
     let mut p = Dictionary::new();
     p.set("Predictor", Object::Integer(2));
     p.set("Columns", Object::Integer(3));
-    let e = Decoder::Flate.decode(&flate_compress(b"abc"), Some(&p), &no_deref).unwrap_err();
+    let e = Decoder::Flate
+        .decode(&flate_compress(b"abc"), Some(&p), &no_deref)
+        .unwrap_err();
     assert!(matches!(e, PdfError::NotImplemented(_)));
 }
 
 #[test]
 fn test_default_decode_bounded() {
     let encoded = b"48656c6c6f>";
-    assert_eq!(Decoder::AsciiHex.decode_bounded(encoded, None, Some(5), &no_deref).unwrap(), b"Hello");
-    assert_eq!(Decoder::AsciiHex.decode_bounded(encoded, None, None, &no_deref).unwrap(), b"Hello");
-    assert!(is_limit(&Decoder::AsciiHex.decode_bounded(encoded, None, Some(4), &no_deref).unwrap_err()));
+    assert_eq!(
+        Decoder::AsciiHex
+            .decode_bounded(encoded, None, Some(5), &no_deref)
+            .unwrap(),
+        b"Hello"
+    );
+    assert_eq!(
+        Decoder::AsciiHex
+            .decode_bounded(encoded, None, None, &no_deref)
+            .unwrap(),
+        b"Hello"
+    );
+    assert!(is_limit(
+        &Decoder::AsciiHex
+            .decode_bounded(encoded, None, Some(4), &no_deref)
+            .unwrap_err()
+    ));
 }
 
 #[test]
@@ -309,8 +361,15 @@ fn test_limit_error_is_read_error() {
 #[test]
 fn test_stacked_bomb() {
     let bomb = stacked_bomb();
-    for (limits, rejected) in [(None, true), (Some(DecodeLimits::for_trusted_input()), false)] {
-        let (out, ids) = pdf_with_streams(vec![make_stream(bomb.clone(), &["FlateDecode", "FlateDecode"], &[])]);
+    for (limits, rejected) in [
+        (None, true),
+        (Some(DecodeLimits::for_trusted_input()), false),
+    ] {
+        let (out, ids) = pdf_with_streams(vec![make_stream(
+            bomb.clone(),
+            &["FlateDecode", "FlateDecode"],
+            &[],
+        )]);
         let r = open(&out, limits);
         if rejected {
             let e = assert_err_matches(data_of(&r, ids[0]), "exceeds the limit");
@@ -332,7 +391,8 @@ fn test_single_layer_flate_not_rejected() {
 #[test]
 fn test_default_context_without_reader() {
     // detached / unbound streams use the default limits
-    let Object::Stream(s) = make_stream(stacked_bomb(), &["FlateDecode", "FlateDecode"], &[]) else {
+    let Object::Stream(s) = make_stream(stacked_bomb(), &["FlateDecode", "FlateDecode"], &[])
+    else {
         panic!()
     };
     assert!(is_limit(&DecodedStream::from_stream(&s).unwrap_err()));
@@ -377,7 +437,11 @@ fn test_cached_data_ignores_later_stricter_limits() {
     let r = open(&out, None);
     assert_eq!(data_of(&r, id).unwrap(), big);
     let s = stream_of(&r, id);
-    assert_eq!(r.read_stream_data(&s, DecodePurpose::Certificate, None).unwrap(), big);
+    assert_eq!(
+        r.read_stream_data(&s, DecodePurpose::Certificate, None)
+            .unwrap(),
+        big
+    );
 }
 
 fn read_objstm(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
@@ -385,7 +449,9 @@ fn read_objstm(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
     let stm = w.prepare_object_stream(true).unwrap();
     let mut d = Dictionary::new();
     d.set("Foo", Object::Integer(7));
-    let id = w.add_object_ext(Object::Dictionary(d), Some(stm), None).unwrap();
+    let id = w
+        .add_object_ext(Object::Dictionary(d), Some(stm), None)
+        .unwrap();
     let r = open(&w.write().unwrap(), limits);
     let d = as_dict(r.get_object(id)?);
     assert_eq!(get(&r, &d, "Foo"), Object::Integer(7));
@@ -395,7 +461,13 @@ fn read_objstm(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
 fn read_dss(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
     let cert_der = hanko_testdata::read(&["pyhanko-certvalidator", "self-signed-with-policy.crt"]);
     let mut w = PdfFileWriter::new(true, true).unwrap();
-    let cert_ref = w.add_object(make_stream(flate_compress(&cert_der), &["FlateDecode"], &[])).unwrap();
+    let cert_ref = w
+        .add_object(make_stream(
+            flate_compress(&cert_der),
+            &["FlateDecode"],
+            &[],
+        ))
+        .unwrap();
     let mut dss = Dictionary::new();
     dss.set("Certs", Object::Array(vec![Object::Reference(cert_ref)]));
     let dss_ref = w.add_object(Object::Dictionary(dss)).unwrap();
@@ -428,11 +500,17 @@ fn read_xmp(limits: Option<DecodeLimits>) -> Result<(), PdfError> {
 #[test]
 fn test_purpose_applied() {
     read_xmp(None).unwrap();
-    assert!(is_limit(&read_xmp(Some(tiny_limit(DecodePurpose::XmpMetadata))).unwrap_err()));
+    assert!(is_limit(
+        &read_xmp(Some(tiny_limit(DecodePurpose::XmpMetadata))).unwrap_err()
+    ));
     read_objstm(None).unwrap();
-    assert!(is_limit(&read_objstm(Some(tiny_limit(DecodePurpose::ObjectStream))).unwrap_err()));
+    assert!(is_limit(
+        &read_objstm(Some(tiny_limit(DecodePurpose::ObjectStream))).unwrap_err()
+    ));
     read_dss(None).unwrap();
-    assert!(is_limit(&read_dss(Some(tiny_limit(DecodePurpose::Certificate))).unwrap_err()));
+    assert!(is_limit(
+        &read_dss(Some(tiny_limit(DecodePurpose::Certificate))).unwrap_err()
+    ));
 }
 
 fn ints(v: &[i64]) -> Object {
@@ -442,12 +520,18 @@ fn ints(v: &[i64]) -> Object {
 #[test]
 fn test_expected_xref_stream_size() {
     let w = ints(&[1, 2, 1]);
-    assert_eq!(expected_xref_stream_size_of(&ints(&[0, 3, 10, 2]), Some(&w)), Some(25));
+    assert_eq!(
+        expected_xref_stream_size_of(&ints(&[0, 3, 10, 2]), Some(&w)),
+        Some(25)
+    );
     assert_eq!(
         expected_xref_stream_size_of(&Object::Array(vec![0.into(), Object::Null]), Some(&w)),
         None
     );
-    assert_eq!(expected_xref_stream_size_of(&ints(&[0, 3, 10]), Some(&w)), None);
+    assert_eq!(
+        expected_xref_stream_size_of(&ints(&[0, 3, 10]), Some(&w)),
+        None
+    );
     assert_eq!(expected_xref_stream_size_of(&ints(&[0, 3]), None), None);
 }
 
@@ -457,10 +541,18 @@ fn test_parse_xref_stream_expected_size() {
         let mut data = b"\x01\x00\x10\x00".repeat(3);
         data.extend(vec![0u8; padding]);
         let mut d = Dictionary::new();
-        d.set("Filter", Object::Array(vec![hanko_pdf::generic::pdf_name("FlateDecode")]));
+        d.set(
+            "Filter",
+            Object::Array(vec![hanko_pdf::generic::pdf_name("FlateDecode")]),
+        );
         d.set("W", ints(&[1, 2, 1]));
         d.set("Size", Object::Integer(3));
-        let res = parse_xref_stream(&d, &flate_compress(&data), &mut DecodeContext::default(), true);
+        let res = parse_xref_stream(
+            &d,
+            &flate_compress(&data),
+            &mut DecodeContext::default(),
+            true,
+        );
         if fails {
             assert!(is_limit(&res.unwrap_err()));
         } else {
@@ -471,14 +563,21 @@ fn test_parse_xref_stream_expected_size() {
 
 #[test]
 fn test_budget_exhausted() {
-    let payload = make_stream(flate_compress(&vec![0u8; MIB as usize]), &["FlateDecode"], &[]);
+    let payload = make_stream(
+        flate_compress(&vec![0u8; MIB as usize]),
+        &["FlateDecode"],
+        &[],
+    );
     let (out, ids) = pdf_with_streams(vec![payload; 4]);
     let r = open(&out, Some(budget_limits(3 * MIB + 100)));
     let start = r.decode_context().remaining_budget().unwrap();
     assert!(start <= (3 * MIB + 100) as i64);
     for (n, id) in ids[..3].iter().enumerate() {
         assert_eq!(data_of(&r, *id).unwrap().len() as u64, MIB);
-        assert_eq!(r.decode_context().remaining_budget().unwrap(), start - (n as i64 + 1) * MIB as i64);
+        assert_eq!(
+            r.decode_context().remaining_budget().unwrap(),
+            start - (n as i64 + 1) * MIB as i64
+        );
     }
     assert!(is_limit(&data_of(&r, ids[3]).unwrap_err()));
 }
@@ -490,15 +589,25 @@ fn test_budget_redecode_not_charged() {
     let start = r.decode_context().remaining_budget().unwrap();
     assert_eq!(data_of(&r, id).unwrap().len() as u64, MIB);
     assert_eq!(data_of(&r, id).unwrap().len() as u64, MIB);
-    assert_eq!(r.decode_context().remaining_budget().unwrap(), start - MIB as i64);
+    assert_eq!(
+        r.decode_context().remaining_budget().unwrap(),
+        start - MIB as i64
+    );
 }
 
 #[test]
 fn test_budget_charges_every_stage() {
     let compressed = flate_compress(&vec![0u8; MIB as usize]);
-    let mut hex: Vec<u8> = compressed.iter().flat_map(|b| format!("{b:02x}").into_bytes()).collect();
+    let mut hex: Vec<u8> = compressed
+        .iter()
+        .flat_map(|b| format!("{b:02x}").into_bytes())
+        .collect();
     hex.push(b'>');
-    let (out, ids) = pdf_with_streams(vec![make_stream(hex, &["ASCIIHexDecode", "FlateDecode"], &[])]);
+    let (out, ids) = pdf_with_streams(vec![make_stream(
+        hex,
+        &["ASCIIHexDecode", "FlateDecode"],
+        &[],
+    )]);
     let r = open(&out, Some(budget_limits(4 * MIB)));
     let start = r.decode_context().remaining_budget().unwrap();
     assert_eq!(data_of(&r, ids[0]).unwrap(), vec![0u8; MIB as usize]);
@@ -514,18 +623,33 @@ fn test_budget_fresh_for_historical_revisions() {
     let new_raw = vec![1u8; 2 * MIB as usize];
     let (out, id) = flate_pdf(&old_raw);
     let mut w = IncrementalWriter::new(open(&out, None));
-    w.update_object((id, 0), make_stream(flate_compress(&new_raw), &["FlateDecode"], &[]));
+    w.update_object(
+        (id, 0),
+        make_stream(flate_compress(&new_raw), &["FlateDecode"], &[]),
+    );
     let out = w.write().unwrap();
     let r = open(&out, Some(budget_limits(10 * MIB)));
     let start = r.decode_context().remaining_budget().unwrap();
     assert_eq!(data_of(&r, id).unwrap(), new_raw);
-    assert_eq!(r.decode_context().remaining_budget().unwrap(), start - 2 * MIB as i64);
+    assert_eq!(
+        r.decode_context().remaining_budget().unwrap(),
+        start - 2 * MIB as i64
+    );
     let hist = r.historical_resolver(0);
     assert_eq!(hist.decode_context().limits, r.decode_context().limits);
-    assert_eq!(hist.decode_context().remaining_budget().unwrap(), 10 * MIB as i64);
+    assert_eq!(
+        hist.decode_context().remaining_budget().unwrap(),
+        10 * MIB as i64
+    );
     assert_eq!(data_of(&hist, id).unwrap(), old_raw);
-    assert_eq!(hist.decode_context().remaining_budget().unwrap(), 9 * MIB as i64);
-    assert_eq!(r.decode_context().remaining_budget().unwrap(), start - 2 * MIB as i64);
+    assert_eq!(
+        hist.decode_context().remaining_budget().unwrap(),
+        9 * MIB as i64
+    );
+    assert_eq!(
+        r.decode_context().remaining_budget().unwrap(),
+        start - 2 * MIB as i64
+    );
 }
 
 #[test]
@@ -552,8 +676,12 @@ fn oversized_pdf() -> Vec<u8> {
             w.move_to_object_stream((idnum, gen), stm).unwrap();
         }
     }
-    w.add_object_ext(hanko_pdf::generic::byte_string(vec![0u8; 3 * MIB as usize]), Some(stm), None)
-        .unwrap();
+    w.add_object_ext(
+        hanko_pdf::generic::byte_string(vec![0u8; 3 * MIB as usize]),
+        Some(stm),
+        None,
+    )
+    .unwrap();
     w.write().unwrap()
 }
 

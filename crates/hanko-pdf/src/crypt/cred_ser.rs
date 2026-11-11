@@ -49,7 +49,9 @@ impl SerialisableCredential {
     /// Deserialise by type name (`SerialisableCredential.deserialise`).
     pub fn deserialise(ser_value: &SerialisedCredential) -> PdfResult<Self> {
         match ser_value.credential_type.as_str() {
-            PasswordCredential::NAME => PasswordCredential::from_der(&ser_value.data).map(Self::Password),
+            PasswordCredential::NAME => {
+                PasswordCredential::from_der(&ser_value.data).map(Self::Password)
+            }
             SimpleEnvelopeKeyDecrypter::NAME => {
                 SimpleEnvelopeKeyDecrypter::from_serialised(&ser_value.data).map(Self::PrivateKey)
             }
@@ -71,7 +73,9 @@ impl SerialisableCredential {
     pub(crate) fn class_name(&self) -> &'static str {
         match self {
             Self::Password(_) => "<class 'pyhanko.pdf_utils.crypt.standard._PasswordCredential'>",
-            Self::PrivateKey(_) => "<class 'pyhanko.pdf_utils.crypt.pubkey.SimpleEnvelopeKeyDecrypter'>",
+            Self::PrivateKey(_) => {
+                "<class 'pyhanko.pdf_utils.crypt.pubkey.SimpleEnvelopeKeyDecrypter'>"
+            }
         }
     }
 }

@@ -127,9 +127,9 @@ impl SecurityHandlerVersion {
         match self {
             Self::Rc4_40 => Ok(5),
             Self::Aes256 => Ok(32),
-            _ if !(5..=16).contains(&key_length) && self <= Self::Rc4OrAes128 => {
-                Err(PdfError::Generic("Key length must be between 5 and 16".into()))
-            }
+            _ if !(5..=16).contains(&key_length) && self <= Self::Rc4OrAes128 => Err(
+                PdfError::Generic("Key length must be between 5 and 16".into()),
+            ),
             _ => Ok(key_length),
         }
     }
@@ -207,7 +207,11 @@ impl CryptFilter {
         Self::with(CipherKind::AesGcm, b"AESV4", 32)
     }
 
-    pub(crate) fn pubkey_with(cipher: CipherKind, keylen: usize, data: PubKeyCfData) -> PdfResult<Self> {
+    pub(crate) fn pubkey_with(
+        cipher: CipherKind,
+        keylen: usize,
+        data: PubKeyCfData,
+    ) -> PdfResult<Self> {
         let mut cf = match cipher {
             CipherKind::Rc4 => Self::with(cipher, b"V2", keylen),
             CipherKind::AesCbc => Self::with(cipher, aes_method(keylen)?, keylen),
@@ -313,12 +317,18 @@ impl CryptFilter {
     /// Crypt filter dictionary (`as_pdf_object`).
     pub fn as_pdf_object(&self) -> PdfResult<Dictionary> {
         if self.cipher == CipherKind::Identity {
-            return Err(PdfError::Generic("Identity filter cannot be serialised".into()));
+            return Err(PdfError::Generic(
+                "Identity filter cannot be serialised".into(),
+            ));
         }
         let mut d = Dictionary::new();
         d.set(
             "AuthEvent",
-            Object::Name(if self.embedded_only { b"EFOpen".to_vec() } else { b"DocOpen".to_vec() }),
+            Object::Name(if self.embedded_only {
+                b"EFOpen".to_vec()
+            } else {
+                b"DocOpen".to_vec()
+            }),
         );
         d.set("CFM", Object::Name(self.method.clone()));
         match &self.pubkey {
@@ -334,7 +344,12 @@ impl CryptFilter {
                 if p.acts_as_default {
                     d.set(
                         "Recipients",
-                        Object::Array(recipients.iter().map(|r| crate::generic::byte_string(r.clone())).collect()),
+                        Object::Array(
+                            recipients
+                                .iter()
+                                .map(|r| crate::generic::byte_string(r.clone()))
+                                .collect(),
+                        ),
                     );
                 } else {
                     let first = recipients
@@ -353,7 +368,9 @@ fn aes_method(keylen: usize) -> PdfResult<&'static [u8]> {
     match keylen {
         16 => Ok(b"AESV2"),
         32 => Ok(b"AESV3"),
-        _ => Err(PdfError::NotImplemented("Only AES-128 and AES-256 are supported".into())),
+        _ => Err(PdfError::NotImplemented(
+            "Only AES-128 and AES-256 are supported".into(),
+        )),
     }
 }
 
@@ -515,7 +532,8 @@ impl CryptFilterConfiguration {
 
 /// Builds a crypt filter from its dictionary and whether it is a default
 /// filter (`/StmF` or `/StrF`) (`CryptFilterBuilder`).
-pub type CryptFilterBuilder = Arc<dyn Fn(&Dictionary, bool) -> PdfResult<CryptFilter> + Send + Sync>;
+pub type CryptFilterBuilder =
+    Arc<dyn Fn(&Dictionary, bool) -> PdfResult<CryptFilter> + Send + Sync>;
 
 /// Crypt filter methods known to a security handler type
 /// (`_known_crypt_filters`).
@@ -600,8 +618,16 @@ impl Default for SecurityHandlerRegistry {
     fn default() -> Self {
         Self {
             handlers: vec![
-                (b"Standard".to_vec(), HandlerType::Standard, super::standard::default_crypt_filters()),
-                (b"Adobe.PubSec".to_vec(), HandlerType::PubKey, super::pubkey::default_crypt_filters()),
+                (
+                    b"Standard".to_vec(),
+                    HandlerType::Standard,
+                    super::standard::default_crypt_filters(),
+                ),
+                (
+                    b"Adobe.PubSec".to_vec(),
+                    HandlerType::PubKey,
+                    super::pubkey::default_crypt_filters(),
+                ),
             ],
         }
     }
@@ -618,7 +644,10 @@ impl SecurityHandlerRegistry {
     /// The crypt filter registry of the handler registered under `name`.
     pub fn crypt_filters_mut(&mut self, name: &str) -> Option<&mut CryptFilterRegistry> {
         let n = strip(name);
-        self.handlers.iter_mut().find(|(h, _, _)| *h == n).map(|(_, _, r)| r)
+        self.handlers
+            .iter_mut()
+            .find(|(h, _, _)| *h == n)
+            .map(|(_, _, r)| r)
     }
 
     fn lookup(&self, encrypt_dict: &Dictionary) -> PdfResult<(HandlerType, &CryptFilterRegistry)> {
@@ -642,7 +671,11 @@ impl SecurityHandlerRegistry {
         };
         if let Object::Name(sf) = subfilter {
             if PubKeyAdbeSubFilter::from_name(sf).is_some() {
-                if let Some((_, ty, reg)) = self.handlers.iter().find(|(_, t, _)| *t == HandlerType::PubKey) {
+                if let Some((_, ty, reg)) = self
+                    .handlers
+                    .iter()
+                    .find(|(_, t, _)| *t == HandlerType::PubKey)
+                {
                     return Ok((*ty, reg));
                 }
             }
@@ -754,9 +787,9 @@ impl HandlerState {
                     "No key available to decrypt, please authenticate first.".into()
                 })
             }),
-            HandlerKind::PubKey { .. } => Err(PdfError::Generic(
-                "Not a standard security handler".into(),
-            )),
+            HandlerKind::PubKey { .. } => {
+                Err(PdfError::Generic("Not a standard security handler".into()))
+            }
         }
     }
 
@@ -772,7 +805,11 @@ impl HandlerState {
     }
 
     /// `derive_object_key` of the filter named `name`.
-    pub(crate) fn object_key(&mut self, name: &[u8], id: ObjectId) -> PdfResult<(CryptFilter, Vec<u8>)> {
+    pub(crate) fn object_key(
+        &mut self,
+        name: &[u8],
+        id: ObjectId,
+    ) -> PdfResult<(CryptFilter, Vec<u8>)> {
         let cf = self.cfc.get_raw(name).ok_or_else(|| {
             PdfError::Generic(format!("The crypt filter /{} is not known", name_str(name)))
         })?;
@@ -797,7 +834,12 @@ impl HandlerState {
 
     /// Encrypt with the filter named `name` under `key` (keeps the GCM
     /// nonce counter of the stored filter).
-    pub(crate) fn encrypt_with(&mut self, name: &[u8], key: &[u8], data: &[u8]) -> PdfResult<Vec<u8>> {
+    pub(crate) fn encrypt_with(
+        &mut self,
+        name: &[u8],
+        key: &[u8],
+        data: &[u8],
+    ) -> PdfResult<Vec<u8>> {
         match self.cfc.index_of(name) {
             Some(i) => self.cfc.filters[i].1.encrypt(key, data),
             None => CryptFilter::identity().encrypt(key, data),
@@ -859,7 +901,10 @@ impl SecurityHandler {
     }
 
     /// [`Self::build`] with an explicit registry.
-    pub fn build_with(encrypt_dict: &Dictionary, registry: &SecurityHandlerRegistry) -> PdfResult<Self> {
+    pub fn build_with(
+        encrypt_dict: &Dictionary,
+        registry: &SecurityHandlerRegistry,
+    ) -> PdfResult<Self> {
         let (ty, reg) = registry.lookup(encrypt_dict)?;
         match ty {
             HandlerType::Standard => Self::instantiate_standard(encrypt_dict, reg),
@@ -909,7 +954,9 @@ impl SecurityHandler {
     /// The default string filter (`get_string_filter`), as a copy.
     pub fn get_string_filter(&self) -> CryptFilter {
         let s = self.lock();
-        s.cfc.get_raw(&s.cfc.strf).unwrap_or_else(CryptFilter::identity)
+        s.cfc
+            .get_raw(&s.cfc.strf)
+            .unwrap_or_else(CryptFilter::identity)
     }
 
     /// The default stream filter, or the filter named `name`
@@ -925,7 +972,9 @@ impl SecurityHandler {
     /// The embedded file filter (`get_embedded_file_filter`), as a copy.
     pub fn get_embedded_file_filter(&self) -> CryptFilter {
         let s = self.lock();
-        s.cfc.get_raw(s.cfc.file_filter_name()).unwrap_or_else(CryptFilter::identity)
+        s.cfc
+            .get_raw(s.cfc.file_filter_name())
+            .unwrap_or_else(CryptFilter::identity)
     }
 
     /// `True` if `get_string_filter()._auth_failed`.
@@ -1010,17 +1059,24 @@ impl SecurityHandler {
         let s = self.lock();
         match &s.kind {
             HandlerKind::Standard(st) => super::standard::standard_as_pdf_object(&s, st),
-            HandlerKind::PubKey { subfilter } => super::pubkey::pubkey_as_pdf_object(&s, *subfilter),
+            HandlerKind::PubKey { subfilter } => {
+                super::pubkey::pubkey_as_pdf_object(&s, *subfilter)
+            }
         }
     }
 
     /// Install a custom PDF MAC token handler factory (pyHanko's
     /// `writer._mac_handler_cls`), used when writing MACs.
-    pub fn set_mac_token_handler(&self, f: Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>>) {
+    pub fn set_mac_token_handler(
+        &self,
+        f: Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>>,
+    ) {
         self.lock().mac_handler = f;
     }
 
-    pub(crate) fn mac_token_handler(&self) -> Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>> {
+    pub(crate) fn mac_token_handler(
+        &self,
+    ) -> Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>> {
         self.lock().mac_handler.clone()
     }
 
@@ -1081,7 +1137,12 @@ impl SecurityHandler {
     /// Decrypt implicitly encrypted stream data of object `id`
     /// (`_implicit_decrypt_stream_content`): embedded file streams use the
     /// embedded file filter, all others the default stream filter.
-    pub fn decrypt_stream_data(&self, data: &[u8], id: ObjectId, embedded_file: bool) -> PdfResult<Vec<u8>> {
+    pub fn decrypt_stream_data(
+        &self,
+        data: &[u8],
+        id: ObjectId,
+        embedded_file: bool,
+    ) -> PdfResult<Vec<u8>> {
         let mut s = self.lock();
         let name = if embedded_file {
             s.cfc.file_filter_name().clone()
@@ -1106,9 +1167,10 @@ impl SecurityHandler {
     /// used, as ISO 32000 7.4.10 specifies (`CryptFilterDecoder.decode`).
     pub fn crypt_filter_decode(&self, name: &[u8], data: &[u8]) -> PdfResult<Vec<u8>> {
         let mut s = self.lock();
-        let cf = s.cfc.get_raw(name).ok_or_else(|| {
-            PdfError::Value(format!("KeyError: /{}", name_str(name)))
-        })?;
+        let cf = s
+            .cfc
+            .get_raw(name)
+            .ok_or_else(|| PdfError::Value(format!("KeyError: /{}", name_str(name))))?;
         let key = s.cf_shared_key(name)?;
         drop(s);
         cf.decrypt(&key, data)

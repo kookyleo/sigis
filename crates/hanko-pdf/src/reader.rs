@@ -15,9 +15,7 @@ use crate::generic::{self, ParseContext};
 use crate::misc::{read_non_whitespace, read_until_whitespace, Cursor};
 use crate::rw_common::{PdfHandler, PdfHandlerExt};
 use crate::stream::{decode_stream_data, CryptFilterDecode};
-use crate::xref::{
-    read_object_header, TrailerDictionary, XRefBuilder, XRefCache, XRefLocation,
-};
+use crate::xref::{read_object_header, TrailerDictionary, XRefBuilder, XRefCache, XRefLocation};
 
 /// Reader options.
 #[derive(Clone, Debug, PartialEq)]
@@ -154,7 +152,9 @@ impl DecodedCache {
             }
             None => h.update([0u8]),
         }
-        h.update(generic::object_to_bytes(&Object::Dictionary(stream.dict.clone())));
+        h.update(generic::object_to_bytes(&Object::Dictionary(
+            stream.dict.clone(),
+        )));
         h.update([0u8]);
         h.update(&stream.content);
         h.finalize().into()
@@ -534,7 +534,11 @@ impl PdfFile {
     fn objstm_data(&self, stmnum: u32) -> PdfResult<(Arc<Vec<u8>>, i64, i64)> {
         let stream = match self.get_object_at((stmnum, 0), None)? {
             Object::Stream(s) => s,
-            _ => return Err(PdfError::read("Object stream reference does not point to a stream")),
+            _ => {
+                return Err(PdfError::read(
+                    "Object stream reference does not point to a stream",
+                ))
+            }
         };
         if !matches!(self.get(&stream.dict, b"Type")?, Some(Object::Name(n)) if n == b"ObjStm") {
             return Err(PdfError::read("Object stream must have /Type /ObjStm"));
@@ -568,7 +572,11 @@ impl PdfFile {
         let strict = self.inner.strict;
         let stream = match self.get_object_at((stmnum, 0), None)? {
             Object::Stream(s) => s,
-            _ => return Err(PdfError::read("Object stream reference does not point to a stream")),
+            _ => {
+                return Err(PdfError::read(
+                    "Object stream reference does not point to a stream",
+                ))
+            }
         };
         if !matches!(self.get(&stream.dict, b"Type")?, Some(Object::Name(n)) if n == b"ObjStm") {
             return Err(PdfError::read("Object stream must have /Type /ObjStm"));
@@ -834,12 +842,10 @@ impl RawPdfPath {
                         elem = Some(entry.clone());
                         continue;
                     }
-                    Err(_) => {
-                        return Err(PdfError::read(format!(
-                            "Encountered missing dictionary entry /{} at position {ix} in path {self}.",
-                            String::from_utf8_lossy(k)
-                        )))
-                    }
+                    Err(_) => return Err(PdfError::read(format!(
+                        "Encountered missing dictionary entry /{} at position {ix} in path {self}.",
+                        String::from_utf8_lossy(k)
+                    ))),
                 },
                 (PathElem::Index(i), Object::Array(a)) => {
                     if *i > a.len() {
@@ -860,7 +866,9 @@ impl RawPdfPath {
                 }
                 _ => {}
             }
-            return Err(PdfError::read(format!("Type error in path {self} at position {ix}.")));
+            return Err(PdfError::read(format!(
+                "Type error in path {self} at position {ix}."
+            )));
         }
         if matches!(current, Object::Reference(_)) && transparent_dereference {
             out.push((elem, handler.resolve(&current)?));
@@ -885,7 +893,11 @@ impl RawPdfPath {
     }
 
     /// The reference at the end of the path (`access_reference_on`).
-    pub fn access_reference_on(&self, handler: &dyn PdfHandler, from: &Object) -> PdfResult<ObjectId> {
+    pub fn access_reference_on(
+        &self,
+        handler: &dyn PdfHandler,
+        from: &Object,
+    ) -> PdfResult<ObjectId> {
         match self.access_on(handler, from, false)? {
             Object::Reference(id) => Ok(id),
             _ => Err(PdfError::IndirectObjectExpected(format!(
@@ -1041,23 +1053,36 @@ impl HistoricalResolver {
 
     /// References written in this revision (`explicit_refs_in_revision`).
     pub fn explicit_refs_in_revision(&self) -> BTreeSet<ObjectId> {
-        self.reader.inner.xrefs.explicit_refs_in_revision(self.revision)
+        self.reader
+            .inner
+            .xrefs
+            .explicit_refs_in_revision(self.revision)
     }
 
     /// References freed in this revision (`refs_freed_in_revision`).
     pub fn refs_freed_in_revision(&self) -> BTreeSet<ObjectId> {
-        self.reader.inner.xrefs.refs_freed_in_revision(self.revision)
+        self.reader
+            .inner
+            .xrefs
+            .refs_freed_in_revision(self.revision)
     }
 
     /// Object streams used in this revision (`object_streams_used`).
     pub fn object_streams_used(&self) -> BTreeSet<ObjectId> {
-        self.reader.inner.xrefs.object_streams_used_in(self.revision)
+        self.reader
+            .inner
+            .xrefs
+            .object_streams_used_in(self.revision)
     }
 
     /// `true` if `id` could not have been assigned in this revision
     /// (`is_ref_unassignable`).
     pub fn is_ref_unassignable(&self, id: ObjectId) -> PdfResult<bool> {
-        let meta = self.reader.inner.xrefs.get_xref_container_info(self.revision)?;
+        let meta = self
+            .reader
+            .inner
+            .xrefs
+            .get_xref_container_info(self.revision)?;
         Ok(i64::from(id.0) >= meta.size)
     }
 
@@ -1127,7 +1152,10 @@ impl HistoricalResolver {
     /// All paths from the trailer to `id` (`_get_usages_of_ref`), after
     /// loading the reverse index (`_load_reverse_xref_cache`).
     pub fn usages_of_ref(&self, id: ObjectId) -> PdfResult<BTreeSet<RawPdfPath>> {
-        let cache = self.state.access_cache.get_or_init(|| self.load_reverse_xref_cache());
+        let cache = self
+            .state
+            .access_cache
+            .get_or_init(|| self.load_reverse_xref_cache());
         match cache {
             Ok(c) => Ok(c.get(&id).cloned().unwrap_or_default()),
             Err(e) => Err(e.clone()),
@@ -1136,7 +1164,10 @@ impl HistoricalResolver {
 
     /// The full reverse index (`_indirect_object_access_cache`).
     pub fn reverse_xref_cache(&self) -> PdfResult<&BTreeMap<ObjectId, BTreeSet<RawPdfPath>>> {
-        let cache = self.state.access_cache.get_or_init(|| self.load_reverse_xref_cache());
+        let cache = self
+            .state
+            .access_cache
+            .get_or_init(|| self.load_reverse_xref_cache());
         cache.as_ref().map_err(Clone::clone)
     }
 
@@ -1148,7 +1179,9 @@ impl HistoricalResolver {
             .map_err(|_| PdfError::Value("KeyError: /Pages".into()))?
             .clone();
         let nil: Path = Rc::new(Cons::Nil);
-        let pages_path = nil.push(PathElem::Key(b"Root".to_vec())).push(PathElem::Key(b"Pages".to_vec()));
+        let pages_path = nil
+            .push(PathElem::Key(b"Root".to_vec()))
+            .push(PathElem::Key(b"Pages".to_vec()));
         let mut page_tree_nodes: HashMap<ObjectId, Vec<PathElem>> = HashMap::new();
         if let Object::Reference(r) = &pages_ref {
             page_tree_nodes.insert(*r, pages_path.to_vec_rev());
@@ -1165,16 +1198,21 @@ impl HistoricalResolver {
             };
             let mut children = Vec::new();
             for (ix, kid) in kids.iter().enumerate() {
-                let kid_path = path.push(PathElem::Key(b"Kids".to_vec())).push(PathElem::Index(ix));
+                let kid_path = path
+                    .push(PathElem::Key(b"Kids".to_vec()))
+                    .push(PathElem::Index(ix));
                 if let Object::Reference(r) = kid {
                     if page_tree_nodes.contains_key(r) {
-                        return Err(PdfError::read("Circular reference in page tree in mapping stage"));
+                        return Err(PdfError::read(
+                            "Circular reference in page tree in mapping stage",
+                        ));
                     }
                     page_tree_nodes.insert(*r, kid_path.to_vec_rev());
                 }
                 let kid_obj = self.resolve(kid)?;
                 if let Object::Dictionary(kd) = &kid_obj {
-                    if matches!(kd.get(b"Type"), Ok(t) if generic::is_name(&self.resolve(t)?, "Pages")) {
+                    if matches!(kd.get(b"Type"), Ok(t) if generic::is_name(&self.resolve(t)?, "Pages"))
+                    {
                         children.push((kid_obj.clone(), kid_path));
                     }
                 }
@@ -1189,8 +1227,12 @@ impl HistoricalResolver {
             let str_root = self.resolve(str_root)?;
             let mut todo: Vec<Object> = vec![str_root];
             while let Some(elem) = todo.pop() {
-                let Object::Dictionary(ed) = &elem else { continue };
-                let Some(children) = self.get(ed, b"K")? else { continue };
+                let Object::Dictionary(ed) = &elem else {
+                    continue;
+                };
+                let Some(children) = self.get(ed, b"K")? else {
+                    continue;
+                };
                 let children = match children {
                     Object::Array(a) => a,
                     other => {
@@ -1203,9 +1245,15 @@ impl HistoricalResolver {
                 };
                 let mut next = Vec::new();
                 for child in children {
-                    let child_ref = if let Object::Reference(r) = child { Some(r) } else { None };
+                    let child_ref = if let Object::Reference(r) = child {
+                        Some(r)
+                    } else {
+                        None
+                    };
                     let child_obj = self.resolve(&child)?;
-                    let Object::Dictionary(cd) = &child_obj else { continue };
+                    let Object::Dictionary(cd) = &child_obj else {
+                        continue;
+                    };
                     if let Some(t) = self.get(cd, b"Type")? {
                         if !generic::is_name(&t, "StructElem") {
                             continue;
@@ -1334,7 +1382,11 @@ impl PdfHandler for HistoricalResolver {
         let reader = &self.reader;
         let last_change = reader.inner.xrefs.get_last_change(id);
         if last_change.is_none() {
-            log::warn!("Could not determine history of {} {} R in xref sections", id.0, id.1);
+            log::warn!(
+                "Could not determine history of {} {} R in xref sections",
+                id.0,
+                id.1
+            );
         }
         let obj = match last_change {
             Some(lc) if lc <= self.revision => reader.get_object_at(id, None)?,
@@ -1352,7 +1404,12 @@ impl PdfHandler for HistoricalResolver {
     }
 
     fn root_ref(&self) -> PdfResult<ObjectId> {
-        match self.reader.inner.trailer.raw_get(b"Root", Some(self.revision)) {
+        match self
+            .reader
+            .inner
+            .trailer
+            .raw_get(b"Root", Some(self.revision))
+        {
             Some(Object::Reference(id)) => Ok(id),
             Some(_) => Err(PdfError::read("/Root must be an indirect reference")),
             None => Err(PdfError::Value("KeyError: /Root".into())),

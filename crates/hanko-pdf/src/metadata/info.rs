@@ -102,7 +102,13 @@ pub fn update_info_dict(
     only_update_existing: bool,
     now: PdfDate,
 ) -> PdfResult<bool> {
-    let mut modified = write_meta_date(info, b"ModDate", meta.last_modified, only_update_existing, now);
+    let mut modified = write_meta_date(
+        info,
+        b"ModDate",
+        meta.last_modified,
+        only_update_existing,
+        now,
+    );
     let producer_string = match handler.get(info, b"Producer")? {
         Some(p) => match &p {
             Object::String(s, _) => match generic::pdf_string(s) {
@@ -142,11 +148,41 @@ pub fn update_info_dict(
     if meta.xmp_unmanaged {
         return Ok(modified);
     }
-    modified |= write_meta_string(handler, info, b"Title", meta.title.as_ref(), only_update_existing)?;
-    modified |= write_meta_string(handler, info, b"Author", meta.author.as_ref(), only_update_existing)?;
-    modified |= write_meta_string(handler, info, b"Subject", meta.subject.as_ref(), only_update_existing)?;
-    modified |= write_meta_string(handler, info, b"Creator", meta.creator.as_ref(), only_update_existing)?;
-    modified |= write_meta_date(info, b"CreationDate", meta.created, only_update_existing, now);
+    modified |= write_meta_string(
+        handler,
+        info,
+        b"Title",
+        meta.title.as_ref(),
+        only_update_existing,
+    )?;
+    modified |= write_meta_string(
+        handler,
+        info,
+        b"Author",
+        meta.author.as_ref(),
+        only_update_existing,
+    )?;
+    modified |= write_meta_string(
+        handler,
+        info,
+        b"Subject",
+        meta.subject.as_ref(),
+        only_update_existing,
+    )?;
+    modified |= write_meta_string(
+        handler,
+        info,
+        b"Creator",
+        meta.creator.as_ref(),
+        only_update_existing,
+    )?;
+    modified |= write_meta_date(
+        info,
+        b"CreationDate",
+        meta.created,
+        only_update_existing,
+        now,
+    );
     if !meta.keywords.is_empty() {
         info.set("Keywords", text_string(&meta.keywords.join(",")));
         modified = true;
@@ -154,7 +190,12 @@ pub fn update_info_dict(
     Ok(modified)
 }
 
-fn read_date(handler: &dyn PdfHandler, info: &Dictionary, key: &[u8], strict: bool) -> Option<PdfDate> {
+fn read_date(
+    handler: &dyn PdfHandler,
+    info: &Dictionary,
+    key: &[u8],
+    strict: bool,
+) -> Option<PdfDate> {
     let v = handler.get(info, key).ok()??;
     if let Some(t) = text_of(&v) {
         if let Ok(d) = parse_pdf_date(&t, strict) {
@@ -169,7 +210,11 @@ fn read_date(handler: &dyn PdfHandler, info: &Dictionary, key: &[u8], strict: bo
 }
 
 /// Read metadata from an Info dictionary (`view_from_info_dict`).
-pub fn view_from_info_dict(handler: &dyn PdfHandler, info: &Dictionary, strict: bool) -> DocumentMetadata {
+pub fn view_from_info_dict(
+    handler: &dyn PdfHandler,
+    info: &Dictionary,
+    strict: bool,
+) -> DocumentMetadata {
     let s = |k: &[u8]| {
         handler
             .get(info, k)
@@ -208,7 +253,13 @@ pub fn py_str(o: &Object) -> String {
         Object::Name(n) => generic::name_str(n),
         Object::Integer(i) => i.to_string(),
         Object::Real(r) => generic::format_real(*r),
-        Object::Boolean(b) => if *b { "True".into() } else { "False".into() },
+        Object::Boolean(b) => {
+            if *b {
+                "True".into()
+            } else {
+                "False".into()
+            }
+        }
         other => format!("{other:?}"),
     }
 }

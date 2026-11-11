@@ -255,7 +255,10 @@ pub fn skip_over_whitespace(
 }
 
 /// Skip comments (`skip_over_comments`); returns `true` if a comment was read.
-pub fn skip_over_comments(stream: &mut Cursor<'_>, error_on_end_of_stream: bool) -> PdfResult<bool> {
+pub fn skip_over_comments(
+    stream: &mut Cursor<'_>,
+    error_on_end_of_stream: bool,
+) -> PdfResult<bool> {
     let mut tok = stream.read1();
     let mut seen = false;
     while tok == Some(b'%') {
@@ -302,7 +305,12 @@ pub fn pair_iter<T: Copy>(items: &[T]) -> PdfResult<Vec<(T, T)>> {
     if !items.len().is_multiple_of(2) {
         return Err(PdfError::value("List has odd number of elements"));
     }
-    Ok(items.as_chunks::<2>().0.iter().map(|c| (c[0], c[1])).collect())
+    Ok(items
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|c| (c[0], c[1]))
+        .collect())
 }
 
 /// Python's `bytes.isspace()` for a single byte (ASCII whitespace incl. `\v`).

@@ -80,7 +80,9 @@ pub fn text(o: &Object) -> String {
 
 /// `handler.get(d, key)` unwrapped.
 pub fn get(h: &dyn PdfHandler, d: &Dictionary, key: &str) -> Object {
-    h.get(d, key.as_bytes()).unwrap().unwrap_or_else(|| panic!("missing {key}"))
+    h.get(d, key.as_bytes())
+        .unwrap()
+        .unwrap_or_else(|| panic!("missing {key}"))
 }
 
 /// `fmt_dummy_xrefs` from test_xref.py.
@@ -124,7 +126,9 @@ pub fn first_page(h: &dyn PdfHandler) -> (hanko_pdf::lopdf::ObjectId, Dictionary
         },
         _ => panic!(),
     };
-    let Object::Reference(r) = kids[0] else { panic!() };
+    let Object::Reference(r) = kids[0] else {
+        panic!()
+    };
     (r, as_dict(h.get_object(r).unwrap()))
 }
 

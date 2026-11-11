@@ -71,7 +71,10 @@ pub fn parse_content_stream(parts: &[(ObjectId, Vec<u8>)]) -> PdfResult<Vec<Grap
 }
 
 /// Parse the content streams `refs` of a document.
-pub fn parse_content_streams_of(handler: &dyn PdfHandler, refs: &[ObjectId]) -> PdfResult<Vec<GraphicsOperator>> {
+pub fn parse_content_streams_of(
+    handler: &dyn PdfHandler,
+    refs: &[ObjectId],
+) -> PdfResult<Vec<GraphicsOperator>> {
     let mut parts = Vec::with_capacity(refs.len());
     for r in refs {
         match handler.get_object(*r)? {

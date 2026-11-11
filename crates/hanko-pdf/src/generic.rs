@@ -203,9 +203,13 @@ pub fn read_item(
             } else if literal == b"null" {
                 return Ok(Item::Object(Object::Null));
             } else if literal == b"R" {
-                return Err(PdfError::read("Indirect object reference in content stream"));
+                return Err(PdfError::read(
+                    "Indirect object reference in content stream",
+                ));
             }
-            return Ok(Item::Operator(String::from_utf8_lossy(&literal).into_owned()));
+            return Ok(Item::Operator(
+                String::from_utf8_lossy(&literal).into_owned(),
+            ));
         }
         Some(6) => {
             read_null(stream)?;
@@ -383,11 +387,9 @@ pub fn read_number(stream: &mut Cursor<'_>) -> PdfResult<Object> {
             .map(Object::Real)
             .ok_or_else(|| PdfError::value(format!("Invalid decimal literal: {text:?}")))
     } else {
-        parse_py_int(&num)
-            .map(Object::Integer)
-            .ok_or_else(|| {
-                PdfError::value(format!("invalid literal for int() with base 10: {text:?}"))
-            })
+        parse_py_int(&num).map(Object::Integer).ok_or_else(|| {
+            PdfError::value(format!("invalid literal for int() with base 10: {text:?}"))
+        })
     }
 }
 
@@ -413,7 +415,10 @@ pub fn read_hex_string(stream: &mut Cursor<'_>) -> PdfResult<Object> {
                 py_bytes_repr(&[*bad])
             )));
         }
-        return Ok(Object::String(unhexlify_padded(&digits), StringFormat::Hexadecimal));
+        return Ok(Object::String(
+            unhexlify_padded(&digits),
+            StringFormat::Hexadecimal,
+        ));
     }
     // Comments may contain '>', so let the tokeniser deal with them.
     stream.seek(start);
@@ -430,7 +435,10 @@ pub fn read_hex_string(stream: &mut Cursor<'_>) -> PdfResult<Object> {
         }
         digits.push(tok);
     }
-    Ok(Object::String(unhexlify_padded(&digits), StringFormat::Hexadecimal))
+    Ok(Object::String(
+        unhexlify_padded(&digits),
+        StringFormat::Hexadecimal,
+    ))
 }
 
 fn hexval(b: u8) -> u8 {
@@ -538,7 +546,9 @@ pub fn decode_name(name_bytes: &[u8]) -> PdfResult<Vec<u8>> {
         if d.is_ascii_hexdigit() {
             Ok(hexval(d))
         } else {
-            Err(PdfError::read("Numeric escape in PDF name must use hexadecimal digits"))
+            Err(PdfError::read(
+                "Numeric escape in PDF name must use hexadecimal digits",
+            ))
         }
     };
     while let Some(b) = it.next() {
@@ -664,7 +674,9 @@ pub fn read_dictionary(
         let value = match read_item(stream, ctx, in_content_stream)? {
             Item::Object(o) => o,
             Item::Operator(op) => {
-                return Err(PdfError::read(format!("Unexpected operator {op} in dictionary")))
+                return Err(PdfError::read(format!(
+                    "Unexpected operator {op} in dictionary"
+                )))
             }
         };
         if !data.has(&key) {
@@ -701,7 +713,11 @@ pub fn read_dictionary(
 
 /// Python-style `repr()` of a byte string (`b'...'`).
 pub fn py_bytes_repr(b: &[u8]) -> String {
-    let quote = if b.contains(&b'\'') && !b.contains(&b'"') { '"' } else { '\'' };
+    let quote = if b.contains(&b'\'') && !b.contains(&b'"') {
+        '"'
+    } else {
+        '\''
+    };
     let mut s = String::from("b");
     s.push(quote);
     for &c in b {
@@ -787,7 +803,9 @@ impl TextStringEncoding {
                     return None;
                 }
                 let units: Vec<u16> = body
-                    .as_chunks::<2>().0.iter()
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
                     .map(|c| {
                         if le {
                             u16::from_le_bytes([c[0], c[1]])
@@ -869,15 +887,13 @@ pub fn pdf_name(s: &str) -> Object {
 }
 
 const PDFDOC_80: [char; 31] = [
-    '\u{2022}', '\u{2020}', '\u{2021}', '\u{2026}', '\u{2014}', '\u{2013}', '\u{0192}',
-    '\u{2044}', '\u{2039}', '\u{203a}', '\u{2212}', '\u{2030}', '\u{201e}', '\u{201c}',
-    '\u{201d}', '\u{2018}', '\u{2019}', '\u{201a}', '\u{2122}', '\u{fb01}', '\u{fb02}',
-    '\u{0141}', '\u{0152}', '\u{0160}', '\u{0178}', '\u{017d}', '\u{0131}', '\u{0142}',
-    '\u{0153}', '\u{0161}', '\u{017e}',
+    '\u{2022}', '\u{2020}', '\u{2021}', '\u{2026}', '\u{2014}', '\u{2013}', '\u{0192}', '\u{2044}',
+    '\u{2039}', '\u{203a}', '\u{2212}', '\u{2030}', '\u{201e}', '\u{201c}', '\u{201d}', '\u{2018}',
+    '\u{2019}', '\u{201a}', '\u{2122}', '\u{fb01}', '\u{fb02}', '\u{0141}', '\u{0152}', '\u{0160}',
+    '\u{0178}', '\u{017d}', '\u{0131}', '\u{0142}', '\u{0153}', '\u{0161}', '\u{017e}',
 ];
 const PDFDOC_18: [char; 8] = [
-    '\u{02d8}', '\u{02c7}', '\u{02c6}', '\u{02d9}', '\u{02dd}', '\u{02db}', '\u{02da}',
-    '\u{02dc}',
+    '\u{02d8}', '\u{02c7}', '\u{02c6}', '\u{02d9}', '\u{02dd}', '\u{02db}', '\u{02da}', '\u{02dc}',
 ];
 
 fn pdfdoc_char(b: u8) -> Option<char> {

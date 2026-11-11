@@ -29,9 +29,14 @@ fn signed_twice_signatures_and_revisions() {
         assert_eq!(data[(br[2] - 1) as usize], b'>');
         assert_eq!(s.contents[0], 0x30);
         // the signature dictionary is present in its signed revision
-        let sig = f.object_in_revision(s.sig_object, s.signed_revision).unwrap();
+        let sig = f
+            .object_in_revision(s.sig_object, s.signed_revision)
+            .unwrap();
         assert!(matches!(sig, Some(Object::Dictionary(_))));
-        assert!(f.objects_written_in(s.signed_revision).unwrap().contains(&s.sig_object));
+        assert!(f
+            .objects_written_in(s.signed_revision)
+            .unwrap()
+            .contains(&s.sig_object));
         // but not in the original document
         assert_eq!(f.object_in_revision(s.sig_object, 0).unwrap(), None);
         // signed revisions end where the byte range ends
@@ -77,7 +82,6 @@ fn incremental_writer_interface() {
     assert_eq!(w.base().bytes(), base.bytes());
 }
 
-
 #[test]
 fn lane_c_and_e_requests() {
     let data = pdf("minimal-signed-twice-both-created.pdf");
@@ -94,7 +98,9 @@ fn lane_c_and_e_requests() {
         let loc = f.xref_location(rev).unwrap();
         assert!(loc.start <= loc.end && loc.end <= data.len() as u64);
         let field = f.signature_field_ref(s.sig_object).unwrap().expect("field");
-        let Object::Dictionary(fd) = f.get_object(field).unwrap() else { panic!() };
+        let Object::Dictionary(fd) = f.get_object(field).unwrap() else {
+            panic!()
+        };
         assert_eq!(fd.get(b"V").unwrap(), &Object::Reference(s.sig_object));
     }
     // own trailer vs effective trailer
@@ -117,31 +123,50 @@ fn lead_round1_b2_fields() {
         assert_eq!(r.xref_end, loc.end);
     }
     for s in f.embedded_signatures().unwrap() {
-        assert_eq!(Some(s.field_object), f.signature_field_ref(s.sig_object).unwrap());
+        assert_eq!(
+            Some(s.field_object),
+            f.signature_field_ref(s.sig_object).unwrap()
+        );
     }
 }
 
 #[test]
 fn lead_round1_b4_spans_and_plain_signature_contents() {
     use hanko_pdf::lopdf::{Dictionary, StringFormat};
-    let mut w = hanko_pdf::writer::copy_into_new_writer(&PdfFile::parse(&minimal()).unwrap()).unwrap();
+    let mut w =
+        hanko_pdf::writer::copy_into_new_writer(&PdfFile::parse(&minimal()).unwrap()).unwrap();
     w.encrypt("secret", None).unwrap();
     let mut sig = Dictionary::new();
     sig.set("Type", Object::Name(b"Sig".to_vec()));
-    sig.set("ByteRange", Object::Array(vec![0.into(), 0.into(), 0.into(), 0.into()]));
-    sig.set("Contents", Object::String(vec![0u8; 16], StringFormat::Hexadecimal));
+    sig.set(
+        "ByteRange",
+        Object::Array(vec![0.into(), 0.into(), 0.into(), 0.into()]),
+    );
+    sig.set(
+        "Contents",
+        Object::String(vec![0u8; 16], StringFormat::Hexadecimal),
+    );
     sig.set("Name", hanko_pdf::generic::text_string("signer"));
     let id = w.add_object(Object::Dictionary(sig)).unwrap();
     let out = w.write().unwrap();
     let span = w.written_object_spans().get(&id).cloned().expect("span");
     let body = &out[span];
     let needle = b"/Contents <00000000000000000000000000000000>";
-    assert!(body.windows(needle.len()).any(|x| x == needle), "{}", String::from_utf8_lossy(body));
+    assert!(
+        body.windows(needle.len()).any(|x| x == needle),
+        "{}",
+        String::from_utf8_lossy(body)
+    );
     // other strings are still encrypted
     assert!(!body.windows(6).any(|x| x == b"signer"));
     let r = PdfFile::parse(&out).unwrap();
     r.decrypt("secret").unwrap();
-    let Object::Dictionary(d) = r.get_object(id).unwrap() else { panic!() };
-    assert_eq!(d.get(b"Contents").unwrap(), &Object::String(vec![0u8; 16], StringFormat::Hexadecimal));
+    let Object::Dictionary(d) = r.get_object(id).unwrap() else {
+        panic!()
+    };
+    assert_eq!(
+        d.get(b"Contents").unwrap(),
+        &Object::String(vec![0u8; 16], StringFormat::Hexadecimal)
+    );
     assert_eq!(text(d.get(b"Name").unwrap()), "signer");
 }

@@ -29,7 +29,14 @@ fn frozen() -> (PdfDate, PdfDate) {
     (modified, created)
 }
 
-fn embed_test(w: &mut PdfWriter, fname: &str, ufname: &str, data: &[u8], created: PdfDate, modified: PdfDate) {
+fn embed_test(
+    w: &mut PdfWriter,
+    fname: &str,
+    ufname: &str,
+    data: &[u8],
+    created: PdfDate,
+    modified: PdfDate,
+) {
     let params = EmbeddedFileParams {
         creation_date: Some(created),
         modification_date: Some(modified),
@@ -50,7 +57,9 @@ fn writer(incremental: bool) -> PdfWriter {
     if incremental {
         IncrementalWriter::new(read(&minimal())).into_inner()
     } else {
-        copy_into_new_writer(&read(&minimal())).unwrap().into_inner()
+        copy_into_new_writer(&read(&minimal()))
+            .unwrap()
+            .into_inner()
     }
 }
 
@@ -78,7 +87,14 @@ fn test_simple_embed() {
         let mut w = writer(incremental);
         let (modified, created) = frozen();
         let vector = pdf("scribble.pdf");
-        embed_test(&mut w, "vector-test.pdf", "テスト.pdf", &vector, created, modified);
+        embed_test(
+            &mut w,
+            "vector-test.pdf",
+            "テスト.pdf",
+            &vector,
+            created,
+            modified,
+        );
         let out = w.write().unwrap();
         let r = read(&out);
         assert_eq!(r.input_version(), (1, 7));
@@ -90,9 +106,14 @@ fn test_simple_embed() {
         assert_eq!(text(&get(&r, &spec, "UF")), "テスト.pdf");
         let s = ef_stream(&r, &spec);
         assert_eq!(r.stream_data(&s).unwrap(), vector);
-        assert_eq!(s.dict.get(b"Subtype").unwrap(), &Object::Name(b"application/pdf".to_vec()));
+        assert_eq!(
+            s.dict.get(b"Subtype").unwrap(),
+            &Object::Name(b"application/pdf".to_vec())
+        );
         let params = as_dict(get(&r, &s.dict, "Params"));
-        let Object::String(cs, _) = get(&r, &params, "CheckSum") else { panic!() };
+        let Object::String(cs, _) = get(&r, &params, "CheckSum") else {
+            panic!()
+        };
         assert_eq!(cs, hex("caaf24354fd2e68c08826d65b309b404"));
         let md = parse_pdf_date_obj(&get(&r, &params, "ModDate"), true).unwrap();
         assert_eq!(md.unix_timestamp(), modified.unix_timestamp());
@@ -103,22 +124,41 @@ fn test_simple_embed() {
 }
 
 fn hex(s: &str) -> Vec<u8> {
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
 }
 
 #[test]
 fn test_embed_twice() {
     for incremental in [true, false] {
-        let mut w = copy_into_new_writer(&read(&minimal())).unwrap().into_inner();
+        let mut w = copy_into_new_writer(&read(&minimal()))
+            .unwrap()
+            .into_inner();
         let (modified, created) = frozen();
         let vector = pdf("scribble.pdf");
         let aes = pdf("minimal-aes256.pdf");
-        embed_test(&mut w, "vector-test.pdf", "テスト.pdf", &vector, created, modified);
+        embed_test(
+            &mut w,
+            "vector-test.pdf",
+            "テスト.pdf",
+            &vector,
+            created,
+            modified,
+        );
         if incremental {
             let out = w.write().unwrap();
             w = IncrementalWriter::new(read(&out)).into_inner();
         }
-        embed_test(&mut w, "some-other-file.pdf", "テスト2.pdf", &aes, created, modified);
+        embed_test(
+            &mut w,
+            "some-other-file.pdf",
+            "テスト2.pdf",
+            &aes,
+            created,
+            modified,
+        );
         let out = w.write().unwrap();
         let r = read(&out);
         let lst = emb_list(&r);
@@ -160,14 +200,21 @@ fn test_embed_with_af() {
         let lst = emb_list(&r);
         assert_eq!(lst.len(), 2);
         assert_eq!(text(&lst[0]), "vector-test.pdf");
-        let Object::Reference(spec_ref) = lst[1] else { panic!() };
+        let Object::Reference(spec_ref) = lst[1] else {
+            panic!()
+        };
         let spec = as_dict(r.get_object(spec_ref).unwrap());
         assert!(!spec.has(b"UF"));
-        assert_eq!(spec.get(b"AFRelationship").unwrap(), &Object::Name(b"Unspecified".to_vec()));
+        assert_eq!(
+            spec.get(b"AFRelationship").unwrap(),
+            &Object::Name(b"Unspecified".to_vec())
+        );
         assert_eq!(r.stream_data(&ef_stream(&r, &spec)).unwrap(), vector);
         assert!(!as_dict(get(&r, &spec, "EF")).has(b"UF"));
         let root = r.root().unwrap();
-        let Object::Array(af) = get(&r, &root, "AF") else { panic!() };
+        let Object::Array(af) = get(&r, &root, "AF") else {
+            panic!()
+        };
         assert_eq!(af[0], Object::Reference(spec_ref));
     }
 }
@@ -181,7 +228,10 @@ fn test_embed_without_ef_stream() {
         af_relationship: Some("Unspecified".into()),
         ..FileSpec::default()
     };
-    let e = assert_err_matches(embed_file(&mut w, &spec), "File spec does not have an embedded file stream");
+    let e = assert_err_matches(
+        embed_file(&mut w, &spec),
+        "File spec does not have an embedded file stream",
+    );
     assert!(matches!(e, PdfError::Write(_)));
 }
 
@@ -214,12 +264,15 @@ fn contains(h: &[u8], n: &[u8]) -> bool {
 #[test]
 fn test_encrypt_efs() {
     use hanko_pdf::crypt::{
-        AuthStatus, CryptFilter, CryptFilterConfiguration, SecurityHandler, StandardEncryptOptions, STD_CF,
+        AuthStatus, CryptFilter, CryptFilterConfiguration, SecurityHandler, StandardEncryptOptions,
+        STD_CF,
     };
     let mut w = copy_into_new_writer(&read(&minimal())).unwrap();
     let mut cf = CryptFilter::standard_aes(32).unwrap();
     cf.set_embedded_only();
-    let cfc = CryptFilterConfiguration::new(vec![(STD_CF, cf)], "Identity", "Identity", Some(STD_CF)).unwrap();
+    let cfc =
+        CryptFilterConfiguration::new(vec![(STD_CF, cf)], "Identity", "Identity", Some(STD_CF))
+            .unwrap();
     let sh = SecurityHandler::build_from_pw(
         "secret",
         None,
@@ -233,7 +286,14 @@ fn test_encrypt_efs() {
     w.assign_security_handler(&sh).unwrap();
     let (modified, created) = frozen();
     let vector = pdf("scribble.pdf");
-    embed_test(&mut w, "vector-test.pdf", "テスト.pdf", &vector, created, modified);
+    embed_test(
+        &mut w,
+        "vector-test.pdf",
+        "テスト.pdf",
+        &vector,
+        created,
+        modified,
+    );
     let out = w.write().unwrap();
     let r = read(&out);
     // accessible without authenticating
@@ -241,7 +301,9 @@ fn test_encrypt_efs() {
     let ef = ef_ref(&r);
     let result = r.decrypt("secret").unwrap();
     assert_eq!(result.status, AuthStatus::Owner);
-    let Object::Stream(s) = r.get_object(ef).unwrap() else { panic!() };
+    let Object::Stream(s) = r.get_object(ef).unwrap() else {
+        panic!()
+    };
     assert!(has_crypt_filter(&s));
     assert_eq!(r.stream_data(&s).unwrap(), vector);
 }
@@ -251,7 +313,9 @@ fn test_decrypt_ef_without_explicit_crypt_filter() {
     let r = read(&pdf("embedded-encrypted-nocf.pdf"));
     let ef = ef_ref(&r);
     r.decrypt("secret").unwrap();
-    let Object::Stream(s) = r.get_object(ef).unwrap() else { panic!() };
+    let Object::Stream(s) = r.get_object(ef).unwrap() else {
+        panic!()
+    };
     assert!(!has_crypt_filter(&s));
     assert_eq!(r.stream_data(&s).unwrap(), pdf("scribble.pdf"));
 }
@@ -277,7 +341,10 @@ fn test_wrapper_doc_underspecified() {
             let out = w.write().unwrap();
             let r = read(&out);
             let decrypter = common::crypt::pubkey_test_decrypter();
-            assert!(r.decrypt_pubkey(&decrypter).map(|a| a.status) != Ok(hanko_pdf::crypt::AuthStatus::User));
+            assert!(
+                r.decrypt_pubkey(&decrypter).map(|a| a.status)
+                    != Ok(hanko_pdf::crypt::AuthStatus::User)
+            );
         }
     }
 }
@@ -311,7 +378,9 @@ fn test_wrapper_doc() {
     let (r, ef) = check_wrapper(&out);
     let result = r.decrypt("secret").unwrap();
     assert_eq!(result.status, hanko_pdf::crypt::AuthStatus::Owner);
-    let Object::Stream(s) = r.get_object(ef).unwrap() else { panic!() };
+    let Object::Stream(s) = r.get_object(ef).unwrap() else {
+        panic!()
+    };
     assert!(has_crypt_filter(&s));
     assert_eq!(r.stream_data(&s).unwrap(), vector);
 }
@@ -335,7 +404,9 @@ fn test_wrapper_doc_pubkey() {
     let (r, ef) = check_wrapper(&out);
     let result = r.decrypt_pubkey(&decrypter).unwrap();
     assert_eq!(result.status, hanko_pdf::crypt::AuthStatus::User);
-    let Object::Stream(s) = r.get_object(ef).unwrap() else { panic!() };
+    let Object::Stream(s) = r.get_object(ef).unwrap() else {
+        panic!()
+    };
     assert!(has_crypt_filter(&s));
     assert_eq!(r.stream_data(&s).unwrap(), vector);
 }

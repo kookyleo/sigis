@@ -56,11 +56,16 @@ fn is_pem(data: &[u8]) -> bool {
 }
 
 fn parse_pem(data: &[u8]) -> PdfResult<Vec<PemBlock>> {
-    let text = std::str::from_utf8(data).map_err(|_| PdfError::Value("PEM data is not ASCII".into()))?;
+    let text =
+        std::str::from_utf8(data).map_err(|_| PdfError::Value("PEM data is not ASCII".into()))?;
     let mut blocks = Vec::new();
     let mut lines = text.lines();
     while let Some(line) = lines.next() {
-        let Some(label) = line.trim().strip_prefix("-----BEGIN ").and_then(|l| l.strip_suffix("-----")) else {
+        let Some(label) = line
+            .trim()
+            .strip_prefix("-----BEGIN ")
+            .and_then(|l| l.strip_suffix("-----"))
+        else {
             continue;
         };
         let end = format!("-----END {label}-----");
@@ -87,7 +92,9 @@ fn parse_pem(data: &[u8]) -> PdfResult<Vec<PemBlock>> {
             body.push_str(l);
         }
         if !closed {
-            return Err(PdfError::Value(format!("PEM block {label} is not terminated")));
+            return Err(PdfError::Value(format!(
+                "PEM block {label} is not terminated"
+            )));
         }
         blocks.push(PemBlock {
             label: label.to_string(),
@@ -111,7 +118,9 @@ pub(crate) fn load_cert_from_pemder(data: &[u8]) -> PdfResult<Vec<u8>> {
     };
     match certs.as_slice() {
         [one] => Ok(one.clone()),
-        _ => Err(PdfError::Value("Number of certs should be exactly 1".into())),
+        _ => Err(PdfError::Value(
+            "Number of certs should be exactly 1".into(),
+        )),
     }
 }
 
@@ -137,27 +146,42 @@ fn hex_decode(s: &str) -> PdfResult<Vec<u8>> {
     }
     (0..s.len())
         .step_by(2)
-        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|_| PdfError::Value("Invalid hex IV".into())))
+        .map(|i| {
+            u8::from_str_radix(&s[i..i + 2], 16)
+                .map_err(|_| PdfError::Value("Invalid hex IV".into()))
+        })
         .collect()
 }
 
 /// Decrypt an OpenSSL "traditional" encrypted PEM body (`DEK-Info`).
 fn decrypt_traditional(block: &PemBlock, passphrase: Option<&[u8]>) -> PdfResult<Vec<u8>> {
-    let Some((_, dek)) = block.headers.iter().find(|(k, _)| k.eq_ignore_ascii_case("DEK-Info")) else {
+    let Some((_, dek)) = block
+        .headers
+        .iter()
+        .find(|(k, _)| k.eq_ignore_ascii_case("DEK-Info"))
+    else {
         return Ok(block.der.clone());
     };
-    let pass = passphrase.ok_or_else(|| PdfError::Value("Password was not given but private key is encrypted".into()))?;
+    let pass = passphrase.ok_or_else(|| {
+        PdfError::Value("Password was not given but private key is encrypted".into())
+    })?;
     let (alg, iv_hex) = dek
         .split_once(',')
         .ok_or_else(|| PdfError::Value("Malformed DEK-Info".into()))?;
     let iv = hex_decode(iv_hex.trim())?;
-    let salt = iv.get(..8).ok_or_else(|| PdfError::Value("Malformed DEK-Info IV".into()))?;
+    let salt = iv
+        .get(..8)
+        .ok_or_else(|| PdfError::Value("Malformed DEK-Info IV".into()))?;
     let keylen = match alg.trim() {
         "AES-128-CBC" => 16,
         "AES-192-CBC" => 24,
         "AES-256-CBC" => 32,
         "DES-EDE3-CBC" => 24,
-        other => return Err(PdfError::NotImplemented(format!("Unsupported PEM encryption {other}"))),
+        other => {
+            return Err(PdfError::NotImplemented(format!(
+                "Unsupported PEM encryption {other}"
+            )))
+        }
     };
     let key = evp_bytes_to_key(pass, salt, keylen);
     if alg.trim() == "DES-EDE3-CBC" {
@@ -177,11 +201,18 @@ fn pkcs1_to_pkcs8(pkcs1: &[u8]) -> Vec<u8> {
 fn is_private_key_info(der: &[u8]) -> bool {
     Tlv::parse_exact(der)
         .and_then(|t| t.children())
-        .is_ok_and(|ch| ch.len() >= 3 && ch[0].tag == tag::INTEGER && ch[1].tag == tag::SEQUENCE && ch[2].tag == tag::OCTET_STRING)
+        .is_ok_and(|ch| {
+            ch.len() >= 3
+                && ch[0].tag == tag::INTEGER
+                && ch[1].tag == tag::SEQUENCE
+                && ch[2].tag == tag::OCTET_STRING
+        })
 }
 
 fn decrypt_pkcs8(der: &[u8], passphrase: Option<&[u8]>) -> PdfResult<Vec<u8>> {
-    let pass = passphrase.ok_or_else(|| PdfError::Value("Password was not given but private key is encrypted".into()))?;
+    let pass = passphrase.ok_or_else(|| {
+        PdfError::Value("Password was not given but private key is encrypted".into())
+    })?;
     let epki = pkcs8::EncryptedPrivateKeyInfoRef::try_from(der)
         .map_err(|e| PdfError::Value(format!("Could not deserialize key data: {e}")))?;
     let doc = epki
@@ -192,7 +223,10 @@ fn decrypt_pkcs8(der: &[u8], passphrase: Option<&[u8]>) -> PdfResult<Vec<u8>> {
 
 /// Load a private key as unencrypted PKCS#8 DER
 /// (`load_private_key_from_pemder_data`).
-pub(crate) fn load_private_key_from_pemder(data: &[u8], passphrase: Option<&[u8]>) -> PdfResult<Vec<u8>> {
+pub(crate) fn load_private_key_from_pemder(
+    data: &[u8],
+    passphrase: Option<&[u8]>,
+) -> PdfResult<Vec<u8>> {
     if is_pem(data) {
         let blocks = parse_pem(data)?;
         let block = blocks
@@ -203,7 +237,9 @@ pub(crate) fn load_private_key_from_pemder(data: &[u8], passphrase: Option<&[u8]
             "PRIVATE KEY" => Ok(block.der.clone()),
             "ENCRYPTED PRIVATE KEY" => decrypt_pkcs8(&block.der, passphrase),
             "RSA PRIVATE KEY" => Ok(pkcs1_to_pkcs8(&decrypt_traditional(block, passphrase)?)),
-            other => Err(PdfError::NotImplemented(format!("Unsupported key type {other}"))),
+            other => Err(PdfError::NotImplemented(format!(
+                "Unsupported key type {other}"
+            ))),
         };
     }
     if is_private_key_info(data) {
@@ -214,7 +250,8 @@ pub(crate) fn load_private_key_from_pemder(data: &[u8], passphrase: Option<&[u8]
             return Ok(k);
         }
     }
-    let t = Tlv::parse_exact(data).map_err(|_| PdfError::Value("Could not deserialize key data".into()))?;
+    let t = Tlv::parse_exact(data)
+        .map_err(|_| PdfError::Value("Could not deserialize key data".into()))?;
     if t.children().is_ok_and(|ch| ch.len() >= 9) {
         return Ok(pkcs1_to_pkcs8(data));
     }
@@ -226,7 +263,8 @@ pub(crate) fn load_private_key_from_pemder(data: &[u8], passphrase: Option<&[u8]
 pub(crate) fn load_pkcs12(data: &[u8], passphrase: Option<&[u8]>) -> PdfResult<(Vec<u8>, Vec<u8>)> {
     let pass = std::str::from_utf8(passphrase.unwrap_or(b""))
         .map_err(|_| PdfError::Value("PKCS#12 passphrase must be UTF-8".into()))?;
-    let pfx = p12::PFX::parse(data).map_err(|e| PdfError::Value(format!("Could not parse PKCS#12 data: {e:?}")))?;
+    let pfx = p12::PFX::parse(data)
+        .map_err(|e| PdfError::Value(format!("Could not parse PKCS#12 data: {e:?}")))?;
     if !pfx.verify_mac(pass) {
         return Err(PdfError::Value("Invalid password or PKCS12 data".into()));
     }

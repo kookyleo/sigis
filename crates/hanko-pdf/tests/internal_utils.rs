@@ -62,14 +62,14 @@ fn simple_page(w: &mut PdfWriter, text: &str, compress: bool, extra_stream: bool
     font.set("F1", Object::Dictionary(courier()));
     let mut resources = Dictionary::new();
     resources.set("Font", Object::Dictionary(font));
-    let stream_data =
-        |y: i32| format!("BT /F1 18 Tf 0 {y} Td ({text}) Tj ET").into_bytes();
+    let stream_data = |y: i32| format!("BT /F1 18 Tf 0 {y} Td ({text}) Tj ET").into_bytes();
     let mk = |w: &mut PdfWriter, y: i32| {
         let mut s = DecodedStream::new(Dictionary::new(), stream_data(y));
         if compress {
             s.compress().unwrap();
         }
-        w.add_object(Object::Stream(s.to_stream().unwrap())).unwrap()
+        w.add_object(Object::Stream(s.to_stream().unwrap()))
+            .unwrap()
     };
     let contents = if extra_stream {
         let a = mk(w, 0);
@@ -141,14 +141,19 @@ fn nested_page_tree_pdf(page_count: usize, pages_per_node: usize) -> Vec<u8> {
         })
         .collect();
     let root = w.root().unwrap();
-    let Ok(Object::Reference(root_ref)) = root.get(b"Pages").cloned() else { panic!() };
+    let Ok(Object::Reference(root_ref)) = root.get(b"Pages").cloned() else {
+        panic!()
+    };
     let mut intermediate = Vec::new();
     for chunk in page_refs.chunks(pages_per_node) {
         let mut node = Dictionary::new();
         node.set("Type", name("Pages"));
         node.set("Parent", Object::Reference(root_ref));
         node.set("Count", Object::Integer(chunk.len() as i64));
-        node.set("Kids", Object::Array(chunk.iter().map(|r| Object::Reference(*r)).collect()));
+        node.set(
+            "Kids",
+            Object::Array(chunk.iter().map(|r| Object::Reference(*r)).collect()),
+        );
         let node_ref = w.add_object(Object::Dictionary(node)).unwrap();
         for p in chunk {
             let mut pg = as_dict(w.get_object(*p).unwrap());
@@ -176,17 +181,25 @@ fn test_insert_page_into_nested_page_tree() {
     assert_eq!(get(&r, &pages, "Count"), Object::Integer(5));
     let (last, _) = r.find_page_for_modification(-1).unwrap();
     let last = as_dict(r.get_object(last).unwrap());
-    assert!(contents_data(&r, &last).windows(8).any(|w| w == b"Appended"));
+    assert!(contents_data(&r, &last)
+        .windows(8)
+        .any(|w| w == b"Appended"));
 }
 
 fn content_stream(y: i32) -> Object {
     let data = format!("BT /F1 18 Tf 0 {y} Td (Test Test) Tj ET").into_bytes();
-    Object::Stream(DecodedStream::new(Dictionary::new(), data).to_stream().unwrap())
+    Object::Stream(
+        DecodedStream::new(Dictionary::new(), data)
+            .to_stream()
+            .unwrap(),
+    )
 }
 
 fn page_contents_refs(r: &PdfFile) -> (Dictionary, Vec<ObjectId>) {
     let k = kids(r);
-    let Object::Reference(pref) = k[0] else { panic!("page must be indirect") };
+    let Object::Reference(pref) = k[0] else {
+        panic!("page must be indirect")
+    };
     let page = as_dict(r.get_object(pref).unwrap());
     let conts = match get(r, &page, "Contents") {
         Object::Array(a) => a
@@ -236,7 +249,11 @@ fn test_add_stream_to_direct_arr() {
     let out = w.write().unwrap();
     let mut w = IncrementalWriter::new(read(&out));
     let data = b"BT /F1 18 Tf 0 50 Td (Test2 Test2) Tj ET".to_vec();
-    let s = Object::Stream(DecodedStream::new(Dictionary::new(), data).to_stream().unwrap());
+    let s = Object::Stream(
+        DecodedStream::new(Dictionary::new(), data)
+            .to_stream()
+            .unwrap(),
+    );
     let stream_ref = w.add_object(s).unwrap();
     w.add_stream_to_page(0, stream_ref, None, false).unwrap();
     let out = w.write().unwrap();
@@ -261,7 +278,10 @@ fn test_whitespace_variants() {
     let snippet = b" /Pages 2 0 R";
     let pos = m.windows(snippet.len()).position(|w| w == snippet).unwrap();
     for ws in [b' ', b'\n', b'\r', b'\t', 0x0c] {
-        let new: Vec<u8> = snippet.iter().map(|&c| if c == b' ' { ws } else { c }).collect();
+        let new: Vec<u8> = snippet
+            .iter()
+            .map(|&c| if c == b' ' { ws } else { c })
+            .collect();
         let mut data = m[..pos].to_vec();
         data.extend_from_slice(&new);
         data.extend_from_slice(&m[pos + snippet.len()..]);
@@ -291,7 +311,10 @@ fn test_skip_ws_eof_err_behaviour() {
         (b"", true),
     ] {
         let mut c = Cursor::new(data);
-        let e = assert_err_matches(misc::skip_over_whitespace(&mut c, stop, true), "ended prematurely");
+        let e = assert_err_matches(
+            misc::skip_over_whitespace(&mut c, stop, true),
+            "ended prematurely",
+        );
         assert!(e.is_stream_error());
     }
 }
@@ -371,7 +394,10 @@ fn test_name_delim() {
 
 #[test]
 fn test_name_with_non_pdf_ascii_whitespace() {
-    let e = assert_err_matches(generic::read_name(&mut Cursor::new(b"/Test\x0bTest")), "must be escaped");
+    let e = assert_err_matches(
+        generic::read_name(&mut Cursor::new(b"/Test\x0bTest")),
+        "must be escaped",
+    );
     assert!(e.is_read_error());
 }
 
@@ -452,7 +478,10 @@ fn test_historical_read() {
     r.get_object_at((6, 0), Some(1)).unwrap();
     let previous_root = as_dict(r.get_object_at((1, 0), Some(0)).unwrap());
     assert!(!previous_root.has(b"AcroForm"));
-    assert!(r.get_object_at((6, 0), Some(0)).unwrap_err().is_read_error());
+    assert!(r
+        .get_object_at((6, 0), Some(0))
+        .unwrap_err()
+        .is_read_error());
     assert!(r.xrefs().explicit_refs_in_revision(1).contains(&(6, 0)));
     assert!(r.xrefs().explicit_refs_in_revision(0).contains(&(2, 0)));
     assert!(!r.xrefs().explicit_refs_in_revision(1).contains(&(2, 0)));
@@ -470,9 +499,14 @@ fn test_page_import() {
             let input = read(&pdf(f));
             let mut w = PdfFileWriter::new(true, true).unwrap();
             let xref = w.import_page_as_xobject(&input, 0, inherit).unwrap();
-            let Object::Stream(x) = w.get_object(xref).unwrap() else { panic!() };
+            let Object::Stream(x) = w.get_object(xref).unwrap() else {
+                panic!()
+            };
             assert!(as_dict(get(&*w, &x.dict, "Resources")).has(b"ExtGState"));
-            assert!(contains(&w.stream_data(&x).unwrap(), b"0 1 0 rg /a0 gs"), "{f} {inherit}");
+            assert!(
+                contains(&w.stream_data(&x).unwrap(), b"0 1 0 rg /a0 gs"),
+                "{f} {inherit}"
+            );
         }
     }
 }
@@ -516,7 +550,9 @@ fn test_page_tree_import() {
         let (_, page) = first_page(&r);
         let resources = r.get_dict(&page, b"Resources").unwrap().unwrap();
         assert!(resources.has(b"ExtGState"));
-        let Some(Object::Stream(contents)) = r.get(&page, b"Contents").unwrap() else { panic!() };
+        let Some(Object::Stream(contents)) = r.get(&page, b"Contents").unwrap() else {
+            panic!()
+        };
         let data = r.stream_data(&contents).unwrap();
         assert!(data.windows(15).any(|w| w == b"0 1 0 rg /a0 gs"));
         if with_objstreams {
@@ -531,15 +567,21 @@ fn test_page_import_with_fonts() {
         let input = read(&pdf("fontembed.pdf"));
         let mut w = PdfFileWriter::new(true, true).unwrap();
         let xref = w.import_page_as_xobject(&input, 0, inherit).unwrap();
-        let Object::Stream(x) = w.get_object(xref).unwrap() else { panic!() };
+        let Object::Stream(x) = w.get_object(xref).unwrap() else {
+            panic!()
+        };
         let res = as_dict(get(&*w, &x.dict, "Resources"));
         let fonts = as_dict(get(&*w, &res, "Font"));
         assert!(fonts.has(b"FEmb"));
         let femb = as_dict(get(&*w, &fonts, "FEmb"));
-        let Object::Array(df) = get(&*w, &femb, "DescendantFonts") else { panic!() };
+        let Object::Array(df) = get(&*w, &femb, "DescendantFonts") else {
+            panic!()
+        };
         let df = as_dict(w.resolve(&df[0]).unwrap());
         let fd = as_dict(get(&*w, &df, "FontDescriptor"));
-        let Object::Stream(ff) = get(&*w, &fd, "FontFile3") else { panic!() };
+        let Object::Stream(ff) = get(&*w, &fd, "FontFile3") else {
+            panic!()
+        };
         assert_eq!(w.stream_data(&ff).unwrap().len(), 1424);
     }
 }
@@ -559,7 +601,15 @@ fn test_deep_modify() {
     assert!(w.objects().contains_key(&(0, 3)));
 }
 
-fn utc(year: i32, month: u8, day: u8, hour: u8, minute: u8, second: u8, off: Option<i32>) -> PdfDate {
+fn utc(
+    year: i32,
+    month: u8,
+    day: u8,
+    hour: u8,
+    minute: u8,
+    second: u8,
+    off: Option<i32>,
+) -> PdfDate {
     PdfDate {
         year,
         month,
@@ -582,7 +632,10 @@ fn test_trailer_update() {
     w.set_custom_trailer_entry("Info", Object::Reference(info_ref));
     let out = w.write().unwrap();
     let r = read(&out);
-    let info = as_dict(r.resolve(&r.trailer().raw_get(b"Info", None).unwrap()).unwrap());
+    let info = as_dict(
+        r.resolve(&r.trailer().raw_get(b"Info", None).unwrap())
+            .unwrap(),
+    );
     assert_eq!(text(&get(&r, &info, "CreationDate")), dt);
 }
 
@@ -601,7 +654,10 @@ fn test_incremental_trailer_operations() {
     assert_eq!(text(flat.get(b"TEST.Test").unwrap()), "bleh");
     let out = w.write().unwrap();
     let r = read(&out);
-    assert_eq!(text(&r.trailer().raw_get(b"TEST.Test", None).unwrap()), "bleh");
+    assert_eq!(
+        text(&r.trailer().raw_get(b"TEST.Test", None).unwrap()),
+        "bleh"
+    );
 }
 
 #[test]
@@ -610,14 +666,19 @@ fn test_generic_trailer_write() {
         let mut w: PdfWriter = if incremental {
             IncrementalWriter::new(read(&minimal())).into_inner()
         } else {
-            copy_into_new_writer(&read(&minimal())).unwrap().into_inner()
+            copy_into_new_writer(&read(&minimal()))
+                .unwrap()
+                .into_inner()
         };
         w.add_object(Object::Null).unwrap();
         w.set_custom_trailer_entry("/TEST.Test", text_string("bleh"));
         assert!(w.trailer_view().unwrap().has(b"TEST.Test"));
         let out = w.write().unwrap();
         let r = read(&out);
-        assert_eq!(text(&r.trailer().raw_get(b"TEST.Test", None).unwrap()), "bleh");
+        assert_eq!(
+            text(&r.trailer().raw_get(b"TEST.Test", None).unwrap()),
+            "bleh"
+        );
     }
 }
 
@@ -732,7 +793,10 @@ fn test_duplicate_filter_disregard() {
     let s = apply_filter_to_stream(&s, "/AHx", None, DuplicateFilter::Ignore).unwrap();
     let out = generic::object_to_bytes(&Object::Stream(s.clone()));
     let s2 = parse_stream(&out);
-    assert_eq!(filters(&s2), Object::Array(vec![name("AHx"), name("FlateDecode")]));
+    assert_eq!(
+        filters(&s2),
+        Object::Array(vec![name("AHx"), name("FlateDecode")])
+    );
     assert_eq!(stream_data(&s2), b"Hello world");
     assert_eq!(s.content, s2.content);
 }
@@ -743,7 +807,10 @@ fn test_duplicate_filter_permitted() {
     let s = apply_filter_to_stream(&s, "/AHx", None, DuplicateFilter::Allow).unwrap();
     let out = generic::object_to_bytes(&Object::Stream(s));
     let s2 = parse_stream(&out);
-    assert_eq!(filters(&s2), Object::Array(vec![name("AHx"), name("AHx"), name("FlateDecode")]));
+    assert_eq!(
+        filters(&s2),
+        Object::Array(vec![name("AHx"), name("AHx"), name("FlateDecode")])
+    );
     assert_eq!(stream_data(&s2), b"Hello world");
 }
 
@@ -767,7 +834,9 @@ fn test_copy_file() {
     assert_eq!(r.root_ref().unwrap(), old_root_ref);
     let root = r.root().unwrap();
     let af = as_dict(get(&r, &root, "AcroForm"));
-    let Object::Array(fields) = get(&r, &af, "Fields") else { panic!() };
+    let Object::Array(fields) = get(&r, &af, "Fields") else {
+        panic!()
+    };
     assert_eq!(fields.len(), 1);
     assert_eq!(kids(&r).len(), 1);
 }
@@ -825,7 +894,11 @@ fn test_path_access() {
         (path(&["/WithRefs", "/Arr", "0"]), Object::Integer(7)),
         (path(&["/WithRefs", "/String"]), text_string("OK")),
     ] {
-        assert_eq!(p.access_on(&PathMockHandler, &obj, true).unwrap(), result, "{p}");
+        assert_eq!(
+            p.access_on(&PathMockHandler, &obj, true).unwrap(),
+            result,
+            "{p}"
+        );
     }
 }
 
@@ -839,18 +912,29 @@ fn test_path_access_failures() {
         path(&["/TheresNoSuchKey"]),
         path(&["/Blah", "/Bleh", "10000"]),
     ] {
-        assert!(p.access_on(&PathMockHandler, &obj, true).unwrap_err().is_read_error(), "{p}");
+        assert!(
+            p.access_on(&PathMockHandler, &obj, true)
+                .unwrap_err()
+                .is_read_error(),
+            "{p}"
+        );
     }
 }
 
 #[test]
 fn test_path_access_reference() {
     let obj = path_test_obj();
-    let r1 = path(&["/WithRefs", "/Arr"]).access_reference_on(&PathMockHandler, &obj).unwrap();
+    let r1 = path(&["/WithRefs", "/Arr"])
+        .access_reference_on(&PathMockHandler, &obj)
+        .unwrap();
     assert_eq!(r1.0, 1);
-    let r2 = path(&["/WithRefs", "/String"]).access_reference_on(&PathMockHandler, &obj).unwrap();
+    let r2 = path(&["/WithRefs", "/String"])
+        .access_reference_on(&PathMockHandler, &obj)
+        .unwrap();
     assert_eq!(r2.0, 0);
-    let e = path(&["/Blah"]).access_reference_on(&PathMockHandler, &obj).unwrap_err();
+    let e = path(&["/Blah"])
+        .access_reference_on(&PathMockHandler, &obj)
+        .unwrap_err();
     assert!(matches!(e, PdfError::IndirectObjectExpected(_)));
 }
 
@@ -864,7 +948,8 @@ fn test_pdf_num_precision() {
 #[test]
 fn test_array_null_bytes() {
     for arr in [&b"[1 1 1]"[..], b"[1 1 1\x00\x00\x00]", b"[1\x00\x001 1 ]"] {
-        let parsed = generic::read_array(&mut Cursor::new(arr), &ctx(), ContentOpReading::No).unwrap();
+        let parsed =
+            generic::read_array(&mut Cursor::new(arr), &ctx(), ContentOpReading::No).unwrap();
         assert_eq!(parsed, vec![Object::Integer(1); 3]);
     }
 }
@@ -1020,7 +1105,9 @@ fn test_extension_registration_create_array() {
         w.register_extension(&ext2()).unwrap();
         w.write().unwrap();
         w.register_extension(&new_ext).unwrap();
-        let Object::Array(a) = ext_value(&w, "TEST") else { panic!("not an array") };
+        let Object::Array(a) = ext_value(&w, "TEST") else {
+            panic!("not an array")
+        };
         assert_eq!(a.len(), expected_len);
     }
 }
@@ -1029,8 +1116,14 @@ fn test_extension_registration_create_array() {
 fn test_multi_extension_registration() {
     let cases: Vec<(Vec<i64>, DeveloperExtension)> = vec![
         (vec![2], ext_multi()),
-        (vec![3], with(ext("/MULT", 3), |e| e.compare_by_level = true)),
-        (vec![2], with(ext("/MULT", 1), |e| e.compare_by_level = true)),
+        (
+            vec![3],
+            with(ext("/MULT", 3), |e| e.compare_by_level = true),
+        ),
+        (
+            vec![2],
+            with(ext("/MULT", 1), |e| e.compare_by_level = true),
+        ),
         (vec![3], with(ext("/MULT", 3), |e| e.subsumes = vec![2])),
         (vec![2], with(ext("/MULT", 1), |e| e.subsumed_by = vec![2])),
         (
@@ -1041,8 +1134,14 @@ fn test_multi_extension_registration() {
             }),
         ),
         (vec![2, 3], ext("/MULT", 3)),
-        (vec![2, 3], with(ext("/MULT", 3), |e| e.compare_by_level = false)),
-        (vec![2, 1], with(ext("/MULT", 1), |e| e.subsumed_by = vec![5])),
+        (
+            vec![2, 3],
+            with(ext("/MULT", 3), |e| e.compare_by_level = false),
+        ),
+        (
+            vec![2, 1],
+            with(ext("/MULT", 1), |e| e.subsumed_by = vec![5]),
+        ),
         (
             vec![2, 1001],
             with(ext("/MULT", 1001), |e| {
@@ -1054,12 +1153,16 @@ fn test_multi_extension_registration() {
     for (expected, new_ext) in cases {
         let mut w = PdfFileWriter::new(true, true).unwrap();
         w.register_extension(&ext_multi()).unwrap();
-        let Object::Array(a) = ext_value(&w, "MULT") else { panic!() };
+        let Object::Array(a) = ext_value(&w, "MULT") else {
+            panic!()
+        };
         assert_eq!(a.len(), 1);
         let out = w.write().unwrap();
         let mut w = copy_into_new_writer(&read(&out)).unwrap();
         w.register_extension(&new_ext).unwrap();
-        let Object::Array(a) = ext_value(&w, "MULT") else { panic!() };
+        let Object::Array(a) = ext_value(&w, "MULT") else {
+            panic!()
+        };
         let lvls: BTreeSet<i64> = a.iter().map(|o| ext_level(&w, o)).collect();
         assert_eq!(lvls, expected.into_iter().collect());
     }
@@ -1119,7 +1222,10 @@ fn test_extension_registration_no_level() {
     d.remove(b"ExtensionLevel");
     let out = written_with_extensions(Object::Dictionary(d));
     let mut w = copy_into_new_writer(&read(&out)).unwrap();
-    let e = assert_err_matches(w.register_extension(&ext2()), "Could not read developer ext");
+    let e = assert_err_matches(
+        w.register_extension(&ext2()),
+        "Could not read developer ext",
+    );
     assert!(e.is_read_error());
 }
 
@@ -1129,7 +1235,10 @@ fn test_extension_registration_bad_level() {
     d.set("ExtensionLevel", Object::Null);
     let out = written_with_extensions(Object::Dictionary(d));
     let mut w = copy_into_new_writer(&read(&out)).unwrap();
-    let e = assert_err_matches(w.register_extension(&ext2()), "Could not read developer ext");
+    let e = assert_err_matches(
+        w.register_extension(&ext2()),
+        "Could not read developer ext",
+    );
     assert!(e.is_read_error());
 }
 
@@ -1137,7 +1246,10 @@ fn test_extension_registration_bad_level() {
 fn test_name_decode() {
     for (bytes, expected) in [
         (&b"/Name1"[..], &b"Name1"[..]),
-        (b"/A;Name_With-Various***Characters", b"A;Name_With-Various***Characters"),
+        (
+            b"/A;Name_With-Various***Characters",
+            b"A;Name_With-Various***Characters",
+        ),
         (b"/1.2", b"1.2"),
         (b"/$$", b"$$"),
         (b"/@pattern", b"@pattern"),
@@ -1148,7 +1260,10 @@ fn test_name_decode() {
         (b"/application#2Fpdf", b"application/pdf"),
         (b"/application#2fpdf", b"application/pdf"),
     ] {
-        assert_eq!(generic::read_name(&mut Cursor::new(bytes)).unwrap(), expected);
+        assert_eq!(
+            generic::read_name(&mut Cursor::new(bytes)).unwrap(),
+            expected
+        );
     }
 }
 
@@ -1183,14 +1298,26 @@ fn test_name_encode() {
 
 #[test]
 fn test_parse_name_invalid_utf8() {
-    assert_eq!(generic::read_name(&mut Cursor::new(b"/Test#ae")).unwrap(), b"Test\xae");
+    assert_eq!(
+        generic::read_name(&mut Cursor::new(b"/Test#ae")).unwrap(),
+        b"Test\xae"
+    );
 }
 
 #[test]
 fn test_parse_datetime() {
-    assert_eq!(pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(-300))), "D:20201226150511-05'00'");
-    assert_eq!(pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(0))), "D:20201226150511Z");
-    assert_eq!(pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(60))), "D:20201226150511+01'00'");
+    assert_eq!(
+        pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(-300))),
+        "D:20201226150511-05'00'"
+    );
+    assert_eq!(
+        pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(0))),
+        "D:20201226150511Z"
+    );
+    assert_eq!(
+        pdf_date(&utc(2020, 12, 26, 15, 5, 11, Some(60))),
+        "D:20201226150511+01'00'"
+    );
 }
 
 #[test]
@@ -1221,8 +1348,12 @@ fn test_parse_comments() {
         "\n    <<%lkjadsf\r/A/B/C%bleh >>\n    /D>>\n    ",
         "\n    <<%lkjadsf\r\n/A/B/C%bleh >>\r/D>>\n    ",
     ] {
-        let d = generic::read_dictionary(&mut Cursor::new(input.trim().as_bytes()), &ctx(), ContentOpReading::No)
-            .unwrap();
+        let d = generic::read_dictionary(
+            &mut Cursor::new(input.trim().as_bytes()),
+            &ctx(),
+            ContentOpReading::No,
+        )
+        .unwrap();
         let d = as_dict(d);
         assert_eq!(d.len(), 2);
         assert_eq!(d.get(b"A").unwrap(), &name("B"));
@@ -1234,7 +1365,11 @@ fn test_parse_comments() {
 fn test_parse_malformed_dictionary() {
     for input in ["<</2 0 R>>", "<</Name 0 0>>", "<<(blah) 0>>"] {
         let e = assert_err_matches(
-            generic::read_dictionary(&mut Cursor::new(input.as_bytes()), &ctx(), ContentOpReading::No),
+            generic::read_dictionary(
+                &mut Cursor::new(input.as_bytes()),
+                &ctx(),
+                ContentOpReading::No,
+            ),
             "Failed to read dictionary key",
         );
         assert!(e.is_read_error());
@@ -1242,7 +1377,10 @@ fn test_parse_malformed_dictionary() {
 }
 
 fn producer(r: &PdfFile) -> String {
-    let info = as_dict(r.resolve(&r.trailer().raw_get(b"Info", None).unwrap()).unwrap());
+    let info = as_dict(
+        r.resolve(&r.trailer().raw_get(b"Info", None).unwrap())
+            .unwrap(),
+    );
     text(&get(r, &info, "Producer"))
 }
 
@@ -1293,7 +1431,12 @@ fn test_unrecognized_token() {
 
 #[test]
 fn test_operator_literal() {
-    let v = read_item(&mut Cursor::new(b"BT"), &ctx(), ContentOpReading::GraphicOps).unwrap();
+    let v = read_item(
+        &mut Cursor::new(b"BT"),
+        &ctx(),
+        ContentOpReading::GraphicOps,
+    )
+    .unwrap();
     assert_eq!(v, Item::Operator("BT".into()));
     let e = assert_err_matches(parse(b"BT"), "Unexpected");
     assert!(e.is_read_error());
@@ -1301,13 +1444,20 @@ fn test_operator_literal() {
 
 #[test]
 fn test_content_stream_null() {
-    let v = read_item(&mut Cursor::new(b"null"), &ctx(), ContentOpReading::GraphicOps).unwrap();
+    let v = read_item(
+        &mut Cursor::new(b"null"),
+        &ctx(),
+        ContentOpReading::GraphicOps,
+    )
+    .unwrap();
     assert_eq!(v, Item::Object(Object::Null));
 }
 
 #[test]
 fn test_bad_bool() {
-    assert!(generic::read_boolean(&mut Cursor::new(b"trux")).unwrap_err().is_read_error());
+    assert!(generic::read_boolean(&mut Cursor::new(b"trux"))
+        .unwrap_err()
+        .is_read_error());
     let mut c = Cursor::new(b"falsx");
     assert!(generic::read_boolean(&mut c).unwrap_err().is_read_error());
     assert!(read_object(&mut c, &ctx()).unwrap_err().is_read_error());
@@ -1315,14 +1465,23 @@ fn test_bad_bool() {
 
 #[test]
 fn test_bad_array() {
-    let e = generic::read_array(&mut Cursor::new(b"$null null]"), &ctx(), ContentOpReading::No).unwrap_err();
+    let e = generic::read_array(
+        &mut Cursor::new(b"$null null]"),
+        &ctx(),
+        ContentOpReading::No,
+    )
+    .unwrap_err();
     assert!(e.is_read_error());
 }
 
 #[test]
 fn test_bad_dict() {
-    let e = generic::read_dictionary(&mut Cursor::new(b"</Blah/Blah>>"), &ctx(), ContentOpReading::No)
-        .unwrap_err();
+    let e = generic::read_dictionary(
+        &mut Cursor::new(b"</Blah/Blah>>"),
+        &ctx(),
+        ContentOpReading::No,
+    )
+    .unwrap_err();
     assert!(e.is_read_error());
 }
 
@@ -1337,7 +1496,10 @@ fn test_bad_indirect_ref() {
         (b"-1 0 R", "Parse error"),
         (b"Z 0 R", "Parse error"),
     ] {
-        let e = assert_err_matches(generic::read_indirect_reference(&mut Cursor::new(payload)), err);
+        let e = assert_err_matches(
+            generic::read_indirect_reference(&mut Cursor::new(payload)),
+            err,
+        );
         assert!(e.is_read_error());
     }
 }
@@ -1363,19 +1525,33 @@ fn test_multi_def_dictionary_nonstrict() {
 
 #[test]
 fn test_compacted_syntax() {
-    let r = read(&hanko_testdata::read(&["pyhanko", "pdf", "safedocs", "CompactedPDFSyntaxTest.pdf"]));
+    let r = read(&hanko_testdata::read(&[
+        "pyhanko",
+        "pdf",
+        "safedocs",
+        "CompactedPDFSyntaxTest.pdf",
+    ]));
     let root = r.root().unwrap();
     let mi = as_dict(get(&r, &root, "MarkInfo"));
     assert_eq!(get(&r, &mi, "Marked"), Object::Boolean(true));
     let k = kids(&r);
     let page = as_dict(r.resolve(&k[0]).unwrap());
     // numeric comparison, as in Python (ints and decimals compare equal)
-    let Object::Array(mb) = get(&r, &page, "MediaBox") else { panic!() };
+    let Object::Array(mb) = get(&r, &page, "MediaBox") else {
+        panic!()
+    };
     let mb: Vec<f32> = mb.iter().map(|o| o.as_float().unwrap()).collect();
     assert_eq!(mb, vec![0.0, 0.0, 999.0, 999.0]);
-    let Object::Array(c) = get(&r, &page, "Contents") else { panic!() };
-    let Object::Stream(s) = r.resolve(&c[0]).unwrap() else { panic!() };
-    assert!(contains(&r.stream_data(&s).unwrap(), b"compacted syntax sequences"));
+    let Object::Array(c) = get(&r, &page, "Contents") else {
+        panic!()
+    };
+    let Object::Stream(s) = r.resolve(&c[0]).unwrap() else {
+        panic!()
+    };
+    assert!(contains(
+        &r.stream_data(&s).unwrap(),
+        b"compacted syntax sequences"
+    ));
     let tv = r.trailer_view();
     let info = as_dict(get(&r, &tv, "Info"));
     assert_eq!(text(&get(&r, &info, "Subject")), "Compacted Syntax v3.0");
@@ -1384,8 +1560,14 @@ fn test_compacted_syntax() {
 fn simple_string_enc_samples() -> Vec<(&'static [u8], TextStringEncoding)> {
     vec![
         (b"abcdef", TextStringEncoding::PdfDoc),
-        (b"\xfe\xff\x00a\x00b\x00c\x00d\x00e\x00f", TextStringEncoding::Utf16Be),
-        (b"\xff\xfea\x00b\x00c\x00d\x00e\x00f\x00", TextStringEncoding::Utf16Le),
+        (
+            b"\xfe\xff\x00a\x00b\x00c\x00d\x00e\x00f",
+            TextStringEncoding::Utf16Be,
+        ),
+        (
+            b"\xff\xfea\x00b\x00c\x00d\x00e\x00f\x00",
+            TextStringEncoding::Utf16Le,
+        ),
         (b"\xef\xbb\xbfabcdef", TextStringEncoding::Utf8),
     ]
 }
@@ -1393,7 +1575,10 @@ fn simple_string_enc_samples() -> Vec<(&'static [u8], TextStringEncoding)> {
 #[test]
 fn test_autodetect_string_encoding() {
     for (encoded, enc) in simple_string_enc_samples() {
-        assert_eq!(generic::pdf_string(encoded), PdfString::Text("abcdef".into(), enc));
+        assert_eq!(
+            generic::pdf_string(encoded),
+            PdfString::Text("abcdef".into(), enc)
+        );
     }
 }
 
@@ -1450,14 +1635,20 @@ fn test_decode_string_premature_end() {
 
 #[test]
 fn test_decode_hex_premature_end() {
-    let e = assert_err_matches(generic::read_hex_string(&mut Cursor::new(b"<deadbeef")), "ended prematurely");
+    let e = assert_err_matches(
+        generic::read_hex_string(&mut Cursor::new(b"<deadbeef")),
+        "ended prematurely",
+    );
     assert!(e.is_read_error());
 }
 
 #[test]
 fn test_decode_hex_invalid_token() {
     for data in [&b"<deadbeefNonsense>"[..], b"<dead%Bleh\nbeefNonsense>"] {
-        let e = assert_err_matches(generic::read_hex_string(&mut Cursor::new(data)), "Unexpected.*N");
+        let e = assert_err_matches(
+            generic::read_hex_string(&mut Cursor::new(data)),
+            "Unexpected.*N",
+        );
         assert!(e.is_read_error());
     }
 }
@@ -1482,7 +1673,10 @@ fn test_decode_hex() {
         let mut buf = data.to_vec();
         buf.extend_from_slice(b" /Next");
         let mut c = Cursor::new(&buf);
-        assert_eq!(hex_bytes(generic::read_hex_string(&mut c).unwrap()), expected);
+        assert_eq!(
+            hex_bytes(generic::read_hex_string(&mut c).unwrap()),
+            expected
+        );
         assert_eq!(c.read_rest(), b" /Next");
     }
 }
@@ -1490,7 +1684,10 @@ fn test_decode_hex() {
 #[test]
 fn test_decode_hex_multiple_chunks() {
     let data: Vec<u8> = (0..=255u8).collect::<Vec<_>>().repeat(40);
-    let hex: Vec<u8> = data.iter().flat_map(|b| format!("{b:02x}").into_bytes()).collect();
+    let hex: Vec<u8> = data
+        .iter()
+        .flat_map(|b| format!("{b:02x}").into_bytes())
+        .collect();
     let lines: Vec<&[u8]> = hex.chunks(63).collect();
     let mut buf = b"<".to_vec();
     buf.extend(lines.join(&b"\r\n"[..]));
@@ -1504,14 +1701,20 @@ fn test_decode_hex_multiple_chunks() {
 fn test_decode_hex_premature_end_multiple_chunks() {
     let mut buf = b"<".to_vec();
     buf.extend(b"ab".repeat(5000));
-    let e = assert_err_matches(generic::read_hex_string(&mut Cursor::new(&buf)), "ended prematurely");
+    let e = assert_err_matches(
+        generic::read_hex_string(&mut Cursor::new(&buf)),
+        "ended prematurely",
+    );
     assert!(e.is_read_error());
 }
 
 #[test]
 fn test_decode_hex_gt_in_comment() {
     let mut c = Cursor::new(b"<de%a>b\nad> /Next");
-    assert_eq!(hex_bytes(generic::read_hex_string(&mut c).unwrap()), b"\xde\xad");
+    assert_eq!(
+        hex_bytes(generic::read_hex_string(&mut c).unwrap()),
+        b"\xde\xad"
+    );
     assert_eq!(c.read_rest(), b" /Next");
 }
 
@@ -1524,7 +1727,10 @@ fn comment_test_pairs() -> Vec<(&'static [u8], Object)> {
         (b"%Bleh\n/A", name("A")),
         (b"%Bleh\n.123", Object::Real(0.123)),
         (b"%Bleh\n1", Object::Integer(1)),
-        (b"%Bleh\n(ABC)", Object::String(b"ABC".to_vec(), StringFormat::Literal)),
+        (
+            b"%Bleh\n(ABC)",
+            Object::String(b"ABC".to_vec(), StringFormat::Literal),
+        ),
     ]
 }
 
@@ -1665,7 +1871,10 @@ fn test_tolerate_startxref_on_same_line() {
 
 #[test]
 fn test_startxref_parse_failure() {
-    for f in ["minimal-startxref-hopeless2.pdf", "minimal-startxref-hopeless3.pdf"] {
+    for f in [
+        "minimal-startxref-hopeless2.pdf",
+        "minimal-startxref-hopeless3.pdf",
+    ] {
         let e = assert_err_matches(try_read(&pdf(f), true), "startxref not found");
         assert!(e.is_read_error());
     }
@@ -1673,7 +1882,10 @@ fn test_startxref_parse_failure() {
 
 #[test]
 fn test_illegal_header() {
-    let e = assert_err_matches(try_read(&pdf("minimal-illegal-header.pdf"), true), "Illegal PDF header");
+    let e = assert_err_matches(
+        try_read(&pdf("minimal-illegal-header.pdf"), true),
+        "Illegal PDF header",
+    );
     assert!(e.is_read_error());
 }
 
@@ -1689,7 +1901,10 @@ fn test_ignore_illegal_version_in_catalog() {
 
 #[test]
 fn test_incremental_document_id_updated() {
-    let out = copy_into_new_writer(&read(&minimal())).unwrap().write().unwrap();
+    let out = copy_into_new_writer(&read(&minimal()))
+        .unwrap()
+        .write()
+        .unwrap();
     let mut w = IncrementalWriter::new(read(&out));
     let mut root = w.root().unwrap();
     root.set("Blah", name("Bluh"));
@@ -1753,7 +1968,9 @@ fn test_merge_resources() {
 
     let r = read(&out);
     let (_, _, res) = page_resources(&r);
-    let Object::Array(ps) = get(&r, &res, "ProcSet") else { panic!() };
+    let Object::Array(ps) = get(&r, &res, "ProcSet") else {
+        panic!()
+    };
     assert!(ps.contains(&name("Text")));
     assert!(ps.contains(&name("PDF")));
 }
@@ -1774,16 +1991,23 @@ fn test_merge_resource_conflict() {
 fn test_copy_deep_object_graph() {
     let mut w = IncrementalWriter::new(read(&minimal()));
     // build the chain bottom-up: /Blah_i -> [ ref to next ]
-    let mut next: Option<ObjectId> = Some(w.add_object(Object::Dictionary(Dictionary::new())).unwrap());
+    let mut next: Option<ObjectId> =
+        Some(w.add_object(Object::Dictionary(Dictionary::new())).unwrap());
     for i in (1..4000).rev() {
         let mut d = Dictionary::new();
         if let Some(n) = next {
-            d.set(format!("Blah_{i}"), Object::Array(vec![Object::Reference(n)]));
+            d.set(
+                format!("Blah_{i}"),
+                Object::Array(vec![Object::Reference(n)]),
+            );
         }
         next = Some(w.add_object(Object::Dictionary(d)).unwrap());
     }
     let mut blah = Dictionary::new();
-    blah.set("Blah_0", Object::Array(vec![Object::Reference(next.unwrap())]));
+    blah.set(
+        "Blah_0",
+        Object::Array(vec![Object::Reference(next.unwrap())]),
+    );
     let mut root = w.root().unwrap();
     root.set("Blah", Object::Dictionary(blah));
     w.set_root(root);
@@ -1795,11 +2019,17 @@ fn test_copy_deep_object_graph() {
     let nr = read(&out);
     let root = nr.root().unwrap();
     let b = as_dict(get(&nr, &root, "Blah"));
-    let Object::Array(a0) = get(&nr, &b, "Blah_0") else { panic!() };
+    let Object::Array(a0) = get(&nr, &b, "Blah_0") else {
+        panic!()
+    };
     let d1 = as_dict(nr.resolve(&a0[0]).unwrap());
-    let Object::Array(a1) = get(&nr, &d1, "Blah_1") else { panic!() };
+    let Object::Array(a1) = get(&nr, &d1, "Blah_1") else {
+        panic!()
+    };
     let d2 = as_dict(nr.resolve(&a1[0]).unwrap());
-    let Object::Array(a2) = get(&nr, &d2, "Blah_2") else { panic!() };
+    let Object::Array(a2) = get(&nr, &d2, "Blah_2") else {
+        panic!()
+    };
     assert_eq!(a2.len(), 1);
 }
 
@@ -1807,7 +2037,9 @@ fn test_copy_deep_object_graph() {
 fn test_copy_root_reference() {
     let mut w = IncrementalWriter::new(read(&minimal()));
     let root_id = w.root_id();
-    let arr = w.add_object(Object::Array(vec![Object::Reference(root_id)])).unwrap();
+    let arr = w
+        .add_object(Object::Array(vec![Object::Reference(root_id)]))
+        .unwrap();
     let mut root = w.root().unwrap();
     root.set("Blah", Object::Reference(arr));
     w.set_root(root);
@@ -1817,18 +2049,26 @@ fn test_copy_root_reference() {
     let out = new_w.write().unwrap();
     let nr = read(&out);
     let root = nr.root().unwrap();
-    let Object::Array(a) = get(&nr, &root, "Blah") else { panic!() };
+    let Object::Array(a) = get(&nr, &root, "Blah") else {
+        panic!()
+    };
     assert_eq!(a[0], Object::Reference(root_id));
 }
 
 #[test]
 fn test_circular_xref_sections() {
-    let e = assert_err_matches(try_read(&pdf("circular-xref-chain.pdf"), true), "startxref loop");
+    let e = assert_err_matches(
+        try_read(&pdf("circular-xref-chain.pdf"), true),
+        "startxref loop",
+    );
     assert!(e.is_read_error());
 }
 
 #[test]
 fn test_malformed_prev() {
-    let e = assert_err_matches(try_read(&pdf("xref-malformed-prev.pdf"), true), "Expected /Prev to be a number");
+    let e = assert_err_matches(
+        try_read(&pdf("xref-malformed-prev.pdf"), true),
+        "Expected /Prev to be a number",
+    );
     assert!(e.is_read_error());
 }

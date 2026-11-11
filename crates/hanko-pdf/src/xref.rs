@@ -109,7 +109,9 @@ fn xref_parse_decimal(raw: &[u8], context: &str) -> PdfResult<i64> {
 fn read_int(stream: &mut Cursor<'_>) -> PdfResult<i64> {
     match read_number(stream)? {
         Object::Integer(i) => Ok(i),
-        other => Err(PdfError::value(format!("Expected an integer, got {other:?}"))),
+        other => Err(PdfError::value(format!(
+            "Expected an integer, got {other:?}"
+        ))),
     }
 }
 
@@ -245,7 +247,9 @@ fn expected_xref_stream_size(idx_pairs: &[i64], entry_sizes: &[i64]) -> Option<i
         .0
         .iter()
         .try_fold(0i64, |acc, c| acc.checked_add(c[1]))?;
-    let width = entry_sizes.iter().try_fold(0i64, |acc, w| acc.checked_add(*w))?;
+    let width = entry_sizes
+        .iter()
+        .try_fold(0i64, |acc, w| acc.checked_add(*w))?;
     count.checked_mul(width.checked_add(1)?)
 }
 
@@ -282,8 +286,8 @@ pub fn parse_xref_stream(
         },
     }
     .ok_or_else(|| PdfError::value("Invalid /Index or /Size in xref stream"))?;
-    let entry_sizes =
-        int_array(dict.get(b"W").ok()).ok_or_else(|| PdfError::value("Invalid /W in xref stream"))?;
+    let entry_sizes = int_array(dict.get(b"W").ok())
+        .ok_or_else(|| PdfError::value("Invalid /W in xref stream"))?;
     if entry_sizes.len() < 3 || entry_sizes.iter().any(|&w| w < 0) {
         return Err(PdfError::value("Invalid /W in xref stream"));
     }
@@ -318,7 +322,12 @@ pub fn parse_xref_stream(
     // Guard against absurd entry counts (pyHanko would loop until memory
     // runs out): an entry needs at least one byte unless all widths are 0.
     let width: i64 = entry_sizes.iter().fold(0i64, |a, w| a.saturating_add(*w));
-    let declared: i64 = idx_pairs.as_chunks::<2>().0.iter().map(|c| c[1].max(0)).fold(0i64, i64::saturating_add);
+    let declared: i64 = idx_pairs
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|c| c[1].max(0))
+        .fold(0i64, i64::saturating_add);
     if declared > (data.len() as i64 / width.max(1)).saturating_add(1_000_000) {
         return Err(PdfError::read("XRef stream declares too many entries"));
     }
@@ -488,7 +497,8 @@ impl XRefSectionData {
                 }
                 (XRefType::Free, _) => {
                     self.freed.insert(idnum, generation);
-                    self.explicit_refs_in_revision.insert((idnum, generation - 1));
+                    self.explicit_refs_in_revision
+                        .insert((idnum, generation - 1));
                 }
                 _ => return Err(PdfError::value("Inconsistent xref entry")),
             }
@@ -651,7 +661,11 @@ pub(crate) fn read_object_header_inner(
     strict: bool,
 ) -> Result<(i64, i64), HeaderError> {
     let pos = stream.tell();
-    let header_err = || HeaderError::Header(PdfError::read(format!("Failed to read object header at {pos}")));
+    let header_err = || {
+        HeaderError::Header(PdfError::read(format!(
+            "Failed to read object header at {pos}"
+        )))
+    };
     let mut extra = skip_over_whitespace(stream, false, true).map_err(HeaderError::Other)?;
     extra |= skip_over_comments(stream, true).map_err(HeaderError::Other)?;
     let idnum = parse_py_int(&read_until_whitespace(stream, None)).ok_or_else(header_err)?;
@@ -826,9 +840,11 @@ impl<'a> XRefBuilder<'a> {
     ) -> Result<(ObjectId, Dictionary, Vec<u8>), HeaderError> {
         let (idnum, generation) = read_object_header_inner(stream, self.strict)?;
         let id = (
-            u32::try_from(idnum).map_err(|_| HeaderError::Other(PdfError::read("Invalid xref stream ID")))?,
-            u16::try_from(generation)
-                .map_err(|_| HeaderError::Other(PdfError::read("Invalid xref stream generation")))?,
+            u32::try_from(idnum)
+                .map_err(|_| HeaderError::Other(PdfError::read("Invalid xref stream ID")))?,
+            u16::try_from(generation).map_err(|_| {
+                HeaderError::Other(PdfError::read("Invalid xref stream generation"))
+            })?,
         );
         let ctx = ParseContext {
             strict: self.strict,
@@ -837,10 +853,14 @@ impl<'a> XRefBuilder<'a> {
         let obj = generic::read_dictionary(stream, &ctx, generic::ContentOpReading::No)
             .map_err(HeaderError::Other)?;
         let Object::Stream(s) = obj else {
-            return Err(HeaderError::Other(PdfError::read("XRef stream must be a stream object")));
+            return Err(HeaderError::Other(PdfError::read(
+                "XRef stream must be a stream object",
+            )));
         };
         if !matches!(s.dict.get(b"Type"), Ok(Object::Name(n)) if n == b"XRef") {
-            return Err(HeaderError::Other(PdfError::read("XRef stream must have /Type /XRef")));
+            return Err(HeaderError::Other(PdfError::read(
+                "XRef stream must have /Type /XRef",
+            )));
         }
         Ok((id, s.dict, s.content))
     }
@@ -853,12 +873,18 @@ impl<'a> XRefBuilder<'a> {
     ) -> Result<Option<i64>, HeaderError> {
         let start_location = stream.tell();
         let (id, dict, content) = self.read_xref_stream_object(stream)?;
-        let entries = parse_xref_stream(&dict, &content, ctx, self.strict).map_err(HeaderError::Other)?;
+        let entries =
+            parse_xref_stream(&dict, &content, ctx, self.strict).map_err(HeaderError::Other)?;
         let mut data = XRefSectionData::default();
-        data.process_entries(&entries, self.strict).map_err(HeaderError::Other)?;
+        data.process_entries(&entries, self.strict)
+            .map_err(HeaderError::Other)?;
         let size = match dict.get(b"Size") {
             Ok(Object::Integer(s)) => *s,
-            _ => return Err(HeaderError::Other(PdfError::read("XRef stream lacks an integer /Size"))),
+            _ => {
+                return Err(HeaderError::Other(PdfError::read(
+                    "XRef stream lacks an integer /Size",
+                )))
+            }
         };
         let meta = XRefSectionMetaInfo {
             xref_section_type: XRefSectionType::Stream,
@@ -892,11 +918,12 @@ impl<'a> XRefBuilder<'a> {
             strict: self.strict,
             length_resolver: None,
         };
-        let new_trailer = match generic::read_dictionary(stream, &pctx, generic::ContentOpReading::No)? {
-            Object::Dictionary(d) => d,
-            Object::Stream(s) => s.dict,
-            _ => return Err(PdfError::read("Trailer must be a dictionary")),
-        };
+        let new_trailer =
+            match generic::read_dictionary(stream, &pctx, generic::ContentOpReading::No)? {
+                Object::Dictionary(d) => d,
+                Object::Stream(s) => s.dict,
+                _ => return Err(PdfError::read("Trailer must be a dictionary")),
+            };
         let declared_size = match new_trailer.get(b"Size") {
             Ok(Object::Integer(s)) => *s,
             Ok(_) => return Err(PdfError::value("Trailer /Size must be an integer")),
@@ -915,9 +942,12 @@ impl<'a> XRefBuilder<'a> {
         };
         let (xref_type, stream_ref) = if let Some(loc) = hybrid_loc {
             let stream_pos = stream.tell();
-            let loc_u = usize::try_from(loc).map_err(|_| PdfError::read("Negative /XRefStm offset"))?;
+            let loc_u =
+                usize::try_from(loc).map_err(|_| PdfError::read("Negative /XRefStm offset"))?;
             stream.seek(loc_u);
-            let (sref, sdict, scontent) = self.read_xref_stream_object(stream).map_err(PdfError::from)?;
+            let (sref, sdict, scontent) = self
+                .read_xref_stream_object(stream)
+                .map_err(PdfError::from)?;
             let meta = XRefSectionMetaInfo {
                 xref_section_type: XRefSectionType::HybridStream,
                 size: match sdict.get(b"Size") {
@@ -971,7 +1001,8 @@ impl<'a> XRefBuilder<'a> {
             if err_count == 0 {
                 declared_startxref = sx;
             }
-            let pos = usize::try_from(sx).map_err(|_| PdfError::read(format!("negative seek value {sx}")))?;
+            let pos = usize::try_from(sx)
+                .map_err(|_| PdfError::read(format!("negative seek value {sx}")))?;
             stream.seek(pos);
             if skip_over_whitespace(&mut stream, false, true)? {
                 log::debug!("Encountered unexpected whitespace when looking for xref stream");
@@ -989,7 +1020,9 @@ impl<'a> XRefBuilder<'a> {
                 match self.read_xref_stream(&mut stream, declared_startxref, ctx) {
                     Ok(prev) => startxref = prev,
                     Err(HeaderError::Header(e)) => {
-                        log::debug!("Failed to read xref stream header, attempting to correct: {e}");
+                        log::debug!(
+                            "Failed to read xref stream header, attempting to correct: {e}"
+                        );
                         startxref = Some(attempt_startxref_correction(&mut stream, sx)?);
                         err_count += 1;
                         continue;
@@ -1021,12 +1054,14 @@ fn attempt_startxref_correction(stream: &mut Cursor<'_>, startxref: i64) -> PdfR
     }
     let readback = 5i64;
     let base = startxref - readback;
-    let base_u = usize::try_from(base).map_err(|_| PdfError::read(format!("negative seek value {base}")))?;
+    let base_u =
+        usize::try_from(base).map_err(|_| PdfError::read(format!("negative seek value {base}")))?;
     stream.seek(base_u);
     let tmp = stream.read((2 * readback) as usize);
     if let Some(nl) = tmp.iter().rposition(|&b| b == b'\n') {
         let target = base.saturating_add(nl as i64 - 1);
-        let target = usize::try_from(target).map_err(|_| PdfError::read(format!("negative seek value {target}")))?;
+        let target = usize::try_from(target)
+            .map_err(|_| PdfError::read(format!("negative seek value {target}")))?;
         stream.seek(target);
         skip_over_whitespace(stream, false, true)?;
         let line_start = stream.tell() as i64;
@@ -1036,7 +1071,9 @@ fn attempt_startxref_correction(stream: &mut Cursor<'_>, startxref: i64) -> PdfR
             }
         }
     }
-    Err(PdfError::read("Could not find xref table at specified location"))
+    Err(PdfError::read(
+        "Could not find xref table at specified location",
+    ))
 }
 
 /// Cross-reference data of all revisions (`XRefCache`).
@@ -1051,7 +1088,10 @@ pub struct XRefCache {
 impl XRefCache {
     /// Build from chronologically ordered sections.
     pub fn new(sections: Vec<XRefSection>) -> Self {
-        let xref_stream_refs = sections.iter().filter_map(|s| s.meta_info.stream_ref).collect();
+        let xref_stream_refs = sections
+            .iter()
+            .filter_map(|s| s.meta_info.stream_ref)
+            .collect();
         Self {
             sections,
             xref_stream_refs,
@@ -1097,15 +1137,24 @@ impl XRefCache {
     pub fn object_streams_used_in(&self, revision: usize) -> BTreeSet<ObjectId> {
         self.sections
             .get(revision)
-            .map(|s| s.xref_data.obj_streams_used.iter().map(|&i| (i, 0)).collect())
+            .map(|s| {
+                s.xref_data
+                    .obj_streams_used
+                    .iter()
+                    .map(|&i| (i, 0))
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
     /// The first revision that defines `id` (`get_introducing_revision`).
     pub fn get_introducing_revision(&self, id: ObjectId) -> Option<usize> {
-        self.sections
-            .iter()
-            .position(|s| matches!(s.xref_data.try_resolve(id.0, i64::from(id.1)), Some(Some(_))))
+        self.sections.iter().position(|s| {
+            matches!(
+                s.xref_data.try_resolve(id.0, i64::from(id.1)),
+                Some(Some(_))
+            )
+        })
     }
 
     /// Metadata of `revision` (`get_xref_container_info`).
@@ -1184,7 +1233,10 @@ impl XRefCache {
             None => self.get_historical_ref(id, self.sections.len().saturating_sub(1)),
             Some(idx) => {
                 let ix = *idx.get(&(id.0, i64::from(id.1)))?;
-                self.sections[ix].xref_data.try_resolve(id.0, i64::from(id.1)).flatten()
+                self.sections[ix]
+                    .xref_data
+                    .try_resolve(id.0, i64::from(id.1))
+                    .flatten()
             }
         }
     }

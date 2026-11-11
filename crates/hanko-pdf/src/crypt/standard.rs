@@ -10,8 +10,8 @@ use lopdf::{Dictionary, Object};
 use sha2::{Digest, Sha256, Sha384, Sha512};
 
 use super::api::{
-    AuthResult, AuthStatus, CryptFilter, CryptFilterConfiguration, CryptFilterRegistry, HandlerKind,
-    HandlerState, SecurityHandler, SecurityHandlerVersion, IDENTITY,
+    AuthResult, AuthStatus, CryptFilter, CryptFilterConfiguration, CryptFilterRegistry,
+    HandlerKind, HandlerState, SecurityHandler, SecurityHandlerVersion, IDENTITY,
 };
 use super::asn1::{self, tag, Tlv};
 use super::cred_ser::{SerialisableCredential, SerialisedCredential};
@@ -256,12 +256,17 @@ pub fn default_crypt_filters() -> CryptFilterRegistry {
                 }
                 Err(_) => 40,
             };
-            Ok(CryptFilter::standard_rc4(usize::try_from(bits.div_euclid(8)).unwrap_or(0)))
+            Ok(CryptFilter::standard_rc4(
+                usize::try_from(bits.div_euclid(8)).unwrap_or(0),
+            ))
         }),
     );
     r.register("AESV2", Arc::new(|_, _| CryptFilter::standard_aes(16)));
     r.register("AESV3", Arc::new(|_, _| CryptFilter::standard_aes(32)));
-    r.register("AESV4", Arc::new(|_, _| Ok(CryptFilter::standard_aes_gcm())));
+    r.register(
+        "AESV4",
+        Arc::new(|_, _| Ok(CryptFilter::standard_aes_gcm())),
+    );
     r.register("Identity", Arc::new(|_, _| Ok(CryptFilter::identity())));
     r
 }
@@ -346,7 +351,11 @@ fn legacy_normalise_pw(password: &Password) -> PdfResult<Vec<u8>> {
 }
 
 /// Algorithm 2.B of ISO 32000-2, 7.6.4.3.4 (`_r6_hash_algo`).
-pub(crate) fn r6_hash_algo(pw_bytes: &[u8], current_salt: &[u8], u_entry: Option<&[u8]>) -> PdfResult<Vec<u8>> {
+pub(crate) fn r6_hash_algo(
+    pw_bytes: &[u8],
+    current_salt: &[u8],
+    u_entry: Option<&[u8]>,
+) -> PdfResult<Vec<u8>> {
     let mut h = Sha256::new();
     h.update(pw_bytes);
     h.update(current_salt);
@@ -383,7 +392,9 @@ struct R6KeyEntry<'a> {
 impl<'a> R6KeyEntry<'a> {
     fn from_bytes(entry: &'a [u8]) -> PdfResult<Self> {
         if entry.len() != 48 {
-            return Err(PdfError::Generic("R6 key entries must be 48 bytes long".into()));
+            return Err(PdfError::Generic(
+                "R6 key entries must be 48 bytes long".into(),
+            ));
         }
         Ok(Self {
             hash_value: &entry[..32],
@@ -393,14 +404,25 @@ impl<'a> R6KeyEntry<'a> {
     }
 }
 
-fn r6_password_authenticate(pw: &[u8], entry: &R6KeyEntry<'_>, u_entry: Option<&[u8]>) -> PdfResult<bool> {
+fn r6_password_authenticate(
+    pw: &[u8],
+    entry: &R6KeyEntry<'_>,
+    u_entry: Option<&[u8]>,
+) -> PdfResult<bool> {
     Ok(r6_hash_algo(pw, entry.validation_salt, u_entry)? == entry.hash_value)
 }
 
-fn r6_derive_file_key(pw: &[u8], entry: &R6KeyEntry<'_>, e_entry: &[u8], u_entry: Option<&[u8]>) -> PdfResult<Vec<u8>> {
+fn r6_derive_file_key(
+    pw: &[u8],
+    entry: &R6KeyEntry<'_>,
+    e_entry: &[u8],
+    u_entry: Option<&[u8]>,
+) -> PdfResult<Vec<u8>> {
     let interm = r6_hash_algo(pw, entry.key_salt, u_entry)?;
     if e_entry.len() != 32 {
-        return Err(PdfError::Generic("/OE and /UE must be 32 bytes long".into()));
+        return Err(PdfError::Generic(
+            "/OE and /UE must be 32 bytes long".into(),
+        ));
     }
     aes_cbc_decrypt(&interm, e_entry, &[0u8; 16], false)
 }
@@ -421,7 +443,8 @@ fn check_r6_values(
         (Some(o), Some(u)) if !o.is_empty() && !u.is_empty() && o.len() == 32 && u.len() == 32 => {}
         _ => {
             return Err(PdfError::Generic(
-                "/UE and /OE must be present and be 32 bytes long in a rev. 6 security handler".into(),
+                "/UE and /OE must be present and be 32 bytes long in a rev. 6 security handler"
+                    .into(),
             ))
         }
     }
@@ -550,7 +573,9 @@ impl SecurityHandler {
         let mut st = StandardState {
             revision: p.revision,
             perms: p.perm_flags,
-            mac_required: !p.perm_flags.contains(StandardPermissions::TOLERATE_MISSING_PDF_MAC),
+            mac_required: !p
+                .perm_flags
+                .contains(StandardPermissions::TOLERATE_MISSING_PDF_MAC),
             odata: p.odata,
             udata: p.udata,
             oeseed: None,
@@ -587,7 +612,10 @@ impl SecurityHandler {
         Ok(Self::from_state(state))
     }
 
-    pub(crate) fn instantiate_standard(encrypt_dict: &Dictionary, reg: &CryptFilterRegistry) -> PdfResult<Self> {
+    pub(crate) fn instantiate_standard(
+        encrypt_dict: &Dictionary,
+        reg: &CryptFilterRegistry,
+    ) -> PdfResult<Self> {
         let v = SecurityHandlerVersion::from_number(number_entry(encrypt_dict, "V")?);
         let r = StandardSecuritySettingsRevision::from_number(number_entry(encrypt_dict, "R")?);
         let cfc = process_crypt_filters(encrypt_dict, reg, false)?;
@@ -603,12 +631,16 @@ impl SecurityHandler {
             }
         };
         if keylen_bits.rem_euclid(8) != 0 {
-            return Err(PdfError::Generic("Key length must be a multiple of 8".into()));
+            return Err(PdfError::Generic(
+                "Key length must be a multiple of 8".into(),
+            ));
         }
         let keylen = usize::try_from(keylen_bits / 8)
             .map_err(|_| PdfError::Generic("Key length must be positive".into()))?;
         let (Some(o), Some(u)) = (dict_get(encrypt_dict, "O"), dict_get(encrypt_dict, "U")) else {
-            return Err(PdfError::Generic("/O and /U entries must be present".into()));
+            return Err(PdfError::Generic(
+                "/O and /U entries must be present".into(),
+            ));
         };
         let perm_flags = match dict_get(encrypt_dict, "P") {
             None => StandardPermissions::allow_everything(),
@@ -693,7 +725,15 @@ impl SecurityHandler {
                 | StandardPermissions::ALLOW_HIGH_QUALITY_PRINTING;
             compute_u_value_r2(&user, &o_entry, perms, id1)
         } else {
-            compute_u_value_r34(&user, rev.num(), keylen_bytes, &o_entry, perms, id1, opts.encrypt_metadata)
+            compute_u_value_r34(
+                &user,
+                rev.num(),
+                keylen_bytes,
+                &o_entry,
+                perms,
+                id1,
+                opts.encrypt_metadata,
+            )
         };
         let version = match rev {
             StandardSecuritySettingsRevision::Rc4OrAes128 => SecurityHandlerVersion::Rc4OrAes128,
@@ -773,11 +813,21 @@ impl SecurityHandler {
         extd.extend_from_slice(b"adb");
         extd.extend(random_bytes(4)?);
         let encrypted_perms = aes_ecb(&encryption_key, &extd, true)?;
-        let kdf_salt = if opts.pdf_mac { Some(random_bytes(32)?) } else { None };
-        let (version, revision) = if opts.use_gcm {
-            (SecurityHandlerVersion::AesGcm, StandardSecuritySettingsRevision::AesGcm)
+        let kdf_salt = if opts.pdf_mac {
+            Some(random_bytes(32)?)
         } else {
-            (SecurityHandlerVersion::Aes256, StandardSecuritySettingsRevision::Aes256)
+            None
+        };
+        let (version, revision) = if opts.use_gcm {
+            (
+                SecurityHandlerVersion::AesGcm,
+                StandardSecuritySettingsRevision::AesGcm,
+            )
+        } else {
+            (
+                SecurityHandlerVersion::Aes256,
+                StandardSecuritySettingsRevision::Aes256,
+            )
         };
         let sh = Self::new_standard(StandardHandlerParams {
             version,
@@ -809,15 +859,26 @@ impl SecurityHandler {
 
     /// Authenticate with a password (`StandardSecurityHandler.authenticate`);
     /// `id1` is required for legacy handlers.
-    pub fn authenticate_password(&self, password: impl Into<Password>, id1: Option<&[u8]>) -> PdfResult<AuthResult> {
+    pub fn authenticate_password(
+        &self,
+        password: impl Into<Password>,
+        id1: Option<&[u8]>,
+    ) -> PdfResult<AuthResult> {
         self.authenticate_standard(password.into(), id1.map(<[u8]>::to_vec))
     }
 
-    pub(crate) fn authenticate_password_credential(&self, cred: &PasswordCredential) -> PdfResult<AuthResult> {
+    pub(crate) fn authenticate_password_credential(
+        &self,
+        cred: &PasswordCredential,
+    ) -> PdfResult<AuthResult> {
         self.authenticate_standard(Password::Bytes(cred.pwd_bytes.clone()), cred.id1.clone())
     }
 
-    fn authenticate_standard(&self, credential: Password, id1: Option<Vec<u8>>) -> PdfResult<AuthResult> {
+    fn authenticate_standard(
+        &self,
+        credential: Password,
+        id1: Option<Vec<u8>>,
+    ) -> PdfResult<AuthResult> {
         let mut s = self.lock();
         let encrypt_metadata = s.encrypt_metadata;
         let keylen = s.keylen;
@@ -830,7 +891,9 @@ impl SecurityHandler {
             authenticate_r6(st, &credential, encrypt_metadata)?
         } else {
             let Some(id1) = id1 else {
-                return Err(PdfError::Read("id1 must be specified for legacy encryption".into()));
+                return Err(PdfError::Read(
+                    "id1 must be specified for legacy encryption".into(),
+                ));
             };
             let pw = legacy_normalise_pw(&credential)?;
             authenticate_legacy(st, &id1, &pw, keylen, encrypt_metadata)
@@ -897,7 +960,8 @@ fn authenticate_legacy(
         }
         val
     };
-    let (owner_ok, key) = auth_user_password_legacy(st, id1, &prp_userpass, keylen, encrypt_metadata);
+    let (owner_ok, key) =
+        auth_user_password_legacy(st, id1, &prp_userpass, keylen, encrypt_metadata);
     if owner_ok {
         return (AuthStatus::Owner, Some(key), Some(cred));
     }
@@ -909,17 +973,27 @@ fn authenticate_legacy(
 }
 
 /// Algorithm 2.A of ISO 32000-2, 7.6.4.3.3 (`_authenticate_r6`).
-fn authenticate_r6(st: &StandardState, password: &Password, encrypt_metadata: bool) -> PdfResult<AuthOutcome> {
+fn authenticate_r6(
+    st: &StandardState,
+    password: &Password,
+    encrypt_metadata: bool,
+) -> PdfResult<AuthOutcome> {
     let pw = r6_normalise_pw(password)?;
     let o_entry = R6KeyEntry::from_bytes(&st.odata)?;
     let u_entry = R6KeyEntry::from_bytes(&st.udata)?;
     let missing = || PdfError::Generic("/UE and /OE must be present".into());
     let (status, key) = if r6_password_authenticate(&pw, &o_entry, Some(&st.udata))? {
         let oe = st.oeseed.as_deref().ok_or_else(missing)?;
-        (AuthStatus::Owner, r6_derive_file_key(&pw, &o_entry, oe, Some(&st.udata))?)
+        (
+            AuthStatus::Owner,
+            r6_derive_file_key(&pw, &o_entry, oe, Some(&st.udata))?,
+        )
     } else if r6_password_authenticate(&pw, &u_entry, None)? {
         let ue = st.ueseed.as_deref().ok_or_else(missing)?;
-        (AuthStatus::User, r6_derive_file_key(&pw, &u_entry, ue, None)?)
+        (
+            AuthStatus::User,
+            r6_derive_file_key(&pw, &u_entry, ue, None)?,
+        )
     } else {
         return Ok((AuthStatus::Failed, None, None));
     };
@@ -952,7 +1026,10 @@ fn authenticate_r6(st: &StandardState, password: &Password, encrypt_metadata: bo
     ))
 }
 
-pub(crate) fn standard_as_pdf_object(s: &HandlerState, st: &StandardState) -> PdfResult<Dictionary> {
+pub(crate) fn standard_as_pdf_object(
+    s: &HandlerState,
+    st: &StandardState,
+) -> PdfResult<Dictionary> {
     let mut d = Dictionary::new();
     d.set("Filter", Object::Name(b"Standard".to_vec()));
     d.set("O", byte_string(st.odata.clone()));

@@ -90,9 +90,8 @@ pub trait PdfHandlerExt: PdfHandler {
 
     /// `dict[key]`, failing with `KeyError` semantics as a [`PdfError::Value`].
     fn get_required(&self, dict: &Dictionary, key: &[u8]) -> PdfResult<Object> {
-        self.get(dict, key)?.ok_or_else(|| {
-            PdfError::Value(format!("KeyError: /{}", String::from_utf8_lossy(key)))
-        })
+        self.get(dict, key)?
+            .ok_or_else(|| PdfError::Value(format!("KeyError: /{}", String::from_utf8_lossy(key))))
     }
 
     /// `dict[key]` as a dictionary (streams yield their dictionary).
@@ -132,12 +131,23 @@ pub trait PdfHandlerExt: PdfHandler {
             .get(&page_tree_root, b"Resources")?
             .unwrap_or_else(|| Object::Dictionary(Dictionary::new()));
         let page_count = as_int(&self.get_required(&page_tree_root, b"Count")?)?;
-        let page_ix = if page_ix < 0 { page_count + page_ix } else { page_ix };
+        let page_ix = if page_ix < 0 {
+            page_count + page_ix
+        } else {
+            page_ix
+        };
         if !(0 <= page_ix && page_ix < page_count) {
             return Err(PdfError::Generic("Page index out of range".into()));
         }
         let mut refs_seen = BTreeSet::new();
-        self.walk_rec(0, pages_ref, root_resources, &mut refs_seen, page_ix, retrieve_parent)
+        self.walk_rec(
+            0,
+            pages_ref,
+            root_resources,
+            &mut refs_seen,
+            page_ix,
+            retrieve_parent,
+        )
     }
 
     #[doc(hidden)]
@@ -164,7 +174,9 @@ pub trait PdfHandlerExt: PdfHandler {
         let mut cur = first_page_ix;
         for (kid_index, kid_ref) in kids.iter().enumerate() {
             let Object::Reference(kid_id) = kid_ref else {
-                return Err(PdfError::read("Page tree node children must be indirect objects"));
+                return Err(PdfError::read(
+                    "Page tree node children must be indirect objects",
+                ));
             };
             if refs_seen.contains(kid_id) {
                 return Err(PdfError::read("Circular reference in page tree"));
@@ -178,7 +190,14 @@ pub trait PdfHandlerExt: PdfHandler {
                 let desc = as_int(&self.get_required(&kid, b"Count")?)?;
                 if cur <= page_ix && page_ix < cur + desc {
                     refs_seen.insert(*kid_id);
-                    return self.walk_rec(cur, *kid_id, last_rsrc, refs_seen, page_ix, retrieve_parent);
+                    return self.walk_rec(
+                        cur,
+                        *kid_id,
+                        last_rsrc,
+                        refs_seen,
+                        page_ix,
+                        retrieve_parent,
+                    );
                 }
                 cur += desc;
             } else if crate::generic::is_name(&node_type, "Page") {

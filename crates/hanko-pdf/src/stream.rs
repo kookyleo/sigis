@@ -65,7 +65,11 @@ pub fn stream_filters(dict: &Dictionary, deref: Deref<'_>) -> PdfResult<Vec<Filt
                 }
                 a
             }
-            _ => return Err(PdfError::stream("/DecodeParms must be a dictionary or an array")),
+            _ => {
+                return Err(PdfError::stream(
+                    "/DecodeParms must be a dictionary or an array",
+                ))
+            }
         },
     };
     names
@@ -85,7 +89,9 @@ pub fn stream_filters(dict: &Dictionary, deref: Deref<'_>) -> PdfResult<Vec<Filt
 
 /// `true` if the stream has a `/Crypt` filter (`_has_crypt_filter`).
 pub fn has_crypt_filter(dict: &Dictionary, deref: Deref<'_>) -> PdfResult<bool> {
-    Ok(stream_filters(dict, deref)?.iter().any(FilterSpec::is_crypt))
+    Ok(stream_filters(dict, deref)?
+        .iter()
+        .any(FilterSpec::is_crypt))
 }
 
 /// Decode stream data, applying the limits of `ctx` (`read_data`).
@@ -131,7 +137,12 @@ pub fn decode_stream_data(
                     )))
                 }
             };
-            decoder.decode_bounded(input, spec.params.as_ref(), ctx.stage_output_cap(stream_cap), deref)?
+            decoder.decode_bounded(
+                input,
+                spec.params.as_ref(),
+                ctx.stage_output_cap(stream_cap),
+                deref,
+            )?
         };
         ctx.record_output(out.len());
         data = Some(out);
@@ -227,7 +238,11 @@ impl DecodedStream {
         params: Option<Dictionary>,
         allow_duplicates: DuplicateFilter,
     ) -> PdfResult<()> {
-        let name = filter_name.strip_prefix('/').unwrap_or(filter_name).as_bytes().to_vec();
+        let name = filter_name
+            .strip_prefix('/')
+            .unwrap_or(filter_name)
+            .as_bytes()
+            .to_vec();
         let cur = stream_filters(&self.dict, &no_deref)?;
         if cur.is_empty() {
             self.dict.set("Filter", Object::Name(name));
@@ -237,7 +252,9 @@ impl DecodedStream {
             return Ok(());
         }
         if allow_duplicates != DuplicateFilter::Allow
-            && cur.iter().any(|s| matches!(&s.name, Object::Name(n) if *n == name))
+            && cur
+                .iter()
+                .any(|s| matches!(&s.name, Object::Name(n) if *n == name))
         {
             if allow_duplicates == DuplicateFilter::Error {
                 return Err(PdfError::write(format!(
@@ -251,7 +268,11 @@ impl DecodedStream {
         names.extend(cur.iter().map(|s| s.name.clone()));
         self.dict.set("Filter", Object::Array(names));
         let params_nonempty = params.as_ref().is_some_and(|p| !p.is_empty());
-        if params_nonempty || cur.iter().any(|s| s.params.as_ref().is_some_and(|p| !p.is_empty())) {
+        if params_nonempty
+            || cur
+                .iter()
+                .any(|s| s.params.as_ref().is_some_and(|p| !p.is_empty()))
+        {
             let mut arr = vec![params.map_or(Object::Null, |p| {
                 if p.is_empty() {
                     Object::Null
@@ -294,7 +315,15 @@ impl DecodedStream {
     /// with the default limits (`DEFAULT_DECODE_CONTEXT`).
     pub fn from_stream(s: &Stream) -> PdfResult<Self> {
         let mut ctx = DecodeContext::default();
-        let data = decode_stream_data(&s.dict, &s.content, &mut ctx, DecodePurpose::Generic, None, &no_deref, None)?;
+        let data = decode_stream_data(
+            &s.dict,
+            &s.content,
+            &mut ctx,
+            DecodePurpose::Generic,
+            None,
+            &no_deref,
+            None,
+        )?;
         Ok(Self {
             dict: s.dict.clone(),
             data,

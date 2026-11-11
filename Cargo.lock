@@ -1410,7 +1410,7 @@ dependencies = [
  "rsa 0.10.0-rc.21",
  "sha1 0.11.0",
  "sha2 0.11.1",
- "sha3",
+ "sha3 0.10.9",
  "spki 0.8.1",
  "stringprep",
  "thiserror",

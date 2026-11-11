@@ -11,10 +11,10 @@ use lopdf::{Dictionary, Object, Stream};
 
 use super::model::{
     self, dc_creator, dc_description, dc_title, not_property_attributes, pdf_keywords,
-    pdf_producer, rdf_about, rdf_alt, rdf_bag, rdf_description, rdf_li, rdf_parse_type,
-    rdf_rdf, rdf_resource, rdf_seq, rdf_value, x_xmpmeta, xml_lang, xmp_createdate,
-    xmp_creatortool, xmp_moddate, DocumentMetadata, ExpandedName, MetaDate, MetaString,
-    Qualifiers, XmpArray, XmpStructure, XmpUri, XmpValue, XmpValueKind, VENDOR,
+    pdf_producer, rdf_about, rdf_alt, rdf_bag, rdf_description, rdf_li, rdf_parse_type, rdf_rdf,
+    rdf_resource, rdf_seq, rdf_value, x_xmpmeta, xml_lang, xmp_createdate, xmp_creatortool,
+    xmp_moddate, DocumentMetadata, ExpandedName, MetaDate, MetaString, Qualifiers, XmpArray,
+    XmpStructure, XmpUri, XmpValue, XmpValueKind, VENDOR,
 };
 use crate::decode_limits::DecodePurpose;
 use crate::error::{PdfError, PdfResult};
@@ -78,7 +78,9 @@ fn parse_dom(text: &str) -> PdfResult<XNode> {
         }
     }
     loop {
-        let (ns_res, ev) = reader.read_resolved_event().map_err(|e| fail(e.to_string()))?;
+        let (ns_res, ev) = reader
+            .read_resolved_event()
+            .map_err(|e| fail(e.to_string()))?;
         let ns = resolve_ns(ns_res)?;
         match ev {
             Event::Start(e) => {
@@ -168,7 +170,10 @@ fn open_node(
             .map_err(|err| fail(err.to_string()))?
             .into_owned();
         if let Some(ans) = ans {
-            node.attrs.push((ExpandedName::new(&ans, &String::from_utf8_lossy(aloc.as_ref())), value));
+            node.attrs.push((
+                ExpandedName::new(&ans, &String::from_utf8_lossy(aloc.as_ref())),
+                value,
+            ));
         }
     }
     Ok(node)
@@ -199,7 +204,10 @@ fn element_children(node: &XNode) -> Vec<&XNode> {
 }
 
 fn attr(node: &XNode, name: &ExpandedName) -> Option<String> {
-    node.attrs.iter().find(|(n, _)| n == name).map(|(_, v)| v.clone())
+    node.attrs
+        .iter()
+        .find(|(n, _)| n == name)
+        .map(|(_, v)| v.clone())
 }
 
 fn check_lang(node: &XNode) -> Option<String> {
@@ -215,7 +223,9 @@ fn proc_struct(node: &XNode, lang: Option<&str>) -> PdfResult<XmpStructure> {
     for child in element_children(node) {
         if let Some(name) = name_of(child) {
             if s.get(&name).is_some() {
-                return Err(xmp_error(format!("Duplicate field {name} in XMP structure value")));
+                return Err(xmp_error(format!(
+                    "Duplicate field {name} in XMP structure value"
+                )));
             }
             s.set(name, proc_value(child, lang)?);
         }
@@ -270,7 +280,9 @@ fn extract_qualifiers(node: &XNode, lang: Option<&str>) -> PdfResult<Qualifiers>
 }
 
 fn unwrap_resource(node: &XNode, lang: Option<&str>) -> PdfResult<(XmpValueKind, Qualifiers)> {
-    let rdf_val = element_children(node).into_iter().find(|c| name_of(c) == Some(rdf_value()));
+    let rdf_val = element_children(node)
+        .into_iter()
+        .find(|c| name_of(c) == Some(rdf_value()));
     match rdf_val {
         Some(v) => Ok((proc_value(v, lang)?.value, extract_qualifiers(node, lang)?)),
         None => Ok((
@@ -301,19 +313,30 @@ fn proc_value(node: &XNode, lang: Option<&str>) -> PdfResult<XmpValue> {
                 if is_http_uri(&text) {
                     return Ok(XmpValue::new(XmpValueKind::Uri(XmpUri(text))));
                 }
-                return Ok(XmpValue::with_quals(XmpValueKind::Str(text), Qualifiers::lang_as_qual(lang)));
+                return Ok(XmpValue::with_quals(
+                    XmpValueKind::Str(text),
+                    Qualifiers::lang_as_qual(lang),
+                ));
             }
             if node.has_any_attr {
-                return Ok(XmpValue::new(XmpValueKind::Structure(proc_struct(node, lang)?)));
+                return Ok(XmpValue::new(XmpValueKind::Structure(proc_struct(
+                    node, lang,
+                )?)));
             }
-            Ok(XmpValue::with_quals(XmpValueKind::Str(String::new()), Qualifiers::lang_as_qual(lang)))
+            Ok(XmpValue::with_quals(
+                XmpValueKind::Str(String::new()),
+                Qualifiers::lang_as_qual(lang),
+            ))
         }
         1 => {
             let child = children[0];
             let name = name_of(child);
             if name == Some(rdf_seq()) || name == Some(rdf_alt()) || name == Some(rdf_bag()) {
                 let arr = proc_arr(child, lang)?;
-                Ok(XmpValue::with_quals(XmpValueKind::Array(arr), Qualifiers::lang_as_qual(lang)))
+                Ok(XmpValue::with_quals(
+                    XmpValueKind::Array(arr),
+                    Qualifiers::lang_as_qual(lang),
+                ))
             } else if name == Some(rdf_description()) {
                 let (inner, quals) = unwrap_resource(child, lang)?;
                 Ok(XmpValue::with_quals(inner, quals))
@@ -372,8 +395,16 @@ fn decode_with(enc: &str, data: &[u8]) -> PdfResult<String> {
             }
             let le = enc == "utf-16le";
             let units: Vec<u16> = data
-                .as_chunks::<2>().0.iter()
-                .map(|c| if le { u16::from_le_bytes([c[0], c[1]]) } else { u16::from_be_bytes([c[0], c[1]]) })
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|c| {
+                    if le {
+                        u16::from_le_bytes([c[0], c[1]])
+                    } else {
+                        u16::from_be_bytes([c[0], c[1]])
+                    }
+                })
                 .collect();
             String::from_utf16(&units).map_err(|_| bad())
         }
@@ -402,7 +433,9 @@ pub fn parse_xmp(data: &[u8]) -> PdfResult<Vec<XmpStructure>> {
     if trimmed.starts_with("<?xml") {
         let decl_end = trimmed.find("?>").unwrap_or(trimmed.len());
         if trimmed[..decl_end].contains("encoding") {
-            return Err(xmp_error("Failed to parse XMP XML: encoding declaration in decoded text"));
+            return Err(xmp_error(
+                "Failed to parse XMP XML: encoding declaration in decoded text",
+            ));
         }
     }
     let root = parse_dom(&text)?;
@@ -439,7 +472,12 @@ impl NsMap {
             .iter()
             .find(|(_, u)| *u == uri)
             .map(|(p, _)| (*p).to_owned())
-            .unwrap_or_else(|| format!("ns{}", self.0.iter().filter(|(p, _)| p.starts_with("ns")).count()));
+            .unwrap_or_else(|| {
+                format!(
+                    "ns{}",
+                    self.0.iter().filter(|(p, _)| p.starts_with("ns")).count()
+                )
+            });
         self.0.push((p.clone(), uri.to_owned()));
         p
     }
@@ -551,7 +589,9 @@ impl Elem {
 fn struct_to_xml(description: &mut Elem, value: &XmpStructure) {
     for (k, v) in value.iter() {
         match &v.value {
-            XmpValueKind::Str(s) if v.qualifiers.is_empty() => description.set(k.clone(), s.clone()),
+            XmpValueKind::Str(s) if v.qualifiers.is_empty() => {
+                description.set(k.clone(), s.clone())
+            }
             _ => add_xmp_value(description.sub(k.clone()), v),
         }
     }
@@ -637,11 +677,18 @@ fn meta_string_as_value(m: Option<&MetaString>, lang_xdefault: bool) -> Option<X
             }
         }
         Some(lc) => {
-            let cc = m.country_code.as_deref().map(|c| format!("-{c}")).unwrap_or_default();
+            let cc = m
+                .country_code
+                .as_deref()
+                .map(|c| format!("-{c}"))
+                .unwrap_or_default();
             Qualifiers::of(vec![(xml_lang(), XmpValue::text(&format!("{lc}{cc}")))])
         }
     };
-    Some(XmpValue::with_quals(XmpValueKind::Str(m.value.clone()), quals))
+    Some(XmpValue::with_quals(
+        XmpValueKind::Str(m.value.clone()),
+        quals,
+    ))
 }
 
 /// ISO 8601 format of a date (`datetime.isoformat()` without microseconds).
@@ -762,7 +809,11 @@ pub fn isoparse(s: &str) -> Option<PdfDate> {
 }
 
 /// Update XMP structures with document metadata (`update_xmp_with_meta`).
-pub fn update_xmp_with_meta(meta: &DocumentMetadata, roots: &[XmpStructure], now: PdfDate) -> Vec<XmpStructure> {
+pub fn update_xmp_with_meta(
+    meta: &DocumentMetadata,
+    roots: &[XmpStructure],
+    now: PdfDate,
+) -> Vec<XmpStructure> {
     let mut fields = XmpStructure::default();
     for root in roots {
         for (k, v) in root.iter() {
@@ -772,7 +823,12 @@ pub fn update_xmp_with_meta(meta: &DocumentMetadata, roots: &[XmpStructure], now
     populate_xmp_with_meta(meta, fields, now)
 }
 
-fn write_meta_date(fields: &mut XmpStructure, key: ExpandedName, d: Option<MetaDate>, now: PdfDate) {
+fn write_meta_date(
+    fields: &mut XmpStructure,
+    key: ExpandedName,
+    d: Option<MetaDate>,
+    now: PdfDate,
+) {
     let v = match d {
         Some(MetaDate::At(v)) => v,
         Some(MetaDate::Now) => now,
@@ -781,19 +837,32 @@ fn write_meta_date(fields: &mut XmpStructure, key: ExpandedName, d: Option<MetaD
     fields.set(key, XmpValue::text(&iso_format(&v)));
 }
 
-fn populate_xmp_with_meta(meta: &DocumentMetadata, mut fields: XmpStructure, now: PdfDate) -> Vec<XmpStructure> {
+fn populate_xmp_with_meta(
+    meta: &DocumentMetadata,
+    mut fields: XmpStructure,
+    now: PdfDate,
+) -> Vec<XmpStructure> {
     write_meta_date(&mut fields, xmp_moddate(), meta.last_modified, now);
     fields.set(pdf_producer(), XmpValue::text(VENDOR));
     if !meta.xmp_unmanaged {
         write_meta_date(&mut fields, xmp_createdate(), meta.created, now);
         if let Some(v) = meta_string_as_value(meta.title.as_ref(), true) {
-            fields.set(dc_title(), XmpValue::new(XmpValueKind::Array(XmpArray::alternative(vec![v]))));
+            fields.set(
+                dc_title(),
+                XmpValue::new(XmpValueKind::Array(XmpArray::alternative(vec![v]))),
+            );
         }
         if let Some(v) = meta_string_as_value(meta.author.as_ref(), false) {
-            fields.set(dc_creator(), XmpValue::new(XmpValueKind::Array(XmpArray::ordered(vec![v]))));
+            fields.set(
+                dc_creator(),
+                XmpValue::new(XmpValueKind::Array(XmpArray::ordered(vec![v]))),
+            );
         }
         if let Some(v) = meta_string_as_value(meta.subject.as_ref(), true) {
-            fields.set(dc_description(), XmpValue::new(XmpValueKind::Array(XmpArray::alternative(vec![v]))));
+            fields.set(
+                dc_description(),
+                XmpValue::new(XmpValueKind::Array(XmpArray::alternative(vec![v]))),
+            );
         }
         if let Some(v) = meta_string_as_value(meta.creator.as_ref(), false) {
             fields.set(xmp_creatortool(), v);

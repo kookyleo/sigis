@@ -32,7 +32,12 @@ pub trait Encryptor: std::fmt::Debug {
     fn encrypt_string(&self, data: &[u8], container: ObjectId) -> PdfResult<Option<Vec<u8>>>;
     /// Encrypt stream data belonging to object `container` (not called for
     /// streams with an explicit `/Crypt` filter).
-    fn encrypt_stream(&self, dict: &Dictionary, data: &[u8], container: ObjectId) -> PdfResult<Vec<u8>>;
+    fn encrypt_stream(
+        &self,
+        dict: &Dictionary,
+        data: &[u8],
+        container: ObjectId,
+    ) -> PdfResult<Vec<u8>>;
     /// The crypt filter for embedded files (name without slash), if it
     /// differs from the default stream filter; embedded file streams then
     /// get an explicit `/Crypt` filter.
@@ -203,9 +208,7 @@ impl ObjectStreamBuilder {
 #[derive(Clone, Debug)]
 enum Base {
     /// A new file (`PdfFileWriter`).
-    Fresh {
-        custom_trailer_entries: Dictionary,
-    },
+    Fresh { custom_trailer_entries: Dictionary },
     /// An incremental update (`IncrementalPdfFileWriter`).
     Incremental {
         prev: PdfFile,
@@ -332,7 +335,10 @@ impl PdfWriter {
                     return Ok(());
                 }
             }
-            root.set("Version", Object::Name(format!("{}.{}", version.0, version.1).into_bytes()));
+            root.set(
+                "Version",
+                Object::Name(format!("{}.{}", version.0, version.1).into_bytes()),
+            );
             self.update_object(self.root, Object::Dictionary(root));
             self.output_version = version;
             return Ok(());
@@ -495,7 +501,11 @@ impl PdfWriter {
 
     /// Move an already added object into an object stream (pyHanko tests do
     /// this by editing `objects` and `objs_in_streams` directly).
-    pub fn move_to_object_stream(&mut self, id: ObjectId, handle: ObjectStreamHandle) -> PdfResult<()> {
+    pub fn move_to_object_stream(
+        &mut self,
+        id: ObjectId,
+        handle: ObjectStreamHandle,
+    ) -> PdfResult<()> {
         let Some(obj) = self.objects.remove(&(id.1, id.0)) else {
             return Err(PdfError::write("No such object in this writer"));
         };
@@ -510,7 +520,9 @@ impl PdfWriter {
     /// Prepare an object stream (`prepare_object_stream`).
     pub fn prepare_object_stream(&mut self, compress: bool) -> PdfResult<ObjectStreamHandle> {
         if !self.stream_xrefs {
-            return Err(PdfError::write("Object streams require Xref streams to be enabled."));
+            return Err(PdfError::write(
+                "Object streams require Xref streams to be enabled.",
+            ));
         }
         self.object_streams.push(ObjectStreamBuilder::new(compress));
         Ok(ObjectStreamHandle(self.object_streams.len() - 1))
@@ -518,7 +530,11 @@ impl PdfWriter {
 
     /// Install encryption for output (`_assign_security_handler`); the
     /// `/Encrypt` dictionary is added as an object.
-    pub fn set_encryption(&mut self, encrypt_dict: Object, encryptor: Box<dyn Encryptor>) -> PdfResult<ObjectId> {
+    pub fn set_encryption(
+        &mut self,
+        encrypt_dict: Object,
+        encryptor: Box<dyn Encryptor>,
+    ) -> PdfResult<ObjectId> {
         let id = self.add_object(encrypt_dict)?;
         self.encrypt = Some(id);
         self.encryptor = Some(encryptor);
@@ -527,21 +543,28 @@ impl PdfWriter {
 
     /// Use an existing `/Encrypt` object and the given encryptor (updates of
     /// encrypted files).
-    pub fn set_existing_encryption(&mut self, encrypt_ref: ObjectId, encryptor: Box<dyn Encryptor>) {
+    pub fn set_existing_encryption(
+        &mut self,
+        encrypt_ref: ObjectId,
+        encryptor: Box<dyn Encryptor>,
+    ) {
         self.encrypt = Some(encrypt_ref);
         self.encryptor = Some(encryptor);
     }
 
     /// The embedded-file crypt filter to add to new embedded file streams.
     pub fn embedded_file_crypt_filter(&self) -> Option<Vec<u8>> {
-        self.encryptor.as_ref().and_then(|e| e.embedded_file_filter_name())
+        self.encryptor
+            .as_ref()
+            .and_then(|e| e.embedded_file_filter_name())
     }
 
     /// Encode a stream, applying explicit `/Crypt` filters with this
     /// writer's encryption settings.
     pub fn encode_with_crypt_filters(&self, s: &DecodedStream) -> PdfResult<Stream> {
         let cf = self.encryptor.as_ref().and_then(|e| e.crypt_filters());
-        let content = crate::stream::encode_stream_data(&s.dict, &s.data, &crate::stream::no_deref, cf)?;
+        let content =
+            crate::stream::encode_stream_data(&s.dict, &s.data, &crate::stream::no_deref, cf)?;
         Ok(Stream {
             dict: s.dict.clone(),
             content,
@@ -556,7 +579,11 @@ impl PdfWriter {
     }
 
     /// Register an annotation on a page (`register_annotation`).
-    pub fn register_annotation(&mut self, page_ref: ObjectId, annot_ref: ObjectId) -> PdfResult<()> {
+    pub fn register_annotation(
+        &mut self,
+        page_ref: ObjectId,
+        annot_ref: ObjectId,
+    ) -> PdfResult<()> {
         let mut page = match self.get_object(page_ref)? {
             Object::Dictionary(d) => d,
             _ => return Err(PdfError::read("Page must be a dictionary")),
@@ -623,9 +650,10 @@ impl PdfWriter {
         let mut updated = false;
         if root.has(b"Metadata") {
             // `root['/Metadata']` as a metadata stream
-            if let (Ok(Object::Reference(mref)), Some(Object::Stream(s))) =
-                (root.get(b"Metadata").cloned(), self.get(&root, b"Metadata")?)
-            {
+            if let (Ok(Object::Reference(mref)), Some(Object::Stream(s))) = (
+                root.get(b"Metadata").cloned(),
+                self.get(&root, b"Metadata")?,
+            ) {
                 let new = xmp_xml::update_metadata_stream(self, &s, &meta, now)?;
                 let new = self.encode_metadata_stream(new)?;
                 self.update_object(mref, Object::Stream(new));
@@ -641,7 +669,8 @@ impl PdfWriter {
             }
         }
         if !updated {
-            let ds = xmp_xml::metadata_stream_from_xmp(&xmp_xml::update_xmp_with_meta(&meta, &[], now));
+            let ds =
+                xmp_xml::metadata_stream_from_xmp(&xmp_xml::update_xmp_with_meta(&meta, &[], now));
             let ds = self.prepare_new_metadata_stream(ds)?;
             let id = self.add_object(Object::Stream(ds))?;
             let mut root = self.root()?;
@@ -701,7 +730,12 @@ impl PdfWriter {
         );
         if let Base::Incremental { prev, .. } = &self.base {
             trailer.set("Prev", Object::Integer(prev.last_startxref()));
-            if prev.encrypted() && !self.encryptor.as_ref().is_some_and(|e| e.is_authenticated()) {
+            if prev.encrypted()
+                && !self
+                    .encryptor
+                    .as_ref()
+                    .is_some_and(|e| e.is_authenticated())
+            {
                 return Err(PdfError::write(
                     "Cannot update this document without encryption credentials from the original. Please call encrypt() with the password of the original file before calling write().",
                 ));
@@ -751,7 +785,10 @@ impl PdfWriter {
         }
         let mut spans = BTreeMap::new();
         for ((generation, idnum), obj) in &self.objects {
-            positions.insert((*generation, *idnum), WrittenPosition::Offset(out.len() as u64));
+            positions.insert(
+                (*generation, *idnum),
+                WrittenPosition::Offset(out.len() as u64),
+            );
             out.extend_from_slice(format!("{idnum} {generation} obj\n").as_bytes());
             let id = (*idnum, *generation);
             let enc = match (&self.encryptor, self.encrypt) {
@@ -859,7 +896,10 @@ impl PdfWriter {
             trailer.set("Size", Object::Integer(i64::from(xrefs_id) + 1));
             out.extend_from_slice(format!("{xrefs_id} 0 obj\n").as_bytes());
             let (content, index) = xref_stream_content(&positions);
-            trailer.set("Index", Object::Array(index.into_iter().map(Object::Integer).collect()));
+            trailer.set(
+                "Index",
+                Object::Array(index.into_iter().map(Object::Integer).collect()),
+            );
             let data = crate::filters::flate_compress(&content);
             generic::write_stream(out, &trailer, &data);
             out.extend_from_slice(b"\nendobj\n");
@@ -879,7 +919,11 @@ impl PdfWriter {
     }
 
     /// Insert a page into the page tree (`insert_page`).
-    pub fn insert_page(&mut self, mut new_page: Dictionary, after: Option<i64>) -> PdfResult<ObjectId> {
+    pub fn insert_page(
+        &mut self,
+        mut new_page: Dictionary,
+        after: Option<i64>,
+    ) -> PdfResult<ObjectId> {
         if !matches!(self.get(&new_page, b"Type")?, Some(t) if generic::is_name(&t, "Page")) {
             return Err(PdfError::write("Not a page object"));
         }
@@ -1040,7 +1084,11 @@ impl PdfWriter {
                     page.set("Contents", Object::Reference(aref));
                     self.update_object(page_ref, Object::Dictionary(page.clone()));
                 }
-                _ => return Err(PdfError::Generic("Unexpected type for page /Contents".into())),
+                _ => {
+                    return Err(PdfError::Generic(
+                        "Unexpected type for page /Contents".into(),
+                    ))
+                }
             },
             Ok(Object::Array(mut a)) => {
                 if prepend {
@@ -1052,7 +1100,11 @@ impl PdfWriter {
                 page.set("Contents", Object::Reference(aref));
                 self.update_object(page_ref, Object::Dictionary(page.clone()));
             }
-            _ => return Err(PdfError::Generic("Unexpected type for page /Contents".into())),
+            _ => {
+                return Err(PdfError::Generic(
+                    "Unexpected type for page /Contents".into(),
+                ))
+            }
         }
         let Some(resources) = resources else {
             return Ok(page_ref);
@@ -1083,7 +1135,10 @@ impl PdfWriter {
     }
 
     /// Register a developer extension in the catalog (`register_extension`).
-    pub fn register_extension(&mut self, ext: &crate::extensions::DeveloperExtension) -> PdfResult<()> {
+    pub fn register_extension(
+        &mut self,
+        ext: &crate::extensions::DeveloperExtension,
+    ) -> PdfResult<()> {
         use crate::extensions::DevExtensionMultivalued as Mv;
         let root = self.root()?;
         // where /Extensions lives: an indirect object, or directly in the root
@@ -1114,7 +1169,11 @@ impl PdfWriter {
                 )))
             }
         };
-        let write_back = |w: &mut Self, mut extensions: Dictionary, value: Option<Object>, arr: Option<Vec<Object>>| -> PdfResult<()> {
+        let write_back = |w: &mut Self,
+                          mut extensions: Dictionary,
+                          value: Option<Object>,
+                          arr: Option<Vec<Object>>|
+         -> PdfResult<()> {
             if let Some(a) = arr {
                 match cur_ref {
                     Some(r) => w.update_object(r, Object::Array(a)),
@@ -1205,7 +1264,9 @@ impl PdfWriter {
             _ => return Err(PdfError::read("Page must be a dictionary")),
         };
         let Some(mb) = other.find_inherited_value(&page, b"MediaBox", b"Parent")? else {
-            return Err(PdfError::read(format!("Page {page_ix} does not have a /MediaBox")));
+            return Err(PdfError::read(format!(
+                "Page {page_ix} does not have a /MediaBox"
+            )));
         };
         let mut stream_dict = Dictionary::new();
         stream_dict.set("BBox", mb);
@@ -1232,7 +1293,11 @@ impl PdfWriter {
         let Object::Stream(cs) = command_stream else {
             return Err(PdfError::read("Page /Contents must be a stream"));
         };
-        let filters = if inherit_filters { other.get(&cs.dict, b"Filter")? } else { None };
+        let filters = if inherit_filters {
+            other.get(&cs.dict, b"Filter")?
+        } else {
+            None
+        };
         let result = match filters {
             Some(f) => {
                 stream_dict.set("Filter", self.import_object(other, &f, None)?);
@@ -1275,7 +1340,10 @@ pub struct ObjectImporter {
 
 impl ObjectImporter {
     /// An importer with a preset reference map.
-    pub fn new(reference_map: BTreeMap<ObjectId, ObjectId>, obj_stream: Option<ObjectStreamHandle>) -> Self {
+    pub fn new(
+        reference_map: BTreeMap<ObjectId, ObjectId>,
+        obj_stream: Option<ObjectStreamHandle>,
+    ) -> Self {
         Self {
             reference_map,
             queued: Vec::new(),
@@ -1304,7 +1372,12 @@ impl ObjectImporter {
         Ok(result)
     }
 
-    fn ingest(&mut self, source: &dyn PdfHandler, target: &mut PdfWriter, obj: &Object) -> PdfResult<Object> {
+    fn ingest(
+        &mut self,
+        source: &dyn PdfHandler,
+        target: &mut PdfWriter,
+        obj: &Object,
+    ) -> PdfResult<Object> {
         Ok(match obj {
             Object::Reference(r) => Object::Reference(self.process_reference(target, *r)?),
             Object::Dictionary(d) => Object::Dictionary(self.ingest_dict(source, target, d)?),
@@ -1323,7 +1396,12 @@ impl ObjectImporter {
         })
     }
 
-    fn ingest_dict(&mut self, source: &dyn PdfHandler, target: &mut PdfWriter, d: &Dictionary) -> PdfResult<Dictionary> {
+    fn ingest_dict(
+        &mut self,
+        source: &dyn PdfHandler,
+        target: &mut PdfWriter,
+        d: &Dictionary,
+    ) -> PdfResult<Dictionary> {
         let mut out = Dictionary::new();
         for (k, v) in d.iter() {
             if k == b"Metadata" {
@@ -1332,7 +1410,10 @@ impl ObjectImporter {
             out.set(k.clone(), self.ingest(source, target, v)?);
         }
         if let Ok(Object::Reference(m)) = d.get(b"Metadata") {
-            out.set("Metadata", Object::Reference(self.process_reference(target, *m)?));
+            out.set(
+                "Metadata",
+                Object::Reference(self.process_reference(target, *m)?),
+            );
         }
         let _ = source;
         Ok(out)
@@ -1383,7 +1464,11 @@ impl PdfHandler for PdfWriter {
         }
     }
 
-    fn decode_stream(&self, stream: &Stream, purpose: crate::decode_limits::DecodePurpose) -> PdfResult<Vec<u8>> {
+    fn decode_stream(
+        &self,
+        stream: &Stream,
+        purpose: crate::decode_limits::DecodePurpose,
+    ) -> PdfResult<Vec<u8>> {
         match &self.base {
             Base::Incremental { prev, .. } => prev.read_stream_data(stream, purpose, None),
             Base::Fresh { .. } => {
@@ -1490,15 +1575,25 @@ impl IncrementalWriter {
             }
             _ => None,
         };
-        let id1 = match trailer.raw_get(b"ID", None).map(|o| base.resolve(&o)).transpose()? {
+        let id1 = match trailer
+            .raw_get(b"ID", None)
+            .map(|o| base.resolve(&o))
+            .transpose()?
+        {
             Some(Object::Array(a)) => match a.first() {
                 Some(Object::String(s, _)) => s.clone(),
                 _ => random_id(),
             },
             _ => random_id(),
         };
-        let size = match trailer.raw_get(b"Size", None).map(|o| base.resolve(&o)).transpose()? {
-            Some(Object::Integer(s)) => u32::try_from(s).map_err(|_| PdfError::read("Invalid /Size"))?,
+        let size = match trailer
+            .raw_get(b"Size", None)
+            .map(|o| base.resolve(&o))
+            .transpose()?
+        {
+            Some(Object::Integer(s)) => {
+                u32::try_from(s).map_err(|_| PdfError::read("Invalid /Size"))?
+            }
             _ => return Err(PdfError::read("Trailer lacks a valid /Size")),
         };
         // pyHanko starts numbering at /Size; files whose /Size does not
@@ -1606,7 +1701,10 @@ pub fn copy_into_new_writer(input: &dyn PdfHandler) -> PdfResult<PdfFileWriter> 
 
 /// [`copy_into_new_writer`] with an explicit `stream_xrefs` setting
 /// (`writer_kwargs={'stream_xrefs': ...}`).
-pub fn copy_into_new_writer_with(input: &dyn PdfHandler, stream_xrefs: bool) -> PdfResult<PdfFileWriter> {
+pub fn copy_into_new_writer_with(
+    input: &dyn PdfHandler,
+    stream_xrefs: bool,
+) -> PdfResult<PdfFileWriter> {
     let mut w = PdfFileWriter::new(stream_xrefs, false)?;
     let input_root = input.root_ref()?;
     let out_root = w.root;
@@ -1649,6 +1747,10 @@ pub fn copy_into_new_writer_with(input: &dyn PdfHandler, stream_xrefs: bool) -> 
 }
 
 /// Apply a filter to a decoded stream (convenience re-export).
-pub fn apply_filter(s: &mut DecodedStream, name: &str, allow_duplicates: DuplicateFilter) -> PdfResult<()> {
+pub fn apply_filter(
+    s: &mut DecodedStream,
+    name: &str,
+    allow_duplicates: DuplicateFilter,
+) -> PdfResult<()> {
     s.apply_filter(name, None, allow_duplicates)
 }

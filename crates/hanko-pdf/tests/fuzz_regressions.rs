@@ -26,7 +26,11 @@ fn object_stream_offset_overflow_is_an_error() {
     let mut pdf = b"%PDF-1.7\n".to_vec();
     let objstm_off = pdf.len();
     pdf.extend_from_slice(
-        format!("1 0 obj\n<</Type/ObjStm/N {n}/First {first}/Length {}>>\nstream\n", d.len() - 2).as_bytes(),
+        format!(
+            "1 0 obj\n<</Type/ObjStm/N {n}/First {first}/Length {}>>\nstream\n",
+            d.len() - 2
+        )
+        .as_bytes(),
     );
     pdf.extend_from_slice(&d[2..]);
     pdf.extend_from_slice(b"\nendstream\nendobj\n");
@@ -39,11 +43,17 @@ fn object_stream_offset_overflow_is_an_error() {
     entries.extend_from_slice(&[1, (xref_off >> 8) as u8, xref_off as u8, 0, 0]);
     let size = n + 3;
     pdf.extend_from_slice(
-        format!("{} 0 obj\n<</Type/XRef/Size {size}/W[1 2 2]/Root 2 0 R/Length {}>>\nstream\n", size - 1, entries.len())
-            .as_bytes(),
+        format!(
+            "{} 0 obj\n<</Type/XRef/Size {size}/W[1 2 2]/Root 2 0 R/Length {}>>\nstream\n",
+            size - 1,
+            entries.len()
+        )
+        .as_bytes(),
     );
     pdf.extend_from_slice(&entries);
-    pdf.extend_from_slice(format!("\nendstream\nendobj\nstartxref\n{xref_off}\n%%EOF\n").as_bytes());
+    pdf.extend_from_slice(
+        format!("\nendstream\nendobj\nstartxref\n{xref_off}\n%%EOF\n").as_bytes(),
+    );
     for opts in [ReaderOptions::default(), ReaderOptions::lenient()] {
         if let Ok(f) = PdfFile::parse_with(&pdf, opts) {
             for i in 2..(2 + n as u32) {
@@ -66,7 +76,6 @@ fn update_does_not_clobber_uncovered_xref_stream() {
     assert_eq!(r.total_revisions(), revs + 1);
     assert_eq!(r.get_object(id).unwrap(), text_string("fuzz"));
 }
-
 
 #[test]
 fn update_rewriting_xref_stream_number_is_rejected_on_read() {

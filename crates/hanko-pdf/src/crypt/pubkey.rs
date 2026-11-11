@@ -19,8 +19,8 @@ use super::cred_ser::{SerialisableCredential, SerialisedCredential};
 use super::permissions::{PdfPermissions, PubKeyPermissions};
 use super::standard::{encrypt_metadata_of, kdf_salt_of, number_entry, process_crypt_filters};
 use super::util::{
-    aes_cbc_decrypt, aes_cbc_encrypt, aes_key_unwrap, aes_key_wrap, random_bytes, rc2_decrypt, rc4_encrypt,
-    tripledes_decrypt,
+    aes_cbc_decrypt, aes_cbc_encrypt, aes_key_unwrap, aes_key_wrap, random_bytes, rc2_decrypt,
+    rc4_encrypt, tripledes_decrypt,
 };
 use crate::error::{PdfError, PdfResult};
 use crate::generic::{byte_string, name_str, type_name};
@@ -127,7 +127,11 @@ pub struct PubKeyCfData {
 impl PubKeyCfData {
     /// Recipient data: `recipients` are DER-encoded CMS `ContentInfo`
     /// objects (`None` for a fresh filter).
-    pub fn new(recipients: Option<Vec<Vec<u8>>>, acts_as_default: bool, encrypt_metadata: bool) -> Self {
+    pub fn new(
+        recipients: Option<Vec<Vec<u8>>>,
+        acts_as_default: bool,
+        encrypt_metadata: bool,
+    ) -> Self {
         Self {
             recipients,
             acts_as_default,
@@ -196,7 +200,10 @@ impl CertInfo {
         if f.peek().is_some_and(|t| t.tag == 0xa0) {
             f.next();
         }
-        let serial = f.next().filter(|t| t.tag == tag::INTEGER).ok_or_else(|| bad("serial"))?;
+        let serial = f
+            .next()
+            .filter(|t| t.tag == tag::INTEGER)
+            .ok_or_else(|| bad("serial"))?;
         let _sig = f.next().ok_or_else(|| bad("signature"))?;
         let issuer = f.next().ok_or_else(|| bad("issuer"))?;
         let _validity = f.next().ok_or_else(|| bad("validity"))?;
@@ -331,7 +338,10 @@ fn parse_private_key(pkcs8: &[u8]) -> PdfResult<PrivKey> {
     let pki = Tlv::parse_exact(pkcs8).map_err(|_| bad("not DER"))?;
     let ch = pki.children()?;
     let alg = AlgId::parse(ch.get(1).ok_or_else(|| bad("missing algorithm"))?)?;
-    let inner = ch.get(2).filter(|t| t.tag == tag::OCTET_STRING).ok_or_else(|| bad("missing key"))?;
+    let inner = ch
+        .get(2)
+        .filter(|t| t.tag == tag::OCTET_STRING)
+        .ok_or_else(|| bad("missing key"))?;
     match alg.oid.as_str() {
         oids::RSA => Ok(PrivKey::Rsa(Box::new(
             rsa::RsaPrivateKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?,
@@ -339,21 +349,35 @@ fn parse_private_key(pkcs8: &[u8]) -> PdfResult<PrivKey> {
         oids::EC_PUBLIC_KEY => {
             let curve = alg.params.map(|p| p.oid()).transpose()?.unwrap_or_default();
             match curve.as_str() {
-                oids::P256 => Ok(PrivKey::P256(p256::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?)),
-                oids::P384 => Ok(PrivKey::P384(p384::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?)),
-                oids::P521 => Ok(PrivKey::P521(p521::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?)),
-                other => Err(PdfError::NotImplemented(format!("Unsupported curve {other}"))),
+                oids::P256 => Ok(PrivKey::P256(
+                    p256::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?,
+                )),
+                oids::P384 => Ok(PrivKey::P384(
+                    p384::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?,
+                )),
+                oids::P521 => Ok(PrivKey::P521(
+                    p521::SecretKey::from_pkcs8_der(pkcs8).map_err(|e| bad(&e.to_string()))?,
+                )),
+                other => Err(PdfError::NotImplemented(format!(
+                    "Unsupported curve {other}"
+                ))),
             }
         }
         oids::X25519 => {
             let k = Tlv::expect(inner.value, tag::OCTET_STRING)?.0.value;
-            Ok(PrivKey::X25519(k.try_into().map_err(|_| bad("X25519 key length"))?))
+            Ok(PrivKey::X25519(
+                k.try_into().map_err(|_| bad("X25519 key length"))?,
+            ))
         }
         oids::X448 => {
             let k = Tlv::expect(inner.value, tag::OCTET_STRING)?.0.value;
-            Ok(PrivKey::X448(Box::new(k.try_into().map_err(|_| bad("X448 key length"))?)))
+            Ok(PrivKey::X448(Box::new(
+                k.try_into().map_err(|_| bad("X448 key length"))?,
+            )))
         }
-        other => Err(PdfError::NotImplemented(format!("Unsupported private key algorithm {other}"))),
+        other => Err(PdfError::NotImplemented(format!(
+            "Unsupported private key algorithm {other}"
+        ))),
     }
 }
 
@@ -440,7 +464,12 @@ fn digest_by_oid(oid: &str, data: &[u8]) -> Option<Vec<u8>> {
     })
 }
 
-fn rsa_oaep_decrypt(key: &rsa::RsaPrivateKey, hash: &str, mgf_hash: &str, ct: &[u8]) -> Result<Vec<u8>, KeyDecryptError> {
+fn rsa_oaep_decrypt(
+    key: &rsa::RsaPrivateKey,
+    hash: &str,
+    mgf_hash: &str,
+    ct: &[u8],
+) -> Result<Vec<u8>, KeyDecryptError> {
     macro_rules! oaep {
         ($d:ty, $m:ty) => {
             key.decrypt(rsa::Oaep::<$d, $m>::new_with_mgf_hash(), ct)
@@ -454,7 +483,11 @@ fn rsa_oaep_decrypt(key: &rsa::RsaPrivateKey, hash: &str, mgf_hash: &str, ct: &[
                 oids::SHA256 => oaep!($d, sha2::Sha256),
                 oids::SHA384 => oaep!($d, sha2::Sha384),
                 oids::SHA512 => oaep!($d, sha2::Sha512),
-                other => return Err(KeyDecryptError::Failed(format!("Unsupported MGF1 hash {other}"))),
+                other => {
+                    return Err(KeyDecryptError::Failed(format!(
+                        "Unsupported MGF1 hash {other}"
+                    )))
+                }
             }
         };
     }
@@ -464,7 +497,11 @@ fn rsa_oaep_decrypt(key: &rsa::RsaPrivateKey, hash: &str, mgf_hash: &str, ct: &[
         oids::SHA256 => by_mgf!(sha2::Sha256),
         oids::SHA384 => by_mgf!(sha2::Sha384),
         oids::SHA512 => by_mgf!(sha2::Sha512),
-        other => return Err(KeyDecryptError::Failed(format!("Unsupported OAEP hash {other}"))),
+        other => {
+            return Err(KeyDecryptError::Failed(format!(
+                "Unsupported OAEP hash {other}"
+            )))
+        }
     };
     r.map_err(|e| KeyDecryptError::Failed(e.to_string()))
 }
@@ -502,10 +539,9 @@ fn x963_kdf(digest_oid: &str, z: &[u8], shared_info: &[u8], len: usize) -> PdfRe
     let mut counter: u32 = 1;
     while out.len() < len {
         let block = [z, &counter.to_be_bytes(), shared_info].concat();
-        out.extend(
-            digest_by_oid(digest_oid, &block)
-                .ok_or_else(|| PdfError::NotImplemented(format!("Unsupported KDF digest {digest_oid}")))?,
-        );
+        out.extend(digest_by_oid(digest_oid, &block).ok_or_else(|| {
+            PdfError::NotImplemented(format!("Unsupported KDF digest {digest_oid}"))
+        })?);
         counter += 1;
     }
     out.truncate(len);
@@ -566,7 +602,10 @@ fn x25519_dh(scalar: &[u8; 32], point: &[u8]) -> PdfResult<[u8; 32]> {
 fn spki_parts(spki: &[u8]) -> PdfResult<(String, Option<String>, Vec<u8>)> {
     let t = Tlv::parse_exact(spki)?;
     let ch = t.children()?;
-    let alg = AlgId::parse(ch.first().ok_or_else(|| PdfError::Value("empty SPKI".into()))?)?;
+    let alg = AlgId::parse(
+        ch.first()
+            .ok_or_else(|| PdfError::Value("empty SPKI".into()))?,
+    )?;
     let bits = ch
         .get(1)
         .filter(|b| b.tag == tag::BIT_STRING && !b.value.is_empty())
@@ -623,7 +662,8 @@ impl EnvelopeKeyDecrypter for SimpleEnvelopeKeyDecrypter {
             Some("3") => oids::SHA512,
             _ => {
                 return Err(KeyDecryptError::Failed(
-                    "Only dhSinglePass-stdDH algorithms from SEC 1 / RFC 5753 are supported.".into(),
+                    "Only dhSinglePass-stdDH algorithms from SEC 1 / RFC 5753 are supported."
+                        .into(),
                 ))
             }
         };
@@ -632,37 +672,52 @@ impl EnvelopeKeyDecrypter for SimpleEnvelopeKeyDecrypter {
             .ok_or_else(|| KeyDecryptError::Failed("Missing key wrap algorithm".into()))?;
         let wrap_alg = AlgId::parse(&wrap)?;
         let (kek_bits, padded) = aes_wrap_params(&wrap_alg.oid).ok_or_else(|| {
-            KeyDecryptError::Failed(format!("{} is not a supported key wrapping algorithm", wrap_alg.oid))
+            KeyDecryptError::Failed(format!(
+                "{} is not a supported key wrapping algorithm",
+                wrap_alg.oid
+            ))
         })?;
         let shared_info = ecc_cms_shared_info(wrap.raw, user_keying_material, kek_bits);
         let orig = Tlv::parse_exact(originator)?;
         if orig.tag != 0xa1 {
-            return Err(KeyDecryptError::Failed("Only originator_key is supported".into()));
+            return Err(KeyDecryptError::Failed(
+                "Only originator_key is supported".into(),
+            ));
         }
         let orig_spki = orig.retagged(tag::SEQUENCE);
         let (o_alg, o_curve, o_key) = spki_parts(&orig_spki)?;
-        let mismatch = || KeyDecryptError::Failed("Originator's public key is not compatible with selected private key".into());
+        let mismatch = || {
+            KeyDecryptError::Failed(
+                "Originator's public key is not compatible with selected private key".into(),
+            )
+        };
         let z: Vec<u8> = match parse_private_key(&self.private_key)? {
             PrivKey::P256(k) => {
                 if o_alg != oids::EC_PUBLIC_KEY || o_curve.as_deref() != Some(oids::P256) {
                     return Err(mismatch());
                 }
                 let pk = p256::PublicKey::from_sec1_bytes(&o_key).map_err(|_| mismatch())?;
-                p256::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine()).raw_secret_bytes().to_vec()
+                p256::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine())
+                    .raw_secret_bytes()
+                    .to_vec()
             }
             PrivKey::P384(k) => {
                 if o_alg != oids::EC_PUBLIC_KEY || o_curve.as_deref() != Some(oids::P384) {
                     return Err(mismatch());
                 }
                 let pk = p384::PublicKey::from_sec1_bytes(&o_key).map_err(|_| mismatch())?;
-                p384::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine()).raw_secret_bytes().to_vec()
+                p384::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine())
+                    .raw_secret_bytes()
+                    .to_vec()
             }
             PrivKey::P521(k) => {
                 if o_alg != oids::EC_PUBLIC_KEY || o_curve.as_deref() != Some(oids::P521) {
                     return Err(mismatch());
                 }
                 let pk = p521::PublicKey::from_sec1_bytes(&o_key).map_err(|_| mismatch())?;
-                p521::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine()).raw_secret_bytes().to_vec()
+                p521::ecdh::diffie_hellman(k.to_nonzero_scalar(), pk.as_affine())
+                    .raw_secret_bytes()
+                    .to_vec()
             }
             PrivKey::X25519(k) => {
                 if o_alg != oids::X25519 {
@@ -715,31 +770,55 @@ fn rsa_recipient(cert: &CertInfo, envelope_key: &[u8], oaep: bool) -> PdfResult<
         let ct = pk
             .encrypt(&mut rng, rsa::Pkcs1v15Encrypt, envelope_key)
             .map_err(|e| PdfError::Value(e.to_string()))?;
-        (asn1::alg_id(oids::RSA, Some(&asn1::tlv(tag::NULL, &[]))), ct)
+        (
+            asn1::alg_id(oids::RSA, Some(&asn1::tlv(tag::NULL, &[]))),
+            ct,
+        )
     };
     let rid = asn1::seq(&[&cert.issuer, &asn1::tlv(tag::INTEGER, &cert.serial)]);
-    Ok(asn1::seq(&[&asn1::uint(0), &rid, &algo, &asn1::octets(&ct)]))
+    Ok(asn1::seq(&[
+        &asn1::uint(0),
+        &rid,
+        &algo,
+        &asn1::octets(&ct),
+    ]))
 }
 
 /// (KDF digest OID, key wrap OID, KEK bits, key agreement OID)
 /// (`_choose_ecdh_settings`).
 fn choose_ecdh_settings(sec_level: usize) -> (&'static str, &'static str, usize, &'static str) {
     if sec_level <= 128 {
-        (oids::SHA256, "2.16.840.1.101.3.4.1.5", 128, "1.3.132.1.11.1")
+        (
+            oids::SHA256,
+            "2.16.840.1.101.3.4.1.5",
+            128,
+            "1.3.132.1.11.1",
+        )
     } else if sec_level <= 192 {
-        (oids::SHA384, "2.16.840.1.101.3.4.1.25", 192, "1.3.132.1.11.2")
+        (
+            oids::SHA384,
+            "2.16.840.1.101.3.4.1.25",
+            192,
+            "1.3.132.1.11.2",
+        )
     } else {
-        (oids::SHA512, "2.16.840.1.101.3.4.1.45", 256, "1.3.132.1.11.3")
+        (
+            oids::SHA512,
+            "2.16.840.1.101.3.4.1.45",
+            256,
+            "1.3.132.1.11.3",
+        )
     }
 }
 
 /// A uniformly random scalar: rejection sampling over field-size byte
 /// strings (top bits masked to the field size).
 fn random_secret<K>(parse: impl Fn(&[u8]) -> Option<K>, len: usize) -> PdfResult<K> {
-    let excess_bits = len * 8 - match len {
-        66 => 521,
-        n => n * 8,
-    };
+    let excess_bits = len * 8
+        - match len {
+            66 => 521,
+            n => n * 8,
+        };
     for _ in 0..256 {
         let mut b = random_bytes(len)?;
         if excess_bits > 0 {
@@ -749,7 +828,9 @@ fn random_secret<K>(parse: impl Fn(&[u8]) -> Option<K>, len: usize) -> PdfResult
             return Ok(k);
         }
     }
-    Err(PdfError::Generic("Could not generate an ephemeral key".into()))
+    Err(PdfError::Generic(
+        "Could not generate an ephemeral key".into(),
+    ))
 }
 
 fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
@@ -759,7 +840,10 @@ fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
     macro_rules! nist {
         ($c:ident, $bits:expr) => {{
             let peer = $c::PublicKey::from_sec1_bytes(&key).map_err(|e| ecdh_err(&e))?;
-            let eph = random_secret(|b| $c::SecretKey::from_slice(b).ok(), ($bits as usize).div_ceil(8))?;
+            let eph = random_secret(
+                |b| $c::SecretKey::from_slice(b).ok(),
+                ($bits as usize).div_ceil(8),
+            )?;
             let z = $c::ecdh::diffie_hellman(eph.to_nonzero_scalar(), peer.as_affine())
                 .raw_secret_bytes()
                 .to_vec();
@@ -767,7 +851,10 @@ fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
             let mut bits = vec![0u8];
             bits.extend_from_slice(point.as_bytes());
             let spki = asn1::seq(&[
-                &asn1::alg_id(oids::EC_PUBLIC_KEY, curve.as_deref().map(asn1::oid).as_deref()),
+                &asn1::alg_id(
+                    oids::EC_PUBLIC_KEY,
+                    curve.as_deref().map(asn1::oid).as_deref(),
+                ),
                 &asn1::tlv(tag::BIT_STRING, &bits),
             ]);
             ($bits / 2, z, spki)
@@ -784,7 +871,10 @@ fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
             let public = curve25519_dalek::MontgomeryPoint::mul_base_clamped(k).0;
             let mut bits = vec![0u8];
             bits.extend_from_slice(&public);
-            let spki = asn1::seq(&[&asn1::alg_id(oids::X25519, None), &asn1::tlv(tag::BIT_STRING, &bits)]);
+            let spki = asn1::seq(&[
+                &asn1::alg_id(oids::X25519, None),
+                &asn1::tlv(tag::BIT_STRING, &bits),
+            ]);
             (128, z, spki)
         }
         (oids::X448, _) => {
@@ -794,15 +884,27 @@ fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
             let public = x448_public(&k)?;
             let mut bits = vec![0u8];
             bits.extend_from_slice(&public);
-            let spki = asn1::seq(&[&asn1::alg_id(oids::X448, None), &asn1::tlv(tag::BIT_STRING, &bits)]);
+            let spki = asn1::seq(&[
+                &asn1::alg_id(oids::X448, None),
+                &asn1::tlv(tag::BIT_STRING, &bits),
+            ]);
             (256, z, spki)
         }
-        _ => return Err(PdfError::NotImplemented(format!("Cannot encrypt for key type '{alg}'"))),
+        _ => {
+            return Err(PdfError::NotImplemented(format!(
+                "Cannot encrypt for key type '{alg}'"
+            )))
+        }
     };
     let (kdf_digest, wrap_oid, kek_bits, ka_oid) = choose_ecdh_settings(sec_level);
     let wrap_algo = asn1::alg_id(wrap_oid, None);
     let ukm = random_bytes(16)?;
-    let kek = x963_kdf(kdf_digest, &z, &ecc_cms_shared_info(&wrap_algo, Some(&ukm), kek_bits), kek_bits / 8)?;
+    let kek = x963_kdf(
+        kdf_digest,
+        &z,
+        &ecc_cms_shared_info(&wrap_algo, Some(&ukm), kek_bits),
+        kek_bits / 8,
+    )?;
     let encrypted = aes_key_wrap(&kek, envelope_key)?;
     // originator [0] EXPLICIT { originatorKey [1] IMPLICIT OriginatorPublicKey }
     let mut orig_key = originator_spki.clone();
@@ -822,7 +924,11 @@ fn ecdh_recipient(cert: &CertInfo, envelope_key: &[u8]) -> PdfResult<Vec<u8>> {
     Ok(asn1::tlv(0xa1, &kari_body))
 }
 
-fn recipient_info(envelope_key: &[u8], cert: &CertInfo, policy: RecipientEncryptionPolicy) -> PdfResult<Vec<u8>> {
+fn recipient_info(
+    envelope_key: &[u8],
+    cert: &CertInfo,
+    policy: RecipientEncryptionPolicy,
+) -> PdfResult<Vec<u8>> {
     if !policy.ignore_key_usage && cert.key_encipherment() != Some(true) {
         return Err(PdfError::Write(format!(
             "Certificate for subject {} does not have the 'key_encipherment' key usage bit set.",
@@ -833,7 +939,9 @@ fn recipient_info(envelope_key: &[u8], cert: &CertInfo, policy: RecipientEncrypt
     match alg.as_str() {
         oids::RSA => rsa_recipient(cert, envelope_key, policy.prefer_oaep),
         oids::EC_PUBLIC_KEY | oids::X25519 | oids::X448 => ecdh_recipient(cert, envelope_key),
-        other => Err(PdfError::NotImplemented(format!("Cannot encrypt for key type '{other}'"))),
+        other => Err(PdfError::NotImplemented(format!(
+            "Cannot encrypt for key type '{other}'"
+        ))),
     }
 }
 
@@ -863,7 +971,10 @@ pub fn construct_recipient_cms(
     ]);
     let ris: Vec<&[u8]> = rec_infos.iter().map(Vec::as_slice).collect();
     let ed = asn1::seq(&[&asn1::uint(0), &asn1::cons(tag::SET, &ris), &eci]);
-    Ok(asn1::seq(&[&asn1::oid(oids::ENVELOPED_DATA), &asn1::tlv(0xa0, &ed)]))
+    Ok(asn1::seq(&[
+        &asn1::oid(oids::ENVELOPED_DATA),
+        &asn1::tlv(0xa0, &ed),
+    ]))
 }
 
 fn rid_issuer_serial<'a>(rid: &Tlv<'a>) -> PdfResult<(&'a [u8], &'a [u8])> {
@@ -881,7 +992,9 @@ fn rid_issuer_serial<'a>(rid: &Tlv<'a>) -> PdfResult<(&'a [u8], &'a [u8])> {
 
 fn map_decrypt_err(e: KeyDecryptError) -> PdfError {
     match e {
-        KeyDecryptError::InappropriateCredential(m) => PdfError::Value(format!("InappropriateCredentialError: {m}")),
+        KeyDecryptError::InappropriateCredential(m) => {
+            PdfError::Value(format!("InappropriateCredentialError: {m}"))
+        }
         KeyDecryptError::Failed(m) => {
             log::debug!("envelope key decryption failed: {m}");
             PdfError::Read("Failed to decrypt envelope key".into())
@@ -890,7 +1003,10 @@ fn map_decrypt_err(e: KeyDecryptError) -> PdfError {
 }
 
 /// Find and decrypt the envelope key for `decrypter` (`read_envelope_key`).
-fn read_envelope_key(recipient_infos: &Tlv<'_>, decrypter: &dyn EnvelopeKeyDecrypter) -> PdfResult<Option<Vec<u8>>> {
+fn read_envelope_key(
+    recipient_infos: &Tlv<'_>,
+    decrypter: &dyn EnvelopeKeyDecrypter,
+) -> PdfResult<Option<Vec<u8>>> {
     for ri in recipient_infos.children()? {
         match ri.tag {
             tag::SEQUENCE => {
@@ -903,7 +1019,10 @@ fn read_envelope_key(recipient_infos: &Tlv<'_>, decrypter: &dyn EnvelopeKeyDecry
                     if ek.tag != tag::OCTET_STRING {
                         return Err(PdfError::Value("Malformed KeyTransRecipientInfo".into()));
                     }
-                    return decrypter.decrypt(ek.value, kea.raw).map(Some).map_err(map_decrypt_err);
+                    return decrypter
+                        .decrypt(ek.value, kea.raw)
+                        .map(Some)
+                        .map_err(map_decrypt_err);
                 }
             }
             0xa1 => {
@@ -924,7 +1043,8 @@ fn read_envelope_key(recipient_infos: &Tlv<'_>, decrypter: &dyn EnvelopeKeyDecry
                     }
                     _ => None,
                 };
-                let kea = next.ok_or_else(|| PdfError::Value("Malformed KeyAgreeRecipientInfo".into()))?;
+                let kea =
+                    next.ok_or_else(|| PdfError::Value("Malformed KeyAgreeRecipientInfo".into()))?;
                 let reks = it
                     .next()
                     .ok_or_else(|| PdfError::Value("Malformed KeyAgreeRecipientInfo".into()))?;
@@ -944,7 +1064,8 @@ fn read_envelope_key(recipient_infos: &Tlv<'_>, decrypter: &dyn EnvelopeKeyDecry
             }
             _ => {
                 return Err(PdfError::NotImplemented(
-                    "RecipientInfo must be of type KeyTransRecipientInfo or KeyAgreeRecipientInfo".into(),
+                    "RecipientInfo must be of type KeyTransRecipientInfo or KeyAgreeRecipientInfo"
+                        .into(),
                 ))
             }
         }
@@ -960,7 +1081,10 @@ pub(crate) fn read_seed_from_recipient_cms(
 ) -> PdfResult<(Option<Vec<u8>>, Option<PubKeyPermissions>)> {
     let (ci, _) = Tlv::expect(recipient_cms, tag::SEQUENCE)?;
     let ch = ci.children()?;
-    let content_type = ch.first().ok_or_else(|| PdfError::Value("Empty ContentInfo".into()))?.oid()?;
+    let content_type = ch
+        .first()
+        .ok_or_else(|| PdfError::Value("Empty ContentInfo".into()))?
+        .oid()?;
     if content_type != oids::ENVELOPED_DATA {
         return Err(PdfError::Read(format!(
             "Recipient CMS content type must be enveloped data, not {}",
@@ -974,20 +1098,34 @@ pub(crate) fn read_seed_from_recipient_cms(
         .explicit_inner()?;
     let mut fields = ed.children()?.into_iter();
     let _version = fields.next();
-    let mut ris = fields.next().ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
+    let mut ris = fields
+        .next()
+        .ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
     if ris.tag == 0xa0 {
         // originatorInfo
-        ris = fields.next().ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
+        ris = fields
+            .next()
+            .ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
     }
-    let eci = fields.next().ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
+    let eci = fields
+        .next()
+        .ok_or_else(|| PdfError::Value("Malformed EnvelopedData".into()))?;
     let Some(envelope_key) = read_envelope_key(&ris, decrypter)? else {
         return Ok((None, None));
     };
     let eci_ch = eci.children()?;
-    let alg = AlgId::parse(eci_ch.get(1).ok_or_else(|| PdfError::Value("Malformed EncryptedContentInfo".into()))?)?;
+    let alg = AlgId::parse(
+        eci_ch
+            .get(1)
+            .ok_or_else(|| PdfError::Value("Malformed EncryptedContentInfo".into()))?,
+    )?;
     let encrypted = match eci_ch.get(2) {
         Some(t) if t.tag == 0x80 => t.value.to_vec(),
-        Some(t) if t.tag == 0xa0 => t.children()?.iter().flat_map(|c| c.value.to_vec()).collect(),
+        Some(t) if t.tag == 0xa0 => t
+            .children()?
+            .iter()
+            .flat_map(|c| c.value.to_vec())
+            .collect(),
         _ => Vec::new(),
     };
     let iv_of = |p: Option<Tlv<'_>>| -> PdfResult<Vec<u8>> {
@@ -1023,7 +1161,12 @@ pub(crate) fn read_seed_from_recipient_cms(
     };
     let seed = content[..content.len().min(20)].to_vec();
     let perms = if content.len() == 24 {
-        Some(PubKeyPermissions::from_bytes([content[20], content[21], content[22], content[23]]))
+        Some(PubKeyPermissions::from_bytes([
+            content[20],
+            content[21],
+            content[22],
+            content[23],
+        ]))
     } else {
         None
     };
@@ -1031,7 +1174,10 @@ pub(crate) fn read_seed_from_recipient_cms(
 }
 
 /// `PubKeyCryptFilter.derive_shared_encryption_key`.
-pub(crate) fn derive_pubkey_shared_key(version: SecurityHandlerVersion, cf: &CryptFilter) -> PdfResult<Vec<u8>> {
+pub(crate) fn derive_pubkey_shared_key(
+    version: SecurityHandlerVersion,
+    cf: &CryptFilter,
+) -> PdfResult<Vec<u8>> {
     let p = cf
         .pubkey
         .as_ref()
@@ -1056,7 +1202,10 @@ pub(crate) fn derive_pubkey_shared_key(version: SecurityHandlerVersion, cf: &Cry
 }
 
 /// `_read_generic_pubkey_cf_info`.
-fn read_generic_pubkey_cf_info(cfdict: &Dictionary, acts_as_default: bool) -> PdfResult<PubKeyCfData> {
+fn read_generic_pubkey_cf_info(
+    cfdict: &Dictionary,
+    acts_as_default: bool,
+) -> PdfResult<PubKeyCfData> {
     let recipients = cfdict
         .get(b"Recipients")
         .map_err(|_| PdfError::Read("PubKey CF dictionary must have /Recipients key".into()))?;
@@ -1080,7 +1229,11 @@ fn read_generic_pubkey_cf_info(cfdict: &Dictionary, acts_as_default: bool) -> Pd
         }
     };
     let encrypt_metadata = encrypt_metadata_of(cfdict);
-    Ok(PubKeyCfData::new(Some(list), acts_as_default, encrypt_metadata))
+    Ok(PubKeyCfData::new(
+        Some(list),
+        acts_as_default,
+        encrypt_metadata,
+    ))
 }
 
 /// `cms.ContentInfo.load(data)`: the first TLV (trailing data is ignored).
@@ -1093,7 +1246,10 @@ fn length_bits(d: &Dictionary, default: i64) -> PdfResult<i64> {
     match d.get(b"Length") {
         Err(_) => Ok(default),
         Ok(Object::Integer(n)) => Ok(*n),
-        Ok(other) => Err(PdfError::Value(format!("Invalid /Length: {}", type_name(other)))),
+        Ok(other) => Err(PdfError::Value(format!(
+            "Invalid /Length: {}",
+            type_name(other)
+        ))),
     }
 }
 
@@ -1105,20 +1261,29 @@ pub fn default_crypt_filters() -> CryptFilterRegistry {
         Arc::new(|d: &Dictionary, acts_as_default| {
             let bits = length_bits(d, 40)?;
             let keylen = usize::try_from(bits.div_euclid(8)).unwrap_or(0);
-            Ok(CryptFilter::pubkey_rc4(keylen, read_generic_pubkey_cf_info(d, acts_as_default)?))
+            Ok(CryptFilter::pubkey_rc4(
+                keylen,
+                read_generic_pubkey_cf_info(d, acts_as_default)?,
+            ))
         }),
     );
     r.register(
         "AESV2",
-        Arc::new(|d: &Dictionary, a| CryptFilter::pubkey_aes(16, read_generic_pubkey_cf_info(d, a)?)),
+        Arc::new(|d: &Dictionary, a| {
+            CryptFilter::pubkey_aes(16, read_generic_pubkey_cf_info(d, a)?)
+        }),
     );
     r.register(
         "AESV3",
-        Arc::new(|d: &Dictionary, a| CryptFilter::pubkey_aes(32, read_generic_pubkey_cf_info(d, a)?)),
+        Arc::new(|d: &Dictionary, a| {
+            CryptFilter::pubkey_aes(32, read_generic_pubkey_cf_info(d, a)?)
+        }),
     );
     r.register(
         "AESV4",
-        Arc::new(|d: &Dictionary, a| CryptFilter::pubkey_aes_gcm(read_generic_pubkey_cf_info(d, a)?)),
+        Arc::new(|d: &Dictionary, a| {
+            CryptFilter::pubkey_aes_gcm(read_generic_pubkey_cf_info(d, a)?)
+        }),
     );
     r.register("Identity", Arc::new(|_, _| Ok(CryptFilter::identity())));
     r
@@ -1148,8 +1313,15 @@ fn pubkey_config(cf: CryptFilter) -> CryptFilterConfiguration {
 }
 
 /// `_pubkey_rc4_config`.
-pub fn pubkey_rc4_config(keylen: usize, recipients: Option<Vec<Vec<u8>>>, encrypt_metadata: bool) -> CryptFilterConfiguration {
-    pubkey_config(CryptFilter::pubkey_rc4(keylen, PubKeyCfData::new(recipients, true, encrypt_metadata)))
+pub fn pubkey_rc4_config(
+    keylen: usize,
+    recipients: Option<Vec<Vec<u8>>>,
+    encrypt_metadata: bool,
+) -> CryptFilterConfiguration {
+    pubkey_config(CryptFilter::pubkey_rc4(
+        keylen,
+        PubKeyCfData::new(recipients, true, encrypt_metadata),
+    ))
 }
 
 /// `_pubkey_aes_config`.
@@ -1165,12 +1337,13 @@ pub fn pubkey_aes_config(
 }
 
 /// `_pubkey_gcm_config`.
-pub fn pubkey_gcm_config(recipients: Option<Vec<Vec<u8>>>, encrypt_metadata: bool) -> PdfResult<CryptFilterConfiguration> {
-    Ok(pubkey_config(CryptFilter::pubkey_aes_gcm(PubKeyCfData::new(
-        recipients,
-        true,
-        encrypt_metadata,
-    ))?))
+pub fn pubkey_gcm_config(
+    recipients: Option<Vec<Vec<u8>>>,
+    encrypt_metadata: bool,
+) -> PdfResult<CryptFilterConfiguration> {
+    Ok(pubkey_config(CryptFilter::pubkey_aes_gcm(
+        PubKeyCfData::new(recipients, true, encrypt_metadata),
+    )?))
 }
 
 /// Options of [`SecurityHandler::build_from_certs`].
@@ -1254,12 +1427,18 @@ impl SecurityHandler {
         let cfc = match crypt_filter_config {
             Some(c) => c,
             None => match version {
-                SecurityHandlerVersion::Rc4_40 => pubkey_rc4_config(5, recipient_objs, encrypt_metadata),
+                SecurityHandlerVersion::Rc4_40 => {
+                    pubkey_rc4_config(5, recipient_objs, encrypt_metadata)
+                }
                 SecurityHandlerVersion::Rc4LongerKeys => {
                     pubkey_rc4_config(legacy_keylen, recipient_objs, encrypt_metadata)
                 }
-                SecurityHandlerVersion::AesGcm => pubkey_gcm_config(recipient_objs, encrypt_metadata)?,
-                v if v >= SecurityHandlerVersion::Aes256 => pubkey_aes_config(32, recipient_objs, encrypt_metadata)?,
+                SecurityHandlerVersion::AesGcm => {
+                    pubkey_gcm_config(recipient_objs, encrypt_metadata)?
+                }
+                v if v >= SecurityHandlerVersion::Aes256 => {
+                    pubkey_aes_config(32, recipient_objs, encrypt_metadata)?
+                }
                 _ => {
                     return Err(PdfError::Generic(
                         "Failed to impute a reasonable crypt filter config".into(),
@@ -1317,7 +1496,10 @@ impl SecurityHandler {
         Ok(sh)
     }
 
-    pub(crate) fn instantiate_pubkey(encrypt_dict: &Dictionary, reg: &CryptFilterRegistry) -> PdfResult<Self> {
+    pub(crate) fn instantiate_pubkey(
+        encrypt_dict: &Dictionary,
+        reg: &CryptFilterRegistry,
+    ) -> PdfResult<Self> {
         let v = SecurityHandlerVersion::from_number(number_entry(encrypt_dict, "V")?);
         let subfilter = determine_subfilter(encrypt_dict)?;
         let cfc = process_crypt_filters(encrypt_dict, reg, true)?;
@@ -1327,12 +1509,16 @@ impl SecurityHandler {
                 "Crypt filters require /adbe.pkcs7.s5 as the declared handler.".into(),
             ));
         } else if cfc.is_none() && subfilter2 == PubKeyAdbeSubFilter::S5 {
-            return Err(PdfError::Read("/adbe.pkcs7.s5 handler requires crypt filters.".into()));
+            return Err(PdfError::Read(
+                "/adbe.pkcs7.s5 handler requires crypt filters.".into(),
+            ));
         }
         // gather_pub_key_metadata
         let keylen_bits = length_bits(encrypt_dict, 128)?;
         if keylen_bits.rem_euclid(8) != 0 {
-            return Err(PdfError::Generic("Key length must be a multiple of 8".into()));
+            return Err(PdfError::Generic(
+                "Key length must be a multiple of 8".into(),
+            ));
         }
         let keylen = usize::try_from(keylen_bits / 8)
             .map_err(|_| PdfError::Generic("Key length must be positive".into()))?;
@@ -1376,8 +1562,16 @@ impl SecurityHandler {
 
     /// Add recipients to all default public-key crypt filters
     /// (`add_recipients`); `certs` are DER certificates.
-    pub fn add_recipients(&self, certs: &[Vec<u8>], perms: PubKeyPermissions, policy: RecipientEncryptionPolicy) -> PdfResult<()> {
-        let certs: Vec<CertInfo> = certs.iter().map(|c| CertInfo::from_der(c)).collect::<PdfResult<_>>()?;
+    pub fn add_recipients(
+        &self,
+        certs: &[Vec<u8>],
+        perms: PubKeyPermissions,
+        policy: RecipientEncryptionPolicy,
+    ) -> PdfResult<()> {
+        let certs: Vec<CertInfo> = certs
+            .iter()
+            .map(|c| CertInfo::from_der(c))
+            .collect::<PdfResult<_>>()?;
         let mut s = self.lock();
         for name in s.cfc.standard_filter_names() {
             if let Some(i) = s.cfc.index_of(&name) {
@@ -1397,7 +1591,10 @@ impl SecurityHandler {
         policy: RecipientEncryptionPolicy,
         perms: PubKeyPermissions,
     ) -> PdfResult<()> {
-        let certs: Vec<CertInfo> = certs.iter().map(|c| CertInfo::from_der(c)).collect::<PdfResult<_>>()?;
+        let certs: Vec<CertInfo> = certs
+            .iter()
+            .map(|c| CertInfo::from_der(c))
+            .collect::<PdfResult<_>>()?;
         let mut s = self.lock();
         let n = name.trim_start_matches('/').as_bytes();
         let i = s
@@ -1409,7 +1606,11 @@ impl SecurityHandler {
 
     /// Authenticate to the crypt filter named `name` only
     /// (`cf.authenticate`).
-    pub fn authenticate_crypt_filter(&self, name: &str, credential: &dyn EnvelopeKeyDecrypter) -> PdfResult<AuthResult> {
+    pub fn authenticate_crypt_filter(
+        &self,
+        name: &str,
+        credential: &dyn EnvelopeKeyDecrypter,
+    ) -> PdfResult<AuthResult> {
         let mut s = self.lock();
         let n = name.trim_start_matches('/').as_bytes();
         let i = s
@@ -1421,7 +1622,10 @@ impl SecurityHandler {
 
     /// Authenticate with a recipient credential
     /// (`PubKeySecurityHandler.authenticate`).
-    pub fn authenticate_pubkey(&self, credential: &dyn EnvelopeKeyDecrypter) -> PdfResult<AuthResult> {
+    pub fn authenticate_pubkey(
+        &self,
+        credential: &dyn EnvelopeKeyDecrypter,
+    ) -> PdfResult<AuthResult> {
         let mut s = self.lock();
         if !matches!(s.kind, HandlerKind::PubKey { .. }) {
             return Err(PdfError::Read(
@@ -1430,7 +1634,9 @@ impl SecurityHandler {
         }
         let mut perms = PubKeyPermissions::allow_everything();
         for name in s.cfc.standard_filter_names() {
-            let Some(i) = s.cfc.index_of(&name) else { continue };
+            let Some(i) = s.cfc.index_of(&name) else {
+                continue;
+            };
             if s.cfc.filters[i].1.pubkey.is_none() {
                 continue;
             }
@@ -1481,7 +1687,10 @@ fn cf_add_recipients(
     Ok(())
 }
 
-fn cf_authenticate(cf: &mut CryptFilter, credential: &dyn EnvelopeKeyDecrypter) -> PdfResult<AuthResult> {
+fn cf_authenticate(
+    cf: &mut CryptFilter,
+    credential: &dyn EnvelopeKeyDecrypter,
+) -> PdfResult<AuthResult> {
     let Some(p) = cf.pubkey.as_mut() else {
         return Err(PdfError::Generic("Not a public-key crypt filter".into()));
     };
@@ -1489,13 +1698,19 @@ fn cf_authenticate(cf: &mut CryptFilter, credential: &dyn EnvelopeKeyDecrypter) 
         let (seed, perms) = read_seed_from_recipient_cms(&recp, credential)?;
         if let Some(seed) = seed {
             p.recp_key_seed = Some(seed);
-            return Ok(AuthResult::new(AuthStatus::User, perms.map(PdfPermissions::PubKey)));
+            return Ok(AuthResult::new(
+                AuthStatus::User,
+                perms.map(PdfPermissions::PubKey),
+            ));
         }
     }
     Ok(AuthResult::new(AuthStatus::Failed, None))
 }
 
-pub(crate) fn pubkey_as_pdf_object(s: &HandlerState, subfilter: PubKeyAdbeSubFilter) -> PdfResult<Dictionary> {
+pub(crate) fn pubkey_as_pdf_object(
+    s: &HandlerState,
+    subfilter: PubKeyAdbeSubFilter,
+) -> PdfResult<Dictionary> {
     let mut d = Dictionary::new();
     d.set("Filter", Object::Name(b"Adobe.PubSec".to_vec()));
     d.set("SubFilter", Object::Name(subfilter.name().to_vec()));
@@ -1518,7 +1733,9 @@ pub(crate) fn pubkey_as_pdf_object(s: &HandlerState, subfilter: PubKeyAdbeSubFil
             .cfc
             .get_raw(&s.cfc.stmf)
             .filter(CryptFilter::is_pubkey)
-            .ok_or_else(|| PdfError::Value("The default crypt filter is not a public-key filter".into()))?;
+            .ok_or_else(|| {
+                PdfError::Value("The default crypt filter is not a public-key filter".into())
+            })?;
         let recipients = cf.recipients().unwrap_or_default();
         d.set(
             "Recipients",
@@ -1533,12 +1750,17 @@ mod tests {
     use super::*;
 
     fn unhex(s: &str) -> Vec<u8> {
-        (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+        (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+            .collect()
     }
 
     #[test]
     fn x25519_rfc7748() {
-        let a: [u8; 32] = unhex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a").try_into().unwrap();
+        let a: [u8; 32] = unhex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
+            .try_into()
+            .unwrap();
         let b_pub = unhex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
         let k = unhex("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
         assert_eq!(x25519_dh(&a, &b_pub).unwrap().to_vec(), k);

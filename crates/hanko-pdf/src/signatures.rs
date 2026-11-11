@@ -247,7 +247,9 @@ pub fn der_outer_length(b: &[u8]) -> Option<usize> {
 /// decrypted) `/Contents`.
 pub fn extract_contents(sig_object: &Dictionary) -> PdfResult<Vec<u8>> {
     match sig_object.get(b"Contents") {
-        Err(_) => Err(PdfError::read("Could not read /Contents entry in signature")),
+        Err(_) => Err(PdfError::read(
+            "Could not read /Contents entry in signature",
+        )),
         Ok(Object::String(s, _)) => Ok(s.clone()),
         Ok(_) => Err(PdfError::read("/Contents must be string-like")),
     }
@@ -269,7 +271,9 @@ pub fn byte_range_data(bytes: &[u8], br: &[u64; 4]) -> PdfResult<Vec<u8>> {
             .checked_add(len)
             .ok_or_else(|| PdfError::read("Byte range overflows"))?;
         if end > bytes.len() as u64 {
-            return Err(PdfError::read("Byte range extends beyond the end of the file"));
+            return Err(PdfError::read(
+                "Byte range extends beyond the end of the file",
+            ));
         }
         out.extend_from_slice(&bytes[start as usize..end as usize]);
     }
@@ -287,7 +291,11 @@ fn parse_byte_range(o: &Object) -> PdfResult<[u64; 4]> {
     for (slot, v) in out.iter_mut().zip(a) {
         match v {
             Object::Integer(i) if *i >= 0 => *slot = *i as u64,
-            _ => return Err(PdfError::read("/ByteRange entries must be nonnegative integers")),
+            _ => {
+                return Err(PdfError::read(
+                    "/ByteRange entries must be nonnegative integers",
+                ))
+            }
         }
     }
     Ok(out)
@@ -318,7 +326,10 @@ impl PdfFile {
                 Ok(Object::Name(n)) => Some(String::from_utf8_lossy(n).into_owned()),
                 _ => None,
             };
-            if !sub_filter.as_deref().is_some_and(|s| KNOWN_SUBFILTERS.contains(&s)) {
+            if !sub_filter
+                .as_deref()
+                .is_some_and(|s| KNOWN_SUBFILTERS.contains(&s))
+            {
                 log::warn!(
                     "Encountered signature with unsupported SubFilter type {sub_filter:?}; ignoring"
                 );

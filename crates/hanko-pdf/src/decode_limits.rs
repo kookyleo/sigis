@@ -246,12 +246,21 @@ impl DecodeContext {
         expected_size: Option<i64>,
     ) -> Option<u64> {
         let l = &self.limits;
-        let purpose_cap = l.per_purpose.get(&purpose).and_then(|p| p.output_cap(encoded_size));
+        let purpose_cap = l
+            .per_purpose
+            .get(&purpose)
+            .and_then(|p| p.output_cap(encoded_size));
         let expected_cap = match (expected_size, l.expected_size_slack) {
-            (Some(e), Some(slack)) => Some(u64::try_from(e.max(0)).unwrap_or(0).saturating_add(slack)),
+            (Some(e), Some(slack)) => {
+                Some(u64::try_from(e.max(0)).unwrap_or(0).saturating_add(slack))
+            }
             _ => None,
         };
-        min_cap(&[l.per_stream.output_cap(encoded_size), purpose_cap, expected_cap])
+        min_cap(&[
+            l.per_stream.output_cap(encoded_size),
+            purpose_cap,
+            expected_cap,
+        ])
     }
 }
 
