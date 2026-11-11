@@ -647,7 +647,7 @@ pub fn verify_timestamp_token(
             .unwrap_or_else(|_| vec![cert.clone()]);
         // Use current time for TSA cert validity (TSA cert must be valid now)
         let now = chrono_to_der_datetime(&chrono::Utc::now());
-        match tsa_trust_store.verify_chain(&chain, now) {
+        match verify_tsa_chain(tsa_trust_store, &chain, now) {
             Ok(_) => true,
             Err(e) => {
                 issues.push(format!("TSA certificate chain verification failed: {e}"));
@@ -828,7 +828,7 @@ pub fn verify_doc_timestamp(
         let chain = super::chain_verify::build_chain(cert, &tsa_certs)
             .unwrap_or_else(|_| vec![cert.clone()]);
         let now = chrono_to_der_datetime(&chrono::Utc::now());
-        match tsa_trust_store.verify_chain(&chain, now) {
+        match verify_tsa_chain(tsa_trust_store, &chain, now) {
             Ok(_) => true,
             Err(e) => {
                 issues.push(format!(
@@ -1141,8 +1141,13 @@ fn verify_signer_info_signature(
         ));
     }
 
-    // Get signature algorithm OID
-    let sig_alg_oid = &signer_info.signature_algorithm.oid;
+    // Get signature algorithm OID. CMS allows plain rsaEncryption here (used
+    // by many signers and TSAs, e.g. DigiCert and Sectigo); it means PKCS#1
+    // v1.5 with the SignerInfo digest algorithm.
+    let sig_alg_oid = &rsa_encryption_with_digest(
+        signer_info.signature_algorithm.oid,
+        signer_info.digest_alg.oid,
+    );
 
     // Get the signer's public key
     let spki = &signer_cert.tbs_certificate.subject_public_key_info;
@@ -1316,6 +1321,44 @@ impl<'a> DerReader<'a> {
             }
             Some((len, 1 + num_bytes))
         }
+    }
+}
+
+/// Verify a TSA chain built from the token's embedded certificates.
+///
+/// TSA tokens often embed cross-certificates that lead past the root the
+/// relying party trusts (for example a newer root cross-signed by an older
+/// one). If the full chain does not end at a trust anchor, accept the longest
+/// prefix whose last certificate a trust anchor issued.
+fn verify_tsa_chain<'s>(
+    store: &'s crate::trust::TrustStore,
+    chain: &[Certificate],
+    validation_time: Option<der::DateTime>,
+) -> Result<&'s Certificate, tsp_ltv::error::TrustError> {
+    store.verify_chain(chain, validation_time).or_else(|e| {
+        (1..chain.len())
+            .rev()
+            .find_map(|len| store.verify_chain(&chain[..len], validation_time).ok())
+            .ok_or(e)
+    })
+}
+
+/// Map `rsaEncryption` plus a SHA-2 digest OID to the matching
+/// `shaNNNWithRSAEncryption` OID. Return any other algorithm unchanged.
+fn rsa_encryption_with_digest(
+    sig_alg_oid: const_oid::ObjectIdentifier,
+    digest_oid: const_oid::ObjectIdentifier,
+) -> const_oid::ObjectIdentifier {
+    use const_oid::db::rfc5912;
+
+    if sig_alg_oid != rfc5912::RSA_ENCRYPTION {
+        return sig_alg_oid;
+    }
+    match digest_oid {
+        rfc5912::ID_SHA_256 => rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
+        rfc5912::ID_SHA_384 => rfc5912::SHA_384_WITH_RSA_ENCRYPTION,
+        rfc5912::ID_SHA_512 => rfc5912::SHA_512_WITH_RSA_ENCRYPTION,
+        _ => sig_alg_oid,
     }
 }
 

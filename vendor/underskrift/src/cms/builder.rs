@@ -982,6 +982,75 @@ fn length_bytes(len: usize) -> usize {
     }
 }
 
+/// OID for `id-aa-signatureTimeStampToken` (1.2.840.113549.1.9.16.2.14, RFC 3161 Appendix A).
+pub const ID_AA_SIGNATURE_TIME_STAMP_TOKEN: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.14");
+
+fn decode_signed_data(cms_der: &[u8]) -> Result<SignedData, CmsError> {
+    let content_info = ContentInfo::from_der(cms_der)
+        .map_err(|e| CmsError::Der(format!("failed to parse ContentInfo: {e}")))?;
+    content_info
+        .content
+        .decode_as()
+        .map_err(|e| CmsError::Der(format!("failed to parse SignedData: {e}")))
+}
+
+/// Return the `signature` value of the single `SignerInfo` in a CMS `ContentInfo`.
+///
+/// For PAdES B-T, the RFC 3161 message imprint is the hash of this value.
+pub fn signer_signature_value(cms_der: &[u8]) -> Result<Vec<u8>, CmsError> {
+    let signed_data = decode_signed_data(cms_der)?;
+    match signed_data.signer_infos.0.as_slice() {
+        [signer_info] => Ok(signer_info.signature.as_bytes().to_vec()),
+        _ => Err(CmsError::Builder("expected exactly one SignerInfo".into())),
+    }
+}
+
+/// Add an RFC 3161 `TimeStampToken` as the `id-aa-signatureTimeStampToken`
+/// unsigned attribute of the single `SignerInfo` in a CMS `ContentInfo`.
+///
+/// Unsigned attributes are not covered by the signature, so the signature
+/// value and signed attributes stay unchanged.
+pub fn add_signature_timestamp_token(
+    cms_der: &[u8],
+    token_der: &[u8],
+) -> Result<Vec<u8>, CmsError> {
+    let mut signed_data = decode_signed_data(cms_der)?;
+    let mut signer_infos = signed_data.signer_infos.0.into_vec();
+    let [signer_info] = signer_infos.as_mut_slice() else {
+        return Err(CmsError::Builder("expected exactly one SignerInfo".into()));
+    };
+    let token = Any::from_der(token_der)
+        .map_err(|e| CmsError::Der(format!("failed to parse timestamp token: {e}")))?;
+    let attribute = Attribute {
+        oid: ID_AA_SIGNATURE_TIME_STAMP_TOKEN,
+        values: SetOfVec::try_from(vec![token])
+            .map_err(|e| CmsError::Der(format!("failed to build attribute value: {e}")))?,
+    };
+    let mut unsigned = signer_info
+        .unsigned_attrs
+        .take()
+        .map(SetOfVec::into_vec)
+        .unwrap_or_default();
+    unsigned.push(attribute);
+    signer_info.unsigned_attrs = Some(
+        SetOfVec::try_from(unsigned)
+            .map_err(|e| CmsError::Der(format!("failed to build unsigned attributes: {e}")))?,
+    );
+    signed_data.signer_infos = SignerInfos(
+        SetOfVec::try_from(signer_infos)
+            .map_err(|e| CmsError::Der(format!("failed to build signer infos set: {e}")))?,
+    );
+    let content = Any::encode_from(&signed_data)
+        .map_err(|e| CmsError::Der(format!("failed to DER-encode SignedData: {e}")))?;
+    ContentInfo {
+        content_type: rfc5911::ID_SIGNED_DATA,
+        content,
+    }
+    .to_der()
+    .map_err(|e| CmsError::Der(format!("failed to DER-encode ContentInfo: {e}")))
+}
+
 /// Encode a small unsigned integer as DER INTEGER.
 fn encode_integer(val: u32) -> Vec<u8> {
     if val == 0 {

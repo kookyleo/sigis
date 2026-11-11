@@ -76,9 +76,14 @@ pub struct SigningOptions {
     pub contact_info: Option<String>,
     /// Size to reserve for the /Contents hex string (in bytes, not hex chars).
     /// Default is 8192 bytes (16384 hex chars). Increase for large cert chains
-    /// or if timestamps are included.
+    /// or if timestamps are included (a TSA token with its certificate chain
+    /// often adds 5-7 KiB).
     pub content_size: usize,
-    /// TSA URL for timestamping (required for B-T and above)
+    /// TSA URL for timestamping (required for B-T and above).
+    ///
+    /// When set, `sign` requests an RFC 3161 timestamp over the CMS signature
+    /// value (SHA-256 message imprint) and embeds the token as the
+    /// `signatureTimeStampToken` unsigned attribute. A TSA failure is an error.
     #[cfg(feature = "tsp")]
     pub tsa_url: Option<String>,
     /// Whether this is a certification signature (first signature with DocMDP)
@@ -612,6 +617,22 @@ impl PdfSigner {
             None => cms_builder,
         };
         let cms_der = cms_builder.build(&data_hash)?;
+
+        // Step 10b: PAdES B-T — timestamp the signature value and embed the
+        // token as the signatureTimeStampToken unsigned attribute.
+        #[cfg(feature = "tsp")]
+        let cms_der = match &self.options.tsa_url {
+            Some(url) => {
+                let signature = crate::cms::builder::signer_signature_value(&cms_der)?;
+                let mut hasher = DigestAlgorithm::Sha256.new_hasher();
+                hasher.update(&signature);
+                let token = crate::tsp::TsaClient::new(url)
+                    .timestamp(&hasher.finalize())
+                    .await?;
+                crate::cms::builder::add_signature_timestamp_token(&cms_der, &token)?
+            }
+            None => cms_der,
+        };
 
         // Step 11: Check that the CMS signature fits in the allocated space
         if cms_der.len() > self.options.content_size {
