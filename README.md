@@ -6,13 +6,25 @@ Open-source PDF signing and verification.
 
 ## Status
 
-Sigis is in the planning stage. The published crate is a placeholder and does not yet implement PDF signing or verification.
+This is an early test service. It provides a browser interface and HTTP endpoints for basic PAdES PDF signing with an uploaded PKCS#12 certificate and offline signature verification. Signed files and uploaded keys are processed in memory. Signature integrity and certificate trust are reported separately; a cryptographically valid signature is not necessarily trusted.
 
-## Project direction
+**This test service has no authentication. Use test documents and test certificates only.** Do not expose it to untrusted networks or use production keys. Timestamping, revocation checking, long-term validation, PKCS#11, and identity integration are not yet implemented. This implementation is not independently certified for PAdES conformance.
 
-Sigis aims to be a self-hosted service for cryptographic PDF signing and verification. Planned capabilities include PAdES signatures, timestamping, long-term validation, incremental multi-signing, OIDC integration, and bring-your-own certificates. Its API and hosted signing page are intended for integration into external systems.
+## Run
 
-These capabilities are goals, not features of the current release. Visual signature images are intended as presentation only; cryptographic signatures provide the basis for verification.
+```sh
+cargo run
+```
+
+The default address is `127.0.0.1:38882`. Set `SIGIS_LISTEN` to change it. Set `SIGIS_TRUST_ROOTS` to a PEM file containing trusted certificate authorities for signature verification; with no configured roots, signatures may be cryptographically valid but untrusted.
+
+## HTTP API
+
+- `GET /health`: health check.
+- `POST /api/sign`: multipart fields `pdf`, `pkcs12`, and `password`; returns the signed PDF. The signature is invisible and uses the basic PAdES profile.
+- `POST /api/verify`: multipart field `pdf`; returns per-signature verification details as JSON. Signing times in the PDF are claims, not trusted timestamps.
+
+Maximum PDF size is 20 MiB and maximum PKCS#12 size is 2 MiB. The uploaded private key is used only to sign the requested document; the service does not store uploads.
 
 ## License
 
