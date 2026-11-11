@@ -131,9 +131,17 @@ pub fn wrap_signed_data(sd: &[u8]) -> Vec<u8> {
     let oid = [
         0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02,
     ];
-    let mut explicit = vec![0xa0];
-    explicit.extend(der_len(sd.len()));
-    explicit.extend_from_slice(sd);
+    // The recorder dumps the `content` field of the ContentInfo, which
+    // asn1crypto serialises with its [0] EXPLICIT tag; plain SignedData
+    // (a SEQUENCE) is wrapped here.
+    let explicit = if sd.first() == Some(&0xa0) {
+        sd.to_vec()
+    } else {
+        let mut explicit = vec![0xa0];
+        explicit.extend(der_len(sd.len()));
+        explicit.extend_from_slice(sd);
+        explicit
+    };
     let mut body = oid.to_vec();
     body.extend(explicit);
     let mut out = vec![0x30];

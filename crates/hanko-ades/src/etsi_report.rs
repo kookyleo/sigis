@@ -192,7 +192,10 @@ fn digest_uri(algo: DigestAlgorithm) -> Result<&'static str, quick_xml::Error> {
     digest_algo_uri(algo).ok_or_else(|| {
         quick_xml::Error::Io(std::sync::Arc::new(std::io::Error::new(
             std::io::ErrorKind::Unsupported,
-            format!("No XML signature syntax available for digest algo '{}'", algo.name()),
+            format!(
+                "No XML signature syntax available for digest algo '{}'",
+                algo.name()
+            ),
         )))
     })
 }

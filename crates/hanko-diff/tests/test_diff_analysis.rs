@@ -682,7 +682,6 @@ fn test_simple_sign_with_separate_annot() {}
 /// is a `hanko-pdf` (lane B) check; this test runs once `PdfFile::parse`
 /// implements it.
 #[test]
-#[ignore = "pending: duplicate xref subsections must be rejected by hanko_pdf::PdfFile::parse (lane B)"]
 fn test_duplicate_xref_table_entry_rejected() {
     let base = std::fs::read(hanko_testdata::pyhanko(&["pdf", "minimal.pdf"])).unwrap();
     let doc = lopdf::Document::load_mem(&base).unwrap();

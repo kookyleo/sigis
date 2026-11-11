@@ -23,26 +23,8 @@ use crate::object::{as_dict, name_str, ref_str};
 use crate::path::{PathNode, RawPdfPath};
 
 /// Cross-reference data of one revision (`XRefSectionData` plus
-/// `XRefSectionMetaInfo`).
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct XrefSectionInfo {
-    /// `/Size` of the section: object numbers `>= size` were not assignable
-    /// in this revision.
-    pub size: u32,
-    /// The cross-reference stream of this revision, if any.
-    pub stream_ref: Option<ObjectId>,
-    /// The hybrid-reference (`/XRefStm`) stream of this revision, if any.
-    pub hybrid_stream_ref: Option<ObjectId>,
-    /// References written by the section, including those of a hybrid
-    /// stream, and freed references as `(number, next generation - 1)`
-    /// (`explicit_refs_in_revision`).
-    pub explicit_refs: BTreeSet<ObjectId>,
-    /// References freed by the section (`refs_freed_in_revision`).
-    pub freed: BTreeSet<ObjectId>,
-    /// Object numbers of the object streams that hold objects of this
-    /// section (`object_streams_used_in`).
-    pub object_streams_used: BTreeSet<u32>,
-}
+/// `XRefSectionMetaInfo`), defined by `hanko-pdf` (request C1).
+pub use hanko_pdf::XrefSectionInfo;
 
 /// Read access to the revision history of a PDF file.
 ///

@@ -1,8 +1,6 @@
 // Port of pyHanko 0.38.1 `pkgs/pyhanko/tests/test_ades_validation.py`
 // (MIT, see LICENSE-pyHanko), replaying the oracle recordings.
 //
-// The tests are ignored until `hanko_cms::validate_cms_signature` (lane A)
-// is implemented; run them with `cargo test -- --ignored`.
 
 #![allow(non_snake_case)]
 
@@ -33,13 +31,13 @@ fn run_basic(
         assert_eq!(
             result.ades_subindic.standard_name(),
             call.expected_subindic(),
-            "{test}"
+            "{test}: {:?}",
+            result.failure_msg
         );
     }
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_pades_basic_happy_path() {
     run_basic(
         "test_pades_basic_happy_path",
@@ -49,7 +47,6 @@ fn test_pades_basic_happy_path() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_happy_path() {
     run_basic(
         "test_embedded_cades_happy_path",
@@ -59,7 +56,6 @@ fn test_embedded_cades_happy_path() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_basic_tampered() {
     run_basic(
         "test_embedded_cades_basic_tampered",
@@ -69,7 +65,6 @@ fn test_embedded_cades_basic_tampered() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_sig_tampered() {
     run_basic(
         "test_embedded_cades_sig_tampered",
@@ -136,19 +131,16 @@ fn with_tl(case: &str, requirements: Option<QualificationRequirements>) {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A); const-oid (R-E5)"]
 fn test_pades_basic_happy_path_with_tl__true() {
     with_tl("True", Some(QualificationRequirements::default()));
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A); const-oid (R-E5)"]
 fn test_pades_basic_happy_path_with_tl__false() {
     with_tl("False", None);
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A); const-oid (R-E5)"]
 fn test_pades_fail_qualification_requirements() {
     let reqs = [
         QualificationRequirements::default(),
@@ -230,7 +222,8 @@ fn run_with_time(test: &str, expect_best_time: Option<&str>) {
         assert_eq!(
             result.ades_subindic.standard_name(),
             call.expected_subindic(),
-            "{test}"
+            "{test}: {:?}",
+            result.failure_msg
         );
         if let Some(t) = expect_best_time {
             assert_eq!(
@@ -242,7 +235,6 @@ fn run_with_time(test: &str, expect_best_time: Option<&str>) {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_with_time_happy_path() {
     run_with_time(
         "test_embedded_cades_with_time_happy_path",
@@ -251,19 +243,16 @@ fn test_embedded_cades_with_time_happy_path() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_with_time_tampered_timestamp() {
     run_with_time("test_embedded_cades_with_time_tampered_timestamp", None);
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_with_time_sig_tampered_timestamp() {
     run_with_time("test_embedded_cades_with_time_sig_tampered_timestamp", None);
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_pre_revoke_with_poe() {
     run_with_time(
         "test_embedded_cades_pre_revoke_with_poe",
@@ -272,7 +261,6 @@ fn test_embedded_cades_pre_revoke_with_poe() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_provably_revoked() {
     run_basic(
         "test_embedded_cades_provably_revoked",
@@ -282,7 +270,6 @@ fn test_embedded_cades_provably_revoked() {
 }
 
 #[test]
-#[ignore = "blocked: hanko_cms::validate_cms_signature (lane A)"]
 fn test_embedded_cades_revoked_no_poe() {
     run_basic(
         "test_embedded_cades_revoked_no_poe",
