@@ -53,6 +53,20 @@ impl ValidationPath {
         1 + self.intermediates.len() + leaf
     }
 
+    /// Number of certificates below the trust anchor (`pkix_len`): 0 when
+    /// the validated certificate is the anchor itself.
+    pub fn pkix_len(&self) -> usize {
+        self.issued_certs().len()
+    }
+
+    /// Every certificate of the path, from the anchor to the leaf
+    /// (`iter_certs` / indexing in pyhanko-certvalidator).
+    pub fn certs(&self) -> Vec<&Cert> {
+        let mut out = vec![self.trust_anchor.cert()];
+        out.extend(self.issued_certs().into_iter().map(|(c, _)| c));
+        out
+    }
+
     /// Paths always contain at least the trust anchor.
     pub fn is_empty(&self) -> bool {
         false

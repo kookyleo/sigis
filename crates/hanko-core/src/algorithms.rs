@@ -249,7 +249,7 @@ impl SignatureMechanism {
             oids::ECDSA_WITH_SHA256 => Self::Ecdsa(Sha256),
             oids::ECDSA_WITH_SHA384 => Self::Ecdsa(Sha384),
             oids::ECDSA_WITH_SHA512 => Self::Ecdsa(Sha512),
-            oids::EC_PUBLIC_KEY => Self::Ecdsa(contextual()?),
+            oids::EC_PUBLIC_KEY | oids::ECDSA_GENERIC => Self::Ecdsa(contextual()?),
             oids::ED25519 => Self::Ed25519,
             other => {
                 let name = match other {
@@ -350,9 +350,11 @@ pub fn validate_signature(
         }
         SignatureMechanism::RsaPss(params) => {
             if params.mgf1_digest != params.digest {
-                return Err(SignatureError::AlgorithmNotSupported(
-                    "PSS with an MGF1 digest different from the message digest".into(),
-                ));
+                // The rsa crate ties MGF1 to the message digest; verify the
+                // encoding directly (RFC 8017 §9.1.2), as pyca does.
+                let key = rsa_key(key_oid, key_bits)?;
+                let hash = prehash(params.digest);
+                return pss_verify_any(&key, signature, &hash, &params);
             }
             let key = rsa_key(key_oid, key_bits)?;
             let sig = rsa::pss::Signature::try_from(signature).map_err(invalid)?;
@@ -430,6 +432,88 @@ pub fn validate_signature(
             signature::Verifier::verify(&key, signed_data, &sig).map_err(invalid)
         }
     }
+}
+
+/// RSASSA-PSS verification for any combination of message digest and MGF1
+/// digest (RFC 8017 §8.1.2 and §9.1.2). `m_hash` is the message digest.
+fn pss_verify_any(
+    key: &rsa::RsaPublicKey,
+    signature: &[u8],
+    m_hash: &[u8],
+    params: &PssParameters,
+) -> Result<(), SignatureError> {
+    use rsa::traits::PublicKeyParts;
+    let invalid = SignatureError::InvalidSignature;
+    // RSAVP1 and I2OSP.
+    if signature.len() != key.size() {
+        return Err(invalid);
+    }
+    let s = rsa::BoxedUint::from_be_slice(signature, key.n_bits_precision())
+        .map_err(|_| SignatureError::InvalidSignature)?;
+    if s >= *key.n().as_ref() {
+        return Err(invalid);
+    }
+    // RSAVP1: m = s^e mod n (square and multiply; public values only).
+    let n = key.n();
+    let mut m = rsa::BoxedUint::one_with_precision(s.bits_precision());
+    for byte in key.e().to_be_bytes().iter() {
+        for i in (0..8).rev() {
+            m = m.mul_mod(&m, n);
+            if (byte >> i) & 1 == 1 {
+                m = m.mul_mod(&s, n);
+            }
+        }
+    }
+    let em_bits = (key.n().bit_width() as usize).saturating_sub(1);
+    let em_len = em_bits.div_ceil(8);
+    let m_bytes = m.to_be_bytes();
+    let significant = m_bytes.iter().skip_while(|b| **b == 0).count();
+    if significant > em_len {
+        return Err(invalid);
+    }
+    let mut em = vec![0u8; em_len];
+    em[em_len - significant..].copy_from_slice(&m_bytes[m_bytes.len() - significant..]);
+
+    // EMSA-PSS-VERIFY.
+    let h_len = params.digest.output_len();
+    let s_len = params.salt_length;
+    if m_hash.len() != h_len || em_len < h_len + s_len + 2 || em[em_len - 1] != 0xbc {
+        return Err(invalid);
+    }
+    let db_len = em_len - h_len - 1;
+    let (masked_db, rest) = em.split_at(db_len);
+    let h = &rest[..h_len];
+    let zero_bits = 8 * em_len - em_bits;
+    let top_mask = (0xffu16 << (8 - zero_bits)) as u8;
+    if masked_db[0] & top_mask != 0 {
+        return Err(invalid);
+    }
+    // MGF1 with the MGF digest.
+    let mut db = Vec::with_capacity(db_len);
+    let mut counter: u32 = 0;
+    while db.len() < db_len {
+        let mut input = h.to_vec();
+        input.extend_from_slice(&counter.to_be_bytes());
+        db.extend(params.mgf1_digest.digest(&input));
+        counter = counter.wrapping_add(1);
+    }
+    db.truncate(db_len);
+    for (d, m) in db.iter_mut().zip(masked_db) {
+        *d ^= m;
+    }
+    db[0] &= !top_mask;
+    let ps_len = em_len - h_len - s_len - 2;
+    if db[..ps_len].iter().any(|b| *b != 0) || db[ps_len] != 0x01 {
+        return Err(invalid);
+    }
+    let salt = &db[db_len - s_len..];
+    let mut m_prime = vec![0u8; 8];
+    m_prime.extend_from_slice(m_hash);
+    m_prime.extend_from_slice(salt);
+    if params.digest.digest(&m_prime) != h {
+        return Err(invalid);
+    }
+    Ok(())
 }
 
 fn rsa_key(

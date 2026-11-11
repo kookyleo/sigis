@@ -1150,6 +1150,7 @@ dependencies = [
  "serde_json",
  "spki 0.8.1",
  "thiserror",
+ "unicode-normalization",
  "x509-cert 0.3.0",
  "x509-ocsp",
 ]
@@ -1158,12 +1159,15 @@ dependencies = [
 name = "hanko-cms"
 version = "0.0.1"
 dependencies = [
+ "base64 0.22.1",
+ "certval",
  "cms 0.3.0-rc.1",
  "const-oid 0.10.3",
  "der 0.8.3",
  "hanko-certvalidator",
  "hanko-core",
  "hanko-testdata",
+ "serde_json",
  "spki 0.8.1",
  "thiserror",
  "x509-cert 0.3.0",

@@ -1,10 +1,31 @@
 # Lane A — Certificates & CMS
 
-Owner: lane A (branch `hanko/a-cms-cert`). See `docs/hanko-lanes.md`.
+Owner: lane A (branch `hanko/a-cms-cert`, worktree `../sigis-wt/a-cms-cert`).
+See `docs/hanko-lanes.md`.
 
 ## Status
 
-Phase 0 done before the lane split: certvalidator foundation (25 test functions ported, see `crates/hanko-certvalidator/PORTING.md`).
+- Phase 0 (before the lane split): certvalidator foundation.
+- Phase 1 (this branch): `hanko-cms` ported (`generic_cms.py`, CMS part of
+  `status.py`, `KeyUsageConstraints`, CMS algorithm policy, `sign/general.py`
+  helpers). `validate_cms_signature`, `validate_timestamp_token` and
+  `validate_detached_cms` are filled; `validate_cms_signature_with` and the
+  `validate` module expose the full pyHanko API (separate timestamp and AC
+  contexts, key usage settings, CMS algorithm policy, a precomputed or
+  computed content digest). certvalidator additions: `find_valid_path`,
+  `validate_path_detailed` / `PathFailure` (AdES mapping data),
+  `ValidationContext::with_other_certs`, `ValidationPath::pkix_len`,
+  asn1crypto-compatible name display and string-preparation checks
+  (`names`), generic RSASSA-PSS (MGF1 digest different from the message
+  digest), the `ecdsa` signature OID.
+- Oracle: `/tmp/pyhanko-oracle/venv` is not installed yet; lane A uses a
+  local copy at `/tmp/lane-a/venv` (pyHanko 0.38.1, pyhanko-certvalidator
+  0.33.0, Certomancer 0.16.0) and the tag sources at `/tmp/lane-a/v0.38.1`.
+  Fixtures: `crates/hanko-testdata/data/lanes/a/harvest/` (see its README).
+
+Next: attribute certificate validation, certvalidator gaps (indirect CRLs,
+`onlySomeReasons`, OCSP responder revocation, registry/AIA, policy
+qualifiers), `hanko-fetch`, `ltv`.
 
 ## Per-suite counts
 
@@ -23,63 +44,69 @@ Phase 0 done before the lane split: certvalidator foundation (25 test functions 
 | `test_registry.py` | 9 | 0 | 0 | 9 |
 | `test_sig_validate.py` | 3 | 3 | 0 | 0 |
 | `test_validate.py` | 21 | 14 | 0 | 7 |
-| `test_cms.py` | 78 | 0 | 0 | 78 |
-| `test_key_usage_constraints.py` | 4 | 0 | 0 | 4 |
+| `test_cms.py` | 78 | 55 | 2 | 21 |
+| `test_key_usage_constraints.py` | 4 | 4 | 0 | 0 |
 | `test_tsa_fetcher.py` | 10 | 0 | 0 | 10 |
 | `test_tsa_fetcher_requests.py` | 4 | 0 | 0 | 4 |
+| **Total** | **271** | **84** | **2** | **185** |
+
+`test_cms.py` details (skips, pending items, recorded-call agreement) are in
+`crates/hanko-cms/PORTING.md`.
 
 ## Known divergences
 
-None yet.
+All fail closed (the port rejects or reports less trust where pyHanko
+accepts); the tests assert this.
+
+- NIST PKITS: 16 cases (DSA, UTCTime 1950, indirect CRLs,
+  `onlySomeReasons`), see `crates/hanko-certvalidator/PORTING.md`.
+- `test_cms.py` recorded calls: 18 of 161 differ, all listed in
+  `crates/hanko-cms/tests/test_cms.rs` (`KNOWN`): MD5, SHA-3, DSA, Ed448
+  (request R1) and attribute certificates (in progress).
+- Without a validation context, nothing is trusted (pyHanko uses the OS
+  trust store).
 
 ## Requests to the lead
 
-None yet.
-
-## Requests from other lanes (relayed by the lead, 2026-11-12)
-
-When rebasing onto `main`, keep this section in your version of this file.
-
-- **A-1 (from lane E, R-E2).** `ValidationPath::qualified_policies()`: the
-  pyhanko-certvalidator `QualifiedPolicy` set (issuer-domain and user-domain
-  policy OIDs after RFC 5280 policy processing). Needed for pre-eIDAS
-  qualification in `hanko-eutl` (lane E divergence D-E1).
-- **A-2 (from lane E, R-E3).** Trust anchor qualifiers on `TrustAnchor`
-  (`TrustQualifiers`: `valid_from`, `valid_until`, `trusted_service_type`,
-  `standard_parameters`), enforced during validation, and a trust manager hook
-  in `ValidationContextBuilder` (pyhanko-certvalidator `TrustManager` with
-  `as_trust_anchor` / `find_potential_issuers`), so that a `TSPRegistry` can
-  act as the trust source (lane E divergence D-E2).
-- **A-3 (from lane E, R-E7).** `hanko_cms::validate_cms_signature` needs the
-  key usage settings (pyHanko applies `non_repudiation` / `digital_signature`
-  defaults for PDF signatures) and the CMS algorithm policy as parameters (or
-  an options struct). AdES mapping needs `is_ee_cert` / `is_side_validation`
-  on `ValidationError::{Expired, Revoked}` (`handle_certvalidator_errors`).
-  LTA validation needs a way to extend a `ValidationContext` with DSS
-  material (certificates, CRLs, OCSP responses) and POEs.
-- **A-4 (from the lead, R-E1).** There is now one `KeyUsageConstraints`:
-  `hanko_core::key_usage` (lane E's version, moved from `hanko-validate`;
-  **owned by lane A from now on**). Replace `hanko_cms::key_usage` with a
-  re-export of `hanko_core::key_usage`, and reconcile the APIs there: lane A
-  has `with_key_usage(&[&str])` and `validate(..)` with extra arguments,
-  lane E has `with_key_usage(impl IntoIterator)`, `validate(cert)` plus
-  `validate_with_extra(..)`, and a derived `Default`. Check that `Default`
-  matches pyHanko (`explicit_extd_key_usage_required=True`). Keep the lane E
-  call sites in `hanko-validate` / `hanko-eutl` compiling; ask the lead if a
-  call site in a lane E crate must change.
-- **A-5 (from lane D).** `DigestAlgorithm` needs SHA3-256/384/512 and
-  SHAKE256 (`test_ecdsa_with_sha3`, `test_rsa_with_sha3`, Ed448 with
-  `shake256_len`). Signing support for Ed448, DSA and ML-DSA would need
-  RustCrypto `ed448-goldilocks`, `dsa`, `ml-dsa` (covered by your R1).
-- **A-6 (from lane D).** A getter for the CRLs and OCSP responses supplied to
-  a `ValidationContext` (pyHanko embeds `vc.ocsps` / `vc.crls`, e.g.
-  `dummy_ocsp_vc` in `test_ocsp_embed`, `test_pades_revinfo_dummydata`).
-- **Lead answers to your requests:** R1 approved; add the four crates to
-  `crates/hanko-core/Cargo.toml` in the same commit as the code using them.
-  R2 done: `HankoError::SignatureValidation { message, ades_subindication:
-  Option<hanko_core::ades::AdesSubIndic> }`. R3 done (`hazmat`). R4 done:
-  `hanko_testdata::data_dir()` resolves at run time, and
-  `hanko_testdata::manifest_dir()` replaces `env!("CARGO_MANIFEST_DIR")`;
-  you can drop the local `lane_data` workaround. R5 approved. Also:
-  `const-oid` is patched on `main`, so certificates with `2.999.*` policy
-  OIDs (Certomancer `testing-ca-qualified`) now decode.
+- **R1 — hanko-core algorithm dependencies.** `algorithms.rs` (lane A) needs
+  MD5, SHA-3 / SHAKE256, DSA and Ed448 to match pyHanko (15 `test_cms.py`
+  functions, NIST PKITS 4.1.4/4.1.5, the Ed448 certvalidator test). Please
+  add to `crates/hanko-core/Cargo.toml` (versions match the digest 0.11 /
+  signature 3 family already in use):
+  `md-5 = { version = "0.11", default-features = false, features = ["oid"] }`,
+  `sha3 = { version = "0.11", default-features = false, features = ["oid"] }`,
+  `dsa = { version = "0.7", default-features = false }`,
+  `ed448-goldilocks = { version = "0.14.0-pre.15", default-features = false }`.
+  Lane A will then add the variants `Md5`, `Sha3_224`, `Sha3_256`,
+  `Sha3_384`, `Sha3_512` and `Shake256` to `DigestAlgorithm` (§4 interface:
+  additive, but exhaustive `match`es in other crates would need a new arm;
+  none exist today) and `Dsa(..)` / `Ed448` to `SignatureMechanism`.
+- **R2 — `HankoError` variant for CMS validation failures.** The §4
+  functions return `hanko_core::Result`; pyHanko raises
+  `SignatureValidationError` with an AdES sub-indication. Please add
+  `HankoError::SignatureValidation { message: String, ades_subindication: Option<&'static str> }`.
+  Until then `From<CmsError> for HankoError` maps to `Malformed` (full
+  message kept, fails closed); callers that need the class use
+  `hanko_cms::validate_cms_signature_with` (returns `CmsError`).
+- **R3 — `x509-cert` feature in hanko-core.** `cert.rs` uses
+  `x509_cert::certificate::Raw` (feature `hazmat`), which hanko-core only
+  gets through feature unification with `certval`; `cargo check -p
+  hanko-core` alone fails. Please enable `features = ["pem", "hazmat"]` for
+  x509-cert in `crates/hanko-core/Cargo.toml`.
+- **R4 — hanko-testdata data path with a shared target directory.**
+  `hanko_testdata::path` uses the compile-time `CARGO_MANIFEST_DIR`. All
+  worktrees share `/build/sigis/target` and the same relative package path,
+  so cargo reuses a hanko-testdata build from another worktree, and fixtures
+  added on a lane branch are looked up in `main`'s checkout (observed here).
+  Suggest resolving the data directory at run time, e.g. from the test
+  binary's `CARGO_MANIFEST_DIR` (`<crate>/../hanko-testdata/data`), falling
+  back to the compile-time path. Lane A's tests do this locally
+  (`tests/common/mod.rs::lane_data`).
+- **R5 — additive interface changes in `hanko-cms` (for approval).** Kept
+  every §4 item; added fields to `SignatureStatus` (`trust_problem_indic`,
+  `pkcs7_signature_mechanism`, `md_algorithm_name`, `revocation_details`,
+  `error_time_horizon`, `validation_time`) and to
+  `StandardCmsSignatureStatus` (`cades_signer_attrs`, `ac_attrs`,
+  `ac_validation_errs`). `TrustProblem::KeyUsage` also carries the
+  self-signed `InvalidCertificateError`. Consumers that construct these
+  structs with literals would need the new fields; readers are unaffected.

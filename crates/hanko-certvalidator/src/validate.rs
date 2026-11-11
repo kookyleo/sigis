@@ -129,6 +129,10 @@ fn extend_paths(
         return;
     }
     for candidate in &ctx.other_certs {
+        if crate::names::check_name(candidate.subject()).is_err() {
+            // asn1crypto cannot index such a certificate by subject.
+            continue;
+        }
         let used = candidate == leaf || chain.contains(candidate);
         let is_anchor = ctx.trust_anchors.iter().any(|a| a.cert() == candidate);
         if !used && !is_anchor && may_have_issued(candidate, current) {
@@ -216,6 +220,97 @@ fn map_status(status: PathValidationStatus) -> ValidationError {
     }
 }
 
+/// A failed path validation with the context pyHanko attaches to its
+/// exceptions (`original_path`, `is_ee_cert`, `is_side_validation`,
+/// `expired_dt` / `revocation_dt`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PathFailure {
+    /// The error.
+    pub error: ValidationError,
+    /// The path on which validation failed, if any.
+    pub path: Option<ValidationPath>,
+    /// The failing certificate is the end-entity certificate of the path.
+    pub is_ee_cert: bool,
+    /// The failure happened while validating revocation information signers.
+    pub is_side_validation: bool,
+    /// Expiry or revocation time, if relevant.
+    pub time_horizon: Option<hanko_core::time::Moment>,
+    /// The certificate itself is unsuitable (`InvalidCertificateError`), for
+    /// example self-signed but not trusted.
+    pub invalid_certificate: bool,
+}
+
+impl PathFailure {
+    fn plain(error: ValidationError, path: Option<ValidationPath>) -> Self {
+        Self {
+            error,
+            path,
+            is_ee_cert: false,
+            is_side_validation: false,
+            time_horizon: None,
+            invalid_certificate: false,
+        }
+    }
+}
+
+/// Port of `find_valid_path`: build paths for `cert` and return the first
+/// that validates. On failure, report the error pyhanko-certvalidator would
+/// raise: a single candidate's error, else the last error that is not about
+/// a signature, else the first error. If no path can be built and the
+/// certificate is self-issued, the failure is an `InvalidCertificateError`.
+pub fn find_valid_path(
+    ctx: &ValidationContext,
+    cert: &Cert,
+    params: Option<&PkixValidationParams>,
+) -> Result<ValidationPath, Box<PathFailure>> {
+    // asn1crypto cannot compare names that fail string preparation, so
+    // pyhanko-certvalidator fails with a `ValueError` on such certificates.
+    for name in [cert.subject(), cert.issuer()] {
+        if let Err(e) = crate::names::check_name(name) {
+            return Err(Box::new(PathFailure::plain(ValidationError::Malformed(e), None)));
+        }
+    }
+    let paths = match build_paths(ctx, cert) {
+        Ok(p) => p,
+        Err(e) => {
+            if cert.is_self_issued() {
+                let mut f = PathFailure::plain(
+                    ValidationError::PathValidation(format!(
+                        "The X.509 certificate provided is self-signed - \"{}\"",
+                        certval::name_to_string(cert.subject())
+                    )),
+                    None,
+                );
+                f.invalid_certificate = true;
+                return Err(Box::new(f));
+            }
+            return Err(Box::new(PathFailure::plain(e, None)));
+        }
+    };
+    let mut failures = Vec::new();
+    for path in paths {
+        match validate_path_detailed(ctx, &path, params, 0) {
+            Ok(()) => return Ok(path),
+            Err(f) => failures.push(f),
+        }
+    }
+    if failures.len() > 1 {
+        if let Some(pos) = failures
+            .iter()
+            .rposition(|f| !f.error.to_string().contains("signature"))
+        {
+            return Err(failures.swap_remove(pos));
+        }
+    }
+    let mut it = failures.into_iter();
+    Err(it.next().unwrap_or_else(|| {
+        Box::new(PathFailure::plain(
+            ValidationError::PathBuilding("no candidate paths".into()),
+            None,
+        ))
+    }))
+}
+
 /// Validate `path` at the context's time of interest (port of `validate_path`).
 ///
 /// This covers RFC 5280 validation, the algorithm usage policy, and revocation
@@ -237,9 +332,24 @@ pub(crate) fn validate_path_at_depth(
     params: Option<&PkixValidationParams>,
     depth: u8,
 ) -> Result<(), ValidationError> {
+    validate_path_detailed(ctx, path, params, depth).map_err(|f| f.error)
+}
+
+/// [`validate_path`] with the failure details of [`PathFailure`].
+pub fn validate_path_detailed(
+    ctx: &ValidationContext,
+    path: &ValidationPath,
+    params: Option<&PkixValidationParams>,
+    depth: u8,
+) -> Result<(), Box<PathFailure>> {
+    let fail = |error: ValidationError| Box::new(PathFailure::plain(error, Some(path.clone())));
     let anchor: &TrustAnchor = path.trust_anchor();
     if anchor.enforce_validity() {
-        check_validity(ctx, anchor.cert(), "the trust anchor")?;
+        check_validity(ctx, anchor.cert(), "the trust anchor").map_err(|e| {
+            let mut f = fail(e);
+            f.time_horizon = Some(anchor.cert().not_after());
+            f
+        })?;
     }
     let issued = path.issued_certs();
     if issued.is_empty() {
@@ -248,7 +358,14 @@ pub(crate) fn validate_path_at_depth(
     }
     let total = issued.len();
     for (index, (cert, _)) in issued.iter().enumerate() {
-        check_validity(ctx, cert, &path.describe(index, total))?;
+        check_validity(ctx, cert, &path.describe(index, total)).map_err(|e| {
+            let mut f = fail(e);
+            f.is_ee_cert = index + 1 == total && path.leaf().is_some();
+            if matches!(f.error, ValidationError::Expired { .. }) {
+                f.time_horizon = Some(cert.not_after());
+            }
+            f
+        })?;
     }
 
     let toi = ctx
@@ -256,16 +373,17 @@ pub(crate) fn validate_path_at_depth(
         .validation_time
         .to_der_datetime()
         .map(TimeOfInterest)
-        .ok_or_else(|| ValidationError::Malformed("time of interest out of range".into()))?;
+        .ok_or_else(|| fail(ValidationError::Malformed("time of interest out of range".into())))?;
     let cps = settings(ctx, toi, anchor.enforce_validity(), params);
-    let pe = environment(ctx)?;
+    let pe = environment(ctx).map_err(fail)?;
 
     let ta = PDVTrustAnchorChoice::try_from(anchor.cert().der())
-        .map_err(|e| ValidationError::Malformed(format!("trust anchor: {e}")))?;
+        .map_err(|e| fail(ValidationError::Malformed(format!("trust anchor: {e}"))))?;
     let mut chain: Vec<PDVCertificate> = issued
         .iter()
         .map(|(c, _)| pdv_cert(c))
-        .collect::<Result<_, _>>()?;
+        .collect::<Result<_, _>>()
+        .map_err(fail)?;
     let Some(target) = chain.pop() else {
         return Ok(());
     };
@@ -273,8 +391,8 @@ pub(crate) fn validate_path_at_depth(
     let mut results = CertificationPathResults::new();
     match validate_path_rfc5280(&pe, &cps, &cv_path, &mut results) {
         Ok(()) => {}
-        Err(certval::Error::PathValidation(status)) => return Err(map_status(status)),
-        Err(e) => return Err(cv_err("The path could not be validated", e)),
+        Err(certval::Error::PathValidation(status)) => return Err(fail(map_status(status))),
+        Err(e) => return Err(fail(cv_err("The path could not be validated", e))),
     }
 
     // Algorithm usage policy on every certificate signature in the path.
@@ -286,15 +404,15 @@ pub(crate) fn validate_path_at_depth(
             Some(&issuer_key),
         );
         if !allowed.allowed {
-            return Err(ValidationError::DisallowedAlgorithm(format!(
+            return Err(fail(ValidationError::DisallowedAlgorithm(format!(
                 "The path could not be validated because the signature of {} uses a disallowed algorithm: {}",
                 path.describe(index, total),
                 allowed.failure_reason.unwrap_or_default()
-            )));
+            ))));
         }
     }
 
-    revinfo::check_path_revocation(ctx, path, depth)
+    revinfo::check_path_revocation_detailed(ctx, path, depth)
 }
 
 /// Validates one certificate against a [`ValidationContext`]

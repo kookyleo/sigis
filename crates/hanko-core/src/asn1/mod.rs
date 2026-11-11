@@ -8,6 +8,8 @@
 //! - [`sig_policy`]: `SignaturePolicyIdentifier` (RFC 5126 / ETSI EN 319 122-1).
 //! - [`commitment`]: `CommitmentTypeIndication` (RFC 5126 / ETSI EN 319 122-1).
 //! - [`oids`]: object identifiers.
+//! - [`raw_oid`]: object identifiers compared in encoded form.
+//! - [`tlv`]: a lenient TLV reader that keeps original encodings.
 
 /// Re-exports of the RustCrypto format crates at the exact (pinned) versions
 /// that `certval` uses, so downstream code shares their types.
@@ -16,7 +18,9 @@ pub use {cms, x509_cert, x509_ocsp, x509_tsp};
 pub mod commitment;
 pub mod ess;
 pub mod oids;
+pub mod raw_oid;
 pub mod sig_policy;
+pub mod tlv;
 
 use spki::AlgorithmIdentifierOwned;
 

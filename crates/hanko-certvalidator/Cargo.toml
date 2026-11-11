@@ -17,6 +17,7 @@ x509-cert = { workspace = true }
 x509-ocsp = { workspace = true }
 certval = { workspace = true }
 thiserror = { workspace = true }
+unicode-normalization = "0.1.25"
 
 [dev-dependencies]
 hanko-testdata = { workspace = true }

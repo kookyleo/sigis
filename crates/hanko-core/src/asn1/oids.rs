@@ -29,7 +29,19 @@ oids! {
     /// SHA-512.
     SHA512 = "2.16.840.1.101.3.4.2.3";
     /// SHA3-256.
+    SHA3_224 = "2.16.840.1.101.3.4.2.7";
+    /// SHA3-256.
     SHA3_256 = "2.16.840.1.101.3.4.2.8";
+    /// SHA3-384.
+    SHA3_384 = "2.16.840.1.101.3.4.2.9";
+    /// SHA3-512.
+    SHA3_512 = "2.16.840.1.101.3.4.2.10";
+    /// SHAKE128.
+    SHAKE128 = "2.16.840.1.101.3.4.2.11";
+    /// SHAKE256 (fixed 512-bit output in CMS, RFC 8419).
+    SHAKE256 = "2.16.840.1.101.3.4.2.12";
+    /// `id-shake256-len` (SHAKE256 with an explicit output length).
+    SHAKE256_LEN = "2.16.840.1.101.3.4.2.18";
 
     // RSA.
     /// rsaEncryption (key type; also a CMS signature algorithm meaning PKCS#1 v1.5).
@@ -64,6 +76,8 @@ oids! {
     SECP521R1 = "1.3.132.0.35";
     /// ecdsa-with-SHA1.
     ECDSA_WITH_SHA1 = "1.2.840.10045.4.1";
+    /// `ecdsa` (asn1crypto): the ECDSA arc, digest taken from context.
+    ECDSA_GENERIC = "1.2.840.10045.4";
     /// ecdsa-with-SHA224.
     ECDSA_WITH_SHA224 = "1.2.840.10045.4.3.1";
     /// ecdsa-with-SHA256.
@@ -145,7 +159,53 @@ oids! {
     /// id-kp-OCSPSigning.
     KP_OCSP_SIGNING = "1.3.6.1.5.5.7.3.9";
 
+    // CMS content types.
+    /// `id-data`.
+    CT_DATA = "1.2.840.113549.1.7.1";
+    /// `id-signedData`.
+    CT_SIGNED_DATA = "1.2.840.113549.1.7.2";
+    /// `id-envelopedData`.
+    CT_ENVELOPED_DATA = "1.2.840.113549.1.7.3";
+    /// `id-digestedData`.
+    CT_DIGESTED_DATA = "1.2.840.113549.1.7.5";
+    /// `id-encryptedData`.
+    CT_ENCRYPTED_DATA = "1.2.840.113549.1.7.6";
+    /// `id-ct-authData`.
+    CT_AUTHENTICATED_DATA = "1.2.840.113549.1.9.16.1.2";
+    /// `id-ct-TSTInfo` (RFC 3161).
+    CT_TST_INFO = "1.2.840.113549.1.9.16.1.4";
+
+    // Extended key usages.
+    /// `anyExtendedKeyUsage`.
+    KP_ANY_EXTENDED_KEY_USAGE = "2.5.29.37.0";
+    /// `id-kp-serverAuth`.
+    KP_SERVER_AUTH = "1.3.6.1.5.5.7.3.1";
+    /// `id-kp-clientAuth`.
+    KP_CLIENT_AUTH = "1.3.6.1.5.5.7.3.2";
+    /// `id-kp-codeSigning`.
+    KP_CODE_SIGNING = "1.3.6.1.5.5.7.3.3";
+    /// `id-kp-emailProtection`.
+    KP_EMAIL_PROTECTION = "1.3.6.1.5.5.7.3.4";
+    /// `id-kp-timeStamping`.
+    KP_TIME_STAMPING = "1.3.6.1.5.5.7.3.8";
+    /// Microsoft document signing.
+    KP_DOCUMENT_SIGNING = "1.3.6.1.4.1.311.10.3.12";
+    /// Adobe Authentic Documents Trust.
+    KP_ADOBE_AUTHENTIC_DOCUMENTS_TRUST = "1.2.840.113583.1.1.5";
+
     // CMS / ESS / CAdES attributes.
+    /// `id-aa-CMSAlgorithmProtection` (RFC 6211).
+    CMS_ALGORITHM_PROTECTION = "1.2.840.113549.1.9.52";
+    /// `counterSignature`.
+    COUNTER_SIGNATURE = "1.2.840.113549.1.9.6";
+    /// `id-aa-ets-contentTimestamp`.
+    AA_CONTENT_TIMESTAMP = "1.2.840.113549.1.9.16.2.20";
+    /// `id-aa-ets-signerAttr`.
+    AA_SIGNER_ATTRIBUTES = "0.4.0.1733.2.3";
+    /// `id-aa-ets-signerAttrV2` (ETSI EN 319 122-1).
+    AA_SIGNER_ATTRIBUTES_V2 = "0.4.0.19122.1.1";
+    /// Adobe `RevocationInfoArchival` attribute.
+    ADBE_REVOCATION_INFO_ARCHIVAL = "1.2.840.113583.1.1.8";
     /// id-contentType.
     CONTENT_TYPE = "1.2.840.113549.1.9.3";
     /// id-messageDigest.

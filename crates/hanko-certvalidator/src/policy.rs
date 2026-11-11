@@ -36,6 +36,34 @@ pub enum RevocationCheckingRule {
 }
 
 impl RevocationCheckingRule {
+    /// The pyhanko-certvalidator enum value (`clrcheck`, ...).
+    pub fn value(self) -> &'static str {
+        match self {
+            Self::CrlRequired => "clrcheck",
+            Self::OcspRequired => "ocspcheck",
+            Self::CrlAndOcspRequired => "bothcheck",
+            Self::CrlOrOcspRequired => "eithercheck",
+            Self::NoCheck => "nocheck",
+            Self::CheckIfDeclared => "ifdeclaredcheck",
+            Self::CheckIfDeclaredSoft => "ifdeclaredsoftcheck",
+        }
+    }
+
+    /// Parse a pyhanko-certvalidator enum value (see [`Self::value`]).
+    pub fn from_value(value: &str) -> Option<Self> {
+        [
+            Self::CrlRequired,
+            Self::OcspRequired,
+            Self::CrlAndOcspRequired,
+            Self::CrlOrOcspRequired,
+            Self::NoCheck,
+            Self::CheckIfDeclared,
+            Self::CheckIfDeclaredSoft,
+        ]
+        .into_iter()
+        .find(|r| r.value() == value)
+    }
+
     /// Revocation information is always expected.
     pub fn strict(self) -> bool {
         !matches!(

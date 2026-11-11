@@ -333,12 +333,12 @@ pub(crate) fn revoked_error(
 }
 
 /// Check the revocation status of every certificate in `path` below the
-/// trust anchor.
-pub(crate) fn check_path_revocation(
+/// trust anchor, reporting which certificate failed.
+pub(crate) fn check_path_revocation_detailed(
     ctx: &ValidationContext,
     path: &ValidationPath,
     depth: u8,
-) -> Result<(), ValidationError> {
+) -> Result<(), Box<crate::validate::PathFailure>> {
     let issued = path.issued_certs();
     let total = issued.len();
     for (index, (cert, issuer)) in issued.into_iter().enumerate() {
@@ -351,7 +351,23 @@ pub(crate) fn check_path_revocation(
             is_ee,
             depth,
         };
-        check_revocation(ctx, &subject)?;
+        check_revocation(ctx, &subject).map_err(|error| {
+            let time_horizon = match &error {
+                ValidationError::Revoked {
+                    revocation_time, ..
+                } => *revocation_time,
+                ValidationError::StaleRevinfo { time_cutoff, .. } => *time_cutoff,
+                _ => None,
+            };
+            Box::new(crate::validate::PathFailure {
+                error,
+                path: Some(path.clone()),
+                is_ee_cert: is_ee,
+                is_side_validation: false,
+                time_horizon,
+                invalid_certificate: false,
+            })
+        })?;
     }
     Ok(())
 }

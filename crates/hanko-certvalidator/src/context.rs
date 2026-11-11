@@ -73,6 +73,34 @@ impl ValidationContext {
         self.algorithm_policy.as_ref()
     }
 
+    /// Algorithm usage policy, shared.
+    pub fn algorithm_policy_arc(&self) -> Arc<dyn AlgorithmUsagePolicy> {
+        self.algorithm_policy.clone()
+    }
+
+    /// A copy of this context with additional certificates available for
+    /// path building (`certificate_registry.register_multiple`). Duplicates
+    /// are ignored.
+    pub fn with_other_certs<'a>(&self, certs: impl IntoIterator<Item = &'a Cert>) -> Self {
+        let mut out = self.clone();
+        for c in certs {
+            if !out.other_certs.contains(c) && !out.trust_anchors.iter().any(|a| a.cert() == c) {
+                out.other_certs.push(c.clone());
+            }
+        }
+        out
+    }
+
+    /// The time of interest (`moment`).
+    pub fn moment(&self) -> Moment {
+        self.timing.validation_time
+    }
+
+    /// The best known signature time (`best_signature_time`).
+    pub fn best_signature_time(&self) -> Moment {
+        self.timing.best_signature_time
+    }
+
     /// Every certificate known to the context: anchors, then other certificates.
     pub(crate) fn known_certs(&self) -> impl Iterator<Item = &Cert> {
         self.trust_anchors

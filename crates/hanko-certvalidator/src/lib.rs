@@ -21,12 +21,15 @@
     warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod ac;
 pub mod authority;
 pub mod context;
 pub mod ltv;
+pub mod names;
 pub mod path;
 pub mod policy;
 pub mod revinfo;
+mod stringprep_tables;
 pub mod validate;
 
 pub use authority::{Cert, TrustAnchor};
@@ -36,4 +39,7 @@ pub use policy::{
     CertRevTrustPolicy, FreshnessReqType, NonRevokedStatusAssertion, PkixValidationParams,
     RevocationCheckingPolicy, RevocationCheckingRule, NO_REVOCATION, REQUIRE_REVINFO,
 };
-pub use validate::{build_paths, validate_path, CertificateValidator};
+pub use validate::{
+    build_paths, find_valid_path, validate_path, validate_path_detailed, CertificateValidator,
+    PathFailure,
+};
