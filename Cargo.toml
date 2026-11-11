@@ -10,6 +10,12 @@ keywords = ["pdf", "signature", "pades", "verification"]
 categories = ["cryptography"]
 exclude = ["vendor/"]
 
+[workspace]
+members = [".", "crates/hanko"]
+# The vendored crate is a patched dependency, not a workspace member: its own
+# tests need fixtures that are not shipped.
+exclude = ["vendor/underskrift"]
+
 [dependencies]
 axum = { version = "0.8", features = ["multipart"] }
 serde_json = "1"
