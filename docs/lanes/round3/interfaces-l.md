@@ -12,6 +12,14 @@ through every signing, timestamp, archival-chain and DSS reopen. A fresh default
 reader or a reset budget during a reopen is not acceptable. Port exact upstream
 assertions before implementation and compare against pyHanko 0.38.1.
 
+The same requirement applies to `PdfUpdate::{new,fresh}`, field additions and
+standalone text/QR stamp APIs requested by C. A bounded CLI preflight does not
+make an unbounded internal parser safe; every real downstream read must inherit
+the selected policy/state. Compatibility entry points keep existing defaults.
+C owns its eight remaining decode-function assertions; S retains the three
+caller IDs below. P owns signing/stamp/update implementations. L owns the
+shared reader primitive and coordinates its acceptance with S.
+
 Before implementing the public surface, P must publish exact proposed Rust
 signatures and defaults in `p-report.md` and notify L early: the added
 `SignOptions` and `TimestampOptions` fields, the limit-aware archival-chain API,
@@ -120,11 +128,31 @@ lane worktrees were synced previously. V's shared-repository-lock wording is
 stale and must be corrected. Existing old jobs/sessions stay unchanged; L owns
 the fresh old-lock audit. No service restart or process killing is authorized.
 
-Accepted unique-function counts remain P 297/271/13/13, V 47/12/0/35 and
-S 824/738/80/6 (total/passed/skipped/pending). Cross-lane assistance does not add
+Accepted unique-function counts at main62a72a2 are P 297/271/13/13,
+V 47/12/0/35, S 824/753/63/8, C 252/0/0/252 and L 11/2/0/9
+(total/passed/skipped/pending). The acceptance ledger is authoritative; lane
+working-copy counts are proposals until review and the workspace gate pass. Cross-lane assistance does not add
 S-owned functions to P/V counts. Python's 14 cases across three functions are
 oracle evidence, not passing Rust ports. Publish exact IDs -> Rust tests,
 parameters, exclusions, commands/results and evidence paths in each lane report.
 Keep fixtures/replays separate from fresh live comparisons. All trust decisions
 fail closed. Notify L with concrete signatures and committed, verified increments;
 continue independent owned work while shared interfaces are pending.
+
+
+## C: caller policy and independently reviewable increments
+
+C reports 202/252 functions locally verified; no C implementation is accepted
+yet. L retains merged manifests/lockfile ownership. Existing workspace CMS,
+PDF-diff and EUTL dependencies are permitted in the CLI layer; no dependency
+layer change is approved. Submit coherent owned commits, exact function IDs,
+parameter/provider exclusions and fresh same-output oracle evidence before
+claiming accepted counts. CLI subprocess tests must use their Cargo-produced
+executable, protected from another worktree overwriting the shared binary.
+
+C reports a forbidden-only KU constraint gap in the shared validator. S owns
+the lower-layer investigation and substantive regression/repair, preserving
+None versus explicit-empty usage semantics. CLI must continue enforcing
+mandatory negative policies until the shared implementation is accepted. V
+owns qualified AdES/LTA results; unsupported mandatory qualification must
+reject before network or output, rather than silently run basic validation.

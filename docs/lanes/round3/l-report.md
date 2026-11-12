@@ -78,3 +78,23 @@ actual timed-policy CMS/LTA recovery remains S/V-owned and pending. Four
 S-owned layout/resource functions pass all28 exact assertions in P's test
 crate and count once. Accepted S824/753/63/8, overall1431/1038/76/317.
 Latest Rust1249 discovered/1241 passed/8ignored/0failed across99 reports.
+
+
+## C caller requests and independent L work
+
+C reports a local202/252 checkpoint; none is accepted before committed source,
+assertion review and the full gate. L extended the interface contract to
+PdfUpdate construction, field additions and standalone stamps: preflight is
+insufficient, and remaining budget/authentication/strictness must reach real
+reads. P received the consumer request. S received the forbidden-only key
+usage investigation/repair request and a reservation for L's minimal shared
+reader primitive and MAC factory getter. Receipts:
+round3-launch/c-interface-routing-20261113.json.
+
+L is reviewing P's external PdfFile::reopen proposal, adding independent
+central regressions before implementation. The snapshot model supports
+sequential state transfer; it does not promise a global budget across sibling
+operations. Independent CSC live integrations are being ported against the
+actual pinned Python CSC service, with isolated test dependencies and actual
+Rust PDF signing/trust verification. No helper, draft or oracle call adds an
+upstream pass before acceptance. No new Cargo gate has started yet.
