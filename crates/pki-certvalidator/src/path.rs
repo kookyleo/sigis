@@ -17,11 +17,8 @@ pub struct ValidationPath {
     qualified_policies: Option<Vec<QualifiedPolicy>>,
 }
 
-/// A certificate policy valid for the path, with the qualifiers the leaf
-/// certificate attaches to it (`QualifiedPolicy`).
-///
-/// Simplification: policy mapping is not traced back, so the user-domain
-/// and issuer-domain identifiers are both the valid policy of the leaf.
+/// A policy in the trust anchor's domain and the end-entity policy it maps
+/// to, with qualifiers gathered across the RFC 9618 graph (`QualifiedPolicy`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct QualifiedPolicy {
     /// `user_domain_policy_id`.

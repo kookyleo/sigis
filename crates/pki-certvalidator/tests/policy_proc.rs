@@ -363,3 +363,248 @@ fn test_merge_takes_the_stricter_policy_graph_limit() {
         assert_eq!(pa.merge(&pb).max_policy_graph_nodes, expected);
     }
 }
+
+// Supplemental trust-constraint regressions: an empty intersection must not
+// become the public empty-Vec wildcard convention during anchor combination.
+fn policy_input(name: &str) -> sigis_pki_certvalidator::Cert {
+    use std::fmt::Write;
+    let path = common::fixture(&["nist_pkits", "certs", name]);
+    let cert = sigis_pki_certvalidator::Cert::from_pem_or_der(
+        &std::fs::read(&path).expect("opened policy fixture"),
+    )
+    .expect("policy fixture certificate");
+    let mut hash = String::new();
+    for byte in cert.sha256() {
+        write!(&mut hash, "{byte:02x}").unwrap();
+    }
+    eprintln!("POLICY_INPUT path={} sha256={hash}", path.display());
+    cert
+}
+
+fn policy_verdict(
+    result: &Result<ValidationPath, Box<sigis_pki_certvalidator::PathFailure>>,
+) -> serde_json::Value {
+    match result {
+        Ok(path) => serde_json::json!({
+            "outcome": "accept",
+            "qualified_policies": path.qualified_policies().unwrap().iter().map(|p| {
+                assert!(p.qualifiers.is_empty());
+                serde_json::json!({
+                    "user_policy": p.user_domain_policy_id.to_string(),
+                    "issuer_policy": p.issuer_domain_policy_id.to_string(),
+                    "qualifiers_der_hex": []
+                })
+            }).collect::<Vec<_>>()
+        }),
+        Err(failure) => serde_json::json!({
+            "outcome": "reject",
+            "error_class": failure.error.class_name(),
+            "message": failure.error.to_string(),
+            "is_ee_cert": failure.is_ee_cert
+        }),
+    }
+}
+
+fn anchor_policy_case(
+    anchor_policies: &[const_oid::ObjectIdentifier],
+    caller_policies: &[const_oid::ObjectIdentifier],
+    anchor_explicit: bool,
+    caller_explicit: bool,
+) -> Result<ValidationPath, Box<sigis_pki_certvalidator::PathFailure>> {
+    let anchor = TrustAnchor::with_qualifiers(
+        policy_input("TrustAnchorRootCertificate.crt"),
+        TrustQualifiers {
+            standard_parameters: Some(PkixValidationParams {
+                user_initial_policy_set: anchor_policies.to_vec(),
+                initial_explicit_policy: anchor_explicit,
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    );
+    let ctx = ValidationContext::builder()
+        .trust_anchor(anchor)
+        .other_cert(policy_input("GoodCACert.crt"))
+        .moment(moment("2022-05-01T00:00:00Z"))
+        .revocation_mode("soft-fail")
+        .build()
+        .expect("policy context");
+    let mut paths =
+        build_paths(&ctx, &policy_input("ValidCertificatePathTest1EE.crt")).expect("policy paths");
+    assert_eq!(paths.len(), 1);
+    let path = paths.remove(0);
+    let result = sigis_pki_certvalidator::validate_path_qualified(
+        &ctx,
+        &path,
+        Some(&PkixValidationParams {
+            user_initial_policy_set: caller_policies.to_vec(),
+            initial_explicit_policy: caller_explicit,
+            ..Default::default()
+        }),
+    );
+    eprintln!(
+        "POLICY_INTERSECTION {}",
+        serde_json::json!({
+            "anchor_policies": anchor_policies.iter().map(ToString::to_string).collect::<Vec<_>>(),
+            "caller_policies": caller_policies.iter().map(ToString::to_string).collect::<Vec<_>>(),
+            "anchor_explicit": anchor_explicit,
+            "caller_explicit": caller_explicit,
+            "verdict": policy_verdict(&result)
+        })
+    );
+    result
+}
+
+const NIST_POLICY_ONE: const_oid::ObjectIdentifier =
+    const_oid::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.2.1.48.1");
+const NIST_POLICY_TWO: const_oid::ObjectIdentifier =
+    const_oid::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.2.1.48.2");
+
+#[test]
+fn disjoint_anchor_policy_intersection_retains_explicit_requirement() {
+    for (anchor, caller) in [
+        (NIST_POLICY_ONE, NIST_POLICY_TWO),
+        (NIST_POLICY_TWO, NIST_POLICY_ONE),
+    ] {
+        for (anchor_explicit, caller_explicit) in [(true, false), (false, true), (true, true)] {
+            let failure =
+                anchor_policy_case(&[anchor], &[caller], anchor_explicit, caller_explicit)
+                    .expect_err("disjoint mandatory policy sets must reject");
+            assert!(failure.error.is_path_validation_error(), "{failure:?}");
+            assert!(
+                failure
+                    .error
+                    .to_string()
+                    .contains("no valid set of policies"),
+                "{failure:?}"
+            );
+            assert!(failure.is_ee_cert);
+            let original = failure.path.expect("original failed path");
+            assert_eq!(original.pkix_len(), 2);
+            assert_eq!(
+                original.leaf().unwrap(),
+                &load_nist_cert("ValidCertificatePathTest1EE.crt")
+            );
+        }
+    }
+}
+
+#[test]
+fn disjoint_anchor_policy_intersection_without_explicit_requirement_is_empty() {
+    for (anchor, caller) in [
+        (NIST_POLICY_ONE, NIST_POLICY_TWO),
+        (NIST_POLICY_TWO, NIST_POLICY_ONE),
+    ] {
+        let path = anchor_policy_case(&[anchor], &[caller], false, false)
+            .expect("explicit policy is optional");
+        assert_eq!(path.qualified_policies(), Some([].as_slice()));
+    }
+}
+
+#[test]
+fn anchor_policy_intersection_preserves_wildcards_and_nonempty_overlap() {
+    let any = const_oid::db::rfc5280::ANY_POLICY;
+    for (anchor, caller) in [
+        (vec![NIST_POLICY_ONE], vec![NIST_POLICY_ONE]),
+        (vec![], vec![NIST_POLICY_ONE]),
+        (vec![NIST_POLICY_ONE], vec![]),
+        (vec![any], vec![NIST_POLICY_ONE]),
+        (vec![NIST_POLICY_ONE], vec![any]),
+        (
+            vec![NIST_POLICY_ONE, NIST_POLICY_TWO],
+            vec![NIST_POLICY_ONE],
+        ),
+        (
+            vec![NIST_POLICY_ONE],
+            vec![NIST_POLICY_ONE, NIST_POLICY_TWO],
+        ),
+    ] {
+        let path = anchor_policy_case(&anchor, &caller, true, true)
+            .expect("wildcard or overlapping mandatory policy");
+        let policies = path.qualified_policies().expect("qualified policy output");
+        assert_eq!(policies.len(), 1);
+        assert_eq!(policies[0].user_domain_policy_id, NIST_POLICY_ONE);
+        assert_eq!(policies[0].issuer_domain_policy_id, NIST_POLICY_ONE);
+    }
+}
+
+#[test]
+fn policy_graph_limit_enforces_transient_nodes_before_pruning() {
+    let ctx = ValidationContext::builder()
+        .trust_root(policy_input("TrustAnchorRootCertificate.crt"))
+        .other_cert(policy_input("PoliciesP123CACert.crt"))
+        .moment(moment("2022-05-01T00:00:00Z"))
+        .revocation_mode("soft-fail")
+        .build()
+        .expect("policy graph context");
+    let target = policy_input("PoliciesP123subCAP12Cert.crt");
+    let paths = build_paths(&ctx, &target).expect("policy graph path");
+    assert_eq!(paths.len(), 1);
+    let path = &paths[0];
+    assert_eq!(path.pkix_len(), 2);
+    for limit in [None, Some(6), Some(7), Some(8)] {
+        let result = sigis_pki_certvalidator::validate_path_qualified(
+            &ctx,
+            path,
+            Some(&PkixValidationParams {
+                max_policy_graph_nodes: limit,
+                ..Default::default()
+            }),
+        )
+        .expect("limit covers the transient six-node graph");
+        eprintln!(
+            "POLICY_LIMIT {}",
+            serde_json::json!({
+                "limit": limit,
+                "verdict": policy_verdict(&Ok(result.clone()))
+            })
+        );
+        let policies = result.qualified_policies().expect("qualified policies");
+        assert_eq!(policies.len(), 2);
+        assert!(policies
+            .iter()
+            .all(|p| p.user_domain_policy_id == p.issuer_domain_policy_id));
+        assert_eq!(
+            policies
+                .iter()
+                .map(|p| p.user_domain_policy_id)
+                .collect::<std::collections::BTreeSet<_>>(),
+            std::collections::BTreeSet::from([NIST_POLICY_ONE, NIST_POLICY_TWO])
+        );
+    }
+    for limit in (0..=5).rev() {
+        let failure = sigis_pki_certvalidator::validate_path_qualified(
+            &ctx,
+            path,
+            Some(&PkixValidationParams {
+                max_policy_graph_nodes: Some(limit),
+                ..Default::default()
+            }),
+        )
+        .expect_err("transient allocation must obey the node limit");
+        eprintln!(
+            "POLICY_LIMIT {}",
+            serde_json::json!({
+                "limit": limit,
+                "verdict": {
+                    "outcome": "reject",
+                    "error_class": failure.error.class_name(),
+                    "message": failure.error.to_string(),
+                    "is_ee_cert": failure.is_ee_cert
+                }
+            })
+        );
+        let who = if limit < 4 {
+            "intermediate certificate 1"
+        } else {
+            "the end-entity certificate"
+        };
+        assert_eq!(failure.error.to_string(), format!(
+            "The path could not be validated because policy processing for {who} exceeds the size limit on the policy graph"
+        ));
+        assert_eq!(failure.is_ee_cert, limit >= 4);
+        assert!(!failure.is_side_validation);
+        assert_eq!(failure.time_horizon, None);
+        assert_eq!(failure.path.as_ref(), Some(path));
+    }
+}

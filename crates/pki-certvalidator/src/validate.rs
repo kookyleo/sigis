@@ -13,8 +13,9 @@
 mod name_constraints;
 #[cfg(test)]
 mod name_constraints_tests;
+mod rfc9618;
 #[cfg(test)]
-mod policy_graph_tests;
+mod rfc9618_tests;
 
 use certval::{
     validate_path_rfc5280, CertFile, CertVector, CertificationPath, CertificationPathResults,
@@ -621,190 +622,6 @@ pub fn validate_path_qualified(
     Ok(p)
 }
 
-/// Decode `SEQUENCE OF PolicyQualifierInfo` leniently (the strict decoder
-/// rejects some PKITS user notices).
-fn decode_qualifiers(der: &[u8]) -> Vec<x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo> {
-    use der::Decode;
-    use sigis_pki_core::asn1::tlv::Tlv;
-    let Ok(seq) = Tlv::parse_exact(der) else {
-        return Vec::new();
-    };
-    seq.children()
-        .unwrap_or_default()
-        .iter()
-        .filter_map(|q| {
-            let parts = q.children().ok()?;
-            let id = const_oid::ObjectIdentifier::from_der(parts.first()?.raw).ok()?;
-            let qualifier = match parts.get(1) {
-                Some(t) => Some(der::Any::from_der(t.raw).ok()?),
-                None => None,
-            };
-            Some(x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo {
-                policy_qualifier_id: id,
-                qualifier,
-            })
-        })
-        .collect()
-}
-
-/// `user_constrained_policies` (RFC 5280 §6.1.5 (g) as replaced by RFC 9618
-/// §5.5), computed over certval's final policy graph. Edges are
-/// reconstructed from the expected policy sets: a node's parents are the
-/// nodes one level up that expect its policy, else the anyPolicy node.
-fn qualified_policies(
-    results: &CertificationPathResults,
-    params: Option<&PkixValidationParams>,
-) -> Vec<crate::path::QualifiedPolicy> {
-    use std::collections::{BTreeMap, BTreeSet};
-    use x509_cert::ext::pkix::certpolicy::PolicyQualifierInfo;
-    let any = const_oid::db::rfc5280::ANY_POLICY;
-    let Some(tree) = results.get_final_valid_policy_graph() else {
-        return Vec::new();
-    };
-    let n = tree.len().saturating_sub(1);
-    if tree.is_empty() {
-        return Vec::new();
-    }
-    // parents[d][i]: indices into tree[d - 1].
-    let mut parents: Vec<Vec<Vec<usize>>> = vec![Vec::new(); tree.len()];
-    for d in 1..tree.len() {
-        for node in &tree[d] {
-            let up = &tree[d - 1];
-            let mut ps: Vec<usize> = up
-                .iter()
-                .enumerate()
-                .filter(|(_, p)| {
-                    p.valid_policy != any && p.expected_policy_set.contains(&node.valid_policy)
-                })
-                .map(|(i, _)| i)
-                .collect();
-            if ps.is_empty() {
-                ps = up
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, p)| p.valid_policy == any)
-                    .map(|(i, _)| i)
-                    .collect();
-            }
-            parents[d].push(ps);
-        }
-    }
-    let ancestors = |d: usize, i: usize| -> Vec<(usize, usize)> {
-        let mut out = Vec::new();
-        let mut frontier = vec![(d, i)];
-        while let Some((dd, ii)) = frontier.pop() {
-            if dd == 0 {
-                continue;
-            }
-            for &p in &parents[dd][ii] {
-                if !out.contains(&(dd - 1, p)) {
-                    out.push((dd - 1, p));
-                    frontier.push((dd - 1, p));
-                }
-            }
-        }
-        out
-    };
-    let descendants = |d: usize, i: usize| -> Vec<(usize, usize)> {
-        let mut out = Vec::new();
-        let mut frontier = vec![(d, i)];
-        while let Some((dd, ii)) = frontier.pop() {
-            if dd + 1 >= tree.len() {
-                continue;
-            }
-            for (ci, ps) in parents[dd + 1].iter().enumerate() {
-                if ps.contains(&ii) && !out.contains(&(dd + 1, ci)) {
-                    out.push((dd + 1, ci));
-                    frontier.push((dd + 1, ci));
-                }
-            }
-        }
-        out
-    };
-    // Step (g)(2) and (3): nodes branching off anyPolicy, and a final anyPolicy.
-    let mut node_set = Vec::new();
-    for d in 1..=n {
-        for (i, node) in tree[d].iter().enumerate() {
-            if node.valid_policy == any || parents[d][i].len() != 1 {
-                continue;
-            }
-            if tree[d - 1][parents[d][i][0]].valid_policy == any {
-                node_set.push((d, i));
-            }
-        }
-    }
-    if let Some(i) = tree[n].iter().position(|x| x.valid_policy == any) {
-        node_set.push((n, i));
-    }
-    // Step (g)(4).
-    let mut quals: BTreeMap<const_oid::ObjectIdentifier, Vec<PolicyQualifierInfo>> =
-        BTreeMap::new();
-    let mut leaves: BTreeMap<const_oid::ObjectIdentifier, BTreeSet<const_oid::ObjectIdentifier>> =
-        BTreeMap::new();
-    for (d, i) in node_set {
-        let node = &tree[d][i];
-        let entry = quals.entry(node.valid_policy).or_default();
-        let mut relatives = vec![(d, i)];
-        relatives.extend(ancestors(d, i));
-        let desc = descendants(d, i);
-        relatives.extend(desc.iter().copied());
-        for (rd, ri) in relatives {
-            for q in tree[rd][ri]
-                .qualifier_set
-                .as_deref()
-                .map(decode_qualifiers)
-                .unwrap_or_default()
-            {
-                if !entry.contains(&q) {
-                    entry.push(q);
-                }
-            }
-        }
-        let l = leaves.entry(node.valid_policy).or_default();
-        if d == n {
-            l.insert(node.valid_policy);
-        }
-        for (dd, di) in desc {
-            if dd == n {
-                l.insert(tree[dd][di].valid_policy);
-            }
-        }
-    }
-    let qualified = |p: &const_oid::ObjectIdentifier| -> Vec<crate::path::QualifiedPolicy> {
-        leaves[p]
-            .iter()
-            .map(|issuer| crate::path::QualifiedPolicy {
-                user_domain_policy_id: *p,
-                issuer_domain_policy_id: *issuer,
-                qualifiers: quals[p].clone(),
-            })
-            .collect()
-    };
-    let user_set: Vec<const_oid::ObjectIdentifier> = params
-        .map(|p| p.user_initial_policy_set.clone())
-        .filter(|v: &Vec<_>| !v.is_empty())
-        .unwrap_or_else(|| vec![any]);
-    if user_set.contains(&any) {
-        return leaves.keys().flat_map(&qualified).collect();
-    }
-    let mut out: Vec<crate::path::QualifiedPolicy> = leaves
-        .keys()
-        .filter(|p| user_set.contains(p))
-        .flat_map(&qualified)
-        .collect();
-    if leaves.contains_key(&any) {
-        let accounted: Vec<_> = out.iter().map(|q| q.user_domain_policy_id).collect();
-        for p in user_set.iter().filter(|p| !accounted.contains(p)) {
-            out.push(crate::path::QualifiedPolicy {
-                user_domain_policy_id: *p,
-                issuer_domain_policy_id: *p,
-                qualifiers: quals[&any].clone(),
-            });
-        }
-    }
-    out
-}
-
 fn validate_path_in_stack(
     ctx: &ValidationContext,
     path: &ValidationPath,
@@ -871,6 +688,22 @@ fn validate_path_in_stack(
     // Permitted subtrees must be intersected: certval gets one list, and
     // every further list is checked by another certval run below.
     let anchor_params = anchor.qualifiers().standard_parameters.as_ref();
+    // Empty Vec is the public wildcard convention. Preserve the distinction
+    // when two non-wildcard inputs have an empty intersection: serializing
+    // that intersection back through Vec must never relax either input.
+    let empty_policy_intersection = match (params, anchor_params) {
+        (Some(caller), Some(anchor)) => {
+            let a = &caller.user_initial_policy_set;
+            let b = &anchor.user_initial_policy_set;
+            let any = const_oid::db::rfc5280::ANY_POLICY;
+            !a.is_empty()
+                && !b.is_empty()
+                && !a.contains(&any)
+                && !b.contains(&any)
+                && !a.iter().any(|oid| b.contains(oid))
+        }
+        _ => false,
+    };
     let mut permitted_sets: Vec<Vec<x509_cert::ext::pkix::constraints::name::GeneralSubtree>> =
         params
             .and_then(|p| p.initial_permitted_subtrees.clone())
@@ -996,19 +829,9 @@ fn validate_path_in_stack(
         Err(e) => return Err(fail(cv_err("The path could not be validated", e))),
     }
 
-    // `max_policy_graph_nodes`, checked on the final graph.
-    if let Some(limit) = params.and_then(|p| p.max_policy_graph_nodes) {
-        let nodes: usize = results
-            .get_final_valid_policy_graph()
-            .map(|g| g.iter().map(Vec::len).sum())
-            .unwrap_or(0);
-        if nodes > limit {
-            return Err(fail(ValidationError::PathValidation(format!(
-                "The path could not be validated because policy processing for {} exceeds the size limit on the policy graph",
-                path.describe(total - 1, total)
-            ))));
-        }
-    }
+    // Native edges and transient node limits cannot be recovered from final
+    // certval rows. Its complete validation above remains mandatory.
+    let qualified = rfc9618::process_path(path, params, empty_policy_intersection)?;
 
     // Algorithm usage policy on every certificate signature in the path.
     for (index, (cert, issuer)) in issued.iter().enumerate() {
@@ -1042,7 +865,7 @@ fn validate_path_in_stack(
     let mut stack = outer.to_vec();
     stack.push(path.leaf().unwrap_or(anchor.cert()).clone());
     revinfo::check_path_revocation_detailed(ctx, path, &stack)?;
-    Ok(qualified_policies(&results, params))
+    Ok(qualified)
 }
 
 /// Validates one certificate against a [`ValidationContext`]
