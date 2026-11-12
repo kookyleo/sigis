@@ -213,8 +213,8 @@ pub struct EmbeddedSignature {
     pub kind: SignatureKind,
     /// `/SubFilter`.
     pub sub_filter: Option<String>,
-    /// `/ByteRange` as four integers.
-    pub byte_range: [u64; 4],
+    /// `/ByteRange` as flattened offset-length pairs.
+    pub byte_range: Vec<u64>,
     /// `/Contents` with trailing padding removed (DER CMS).
     pub contents: Vec<u8>,
     /// Revision in which the signature was added.
@@ -262,35 +262,71 @@ impl EmbeddedSignature {
     }
 }
 
-/// The data covered by a byte range.
-pub fn byte_range_data(bytes: &[u8], br: &[u64; 4]) -> PdfResult<Vec<u8>> {
-    let mut out = Vec::new();
-    for pair in br.as_chunks::<2>().0 {
-        let (start, len) = (pair[0], pair[1]);
-        let end = start
-            .checked_add(len)
+/// The data covered by complete `(offset, length)` pairs, in their given order.
+///
+/// Every range must fit within `bytes`. The concatenated output is limited to
+/// the input length, including repeated or overlapping ranges, to prevent
+/// attacker-controlled ranges from amplifying the allocation. This is a
+/// stricter resource bound than pyHanko's streaming digest helper.
+pub fn byte_range_data(bytes: &[u8], br: &[u64]) -> PdfResult<Vec<u8>> {
+    let (pairs, remainder) = br.as_chunks::<2>();
+    if !remainder.is_empty() {
+        return Err(PdfError::read(
+            "Byte range must contain complete offset-length pairs",
+        ));
+    }
+    let input_len = u64::try_from(bytes.len())
+        .map_err(|_| PdfError::read("Input length exceeds byte range representation"))?;
+    let mut total_len = 0usize;
+    // Validate every pair and the complete output size before allocating or
+    // copying any data. In particular, a bad later pair cannot be ignored.
+    for pair in pairs {
+        let end = pair[0]
+            .checked_add(pair[1])
             .ok_or_else(|| PdfError::read("Byte range overflows"))?;
-        if end > bytes.len() as u64 {
+        if end > input_len {
             return Err(PdfError::read(
                 "Byte range extends beyond the end of the file",
             ));
         }
-        out.extend_from_slice(&bytes[start as usize..end as usize]);
+        let length =
+            usize::try_from(pair[1]).map_err(|_| PdfError::read("Byte range overflows"))?;
+        total_len = total_len
+            .checked_add(length)
+            .ok_or_else(|| PdfError::read("Total byte range length overflows"))?;
+        if total_len > bytes.len() {
+            return Err(PdfError::read(
+                "Total byte range length exceeds input file length",
+            ));
+        }
+    }
+    let mut out = Vec::new();
+    out.try_reserve_exact(total_len)
+        .map_err(|_| PdfError::read("Could not allocate byte range buffer"))?;
+    for pair in pairs {
+        // The preflight proves these conversions and the slice bounds fit.
+        let start = pair[0] as usize;
+        let end = (pair[0] + pair[1]) as usize;
+        out.extend_from_slice(&bytes[start..end]);
     }
     Ok(out)
 }
 
-fn parse_byte_range(o: &Object) -> PdfResult<[u64; 4]> {
+fn parse_byte_range(o: &Object) -> PdfResult<Vec<u64>> {
     let Object::Array(a) = o else {
         return Err(PdfError::read("/ByteRange must be an array"));
     };
-    if a.len() != 4 {
-        return Err(PdfError::read("/ByteRange must have four entries"));
+    if !a.len().is_multiple_of(2) {
+        return Err(PdfError::read(
+            "/ByteRange must contain complete offset-length pairs",
+        ));
     }
-    let mut out = [0u64; 4];
-    for (slot, v) in out.iter_mut().zip(a) {
-        match v {
-            Object::Integer(i) if *i >= 0 => *slot = *i as u64,
+    let mut out = Vec::new();
+    out.try_reserve_exact(a.len())
+        .map_err(|_| PdfError::read("Could not allocate /ByteRange entries"))?;
+    for value in a {
+        match value {
+            Object::Integer(i) if *i >= 0 => out.push(*i as u64),
             _ => {
                 return Err(PdfError::read(
                     "/ByteRange entries must be nonnegative integers",
@@ -483,5 +519,187 @@ pub fn text_of(o: &Object) -> Option<String> {
     match o {
         Object::String(s, _) => decode_text(s),
         _ => None,
+    }
+}
+
+// Supplemental structural regressions for the approved variable ByteRange API.
+// No coverage or trusted-validation verdict follows from extracting these bytes.
+#[cfg(test)]
+mod byte_range_regressions {
+    use super::*;
+
+    fn range_object(values: &[i64]) -> Object {
+        Object::Array(values.iter().copied().map(Object::Integer).collect())
+    }
+
+    fn sha256_hex(bytes: &[u8]) -> String {
+        sigis_pki_core::algorithms::DigestAlgorithm::Sha256
+            .digest(bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
+    }
+
+    fn assert_read_error<T: std::fmt::Debug>(result: PdfResult<T>, message: &str) {
+        let error = result.expect_err("malformed byte range must reject");
+        assert!(matches!(error, PdfError::Read(_)), "{error:?}");
+        assert!(error.message().contains(message), "{error:?}");
+    }
+
+    #[test]
+    fn variable_byte_range_parser_retains_every_complete_pair() {
+        for expected in [
+            vec![],
+            vec![0, 3],
+            vec![0, 2, 4, 2],
+            vec![6, 2, 2, 2, 0, 1],
+            vec![i64::MAX, 0],
+        ] {
+            let actual = parse_byte_range(&range_object(&expected)).unwrap();
+            assert_eq!(
+                actual.to_vec(),
+                expected
+                    .iter()
+                    .map(|value| *value as u64)
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_data_preserves_pair_order_overlap_and_zero_lengths() {
+        let bytes = b"abcdefghijkl";
+        let cases: &[(&[u64], &[u8])] = &[
+            (&[], b""),
+            (&[0, 3], b"abc"),
+            (&[0, 2, 4, 2], b"abef"),
+            (&[6, 2, 2, 2, 0, 1], b"ghcda"),
+            (&[0, 2, 0, 2], b"abab"),
+            (&[12, 0, 0, 1], b"a"),
+            (&[0, 0, 12, 0], b""),
+        ];
+        for (range, expected) in cases {
+            assert_eq!(byte_range_data(bytes, range).unwrap(), *expected);
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_rejects_incomplete_pairs_before_returning_data() {
+        for range in [&[0][..], &[0, 1, 4][..], &[0, 1, 4, 1, 6][..]] {
+            assert_read_error(
+                byte_range_data(b"abcdefghijkl", range),
+                "complete offset-length pairs",
+            );
+            let object = range_object(&range.iter().map(|value| *value as i64).collect::<Vec<_>>());
+            assert_read_error(parse_byte_range(&object), "complete offset-length pairs");
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_parser_rejects_noninteger_and_negative_entries() {
+        assert_read_error(
+            parse_byte_range(&Object::Integer(0)),
+            "/ByteRange must be an array",
+        );
+        for invalid in [
+            Object::Integer(-1),
+            Object::Real(1.0),
+            Object::Boolean(false),
+            Object::Null,
+            Object::Name(b"Offset".to_vec()),
+            Object::String(b"1".to_vec(), lopdf::StringFormat::Literal),
+            Object::Reference((1, 0)),
+        ] {
+            for position in [0, 1, 3, 5] {
+                let mut values = vec![Object::Integer(0); 6];
+                values[position] = invalid.clone();
+                assert_read_error(
+                    parse_byte_range(&Object::Array(values)),
+                    "entries must be nonnegative integers",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_checks_all_bounds_and_integer_overflow() {
+        let bytes = b"abcdefghijkl";
+        for range in [
+            &[0, 13][..],
+            &[12, 1][..],
+            &[13, 0][..],
+            &[0, 1, 13, 0][..],
+            &[0, 1, 1, 1, 12, 1][..],
+            &[u64::MAX, 0][..],
+        ] {
+            assert_read_error(
+                byte_range_data(bytes, range),
+                "extends beyond the end of the file",
+            );
+        }
+        for range in [
+            &[u64::MAX, 1][..],
+            &[1, u64::MAX][..],
+            &[0, 1, u64::MAX, 1][..],
+        ] {
+            assert_read_error(byte_range_data(bytes, range), "Byte range overflows");
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_bounds_total_allocation_for_repeated_ranges() {
+        let bytes = [0x5a; 32];
+        let at_limit = [0, 1].repeat(bytes.len());
+        assert_eq!(byte_range_data(&bytes, &at_limit).unwrap(), bytes);
+        for range in [vec![0, 32, 0, 32], [0, 1].repeat(bytes.len() + 1)] {
+            assert_read_error(
+                byte_range_data(&bytes, &range),
+                "Total byte range length exceeds input file length",
+            );
+        }
+    }
+
+    #[test]
+    fn variable_byte_range_preserves_real_nonstandard_fixture_cardinality() {
+        let cases: &[(&[u8], &[u64])] = &[
+            (
+                include_bytes!(
+                    "../../testdata/data/pyhanko/pdf/coverage-anomalies/one-byterange.pdf"
+                ),
+                &[0, 690],
+            ),
+            (
+                include_bytes!(
+                    "../../testdata/data/pyhanko/pdf/coverage-anomalies/weird-byterange.pdf"
+                ),
+                &[0, 10, 20, 30],
+            ),
+        ];
+        for (bytes, expected) in cases {
+            let file = PdfFile::parse(bytes).unwrap();
+            let signatures = file.embedded_signatures_pdf().unwrap();
+            assert_eq!(signatures.len(), 1);
+            let signature = &signatures[0];
+            assert_eq!(signature.byte_range.as_slice(), *expected);
+            let signed = signature.signed_data(&file).unwrap();
+            let exact_data: Vec<u8> = expected
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .flat_map(|pair| {
+                    bytes[pair[0] as usize..(pair[0] + pair[1]) as usize]
+                        .iter()
+                        .copied()
+                })
+                .collect();
+            assert_eq!(signed, exact_data);
+            eprintln!(
+                "BYTE_RANGE_FIXTURE input_sha256={} signed_sha256={} signed_len={} range={:?}",
+                sha256_hex(bytes),
+                sha256_hex(&signed),
+                signed.len(),
+                signature.byte_range
+            );
+        }
     }
 }

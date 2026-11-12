@@ -345,3 +345,16 @@ L selected only this source delta and its28 helper regressions after
 main045decd. Accepted S824/754/63/7 and overall1431/1052/66/313 remain
 unchanged after its complete workspace gate passed on mainc4158bd. No old caller
 regression or historical local pass proposal is imported.
+
+
+## Bounded variable ByteRange increment (lead gate pending)
+
+L selected20e0bc7 source/tests after independent review. Vec/slice parsing
+preserves complete pairs; checked bounds, arithmetic and capped fallible
+allocation prevent truncation and repeated-range amplification. Seven new
+native regressions passed in S, with the complete PDF435pass/2oldignore,
+coverage3 and root signer4 regressions. Fresh36-call oracle evidence and
+exact fixture input/output hashes are in s-byte-range-report.md. No complete
+S anomaly/tamper function pass is claimed from extraction alone. Current
+accepted S824/754/63/7 and overall1431/1052/66/313 stay unchanged until
+the lead gate; native helper credit remains zero upstream functions.

@@ -22,7 +22,7 @@ fn signed_twice_signatures_and_revisions() {
     for s in &sigs {
         assert_eq!(s.kind, SignatureKind::Signature);
         let signed = s.signed_data(&f).unwrap();
-        let br = s.byte_range;
+        let br = &s.byte_range;
         assert_eq!(signed.len() as u64, br[1] + br[3]);
         // the gap holds exactly the hex-encoded /Contents
         assert_eq!(data[br[1] as usize], b'<');

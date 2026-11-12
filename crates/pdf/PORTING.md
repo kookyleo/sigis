@@ -199,3 +199,16 @@ differences; they do not establish a universal fail-closed guarantee:
   cannot occur; an empty certificate list yields a file nobody can open.
 - Producer string: `sigis-hanko <version>` instead of `pyHanko <version>`;
   modification dates are written in UTC (pyHanko: local time zone).
+
+
+## Round 3 bounded variable ByteRange interface
+
+L-approved EmbeddedSignature.byte_range now preserves Vec<u64> pairs and
+byte_range_data accepts &[u64]. Seven tests-first native regressions protect
+complete cardinality/order, all malformed entries, bounds/overflow and bounded
+output allocation. The actual one-range fixture stays two entries. No coverage
+or trusting verdict follows from structural extraction; complete validator
+callers remain central L/V work. Exact commands, native435pass/2existingignore,
+new7pass and fresh pinned36-call evidence are in
+[the S report](../../docs/lanes/round3/s-byte-range-report.md). This adds zero
+unique upstream functions.
