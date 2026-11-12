@@ -66,7 +66,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | `tests/xref.rs` | 60 | 59 | 1 | 0 |
-| `test_internal_utils.py` | `tests/internal_utils.rs` | 127 | 111 | 16 | 0 |
+| `test_internal_utils.py` | `tests/internal_utils.rs`, `generic::pdf_string` doctests | 127 | 113 | 14 | 0 |
 | `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 26 | 0 | 3 |
 | `test_content_stream_parser.py` | `tests/content_stream_parser.rs` | 8 | 8 | 0 | 0 |
 | `test_embed.py` | `tests/embed.rs` | 9 | 9 | 0 | 0 |
@@ -84,11 +84,19 @@ Skipped tests:
   Rust counterpart (dunder methods, hashing, runtime type guards, enum
   helpers): `test_bool_dunders`, `test_ordered_enum`, `test_version_enum`,
   `test_name_encode_fail` (names never carry the slash in Rust),
-  `test_pdfstring_typing`, `test_text_string_no_bytes_available` (strings
+  `test_text_string_no_bytes_available` (strings
   always keep their bytes), `test_stream_pathological_encode_decode`
   (streams always have data), `test_dictionary_setvalue_guard`,
   `test_all_nulls_same_hash`, `test_unbound_reference`,
-  `test_assign_non_name_to_dict`, `test_operator_literal_hash`.
+  `test_operator_literal_hash`.
+
+Two former runtime-type skips now have exact Rust compile-time rejection
+assertions in `generic::pdf_string` documentation: `test_pdfstring_typing`
+rejects integer `-1`, and `test_assign_non_name_to_dict` rejects dictionary
+key `10`. A third doctest verifies legal string input and a legal name key.
+All three passed in `tools/cargo-locked.sh test -p sigis-pdf --doc` after
+the scheduler update. These cover two unique upstream functions, not three.
+The revised crate accounting is **406 / 386 passed / 15 skipped / 5 pending**.
 
 - `test_xref.py::test_trailer_refs`: exercises `container_ref` /
   `TrailerReference`, internals of pyHanko's mutable object model that have no

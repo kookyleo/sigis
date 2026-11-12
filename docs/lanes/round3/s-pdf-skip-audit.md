@@ -2,8 +2,9 @@
 
 Baseline: pyHanko 0.38.1, `test_internal_utils.py` and `test_xref.py`.
 This is an assertion audit, not a claim of newly passing functions.
-All 17 inherited PDF skips remain skipped until the listed assertions
-are exercised through substantive Rust tests. Four belong to P-owned APIs.
+This inventory retains all 17 inherited PDF skip IDs. Two compile-time
+guards now pass substantive Rust doctests; the remaining 15 stay skipped.
+Four belong to P-owned APIs.
 
 | Upstream function | Exact assertion or remaining feature gap |
 | --- | --- |
@@ -15,13 +16,13 @@ are exercised through substantive Rust tests. Four belong to P-owned APIs.
 | `test_ordered_enum` | Gap: generic Python `OrderedEnum` helper is absent. A test-only Rust enum would merely test the Rust language and cannot establish a port of this public helper. |
 | `test_version_enum` | Gap: generic version ordering with a future/unknown version greater than all known versions is absent. Requires all strict/non-strict, equal-future and reverse comparisons. |
 | `test_name_encode_fail` | Compatibility gap: upstream rejects serializing a name created without a leading slash, matching `Could not serialise name object`. Rust stores the payload without a slash and cannot preserve this invalid construction state. |
-| `test_pdfstring_typing` | Upstream rejects integer `-1` at runtime. Rust's byte-slice input excludes this at compilation, but no exact compile-failure assertion has yet been added. Remains skipped. |
+| `test_pdfstring_typing` | Passed: `generic::pdf_string(-1)` is a verified compile-failure doctest. The companion positive control accepts `b"text"`. Rust rejects this input at compilation instead of raising the upstream runtime TypeError. |
 | `test_text_string_no_bytes_available` | Compatibility gap: upstream raises `No information` for original bytes of newly constructed text. Rust retains bytes in every string; the missing-original-bytes state is absent. |
 | `test_stream_pathological_encode_decode` | Compatibility gap: upstream permits a stream with neither encoded nor decoded data and rejects both accessors with `No data`. Rust stream content is always a vector, including valid empty content. |
 | `test_dictionary_setvalue_guard` | Compatibility gap: upstream rejects raw integer values for assignment and `setdefault` because values must be `PdfObject`. `lopdf::Dictionary::set` accepts convertible values, so its convenience API intentionally differs. |
 | `test_all_nulls_same_hash` | Gap: upstream requires separately created null objects to have equal hashes. The chosen `lopdf::Object` does not expose a corresponding public hashing contract. Equality alone is not this assertion. |
 | `test_unbound_reference` | Compatibility gap: an unbound Python reference resolves to null. Rust object IDs require a handler for resolution and do not expose an unbound reference resolver. |
-| `test_assign_non_name_to_dict` | Upstream rejects integer dictionary key `10`. Rust byte-string keys reject integers at compilation; no exact compile-failure assertion has yet been added. Remains skipped. |
+| `test_assign_non_name_to_dict` | Passed: the verified compile-failure doctest calls `Dictionary::set(10, Object::Null)`. The companion positive control accepts name key `A`. Rust rejects the integer key at compilation instead of raising the upstream runtime ValueError. |
 | `test_operator_literal_hash` | Gap: upstream distinguishes the hash of text `aaa` from an operator literal `aaa`. Rust separates operators and objects without an equivalent shared hashing interface. |
 | `test_trailer_refs` | Gap: upstream `/Root` reference retains a `TrailerReference` container and `update_container` updates its trailer. Rust uses explicit writer mutation and has no container-reference API; updating a catalog is not the same assertion. |
 

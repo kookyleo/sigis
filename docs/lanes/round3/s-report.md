@@ -59,7 +59,7 @@ complete assertions pass. No unverified candidate earns a new pass.
 
 ### Implemented candidates and exact obligations
 
-- Fetcher increment `f3d0f9b`: lazy transport closes/recreates a session;
+- Fetcher increment `a32a69a` (previously `f3d0f9b`): lazy transport closes/recreates a session;
   four lifecycle assertions and an invalid-auth compile-failure assertion.
   Accepted counts remain 56/38/18/0; five candidate functions require Rust
   checks. The 13 remaining gaps are explicit in the crate PORTING file.
@@ -69,12 +69,14 @@ complete assertions pass. No unverified candidate earns a new pass.
   25 other graph operations and two deprecated APIs remain gaps. The
   zero-length final graph now reports anyPolicy. Only the six predicates
   can become new passes after successful Rust verification.
-- CMS: real signer tests cover four key/digest-selection cases, weak MD5
-  rejection, and fixed-mechanism SHA256 success versus SHA512 conflict.
+- CMS: the checked-in signer test covers four key/digest-selection cases.
+  The earlier tool-timeout attempts to add weak MD5 rejection and the
+  fixed-mechanism SHA256/SHA512 conflict assertions did not write those
+  tests. They are implementation obligations, not implemented candidates.
   No new pass is claimed. `test_direct_pdfcmsembedder_usage` still lacks
   exact low-level, in-place, DocMDP and DSS count assertions. The historical
-  overspecified-digest pass lacked the signer refusal; its new test is
-  pending verification. Full Adobe AC revinfo acceptance still needs V's
+  overspecified-digest pass lacked the signer refusal; its complete test
+  must still be added. Full Adobe AC revinfo acceptance still needs V's
   complete AdES-LTA caller.
 - PDF: two compile-failure guards plus valid-input controls in
   `generic::pdf_string` express integer rejection for string input and
@@ -105,7 +107,7 @@ audit files. Existing EUTL/core passes were not reverified in this increment.
 - No trust-verdict or universal fail-closed claim follows from the new
   encoding/type/model audit. Keep all adversarial rejection controls.
 
-### Tool and verification limitations
+### Historical tool and verification limitations
 
 Tiny commands repeatedly waited hundreds to thousands of seconds outside
 the shell, and multiple tool hosts timed out/reset, losing session handles.
@@ -115,7 +117,7 @@ tool, service or other session was modified. Exact owned commands still
 waiting without compilation are cancelled after cwd/argv/log verification,
 so this checkpoint does not intentionally leave background builds.
 
-Required follow-up checks, serialized through the existing wrapper:
+Required follow-up checks through the existing wrapper:
 
 ```sh
 tools/cargo-locked.sh check -p sigis-pki-certvalidator
@@ -128,7 +130,128 @@ HANKO_ORACLE=/tmp/pyhanko-oracle/venv/bin/python tools/cargo-locked.sh test -p s
 tools/cargo-locked.sh test -p sigis-pdf --doc
 ```
 
-L must also inspect whether wrapper/slot-lock lifetime accounts for the
-observed multiple long-lived Cargo processes. This is a diagnostic request,
-not a proven concurrency bug. All integration, merged lockfile generation,
-workspace gate and final acceptance remain L-owned.
+### Scheduling recovery after db8a75c
+
+Main `db8a75c` is included. Existing owned commits were preserved as
+`a32a69a` (fetchers), `ab6c02f` (CMS), `272c54e` (PKI) and `4eef17d`
+(PDF guards/report). The resumed worktree was clean.
+
+All new Cargo commands use the updated `tools/cargo-locked.sh` and retain
+the configured compiler cache. System rust-slots owns placement, per-host
+serialization and job caps. No forced local mode, repository flock,
+manual job flags or empty `RUSTC_WRAPPER` is added. Existing builds remain
+unchanged; the historical cancellation procedures above do not apply to
+this resumed run. Scheduling repair itself changes no function count.
+
+The next necessary targeted check is `tools/cargo-locked.sh check -p
+sigis-pdf`; its complete output is captured in `resume-pdf-check.log`.
+Host/slot evidence and actual check results will be added after completion.
+The six PDF/CMS pending integration APIs and P/V assertion requests above
+remain active. All integration, merged lockfile generation, workspace gate
+and final acceptance remain L-owned.
+
+### Resumed host/slot evidence and V interface increment
+
+The necessary PDF check launched from the default login shell reports:
+
+```text
+/usr/local/lib/rust-slots/bin/cargo
+rust-remote: vm2065 slot0  /home/l/D/kooky/sigis-wt/r3-s
+```
+
+Command: `tools/cargo-locked.sh check -p sigis-pdf`; output:
+`slots-pdf-check.log`; result is pending. The previously submitted
+`resume-pdf-check.log` came from a non-login shell whose PATH resolved the
+Rustup Cargo shim, rather than rust-slots. It yielded a build-directory
+lock wait and is not host/slot evidence. That existing invocation remains
+unchanged. All resumed invocations now retain the default login environment;
+no empty compiler-wrapper or scheduling-variable export is introduced.
+
+V requested context-preserving historical validation. S implemented the
+minimal additive `ValidationContext::with_timing(ValidationTimingParams)`
+and `with_fetchers(Fetchers)` methods in the owned context module. They
+clone the existing context and replace only the named field. New unit
+assertions were written before the methods and verify nondefault timing,
+revocation and AC target restrictions, trust material, policy/freshness
+handle identity, all three fetcher identities and source immutability.
+This is an API increment for L review and routing to V; no module export
+or shared core type changed. Rust verification remains pending. These
+regressions earn no additional assigned upstream function pass.
+
+## Verified scheduling recovery increment
+
+Actual completed checks supersede the earlier pending statements above:
+
+| Check | Scheduler evidence | Result |
+| --- | --- | --- |
+| `tools/cargo-locked.sh check -p sigis-pdf` | automatic `vm2065 slot0` | passed, 24.79s |
+| `tools/cargo-locked.sh test -p sigis-pdf --doc` | default login environment, wrapper retained | three doctests passed, zero ignored |
+| `tools/cargo-locked.sh check -p sigis-pki-fetch` | automatic `vm2064 slot2` | passed, 19.74s |
+
+Logs: `slots-pdf-check.log`, `slots-pdf-doc.log`,
+`pki-fetch-resume-check.log` under the S artifact directory. The scheduling
+fix itself earns no functions; the two newly executed PDF rejection guards
+satisfy two formerly skipped functions:
+
+| Upstream ID | Rust assertion | Parameters |
+| --- | --- | --- |
+| `pyhanko/test_internal_utils.py::test_pdfstring_typing` | `generic::pdf_string` compile-failure doctest | integer -1 rejected; legal byte-string positive control |
+| `pyhanko/test_internal_utils.py::test_assign_non_name_to_dict` | `generic::pdf_string` dictionary-key compile-failure doctest | integer 10 rejected; legal name-key positive control |
+
+The three Rust doctests represent **two** unique upstream functions. No
+oracle/provider early return exists in these assertions. The Rust rejection
+occurs at compilation; this is an explicit runtime-model compatibility
+adaptation, not a universal trust-verdict claim.
+
+### Current reviewed unique-function accounting
+
+| Crate | Total | Passed | Skipped | Pending |
+| --- | ---: | ---: | ---: | ---: |
+| sigis-cms | 78 | 73 | 2 | 3 |
+| sigis-eutl | 53 | 53 | 0 | 0 |
+| sigis-pdf | 406 | 386 | 15 | 5 |
+| sigis-pdf-diff | 94 | 92 | 2 | 0 |
+| sigis-pki-certvalidator | 133 | 92 | 41 | 0 |
+| sigis-pki-core | 4 | 4 | 0 | 0 |
+| sigis-pki-fetch | 56 | 38 | 18 | 0 |
+| **Total** | **824** | **738** | **78** | **8** |
+
+These remain lane-report counts pending L acceptance. Fetcher check alone
+does not prove the lifecycle or credential tests; those counts stay at the
+baseline. PKI's first resumed check exposed an error conversion mismatch;
+the caller now maps the normalized-name failure through the existing
+validation error constructor. A separate policy-test qualifier needed
+`Some(Any)`. Both source fixes are present, but their follow-up check,
+unit and policy suites have not yet run. Existing formatting processes
+are preserved unchanged, and no duplicate recovery build is started.
+
+CMS `signing_parity.rs` is now confirmed at 109 lines, with both new
+candidate tests present exactly once. The strict MD5 assertion requires
+`HankoError::Signing` and `md5 is not allowed`; any other refusal does not
+satisfy the upstream assertion. The overspecified-mechanism positive case
+still needs full cryptographic verification, so it remains pending.
+A targeted CMS suite is submitted through the updated wrapper; no result
+has yet been accepted. The P-owned MD5 policy-order concern will be routed
+as an observed failure only after this suite returns.
+
+### Runtime and P-owned skip audit artifacts
+
+`runtime-skip-audit.md` is confirmed written: the 54 occurrences split
+into 38 lexical false positives, nine conditional oracle locations across
+three tests, six static inherited-gap locations across five IDs, and one
+ignored diagnostic. These are source-location counts, not extra functions.
+No new runtime oracle execution is inferred from tool availability.
+
+`p-owned-skip-audit.md` is confirmed written as a requirements audit;
+all 13 functions retain P ownership and no new pass credit. Fresh pinned
+source review corrects three provisional descriptions: multivalued signer
+attributes require rejection of duplicate SignerAttributesV2 values with
+`Expected single` (both AC-context parameters); delayed signing without
+prevalidation and with validation information requires an explicit
+missing-certificate refusal; detached eContent is a validator rejection
+of `pdf-sig-with-econtent.pdf`, not merely a signer-input guard. Exact
+current-P test equivalence and provider exclusions remain to be verified.
+
+Current source increments, formatting/test processes and uncommitted
+Cargo.lock are preserved. This is not a ready milestone; L still owns the
+merged lockfile, integration gates and acceptance.
