@@ -116,3 +116,24 @@ and DSS handling, which are later phases.
   original bytes.
 - PEM input is parsed leniently, as asn1crypto does (first `CERTIFICATE`
   block, any line length).
+
+## Round 3 S skip audit (Rust verification pending)
+
+The immutable assigned baseline remains **133 / 92 / 41 / 0**
+(total / passed / skipped / pending). See [ROUND3-S-AUDIT.md](ROUND3-S-AUDIT.md)
+for every inherited skip, exact assertions, parameters and remaining gaps.
+
+Six new production name-predicate tests preserve all 54 upstream cases.
+They are candidates only: shared build-lock waits and tool host failures
+prevented Rust verification, so no upstream pass count is increased.
+Eight synthetic policy-result adapter tests preserve output assertions and
+expose the zero-length graph guard bug, but bypass upstream graph mutation
+setup. All 33 graph functions therefore remain skipped, eight with partial
+coverage. The two deprecated registry entrypoints remain explicit gaps.
+No new provider-dependent early return was added.
+
+Fresh pinned Python oracle evidence: 54 name test parameter invocations
+and eight user-constrained policy test invocations passed. Oracle calls
+are separate from Rust tests and upstream function counts. Build logs and
+reproducible commands are in the lane artifact handoff. Formatting and
+Rust unit/integration checks are required before acceptance.

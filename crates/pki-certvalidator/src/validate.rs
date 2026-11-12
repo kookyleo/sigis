@@ -10,6 +10,12 @@
 //! the algorithm usage policy, and offline revocation checking under the
 //! configured revocation and freshness policies.
 
+mod name_constraints;
+#[cfg(test)]
+mod name_constraints_tests;
+#[cfg(test)]
+mod policy_graph_tests;
+
 use certval::{
     validate_path_rfc5280, CertFile, CertVector, CertificationPath, CertificationPathResults,
     CertificationPathSettings, ExtensionProcessing, ObjectIdentifierSet, PDVCertificate,
@@ -71,41 +77,10 @@ fn settings(
 fn excluded_by_normalized_names(
     issued: &[(&Cert, &Cert)],
     excluded: &[x509_cert::ext::pkix::constraints::name::GeneralSubtree],
-) -> Option<usize> {
+) -> Result<Option<usize>, ValidationError> {
     use x509_cert::ext::pkix::name::GeneralName as G;
     use x509_cert::ext::pkix::SubjectAltName;
-    fn norm(s: &str) -> String {
-        s.trim_end_matches('.').to_ascii_lowercase()
-    }
-    fn domain_match(base: &str, host: &str) -> bool {
-        let (b, h) = (norm(base), norm(host));
-        match b.strip_prefix('.') {
-            Some(suffix) => h.ends_with(&format!(".{suffix}")),
-            None => h == b || h.ends_with(&format!(".{b}")),
-        }
-    }
-    fn host_match(base: &str, host: &str) -> bool {
-        let (b, h) = (norm(base), norm(host));
-        match b.strip_prefix('.') {
-            Some(suffix) => h.ends_with(&format!(".{suffix}")),
-            None => h == b,
-        }
-    }
-    fn uri_host(uri: &str) -> Option<&str> {
-        let rest = uri.split_once("://")?.1;
-        let authority = rest.split(['/', '?', '#']).next()?;
-        let host = authority.rsplit('@').next()?;
-        Some(host.split(':').next().unwrap_or(host))
-    }
-    fn mail_match(base: &str, mailbox: &str) -> bool {
-        let Some((local, host)) = mailbox.rsplit_once('@') else {
-            return false;
-        };
-        match base.rsplit_once('@') {
-            Some((bl, bh)) => bl == local && norm(bh) == norm(host),
-            None => host_match(base, host),
-        }
-    }
+    use name_constraints::{dns_tree_contains, email_tree_contains, uri_tree_contains};
     for (index, (cert, _)) in issued.iter().enumerate() {
         let Ok(Some((_, san))) = cert.extension::<SubjectAltName>() else {
             continue;
@@ -113,20 +88,20 @@ fn excluded_by_normalized_names(
         for name in &san.0 {
             for st in excluded {
                 let hit = match (&st.base, name) {
-                    (G::DnsName(b), G::DnsName(n)) => domain_match(b.as_str(), n.as_str()),
-                    (G::Rfc822Name(b), G::Rfc822Name(n)) => mail_match(b.as_str(), n.as_str()),
+                    (G::DnsName(b), G::DnsName(n)) => dns_tree_contains(b.as_str(), n.as_str()),
+                    (G::Rfc822Name(b), G::Rfc822Name(n)) => email_tree_contains(b.as_str(), n.as_str()).map_err(|e| ValidationError::PathValidation(e.into()))?,
                     (G::UniformResourceIdentifier(b), G::UniformResourceIdentifier(n)) => {
-                        uri_host(n.as_str()).is_some_and(|h| host_match(b.as_str(), h))
+                        uri_tree_contains(b.as_str(), n.as_str()).map_err(|e| ValidationError::PathValidation(e.into()))?
                     }
                     _ => false,
                 };
                 if hit {
-                    return Some(index);
+                    return Ok(Some(index));
                 }
             }
         }
     }
-    None
+    Ok(None)
 }
 
 /// Sort subtrees by name type into certval's representation.
@@ -683,7 +658,7 @@ fn qualified_policies(
         return Vec::new();
     };
     let n = tree.len().saturating_sub(1);
-    if n == 0 {
+    if tree.is_empty() {
         return Vec::new();
     }
     // parents[d][i]: indices into tree[d - 1].
@@ -982,7 +957,7 @@ fn validate_path_in_stack(
     }
     if outcome.is_ok() {
         if let Some(excluded) = params.and_then(|p| p.initial_excluded_subtrees.as_ref()) {
-            if let Some(who) = excluded_by_normalized_names(&issued, excluded) {
+            if let Some(who) = excluded_by_normalized_names(&issued, excluded)? {
                 return Err(fail(ValidationError::PathValidation(format!(
                     "The path could not be validated because some names of {} are excluded from the namespace of the issuing authority. ",
                     path.describe(who, total)
