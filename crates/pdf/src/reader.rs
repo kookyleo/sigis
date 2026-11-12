@@ -280,20 +280,29 @@ impl PdfFile {
 
     /// Parse a PDF shared through an `Arc`.
     pub fn from_arc(bytes: Arc<[u8]>, options: ReaderOptions) -> PdfResult<Self> {
-        let mut ctx = DecodeContext::new(options.decode_limits.clone(), Some(bytes.len() as u64));
+        let ctx = DecodeContext::new(options.decode_limits.clone(), Some(bytes.len() as u64));
+        Self::from_arc_with_context(bytes, options.strict, options.lossless_reals, ctx)
+    }
+
+    fn from_arc_with_context(
+        bytes: Arc<[u8]>,
+        strict: bool,
+        lossless_reals: bool,
+        mut ctx: DecodeContext,
+    ) -> PdfResult<Self> {
         let header_version = read_header_version(&bytes)?;
         let mut c = Cursor::new(&bytes);
         c.seek_end(-1)?;
         let last_startxref = process_data_at_eof(&mut c)?;
-        let mut builder = XRefBuilder::new(&bytes, options.strict, last_startxref);
-        builder.lossless_reals = options.lossless_reals;
+        let mut builder = XRefBuilder::new(&bytes, strict, last_startxref);
+        builder.lossless_reals = lossless_reals;
         let sections = builder.read_xrefs(&mut ctx)?;
         let trailer = std::mem::take(&mut builder.trailer);
         let has_xref_stream = builder.has_xref_stream;
         let inner = ReaderInner {
             bytes: bytes.clone(),
-            strict: options.strict,
-            lossless_reals: options.lossless_reals,
+            strict,
+            lossless_reals,
             header_version,
             xrefs: XRefCache::new(sections),
             trailer,
@@ -312,6 +321,104 @@ impl PdfFile {
         })
     }
 
+    /// Reopen related output bytes with the current reader policy and budget.
+    ///
+    /// Cross-reference streams are parsed against the remaining budget of
+    /// this reader, without granting credit for a larger output file. Object
+    /// and stream caches are rebuilt. Encrypted output may reuse the installed
+    /// decryptor only if its complete raw encryption settings and permanent
+    /// document ID match. A plaintext copy never retains the decryptor.
+    ///
+    /// Continue sequential operations with the returned reader: sibling reopens
+    /// receive independent budget snapshots, rather than a shared global ledger.
+    /// Reused keys do not imply that output integrity or its PDF MAC is valid.
+    pub fn reopen(&self, bytes: &[u8]) -> PdfResult<Self> {
+        if bytes == self.bytes() {
+            return Ok(self.clone());
+        }
+        // Resolve old identity before taking the budget snapshot: identity
+        // objects can themselves require bounded object-stream decoding.
+        let encryption = self.raw_encryption_identity()?;
+        let permanent_id = if encryption.is_some() {
+            self.raw_permanent_document_id()?
+        } else {
+            None
+        };
+        let reopened = Self::from_arc_with_context(
+            bytes.into(),
+            self.inner.strict,
+            self.inner.lossless_reals,
+            self.decode_context(),
+        )?;
+        if let Some(new_encryption) = reopened.raw_encryption_identity()? {
+            if encryption.as_ref() != Some(&new_encryption)
+                || permanent_id != reopened.raw_permanent_document_id()?
+            {
+                return Err(PdfError::read(
+                    "Cannot reuse reader authentication with changed encryption settings or document ID",
+                ));
+            }
+            // Install only after inspecting the new raw graph. An installed
+            // decryptor would make security_handler() return the old handler.
+            reopened.set_decryptor(self.decryptor());
+        }
+        Ok(reopened)
+    }
+
+    fn raw_permanent_document_id(&self) -> PdfResult<Option<Vec<u8>>> {
+        match self.inner.trailer.raw_get(b"ID", None) {
+            Some(id) => Ok(Some(document_id_from(&self.deref_raw(&id)?)?.0)),
+            None => Ok(None),
+        }
+    }
+
+    fn raw_encryption_identity(&self) -> PdfResult<Option<Object>> {
+        fn resolve_identity(
+            reader: &PdfFile,
+            object: Object,
+            depth: usize,
+            remaining: &mut usize,
+        ) -> PdfResult<Object> {
+            if depth > MAX_RESOLVE_DEPTH || *remaining == 0 {
+                return Err(PdfError::read(
+                    "Encryption settings graph exceeds reopen limits",
+                ));
+            }
+            *remaining -= 1;
+            Ok(match object {
+                Object::Reference(id) => resolve_identity(
+                    reader,
+                    reader.get_object_raw(id, None)?,
+                    depth + 1,
+                    remaining,
+                )?,
+                Object::Array(values) => Object::Array(
+                    values
+                        .into_iter()
+                        .map(|value| resolve_identity(reader, value, depth + 1, remaining))
+                        .collect::<PdfResult<_>>()?,
+                ),
+                Object::Dictionary(dictionary) => {
+                    let mut resolved = Dictionary::new();
+                    for (key, value) in dictionary {
+                        resolved.set(key, resolve_identity(reader, value, depth + 1, remaining)?);
+                    }
+                    Object::Dictionary(resolved)
+                }
+                Object::Stream(_) => {
+                    return Err(PdfError::read("Stream object in encryption settings"));
+                }
+                scalar => scalar,
+            })
+        }
+        self.encrypt_dict()?
+            .map(|dictionary| {
+                let mut remaining = 4096;
+                resolve_identity(self, Object::Dictionary(dictionary), 0, &mut remaining)
+            })
+            .transpose()
+    }
+
     /// Reopen the same bytes with decimal precision checks for modification
     /// analysis. Strictness, decoding limits and the authenticated decryptor
     /// are preserved; rounded object and historical caches are not reused.
@@ -322,25 +429,12 @@ impl PdfFile {
         if self.inner.lossless_reals {
             return Ok(self.clone());
         }
-        let original_context = self.decode_context();
-        let checked = Self::from_arc(
+        let checked = Self::from_arc_with_context(
             self.bytes_arc(),
-            ReaderOptions {
-                strict: self.inner.strict,
-                lossless_reals: true,
-                decode_limits: original_context.limits.clone(),
-            },
+            self.inner.strict,
+            true,
+            self.decode_context(),
         )?;
-        if let (Some(original), Some(current)) = (
-            original_context.remaining_budget(),
-            checked.decode_context().remaining_budget(),
-        ) {
-            if original < current {
-                lock(&checked.inner.decode_ctx).record_output(
-                    usize::try_from(current.saturating_sub(original)).unwrap_or(usize::MAX),
-                );
-            }
-        }
         checked.set_decryptor(self.decryptor());
         Ok(checked)
     }

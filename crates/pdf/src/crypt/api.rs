@@ -1074,9 +1074,9 @@ impl SecurityHandler {
         self.lock().mac_handler = f;
     }
 
-    pub(crate) fn mac_token_handler(
-        &self,
-    ) -> Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>> {
+    /// The installed MAC factory, preserving its shared handle identity.
+    /// This exposes factory configuration, not a document key or MAC verdict.
+    pub fn mac_token_handler(&self) -> Option<Arc<dyn super::pdfmac::PdfMacTokenHandlerFactory>> {
         self.lock().mac_handler.clone()
     }
 
