@@ -60,6 +60,16 @@ impl ValidationContext {
         &self.timing
     }
 
+    /// Clone this context, replacing only its timing parameters.
+    ///
+    /// Caller-supplied policies, freshness checks, assertions and attribute
+    /// certificate target restrictions are preserved for historical validation.
+    pub fn with_timing(&self, timing: ValidationTimingParams) -> Self {
+        let mut context = self.clone();
+        context.timing = timing;
+        context
+    }
+
     /// Revocation information trust policy.
     pub fn revinfo_policy(&self) -> &CertRevTrustPolicy {
         &self.revinfo_policy
@@ -68,6 +78,15 @@ impl ValidationContext {
     /// Configured fetchers (none by default).
     pub fn fetchers(&self) -> &Fetchers {
         &self.fetchers
+    }
+
+    /// Clone this context, replacing only its fetchers.
+    ///
+    /// All caller-supplied validation requirements remain in effect.
+    pub fn with_fetchers(&self, fetchers: Fetchers) -> Self {
+        let mut context = self.clone();
+        context.fetchers = fetchers;
+        context
     }
 
     /// Algorithm usage policy.
@@ -388,3 +407,7 @@ impl ValidationContextBuilder {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "context_tests.rs"]
+mod tests;
