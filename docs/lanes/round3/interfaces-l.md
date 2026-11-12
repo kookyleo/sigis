@@ -95,11 +95,22 @@ restrictions and every other caller requirement; retain unaffected handle
 identity and source immutability. V may consume these accepted methods after
 updating its worktree; validation feature acceptance remains separate.
 
-V's additional `AlgorithmUsageConstraint::not_allowed_after: Option<Moment>`
-request, error-horizon propagation and distinction between time-limited
-`CRYPTO_CONSTRAINTS_FAILURE_NO_POE` and permanent `CRYPTO_CONSTRAINTS_FAILURE`
-remain pending L triage. Do not infer a cutoff from diagnostic strings, weaken
-mandatory policy tests, or claim this additional API is approved/delivered.
+The shared `AlgorithmUsageConstraint::not_allowed_after: Option<Moment>` API
+and `ValidationError::DisallowedAlgorithm { msg, banned_since }` are accepted
+in main33bc368 after the complete workspace gate. Both existing constraint
+constructors default to None. Error display/class/hierarchy remain unchanged;
+certificate/AC/time-slide producers retain actual typed cutoffs and still reject.
+Five native regressions and seven constraint/three Python error property cases
+cover this helper API; they are not full algorithm-validation function ports.
+
+S owns typed CMS enforcement, path/AC/context horizon propagation, preserving
+original failure paths, horizon-sensitive status mapping and actual time-slide
+min(control_time, cutoff) behavior. V owns typed error matching, _NO_POE versus
+permanent mapping and LTA/hedging recovery with authenticated POE. Existing
+string-based CMS enforcement/permanent mappings and rejecting time-slide
+semantics remain pending consumer work. Never infer cutoff dates from reason
+strings, create POE from a cutoff, or weaken mandatory checks. Exact audit:
+/home/l/.codex/artifacts/sigis/round3-launch/algorithm-horizon/audit.md.
 
 ## Scheduling, accounting and handoff
 

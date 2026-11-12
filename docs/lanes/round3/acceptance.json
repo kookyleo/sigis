@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "6dc97bb60d8a221d7aefddd3a3afae99d6a4ac00",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-primitives/gate/gate.json",
+  "accepted_source_commit": "33bc36826342cd71a989b8eb398b3fc9ca3f23f6",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/algorithm-horizon/integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -103,6 +103,30 @@
       "status": "passed",
       "rust_test": "generic::pdf_string compile-fail doctest",
       "reason": "Exact integer input/key rejection is represented as Rust compile-time type failure; legal input remains accepted. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_box_constraint_over_underspecify",
+      "status": "passed",
+      "rust_test": "test_round3_layout::test_box_constraint_over_underspecify",
+      "reason": "All 28 upstream assertions/exception contexts across four functions were independently reviewed and passed the full workspace gate; implemented in P test crate but credited only to assigned S/PDF ownership."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_box_constraint_recalc",
+      "status": "passed",
+      "rust_test": "test_round3_layout::test_box_constraint_recalc",
+      "reason": "All 28 upstream assertions/exception contexts across four functions were independently reviewed and passed the full workspace gate; implemented in P test crate but credited only to assigned S/PDF ownership."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_resource_add_test",
+      "status": "passed",
+      "rust_test": "test_round3_layout::test_resource_add_test",
+      "reason": "All 28 upstream assertions/exception contexts across four functions were independently reviewed and passed the full workspace gate; implemented in P test crate but credited only to assigned S/PDF ownership."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_duplicate_resource",
+      "status": "passed",
+      "rust_test": "test_round3_layout::test_duplicate_resource",
+      "reason": "All 28 upstream assertions/exception contexts across four functions were independently reviewed and passed the full workspace gate; implemented in P test crate but credited only to assigned S/PDF ownership."
     }
   ]
 }

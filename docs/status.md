@@ -48,8 +48,18 @@ Main `6dc97bb` accepts the independently reviewed S primitive subset after a
 second complete serial workspace gate: six name functions, five fetcher/auth
 functions and two PDF typing functions, 13 unique completions from inherited
 skips. No CMS known-red suite or weaker duplicate context helper was imported.
-The accepted S count is 824/749/67/8; lane reports can contain additional
-provisional claims. Eight policy-graph adapter tests remain partial.
+That checkpoint had accepted S824/749/67/8; eight policy-graph adapter tests
+remain partial. Main33bc368 subsequently passed another complete workspace
+gate. It adds P's four complete layout/resource assertion ports, credited only
+to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
+API has five native regressions but earns no upstream-function credit.
+
+The latest gate found **1,249 Rust tests: 1,241 passed, eight ignored, zero
+failed**, across99 reports. Algorithm constraints now expose not_allowed_after;
+structured policy errors preserve banned_since without parsing reason strings.
+Certificate/AC/time-slide producers retain metadata and continue rejecting.
+Typed CMS enforcement, horizon-sensitive status mapping and time-slide/LTA
+recovery still require S/V; metadata alone is not timed-algorithm parity.
 
 ## Integration and verification
 
@@ -117,15 +127,15 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-certvalidator` | 133 | 98 | 35 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
 | `sigis-cms` | 78 | 73 | 2 | 3 |
-| `sigis-pdf` | 406 | 386 | 15 | 5 |
+| `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
 | `sigis-pades-sign` | 297 | 271 | 13 | 13 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,032** | **80** | **56** |
+| **Library lanes A–E** | **1,168** | **1,036** | **76** | **56** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 2 | 0 | 9 |
-| **Overall** | **1,431** | **1,034** | **80** | **317** |
+| **Overall** | **1,431** | **1,038** | **76** | **317** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -168,8 +178,8 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 80 skipped functions comprise certvalidator 35, fetchers 13,
-CMS two, PDF 15, PDF-diff two and signing 13. Skip reasons remain in the
+The 76 skipped functions comprise certvalidator 35, fetchers 13,
+CMS two, PDF 11, PDF-diff two and signing 13. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains 33 policy-graph internal functions and two deprecated
@@ -181,9 +191,9 @@ owning `PORTING.md` and lane files:
 - The two CMS skips concern signer-side weak-digest prevention and
   key-based digest selection. Signing completion must revisit their
   assertions rather than count validation replays as full signing tests.
-- PDF skips cover Python object-model/trailer mechanics and four
-  layout/resource functions assigned to D modules. These are not
-  automatically counted a second time as passed appearance tests.
+- PDF skips retain object-model/trailer gaps. The four layout/resource
+  functions now execute all exact upstream assertions in the P test crate;
+  they are credited once to S/PDF ownership, not again to signing.
 - The two retained PDF-diff skips concern anomalous coverage and in-place
   signature-object tampering, checked before modification analysis.
   Validator coverage must retain those behaviours.

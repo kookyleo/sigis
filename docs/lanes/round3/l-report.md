@@ -69,3 +69,12 @@ passes the complete serial workspace gate. Accepted13 formerly skipped
 functions, no CMS source known-red suite. Policy graph8 adapters remain
 partial and count0; stronger main context tests remain intact. Accepted
 S824/749/67/8, overall1431/1034/80/317. See acceptance.json for exact IDs.
+
+## Shared algorithm API and P layout acceptance
+
+Main33bc368 passed all six workspace gates. Five native cutoff/error API
+regressions retain typed metadata, permanent defaults and error identity;
+actual timed-policy CMS/LTA recovery remains S/V-owned and pending. Four
+S-owned layout/resource functions pass all28 exact assertions in P's test
+crate and count once. Accepted S824/753/63/8, overall1431/1038/76/317.
+Latest Rust1249 discovered/1241 passed/8ignored/0failed across99 reports.
