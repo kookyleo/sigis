@@ -295,8 +295,10 @@ fn check_live_lta_case(full_chain: bool, explicit_strict: bool, function: &str) 
     std::fs::write(&pdf_path, &output).unwrap();
     std::fs::write(&root_path, &root_der).unwrap();
     if let Some(directory) = std::env::var_os("SIGIS_LIVE_LTA_ARTIFACT_DIR") {
-        let directory = std::path::PathBuf::from(directory)
-            .join(format!("{function}-{}", if full_chain { "full" } else { "leaf" }));
+        let directory = std::path::PathBuf::from(directory).join(format!(
+            "{function}-{}",
+            if full_chain { "full" } else { "leaf" }
+        ));
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(directory.join("strict-live-lta.pdf"), &output).unwrap();
         std::fs::write(directory.join("root.der"), &root_der).unwrap();
