@@ -6,7 +6,7 @@ Status: active; lead sigis-cx. Launch commit b5bb72f.
 
 | Crate / assigned suite | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| root live integrations | 11 | 0 | 0 | 11 |
+| root live integrations | 11 | 2 | 0 | 9 |
 
 The four Codex aoa sessions were created in dedicated worktrees and all
 reported busy at launch. Their scope and exact ownership are in the briefs.
@@ -24,7 +24,7 @@ and empty-trust-root assertions plus live oracle comparisons. Build a
 loopback-only Certomancer sidecar and a repeatable collected-case inventory.
 The six live PAdES/backend flows depend on P/V accepted signing/LTA APIs;
 the CLI live LTA case also depends on C. CSC batching is next independent
-integration work. No live function is newly counted passed yet.
+integration work. The two live timestamp functions are now accepted after the complete main gate.
 
 ## Integration contract
 
@@ -46,5 +46,18 @@ The old wrapper's FD 9 could be replaced by rust-slots slot acquisition.
 Other bypass paths could retain it; a lane PATH putting rustup Cargo first
 was found. The launcher now uses the absolute system scheduler entry point.
 See cargo-lock-audit.md and context-clone-api artifacts. No build was killed.
-The live integration baseline remains 11/0/0/11; earlier queued runs and
-unvalidated drafts are not accepted passing ports.
+The immutable live baseline was 11/0/0/11; accepted main is now 11/2/0/9.
+Earlier queued runs and unvalidated drafts were not used as passing evidence.
+
+## Live TSA acceptance
+
+Main0823cef passes the full serial build/test/clippy/strict-doc/layer/fmt gate.
+The exact upstream default-session and explicit-session functions exercise
+actual loopback HTTP and compare correct/wrong imprint verdicts against the
+pinned oracle. Accepted2, pending9; four Python validation calls are not four
+functions. Worker oracle replicas passed real loopback smoke checks.
+
+The accepted ledger also downgrades two historically partial CMS passes;
+overall counts therefore remain1431/1021/93/317 until further lane acceptance.
+The immutable ownership baseline is unchanged. See acceptance.json and
+python3 tools/port-status.py for reproducible counts.

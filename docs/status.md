@@ -1,6 +1,6 @@
 # Rust port status
 
-Updated: 2026-11-12. Baseline: **pyHanko 0.38.1** (`v0.38.1`,
+Updated: 2026-11-13. Baseline: **pyHanko 0.38.1** (`v0.38.1`,
 `580f49498f76`) and **pyhanko-certvalidator 0.33.0**
 (`pyhanko-certvalidator/v0.33.0`, `b48999514cb4`).
 
@@ -12,12 +12,37 @@ The five remaining lanes are assigned in [round3/README.md](lanes/round3/README.
 The exact immutable baseline is [ownership.json](lanes/round3/ownership.json),
 with all 1,431 function IDs, owners and statuses. P/V/S/C use dedicated
 `hanko/r3-*` branches and `sigis-r3-*` Codex sessions; `sigis-cx` owns L on
-main. All Cargo commands use `tools/cargo-locked.sh`: one shared flock,
-the canonical target, two compilation jobs and one documentation job.
+main. All Cargo commands use `tools/cargo-locked.sh`, which selects the
+canonical target and invokes system rust-slots by absolute path. The system
+owns placement/concurrency; there is no repository flock, local pin or job cap.
+Automatic worker tests use the same pinned oracle runtime, now replicated and
+live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
 The launch adds the L6 `sigis-cli` application shell; it earns no new passes.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
+
+## Accepted round 3 increments
+
+Main `940e04d` adds context-preserving historical timing/fetcher clones.
+Two native regression tests retain non-default freshness judges, assertions,
+AC targets, custom trust manager, trust/revocation material, algorithm policy
+and fetcher identity. They earn no upstream function credit.
+
+Main `0823cef` ports the two exact live TSA functions (default and explicit
+HTTP session). Each fetches an actual loopback Certomancer token, verifies
+integrity and no-root distrust in Rust and the fresh pinned Python oracle,
+and rejects a changed imprint. This is two functions/four Python validation
+calls; there are no oracle/provider early returns. The full serial workspace
+build/test/clippy/strict-doc/layer/fmt gate passed. Logs and exact test counts:
+`/home/l/.codex/artifacts/sigis/round3-launch/l-live-gate/`.
+
+The accepted CMS count corrects two historical partial-pass claims to pending:
+`test_overspecify_cms_digest_algo` lacked actual signer/refusal assertions;
+`test_direct_pdfcmsembedder_usage` lacked low-level/buffer/DSS assertions.
+S's newer positive coverage is not yet integrated. Thus the two L completions
+and two CMS corrections offset in the overall count; they are separate changes.
+The 12 inherited V functions remain provisional pending fresh assertion review.
 
 ## Integration and verification
 
@@ -74,23 +99,25 @@ regular lane branches were fast-forwarded normally.
 The release inventory contains **1,431 test functions in 55 modules**.
 Parametrized functions count once. Rust test results, oracle calls,
 recorded Python cases and fuzz iterations are separate measurements.
-The tables consolidate the latest lane reports rather than obsolete
-introductory summaries in some `PORTING.md` files.
+The accepted tables are computed from immutable ownership.json plus
+[acceptance.json](lanes/round3/acceptance.json), using
+`python3 tools/port-status.py`. Lane reports remain provisional until source
+integration and the lead gate; their claimed passes are not accepted early.
 
 | Crate / assigned test owner | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 92 | 41 | 0 |
 | `sigis-pki-fetch` | 56 | 38 | 18 | 0 |
-| `sigis-cms` | 78 | 75 | 2 | 1 |
+| `sigis-cms` | 78 | 73 | 2 | 3 |
 | `sigis-pdf` | 406 | 384 | 17 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
 | `sigis-pades-sign` | 297 | 271 | 13 | 13 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,021** | **93** | **54** |
+| **Library lanes A–E** | **1,168** | **1,019** | **93** | **56** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
-| Lead: live integration (round-3 L) | 11 | 0 | 0 | 11 |
+| Lead: live integration (round-3 L) | 11 | 2 | 0 | 9 |
 | **Overall** | **1,431** | **1,021** | **93** | **317** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
@@ -106,8 +133,8 @@ The fetch crate also owns 14 TSA functions. Shared algorithms are counted
 once at their owning test suite.
 
 `sigis-ades-model`, `sigis-hanko`, `sigis-testdata`, `sigis-sign` and the
-root service have no separately assigned upstream module in this
-inventory. Their shared code is covered by the owning suites or awaits
+root service outside the 11 L-owned live functions have no separately assigned
+upstream module in this inventory. Their shared code is covered by the owning suites or awaits
 lead integration. `sigis-xmldsig`, `sigis-xades`, `sigis-cades`,
 `sigis-asic`, `sigis-ooxml`, `sigis-odf` and `sigis-xsig` are XML-plan
 skeletons; pyHanko baseline coverage is N/A for those crates.
@@ -116,12 +143,12 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`, blocked on complete AdES-LTA validation |
+| A / CMS | 3 | `test_embed_ac_revinfo_adobe_style`; complete signer assertions for `test_overspecify_cms_digest_algo`; borrowed-buffer/low-level/DSS assertions for `test_direct_pdfcmsembedder_usage` |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 13 | One signed attachment; eight PAdES HTTP-TSA/AC presign/DSS-attribute tests; one seed-value TSA URL; three public-key encrypted-signing/copy tests |
 | E / AdES | 35 | 28 validation functions, five report functions and two request functions; past/LTA/POE/revinfo and report integration |
 | Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
-| Lead / live integration | 11 | Nine Certomancer and two CSC dummy-service functions |
+| Lead / live integration | 9 | Seven remaining Certomancer and two CSC dummy-service functions |
 | **Total** | **317** | |
 
 D integration makes the signer and seed model available to dependent
@@ -287,9 +314,9 @@ parallel while Cargo builds remain serialized on the shared target.
 | --- | --- | --- | --- |
 | P — Signing completion | `crates/pades-sign/`, D fixtures, `docs/lanes/d.md` | Finish D's 13 pending functions; consume B writer/encryption/embedding and A TSA/AC APIs; PDF MAC signing, AC/DSS autofill, metadata and provider gaps | Every assigned function passing or explicitly justified; oracle verifies produced PDF/CMS; unsupported mandatory requirements reject |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, E AdES fixtures, `docs/lanes/e.md` | Finish 35 pending functions; seed values/status, DSS, past/LTA/POE, revinfo/local knowledge and full reports/requests using A/B/C/D interfaces | Complete assigned function accounting; tampered, expired and revoked replays agree with oracle; no fail-open verdict |
-| S — Structural / PKI parity | `crates/pdf/`, `crates/pdf-diff/`, `crates/pki-core/src/{algorithms.rs,asn1/,key_usage.rs}`, `crates/pki-certvalidator/`, `crates/pki-fetch/`, `crates/cms/`, `crates/eutl/`, their fixtures and A/B/C status files | Finish B's five pending integration tests, consume qualified policies/trust-manager APIs, audit runtime skips, numeric/schema bounds and algorithm gaps; close A's one CMS test when V provides LTA | Corpus and fresh adversarial differential verdicts remain fail closed; five PDF and one CMS pending functions become substantive assertions; exceptions explicit |
+| S — Structural / PKI parity | `crates/pdf/`, `crates/pdf-diff/`, `crates/pki-core/src/{algorithms.rs,asn1/,key_usage.rs}`, `crates/pki-certvalidator/`, `crates/pki-fetch/`, `crates/cms/`, `crates/eutl/`, their fixtures and A/B/C status files | Finish B's five pending integration tests, consume qualified policies/trust-manager APIs, audit runtime skips, numeric/schema bounds and algorithm gaps; close A's three pending CMS functions with P/V | Corpus and fresh adversarial differential verdicts remain fail closed; five PDF and three CMS pending functions become substantive assertions; exceptions explicit |
 | C — CLI / configuration | New lead-assigned CLI crate and its tests/configuration fixtures | Port 252 functions through current APIs; begin config/runtime/fields immediately, complete LTV commands after P/V | Match upstream output, error and exit behaviour; complete function accounting with local transport doubles |
-| L — Lead / integration | Root, `tools/`, facades/service, central fixtures and consolidated status docs | Central Certomancer export and collected-case inventory; 11 live integrations; merge lanes, final gates and service switch after parity | Repeatable oracle setup, skip audit, full gate and layer check; service backend switch only after acceptance |
+| L — Lead / integration | Root, `tools/`, facades/service, central fixtures and consolidated status docs | Central Certomancer export and collected-case inventory; nine remaining live integrations; merge lanes, final gates and service switch after parity | Repeatable oracle setup, skip audit, full gate and layer check; service backend switch only after acceptance |
 
 P, V, S and C can start concurrently. S starts decode-limit assertions and
 independent parity work while coordinating PDF MAC/PAdES acceptance with
