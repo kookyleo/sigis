@@ -295,15 +295,12 @@ fn find_crl_issuer(
     let mut sig_failures = 0;
     let mut explicit: Vec<String> = Vec::new();
     for (cand, path) in paths {
-        // A CRL issuer whose own path is being validated further up
-        // (`check_path_verif_recursion`) is accepted as is.
-        if subject.stack.contains(&cand) {
-            return IssuerSearch::Found(cand);
-        }
         // A certificate of the path being validated is checked by that
         // validation (from the anchor down); others need their own path.
         let in_main_path = subject.path.authorities().contains(&&cand);
-        if !in_main_path {
+        // Recursion exempts only issuer certificate path validation. The
+        // current CRL still requires its own signature check below.
+        if !subject.stack.contains(&cand) && !in_main_path {
             if let Err(e) = crate::validate::validate_path_at_depth(ctx, &path, None, subject.stack)
             {
                 explicit.push(format!(
