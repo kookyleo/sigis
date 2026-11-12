@@ -88,8 +88,8 @@ fn test_qualifiers_are_gathered_across_the_path() {
     let result = policies(
         vec![
             root(),
-            vec![node(GOLD, &[WHITE], &[gold.clone()])],
-            vec![node(WHITE, &[WHITE], &[white.clone()])],
+            vec![node(GOLD, &[WHITE], std::slice::from_ref(&gold))],
+            vec![node(WHITE, &[WHITE], std::slice::from_ref(&white))],
         ],
         &[ANY],
     );
@@ -113,7 +113,7 @@ fn test_identical_qualifiers_are_deduplicated() {
     let result = policies(
         vec![
             root(),
-            vec![node(GOLD, &[GOLD], &[q.clone()])],
+            vec![node(GOLD, &[GOLD], std::slice::from_ref(&q))],
             vec![node(GOLD, &[GOLD], &[q])],
         ],
         &[ANY],
@@ -188,8 +188,14 @@ fn test_trailing_any_policy_expands_to_user_initial_policy_set() {
     let result = policies(
         vec![
             root(),
-            vec![node(ANY, &[ANY], &[q.clone()]), node(GOLD, &[GOLD], &[])],
-            vec![node(ANY, &[ANY], &[q.clone()]), node(GOLD, &[GOLD], &[])],
+            vec![
+                node(ANY, &[ANY], std::slice::from_ref(&q)),
+                node(GOLD, &[GOLD], &[]),
+            ],
+            vec![
+                node(ANY, &[ANY], std::slice::from_ref(&q)),
+                node(GOLD, &[GOLD], &[]),
+            ],
         ],
         &[GOLD, SILVER],
     );
