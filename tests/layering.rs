@@ -84,7 +84,10 @@ fn workspace_respects_layers() {
         for dep in package["dependencies"].as_array().expect("dependencies") {
             let dep_name = dep["name"].as_str().expect("dependency name");
             if workspace.contains(dep_name) {
-                all_dependencies.entry(name.to_owned()).or_default().insert(dep_name.to_owned());
+                all_dependencies
+                    .entry(name.to_owned())
+                    .or_default()
+                    .insert(dep_name.to_owned());
             }
             if !workspace.contains(dep_name) || dep["kind"].as_str() == Some("dev") {
                 continue;
@@ -115,8 +118,13 @@ fn workspace_respects_layers() {
     }
     let mut complete = BTreeSet::new();
     for name in &workspace {
-        if let Some(cycle) = dependency_cycle(name, &all_dependencies, &mut Vec::new(), &mut complete) {
-            violations.push(format!("workspace dependency cycle (including dev): {}", cycle.join(" -> ")));
+        if let Some(cycle) =
+            dependency_cycle(name, &all_dependencies, &mut Vec::new(), &mut complete)
+        {
+            violations.push(format!(
+                "workspace dependency cycle (including dev): {}",
+                cycle.join(" -> ")
+            ));
             break;
         }
     }
@@ -126,7 +134,6 @@ fn workspace_respects_layers() {
         violations.join("\n")
     );
 }
-
 
 // Dev-dependencies may point upward, but cross-layer integration must not
 // introduce package cycles. Put such callers in the root integration tests.
