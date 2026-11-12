@@ -142,3 +142,33 @@ completed; check passed on vm2064 slot0, and the full library unit suite
 slot0. All tests ran with zero failures and zero ignored tests. The two
 context-preservation unit tests are regression coverage, not new upstream
 function passes. The lead still owns the complete workspace gate.
+
+
+## Independent algorithm-failure certificate-position regression
+
+`tests/algorithm_failure_context.rs` adds three supplemental native tests
+using the actual multitasking-ocsp certificate chain and both real OCSP
+responses under required revocation checks. The detailed failure preserves
+the full built path, the exact typed core error survives validate_path,
+and the algorithm hook receives validation time and actual issuer key.
+Leaf rejection must set is_ee_cert=true; intermediate rejection stays false.
+The original implementation failed that leaf assertion (2 passed / 1 failed).
+The producer now sets the flag from the actual issued-certificate index.
+No algorithm refusal, path material, revocation requirement or error class
+was weakened. A date-like permanent reason still has no contextual horizon.
+
+After the fix, all three regressions and the existing validate suite's
+20 tests passed with zero ignored tests. Check and targeted strict Clippy
+also passed on vm2065 slot0; repository-wrapper formatting passed. Four
+fresh pinned oracle records independently confirm valid control, both
+rejection contexts/original paths and missing-required-OCSP rejection.
+Full error wording differs as previously documented; class, certificate
+position, original path and permanent horizon are the compared fields.
+No provider/runtime exclusion or new dependency is present.
+
+This changes no upstream-function count. It is not typed-cutoff/CMS/LTA
+or time-slide recovery acceptance. The full future-API regression matrix
+remains separate, pending safe S synchronization with the L shared API.
+Logs, exact commands and live reference outputs are in the S artifact
+algorithm-failure-context-* files. The L-owned wrapper/context/core files
+and the existing lockfile change remain untouched by this increment.

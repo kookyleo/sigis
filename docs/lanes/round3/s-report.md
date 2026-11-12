@@ -255,3 +255,49 @@ current-P test equivalence and provider exclusions remain to be verified.
 Current source increments, formatting/test processes and uncommitted
 Cargo.lock are preserved. This is not a ready milestone; L still owns the
 merged lockfile, integration gates and acceptance.
+
+
+## Lead curated follow-up (gate pending)
+
+Accepted main6ec3816 remains S824/754/63/7 and overall1431/1052/66/313.
+The historical tables above are not the current acceptance ledger. Only the
+independent certificate-position correction below is selected; it adds no
+upstream function. Typed CMS/time-slide and archived cross-lane work remain
+unaccepted. Main structured algorithm cutoff metadata is preserved.
+
+## Verified independent path-context correction
+
+`algorithm_failure_context` first ran 2 passed / 1 failed on vm2065 slot0:
+leaf algorithm denial reported is_ee_cert=false. The producer now derives
+that flag from the actual certificate's index and retains its existing
+full original path and typed core error. This bounded change needs neither
+new shared fields nor a context/core edit and remains compatible with L's
+structured-error migration after the producer is reconciled at rebase.
+It does not implement timed cutoff propagation and grants no new pass.
+
+Final commands (absolute main wrapper, caller cwd r3-s):
+
+```sh
+/home/l/D/kooky/sigis/tools/cargo-locked.sh check -p sigis-pki-certvalidator
+HANKO_ORACLE=/tmp/pyhanko-oracle/venv/bin/python /home/l/D/kooky/sigis/tools/cargo-locked.sh test -p sigis-pki-certvalidator --test algorithm_failure_context --test validate
+/home/l/D/kooky/sigis/tools/cargo-locked.sh clippy -p sigis-pki-certvalidator --lib --test algorithm_failure_context -- -D warnings
+/home/l/D/kooky/sigis/tools/cargo-locked.sh fmt -p sigis-pki-certvalidator -- --check
+```
+
+Check passed in 0.87s; native tests passed 3/3 plus 20/20 existing path
+regressions (compile 1.91s); strict Clippy passed in 5.07s. All compiling
+commands selected **vm2065 slot0**. Formatting passed after correcting only
+a new-test line wrap. No native tests were ignored or filtered. Logs:
+algorithm-failure-context-{red,check,green,clippy,fmt-final}.log.
+
+The four fresh oracle records use the exact same input certificates and
+OCSP responses, invoking the actual pinned async_validate_path: successful
+control, leaf/intermediate mandatory algorithm rejection, retained original
+path and no invented cutoff from the date-like reason, then missing
+required OCSP rejection. Native tests build their real path and compare
+detailed versus stripped core errors. Full diagnostic wording is not
+claimed identical; the meaningful class/context/horizon fields agree.
+Reproduce the oracle via the fixed interpreter on
+~/.codex/artifacts/sigis/round3/s/algorithm-failure-context-oracle.py.
+No recorded verdict was consumed.
+
