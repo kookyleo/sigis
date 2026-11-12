@@ -6,6 +6,10 @@ run P/V/S/C from branches created after the launch commit. The immutable
 parameters count once. [p.md](p.md), [v.md](v.md), [s.md](s.md), [c.md](c.md)
 and [l.md](l.md) are the execution briefs and ownership contracts.
 
+The table below is the immutable launch baseline. Current accepted counts are
+in [status.md](../../status.md) and [acceptance.json](acceptance.json); lane
+proposals do not update those counts before the lead gate.
+
 | Lane | Session | Branch | Assigned | Passed | Skipped | Pending |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | P | sigis-r3-p | hanko/r3-p | 297 | 271 | 13 | 13 |

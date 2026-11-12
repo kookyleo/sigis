@@ -306,3 +306,36 @@ in the optional case it returns no qualified policy. Other finite/default and
 zero-issued controls retain their assertions. Do not label all10 calls exact
 agreements or infer universal fail-closed parity. Evidence and independent
 source review are under round3-launch/policy-merge-api/.
+
+
+## Archival validation and reports accepted
+
+Source df25c79 passed all six workspace gates: 1462 discovered /
+1454 passed / 8 ignored / zero failed, across126 reports.
+V is now47/45/0/2:33 originally pending unique functions are accepted once.
+All47 immutable IDs and76 source parameters were audited; two AC-dependent
+functions remain pending authenticated fetched evidence. S foreign caller
+wrappers and additional security helpers earn no V function credit.
+
+The actual lead workspace run used explicit Cargo env leaf arguments, not
+ambient selection. All212 native read receipts match lengths/SHA256 for102
+actual files:87 selected frozen inputs (three AdES recordings,78 seed files,
+six PDF-MAC files) and15 committed repository inputs. Receipts identify s7 /
+s7.0 for this run; owner vm2064.1 and the earlier isolated101-test result
+are different runs. The pinned Python recordings were freshly regenerated
+earlier; replaying them here is not another fresh Python execution.
+
+Atomic document-timestamp candidate evidence publishes only when the entire
+chain passes. A forbidden signature-timestamp imprint cannot add POE, lower
+best time or lower qualification time through a retained report token. The
+previous source/provenance/ByteRange holds are closed by reviewed fixes and
+this actual merged gate. Independent review of owner810d417 is recorded in
+v-proof-policy-fix-review.md; all133 owned source/test/fixture bytes match it.
+The lockfile adds only two existing workspace edges, with no version changes.
+
+Three supplemental denied-imprint cases reject more strictly than pinned
+Python's final OK. A corrupt chain agrees on final NO_POE but reports native
+best time2024 versus Python2020. Report encoding/layout and complete XML schema
+identity remain outside smoke assertions. Do not call all differences either
+identical or universally fail closed. Accepted overall1431/1119/32/280;
+P/S/C/L counts unchanged. Exact evidence: round3-launch/v-integration/.

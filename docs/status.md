@@ -44,10 +44,10 @@ The later P increment restores the overspecify function with actual signing
 and refusal assertions. Direct embedder now has low-level/DocMDP/DSS coverage
 but remains pending because caller-buffer identity is still absent. The two
 earlier L completions and CMS corrections were separate accounting changes.
-The 12 inherited V functions remain the accepted baseline. V's proposed45/47
-checkpoint remains unaccepted. The independent corrected-input rerun now
-passes101 native tests after the range/report and policy-classification fixes;
-LTA proof-policy controls and coherent workspace integration remain required.
+V now has45 accepted unique functions after its coherent source, proof-policy
+corrections and actual fresh-input workspace gate. Both AC-dependent functions
+remain pending. Earlier provisional12/35 and failed/rerun package checkpoints
+below are historical evidence, superseded by the accepted source df25c79.
 
 Main `6dc97bb` accepts the independently reviewed S primitive subset after a
 second complete serial workspace gate: six name functions, five fetcher/auth
@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main f91dccd found **1,375 Rust tests: 1,367 passed, 8
-ignored, zero failed**, across 111 reports. Build, workspace tests, strict
+The latest gate on main df25c79 found **1,462 Rust tests: 1,454 passed, 8
+ignored, zero failed**, across 126 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/policy-merge-api/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/v-integration/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -177,12 +177,12 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
 | `sigis-pades-sign` | 297 | 282 | 3 | 12 |
-| `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
+| `sigis-pades` (including `ades`) | 47 | 45 | 0 | 2 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,082** | **32** | **54** |
+| **Library lanes A–E** | **1,168** | **1,115** | **32** | **21** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,086** | **32** | **313** |
+| **Overall** | **1,431** | **1,119** | **32** | **280** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -210,10 +210,10 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 | A / CMS | 2 | `test_embed_ac_revinfo_adobe_style`; borrowed-buffer identity for `test_direct_pdfcmsembedder_usage` (low-level/DSS assertions now execute) |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 12 | Eight PAdES HTTP-TSA/AC presign/DSS-attribute tests; one seed-value TSA URL; three public-key encrypted-signing/copy tests |
-| E / AdES | 35 | 28 validation functions, five report functions and two request functions; past/LTA/POE/revinfo and report integration |
+| E / AdES | 2 | Authenticated live AC validation and the AC-dependent validation report |
 | Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
 | Lead / live integration | 7 | Seven Certomancer functions, all requiring actual LTA validation; missing-issuer fetching and loopback PFX/AIA routes also remain |
-| **Total** | **313** | |
+| **Total** | **280** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
@@ -634,3 +634,36 @@ three key-loader functions still need actual CMS integrity assertions, and
 the complete CLI/qualified-validation package has not passed acceptance.
 V supplied new archival-proof controls for review; the earlier independent
 101-test result predates those controls. No V/C completion is booked early.
+
+
+## Accepted archival validation and reports
+
+Source df25c79 passed all six workspace gates: 1462 discovered /
+1454 passed / 8 ignored / zero failed, across126 reports.
+V is now47/45/0/2:33 originally pending unique functions are accepted once.
+All47 immutable IDs and76 source parameters were audited; two AC-dependent
+functions remain pending authenticated fetched evidence. S foreign caller
+wrappers and additional security helpers earn no V function credit.
+
+The actual lead workspace run used explicit Cargo env leaf arguments, not
+ambient selection. All212 native read receipts match lengths/SHA256 for102
+actual files:87 selected frozen inputs (three AdES recordings,78 seed files,
+six PDF-MAC files) and15 committed repository inputs. Receipts identify s7 /
+s7.0 for this run; owner vm2064.1 and the earlier isolated101-test result
+are different runs. The pinned Python recordings were freshly regenerated
+earlier; replaying them here is not another fresh Python execution.
+
+Atomic document-timestamp candidate evidence publishes only when the entire
+chain passes. A forbidden signature-timestamp imprint cannot add POE, lower
+best time or lower qualification time through a retained report token. The
+previous source/provenance/ByteRange holds are closed by reviewed fixes and
+this actual merged gate. Independent review of owner810d417 is recorded in
+v-proof-policy-fix-review.md; all133 owned source/test/fixture bytes match it.
+The lockfile adds only two existing workspace edges, with no version changes.
+
+Three supplemental denied-imprint cases reject more strictly than pinned
+Python's final OK. A corrupt chain agrees on final NO_POE but reports native
+best time2024 versus Python2020. Report encoding/layout and complete XML schema
+identity remain outside smoke assertions. Do not call all differences either
+identical or universally fail closed. Accepted overall1431/1119/32/280;
+P/S/C/L counts unchanged. Exact evidence: round3-launch/v-integration/.

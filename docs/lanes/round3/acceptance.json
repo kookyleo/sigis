@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "f91dccdc43f8ad852dcafacee3670269c2a872d7",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/policy-merge-api/gate/gate.json",
+  "accepted_source_commit": "df25c796730b719db400126e08c57de5427a8a11",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/v-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -410,6 +410,204 @@
       "status": "passed",
       "rust_test": "test_round3_digest_policy::test_sign_weak_digest_prevention",
       "reason": "Actual MD5 signing with a caller validation context returns the required Signing refusal before mechanism resolution. Three ordering/current-clock/permitted/no-VC controls and mandatory fresh pinned oracle probes pass; independently reviewed and full workspace gate on c69886c."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_embedded_cades_with_time_happy_path_with_tl",
+      "status": "passed",
+      "rust_test": "ades_qualification::test_embedded_cades_with_time_happy_path_with_tl",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_embedded_cades_with_time_fail_qualification_requirements",
+      "status": "passed",
+      "rust_test": "ades_qualification::test_embedded_cades_with_time_fail_qualification_requirements",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_embedded_cades_with_time_non_qtst_tsa_fail",
+      "status": "passed",
+      "rust_test": "ades_qualification::test_embedded_cades_with_time_non_qtst_tsa_fail",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_embedded_cades_with_time_non_qtst_tsa_pass",
+      "status": "passed",
+      "rust_test": "ades_qualification::test_embedded_cades_with_time_non_qtst_tsa_pass",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_happy_path_current_time",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_happy_path_current_time",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_happy_path_past_time",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_happy_path_past_time",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_simulate_future_lta_happy_path",
+      "status": "passed",
+      "rust_test": "ades_lta::test_simulate_future_lta_happy_path",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_simulate_future_lta_happy_path_eseal",
+      "status": "passed",
+      "rust_test": "ades_lta::test_simulate_future_lta_happy_path_eseal",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_fail_qualification_requirements",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_fail_qualification_requirements",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_simulate_future_lta_happy_path_with_ts_chain",
+      "status": "passed",
+      "rust_test": "ades_lta::test_simulate_future_lta_happy_path_with_ts_chain",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_simulate_future_lta_no_revinfo_fail",
+      "status": "passed",
+      "rust_test": "ades_lta::test_simulate_future_lta_no_revinfo_fail",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_simulate_future_lta_with_broken_ts_chain",
+      "status": "passed",
+      "rust_test": "ades_lta::test_simulate_future_lta_with_broken_ts_chain",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_expired_timestamp",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_expired_timestamp",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_missing_dts",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_missing_dts",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_happy_path_past_time_with_chain",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_happy_path_past_time_with_chain",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_hash_algorithm_banned_but_poe_ok",
+      "status": "passed",
+      "rust_test": "ades_lta_algorithms::test_pades_hash_algorithm_banned_but_poe_ok",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_hash_algorithm_banned_and_no_poe",
+      "status": "passed",
+      "rust_test": "ades_lta_algorithms::test_pades_lta_hash_algorithm_banned_and_no_poe",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_algo_permaban",
+      "status": "passed",
+      "rust_test": "ades_lta_permaban::test_pades_lta_algo_permaban",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_nontraditional_hybrid_lta",
+      "status": "passed",
+      "rust_test": "ades_lta::test_nontraditional_hybrid_lta",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_nontraditional_hybrid_lta_with_failed_timestamp",
+      "status": "passed",
+      "rust_test": "ades_lta::test_nontraditional_hybrid_lta_with_failed_timestamp",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_multi_sig_timestamp_algo_hedge_ok",
+      "status": "passed",
+      "rust_test": "ades_lta_algorithms::test_pades_multi_sig_timestamp_algo_hedge_ok",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_multi_doc_timestamp_algo_hedge_ok",
+      "status": "passed",
+      "rust_test": "ades_lta_algorithms::test_pades_multi_doc_timestamp_algo_hedge_ok",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_multi_sig_timestamp_with_unknown_digest",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_multi_sig_timestamp_with_unknown_digest",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_content_ts_with_different_digest_not_supported",
+      "status": "passed",
+      "rust_test": "ades_digest::test_content_ts_with_different_digest_not_supported",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_bootstrap_handlers_default_backend",
+      "status": "passed",
+      "rust_test": "ades_policy::test_bootstrap_handlers_default_backend",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_certificate_fetching_rule_matrix",
+      "status": "passed",
+      "rust_test": "ades_policy::test_certificate_fetching_rule_matrix",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_never_fetch_certs_keeps_revinfo_fetching",
+      "status": "passed",
+      "rust_test": "ades_policy::test_never_fetch_certs_keeps_revinfo_fetching",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_report.py::test_pades_basic_report_smoke_test",
+      "status": "passed",
+      "rust_test": "ades_report::test_pades_basic_report_smoke_test",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_report.py::test_pades_basic_failing_report_smoke_test",
+      "status": "passed",
+      "rust_test": "ades_report::test_pades_basic_failing_report_smoke_test",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_report.py::test_pades_basic_indeteriminate_report_smoke_test",
+      "status": "passed",
+      "rust_test": "ades_report::test_pades_basic_indeteriminate_report_smoke_test",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_report.py::test_pades_lta_report_smoke_test",
+      "status": "passed",
+      "rust_test": "ades_lta_report::test_pades_lta_report_smoke_test",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_requests.py::test_pades_basic_happy_path_requests",
+      "status": "passed",
+      "rust_test": "ades_requests::test_pades_basic_happy_path_requests",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_requests.py::test_pades_lta_happy_path_current_time_requests",
+      "status": "passed",
+      "rust_test": "ades_requests::test_pades_lta_happy_path_current_time_requests",
+      "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
     }
   ]
 }
