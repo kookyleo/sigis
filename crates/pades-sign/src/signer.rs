@@ -145,9 +145,10 @@ pub fn default_signature_mechanism(
     let spki = cert.public_key();
     let null = || Any::encode_from(&der::asn1::Null).ok();
     let (oid, parameters) = match spki.algorithm.oid {
-        oids::RSA_ENCRYPTION if prefer_pss => {
-            (oids::RSASSA_PSS, Some(Any::encode_from(&optimal_pss_params(&spki, digest)?)?))
-        }
+        oids::RSA_ENCRYPTION if prefer_pss => (
+            oids::RSASSA_PSS,
+            Some(Any::encode_from(&optimal_pss_params(&spki, digest)?)?),
+        ),
         oids::RSA_ENCRYPTION => (
             match digest {
                 DigestAlgorithm::Sha1 => oids::SHA1_WITH_RSA,
@@ -166,7 +167,10 @@ pub fn default_signature_mechanism(
             },
             null(),
         ),
-        oids::RSASSA_PSS => (oids::RSASSA_PSS, Some(Any::encode_from(&optimal_pss_params(&spki, digest)?)?)),
+        oids::RSASSA_PSS => (
+            oids::RSASSA_PSS,
+            Some(Any::encode_from(&optimal_pss_params(&spki, digest)?)?),
+        ),
         oids::EC_PUBLIC_KEY => (
             match digest {
                 DigestAlgorithm::Sha1 => oids::ECDSA_WITH_SHA1,
@@ -284,7 +288,10 @@ pub fn select_suitable_signing_md(spki: &SubjectPublicKeyInfoOwned) -> DigestAlg
             let size = sigis_pki_core::algorithms::rsa_key_size(spki).unwrap_or(2048);
             with_thresholds(
                 size,
-                &[(2048, DigestAlgorithm::Sha256), (3072, DigestAlgorithm::Sha384)],
+                &[
+                    (2048, DigestAlgorithm::Sha256),
+                    (3072, DigestAlgorithm::Sha384),
+                ],
             )
         }
         oids::EC_PUBLIC_KEY => {
@@ -300,7 +307,10 @@ pub fn select_suitable_signing_md(spki: &SubjectPublicKeyInfoOwned) -> DigestAlg
             };
             with_thresholds(
                 size,
-                &[(256, DigestAlgorithm::Sha256), (384, DigestAlgorithm::Sha384)],
+                &[
+                    (256, DigestAlgorithm::Sha256),
+                    (384, DigestAlgorithm::Sha384),
+                ],
             )
         }
         oids::ED25519 => DigestAlgorithm::Sha512,
@@ -317,7 +327,10 @@ pub fn sign_with_key(
     data: &[u8],
     digest: DigestAlgorithm,
 ) -> Result<Vec<u8>> {
-    if matches!(mech.oid, oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87) {
+    if matches!(
+        mech.oid,
+        oids::ML_DSA_44 | oids::ML_DSA_65 | oids::ML_DSA_87
+    ) {
         use signature::Signer;
         let bad = || signing_error("The signature mechanism ml-dsa is unsupported by this signer.");
         return match (mech.oid, key) {
@@ -369,7 +382,9 @@ pub fn sign_with_key(
             let hashed = md.digest(data);
             let salt = params.salt_length;
             let res = match md {
-                DigestAlgorithm::Sha1 => k.sign(rsa::Pss::<sha1::Sha1>::new_with_salt(salt), &hashed),
+                DigestAlgorithm::Sha1 => {
+                    k.sign(rsa::Pss::<sha1::Sha1>::new_with_salt(salt), &hashed)
+                }
                 DigestAlgorithm::Sha224 => {
                     k.sign(rsa::Pss::<sha2::Sha224>::new_with_salt(salt), &hashed)
                 }
@@ -511,11 +526,19 @@ pub fn directory_string(value: &Any) -> Option<String> {
     use der::{Tag, Tagged};
     let bytes = value.value();
     match value.tag() {
-        Tag::Utf8String => Utf8StringRef::new(bytes).ok().map(|s| s.as_str().to_owned()),
-        Tag::PrintableString => PrintableStringRef::new(bytes).ok().map(|s| s.as_str().to_owned()),
+        Tag::Utf8String => Utf8StringRef::new(bytes)
+            .ok()
+            .map(|s| s.as_str().to_owned()),
+        Tag::PrintableString => PrintableStringRef::new(bytes)
+            .ok()
+            .map(|s| s.as_str().to_owned()),
         Tag::Ia5String => Ia5StringRef::new(bytes).ok().map(|s| s.as_str().to_owned()),
-        Tag::TeletexString => TeletexStringRef::new(bytes).ok().map(|s| s.as_str().to_owned()),
-        Tag::BmpString => BmpString::from_ucs2(bytes.to_vec()).ok().map(|s| s.to_string()),
+        Tag::TeletexString => TeletexStringRef::new(bytes)
+            .ok()
+            .map(|s| s.as_str().to_owned()),
+        Tag::BmpString => BmpString::from_ucs2(bytes.to_vec())
+            .ok()
+            .map(|s| s.to_string()),
         _ => None,
     }
 }

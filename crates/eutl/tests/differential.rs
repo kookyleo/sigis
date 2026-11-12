@@ -224,6 +224,35 @@ fn differential_trusted_list_verdicts() {
         time: None,
     });
 
+    // These edits preserve the cryptographic payload. The oracle's XSD
+    // validation must reject them before treating the signature as trusted.
+    for (name, from, to) in [
+        (
+            "signature-value-attribute",
+            "<ds:SignatureValue>",
+            "<ds:SignatureValue bogus=\"1\">",
+        ),
+        (
+            "signature-value-child",
+            "</ds:SignatureValue>",
+            "<ds:DigestValue/></ds:SignatureValue>",
+        ),
+        (
+            "signature-text",
+            "<ds:SignedInfo>",
+            "invalid-schema-text<ds:SignedInfo>",
+        ),
+        ("object-attribute", "<ds:Object>", "<ds:Object bogus=\"1\">"),
+    ] {
+        let xml = tampered(&gen_tl, tmp.path(), &format!("{name}.xml"), from, to);
+        cases.push(Case {
+            name: name.into(),
+            xml,
+            certs: vec![root.clone()],
+            time: None,
+        });
+    }
+
     // Write the case list for the oracle.
     let mut oracle_cases = Vec::new();
     for (i, c) in cases.iter().enumerate() {

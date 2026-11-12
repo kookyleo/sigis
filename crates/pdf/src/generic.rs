@@ -348,8 +348,22 @@ pub fn parse_py_int(raw: &[u8]) -> Option<i64> {
     Some(if neg { -v } else { v })
 }
 
+/// Canonical decimal components without rounding or integer conversion.
+/// The input has already been checked to contain an optional sign, digits
+/// and at most one decimal point.
+fn decimal_components(raw: &str) -> (bool, &str, &str) {
+    let digits = raw.trim_start_matches(['+', '-']);
+    let (integer, fraction) = digits.split_once('.').unwrap_or((digits, ""));
+    let integer = integer.trim_start_matches('0');
+    let fraction = fraction.trim_end_matches('0');
+    let negative = raw.starts_with('-') && !(integer.is_empty() && fraction.is_empty());
+    (negative, integer, fraction)
+}
+
 /// Python `Decimal(str)` restricted to the characters a PDF number token can
-/// contain.
+/// contain, with a fail-closed precision check for lopdf's f32 storage.
+/// Only the decimal value of the float's shortest rendering is accepted;
+/// otherwise distinct PDF decimals could become equal during diff analysis.
 fn parse_py_decimal(raw: &str) -> Option<f32> {
     let digits = raw.trim_start_matches(['+', '-']);
     if raw.len() - digits.len() > 1 {
@@ -370,7 +384,11 @@ fn parse_py_decimal(raw: &str) -> Option<f32> {
         if int_part.is_empty() { "0" } else { int_part },
         if frac_part.is_empty() { "0" } else { frac_part }
     );
-    normalized.parse::<f32>().ok().filter(|v| v.is_finite())
+    let value = normalized.parse::<f32>().ok().filter(|v| v.is_finite())?;
+    if decimal_components(raw) != decimal_components(&value.to_string()) {
+        return None;
+    }
+    Some(value)
 }
 
 /// Read a number (`NumberObject.read_from_stream`).

@@ -13,6 +13,8 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+#[path = "support/signing.rs"]
+mod signing;
 mod support;
 
 use support::{check_function, Divergence, Replay};
@@ -663,20 +665,24 @@ fn test_anomalous_coverage() {}
 fn test_tamper_sig_obj() {}
 
 #[test]
-#[ignore = "skipped: signing a new deep field, single signed revision, no difference analysis (lane D)"]
-fn test_create_deep_sig_field() {}
+fn test_create_deep_sig_field() {
+    signing::create_deep_fields(false);
+}
 
 #[test]
-#[ignore = "skipped: signing a new deep field, single signed revision, no difference analysis (lane D)"]
-fn test_create_multi_deep_sig_field() {}
+fn test_create_multi_deep_sig_field() {
+    signing::create_deep_fields(true);
+}
 
 #[test]
-#[ignore = "skipped: the signer refuses a non-signature field, no difference analysis (lane D)"]
-fn test_deep_non_sig_field() {}
+fn test_deep_non_sig_field() {
+    signing::reject_non_signature_fields();
+}
 
 #[test]
-#[ignore = "skipped: separate widget annotation at signing time, single signed revision (lane D)"]
-fn test_simple_sign_with_separate_annot() {}
+fn test_simple_sign_with_separate_annot() {
+    signing::separate_annotation();
+}
 
 /// pyHanko's reader rejects xref sections that list an object twice. That
 /// is a `sigis-pdf` (lane B) check; this test runs once `PdfFile::parse`

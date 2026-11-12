@@ -17,3 +17,7 @@ quick-xml = { workspace = true }
 [dev-dependencies]
 sigis-testdata = { workspace = true }
 serde_json = { workspace = true }
+sigis-pades-sign = { workspace = true }
+sigis-pades = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+tempfile = "3"

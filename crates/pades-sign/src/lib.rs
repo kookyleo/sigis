@@ -38,11 +38,11 @@ pub mod text;
 
 use std::sync::Arc;
 
+use sigis_pdf::MdpPerm;
 use sigis_pki_certvalidator::ValidationContext;
 use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::errors::Result;
 use sigis_pki_core::sign::{KeySigner, TimeStamper};
-use sigis_pdf::MdpPerm;
 
 pub use crate::attributes::{CadesSignedAttrSpec, CmsSignedAttributes, SignerAttrSpec};
 pub use crate::cms::CmsSignerOptions;
@@ -236,7 +236,12 @@ pub fn add_document_timestamp(
 ) -> Result<Vec<u8>> {
     use crate::pdf::timestamp::{timestamp_pdf_with, TimestampOptions};
     let field = (!field_name.is_empty()).then(|| field_name.to_owned());
-    timestamp_pdf_with(pdf, timestamper, field, &TimestampOptions::new(DigestAlgorithm::Sha256))
+    timestamp_pdf_with(
+        pdf,
+        timestamper,
+        field,
+        &TimestampOptions::new(DigestAlgorithm::Sha256),
+    )
 }
 
 /// Add validation information for the existing signatures to the DSS
@@ -257,7 +262,12 @@ pub fn add_validation_info(
         out = crate::pdf::timestamp::add_validation_info_for(&out, s, ctx, true, true, false)?;
     }
     match timestamper {
-        Some(ts) => crate::pdf::timestamp::update_archival_chain_with(&out, ts, ctx, DigestAlgorithm::Sha256),
+        Some(ts) => crate::pdf::timestamp::update_archival_chain_with(
+            &out,
+            ts,
+            ctx,
+            DigestAlgorithm::Sha256,
+        ),
         None => Ok(out),
     }
 }

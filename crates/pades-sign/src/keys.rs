@@ -17,10 +17,10 @@
 use base64ct::Encoding;
 use der::asn1::{ObjectIdentifier, OctetString};
 use der::{Decode, Encode};
+use pkcs8::{EncryptedPrivateKeyInfoRef, PrivateKeyInfoOwned};
 use sigis_pki_core::asn1::oids;
 use sigis_pki_core::cert::Cert;
 use sigis_pki_core::errors::{HankoError, Result};
-use pkcs8::{EncryptedPrivateKeyInfoRef, PrivateKeyInfoOwned};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 /// A private key held in memory, with the key types pyHanko's
@@ -95,9 +95,9 @@ impl PrivateKey {
                     .as_bytes()
                     .try_into()
                     .map_err(|_| malformed("Ed25519 key: wrong length"))?;
-                Ok(Self::Ed25519(Box::new(ed25519_dalek::SigningKey::from_bytes(
-                    &seed,
-                ))))
+                Ok(Self::Ed25519(Box::new(
+                    ed25519_dalek::SigningKey::from_bytes(&seed),
+                )))
             }
             oids::ED448 => {
                 use pkcs8::DecodePrivateKey;
@@ -184,9 +184,7 @@ impl PrivateKey {
                     oid: oids::ED25519,
                     parameters: None,
                 },
-                subject_public_key: der::asn1::BitString::from_bytes(
-                    k.verifying_key().as_bytes(),
-                )?,
+                subject_public_key: der::asn1::BitString::from_bytes(k.verifying_key().as_bytes())?,
             }
             .to_der()?,
             Self::Ed448(k) => SubjectPublicKeyInfoOwned {

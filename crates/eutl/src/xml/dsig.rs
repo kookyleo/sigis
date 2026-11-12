@@ -187,59 +187,305 @@ fn c14n_params(method_node: Node<'_, '_>) -> Result<C14nParams, DsigError> {
     Ok(params)
 }
 
-/// Check the structure of a `ds:Signature` element against the XMLDSig
-/// schema (the parts signxml's schema validation would reject).
+/// Enforce a deliberately narrow XMLDSig/XAdES schema profile before any
+/// cryptographic checks. Unsupported schema extensions fail closed. This is
+/// not a general XSD processor; the supported grammar covers trusted lists,
+/// certificate key values and the signed properties consumed below.
 fn check_structure(sig: Node<'_, '_>) -> Result<(), DsigError> {
-    let kids: Vec<_> = element_children(sig).collect();
-    let names: Vec<_> = kids
-        .iter()
-        .map(|k| (k.tag_name().namespace(), k.tag_name().name()))
-        .collect();
-    let ok = names.len() >= 2
-        && names[0] == (Some(DSIG_NS), "SignedInfo")
-        && names[1] == (Some(DSIG_NS), "SignatureValue")
-        && names[2..].iter().enumerate().all(|(i, n)| {
-            *n == (Some(DSIG_NS), "Object") || (i == 0 && *n == (Some(DSIG_NS), "KeyInfo"))
-        });
-    if !ok {
-        return Err(invalid(
-            "Signature element does not match the XMLDSig schema",
-        ));
+    use std::collections::BTreeSet;
+
+    fn xml_space(c: char) -> bool {
+        matches!(c, ' ' | '\t' | '\r' | '\n')
     }
-    let si = kids[0];
-    let si_names: Vec<_> = element_children(si)
-        .map(|k| (k.tag_name().namespace(), k.tag_name().name()))
-        .collect();
-    let ok = si_names.len() >= 3
-        && si_names[0] == (Some(DSIG_NS), "CanonicalizationMethod")
-        && si_names[1] == (Some(DSIG_NS), "SignatureMethod")
-        && si_names[2..]
-            .iter()
-            .all(|n| *n == (Some(DSIG_NS), "Reference"));
-    if !ok {
-        return Err(invalid(
-            "SignedInfo element does not match the XMLDSig schema",
-        ));
+    fn sequence(node: Node<'_, '_>, ns: &str, spec: &[(&str, usize, usize)]) -> bool {
+        let kids: Vec<_> = element_children(node).collect();
+        let mut pos = 0;
+        for &(name, min, max) in spec {
+            let start = pos;
+            while pos < kids.len() && is(kids[pos], ns, name) && pos - start < max {
+                pos += 1;
+            }
+            if pos - start < min {
+                return false;
+            }
+        }
+        pos == kids.len()
     }
-    for r in children(si, DSIG_NS, "Reference") {
-        let rn: Vec<_> = element_children(r)
-            .map(|k| (k.tag_name().namespace(), k.tag_name().name()))
-            .collect();
-        let ok = matches!(
-            rn.as_slice(),
-            [
-                (Some(DSIG_NS), "Transforms"),
-                (Some(DSIG_NS), "DigestMethod"),
-                (Some(DSIG_NS), "DigestValue")
-            ] | [
-                (Some(DSIG_NS), "DigestMethod"),
-                (Some(DSIG_NS), "DigestValue")
-            ]
-        );
-        if !ok {
-            return Err(invalid(
-                "Reference element does not match the XMLDSig schema",
-            ));
+    fn id_valid(id: &str) -> bool {
+        // An ASCII subset of xsd:ID/NCName; Unicode IDs are unsupported.
+        let mut chars = id.chars();
+        chars
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+            && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.'))
+    }
+
+    let mut ids = BTreeSet::new();
+    for node in sig.descendants().filter(|n| n.is_element()) {
+        let name = node.tag_name().name();
+        let ns = node.tag_name().namespace();
+        let mut attrs: &[&str] = &[];
+        let mut required: &[&str] = &[];
+        let mut scalar = false;
+        let mut binary = false;
+        let structure = match (ns, name) {
+            (Some(DSIG_NS), "Signature") => {
+                attrs = &["Id"];
+                sequence(
+                    node,
+                    DSIG_NS,
+                    &[
+                        ("SignedInfo", 1, 1),
+                        ("SignatureValue", 1, 1),
+                        ("KeyInfo", 0, 1),
+                        ("Object", 0, usize::MAX),
+                    ],
+                )
+            }
+            (Some(DSIG_NS), "SignedInfo") => {
+                attrs = &["Id"];
+                sequence(
+                    node,
+                    DSIG_NS,
+                    &[
+                        ("CanonicalizationMethod", 1, 1),
+                        ("SignatureMethod", 1, 1),
+                        ("Reference", 1, usize::MAX),
+                    ],
+                )
+            }
+            (Some(DSIG_NS), "Reference") => {
+                attrs = &["Id", "URI", "Type"];
+                sequence(
+                    node,
+                    DSIG_NS,
+                    &[
+                        ("Transforms", 0, 1),
+                        ("DigestMethod", 1, 1),
+                        ("DigestValue", 1, 1),
+                    ],
+                )
+            }
+            (Some(DSIG_NS), "Transforms") => {
+                sequence(node, DSIG_NS, &[("Transform", 1, usize::MAX)])
+            }
+            (Some(DSIG_NS), "CanonicalizationMethod" | "Transform") => {
+                attrs = &["Algorithm"];
+                required = attrs;
+                // Only the canonicalization parameter supported by this verifier.
+                sequence(node, EC_NS, &[("InclusiveNamespaces", 0, 1)])
+            }
+            (Some(DSIG_NS), "SignatureMethod" | "DigestMethod") => {
+                attrs = &["Algorithm"];
+                required = attrs;
+                element_children(node).next().is_none()
+            }
+            (Some(DSIG_NS), "SignatureValue") => {
+                attrs = &["Id"];
+                scalar = true;
+                binary = true;
+                true
+            }
+            (
+                Some(DSIG_NS),
+                "DigestValue" | "X509Certificate" | "X509SKI" | "X509CRL" | "Modulus" | "Exponent",
+            ) => {
+                scalar = true;
+                binary = true;
+                true
+            }
+            (Some(DSIG_NS), "KeyInfo") => {
+                attrs = &["Id"];
+                element_children(node).next().is_some()
+                    && element_children(node).all(|k| {
+                        is(k, DSIG_NS, "X509Data")
+                            || is(k, DSIG_NS, "KeyValue")
+                            || is(k, DSIG11_NS, "DEREncodedKeyValue")
+                    })
+            }
+            (Some(DSIG_NS), "KeyValue") => {
+                let kids: Vec<_> = element_children(node).collect();
+                kids.len() == 1
+                    && (is(kids[0], DSIG_NS, "RSAKeyValue") || is(kids[0], DSIG11_NS, "ECKeyValue"))
+            }
+            (Some(DSIG_NS), "RSAKeyValue") => {
+                sequence(node, DSIG_NS, &[("Modulus", 1, 1), ("Exponent", 1, 1)])
+            }
+            (Some(DSIG_NS), "X509Data") => {
+                element_children(node).next().is_some()
+                    && element_children(node).all(|k| {
+                        k.tag_name().namespace() == Some(DSIG_NS)
+                            && matches!(
+                                k.tag_name().name(),
+                                "X509IssuerSerial"
+                                    | "X509SKI"
+                                    | "X509SubjectName"
+                                    | "X509Certificate"
+                                    | "X509CRL"
+                            )
+                    })
+            }
+            (Some(DSIG_NS), "X509IssuerSerial") | (Some(XADES_NS), "IssuerSerial") => sequence(
+                node,
+                DSIG_NS,
+                &[("X509IssuerName", 1, 1), ("X509SerialNumber", 1, 1)],
+            ),
+            (Some(DSIG_NS), "X509IssuerName" | "X509SubjectName" | "X509SerialNumber") => {
+                scalar = true;
+                if name == "X509SerialNumber" {
+                    let text = text_content(node);
+                    let value = text.trim_matches(xml_space);
+                    let digits = value.strip_prefix(['+', '-']).unwrap_or(value);
+                    !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
+                } else {
+                    true
+                }
+            }
+            (Some(DSIG_NS), "Object") => {
+                attrs = &["Id", "MimeType", "Encoding"];
+                // No unchecked arbitrary XML extensions inside a trusted signature.
+                sequence(node, XADES_NS, &[("QualifyingProperties", 1, 1)])
+            }
+            (Some(DSIG11_NS), "ECKeyValue") => {
+                attrs = &["Id"];
+                sequence(
+                    node,
+                    DSIG11_NS,
+                    &[("NamedCurve", 1, 1), ("PublicKey", 1, 1)],
+                )
+            }
+            (Some(DSIG11_NS), "NamedCurve") => {
+                attrs = &["URI"];
+                required = attrs;
+                element_children(node).next().is_none()
+            }
+            (Some(DSIG11_NS), "PublicKey" | "DEREncodedKeyValue") => {
+                if name == "DEREncodedKeyValue" {
+                    attrs = &["Id"];
+                }
+                scalar = true;
+                binary = true;
+                true
+            }
+            (Some(EC_NS), "InclusiveNamespaces") => {
+                attrs = &["PrefixList"];
+                required = attrs;
+                element_children(node).next().is_none()
+            }
+            (Some(XADES_NS), "QualifyingProperties") => {
+                attrs = &["Id", "Target"];
+                required = &["Target"];
+                sequence(node, XADES_NS, &[("SignedProperties", 1, 1)])
+            }
+            (Some(XADES_NS), "SignedProperties") => {
+                attrs = &["Id"];
+                sequence(
+                    node,
+                    XADES_NS,
+                    &[
+                        ("SignedSignatureProperties", 1, 1),
+                        ("SignedDataObjectProperties", 0, 1),
+                    ],
+                )
+            }
+            (Some(XADES_NS), "SignedSignatureProperties") => {
+                attrs = &["Id"];
+                sequence(
+                    node,
+                    XADES_NS,
+                    &[
+                        ("SigningTime", 0, 1),
+                        ("SigningCertificate", 0, 1),
+                        ("SigningCertificateV2", 0, 1),
+                    ],
+                )
+            }
+            (Some(XADES_NS), "SigningCertificate" | "SigningCertificateV2") => {
+                sequence(node, XADES_NS, &[("Cert", 1, usize::MAX)])
+            }
+            (Some(XADES_NS), "Cert") => {
+                attrs = &["URI"];
+                let v2 = node
+                    .parent()
+                    .is_some_and(|p| is(p, XADES_NS, "SigningCertificateV2"));
+                sequence(
+                    node,
+                    XADES_NS,
+                    &[
+                        ("CertDigest", 1, 1),
+                        (
+                            if v2 { "IssuerSerialV2" } else { "IssuerSerial" },
+                            usize::from(!v2),
+                            1,
+                        ),
+                    ],
+                )
+            }
+            (Some(XADES_NS), "CertDigest") => sequence(
+                node,
+                DSIG_NS,
+                &[("DigestMethod", 1, 1), ("DigestValue", 1, 1)],
+            ),
+            (Some(XADES_NS), "IssuerSerialV2") => {
+                scalar = true;
+                binary = true;
+                true
+            }
+            (Some(XADES_NS), "SigningTime" | "Description" | "MimeType" | "Encoding") => {
+                scalar = true;
+                if name == "SigningTime" {
+                    Moment::parse_xsd_datetime(text_content(node).trim_matches(xml_space)).is_some()
+                } else {
+                    true
+                }
+            }
+            (Some(XADES_NS), "SignedDataObjectProperties") => {
+                attrs = &["Id"];
+                sequence(node, XADES_NS, &[("DataObjectFormat", 0, usize::MAX)])
+            }
+            (Some(XADES_NS), "DataObjectFormat") => {
+                attrs = &["ObjectReference"];
+                required = attrs;
+                sequence(
+                    node,
+                    XADES_NS,
+                    &[
+                        ("Description", 0, 1),
+                        ("MimeType", 0, 1),
+                        ("Encoding", 0, 1),
+                    ],
+                )
+            }
+            _ => false,
+        };
+        let bad_attr = node
+            .attributes()
+            .any(|a| a.namespace().is_some() || !attrs.contains(&a.name()));
+        let missing_attr = required.iter().any(|a| node.attribute(*a).is_none());
+        let bad_content = if scalar {
+            element_children(node).next().is_some()
+        } else {
+            node.children()
+                .filter(|c| c.is_text())
+                .any(|c| !c.text().unwrap_or("").chars().all(xml_space))
+        };
+        if !structure || bad_attr || missing_attr || bad_content {
+            return Err(invalid(format!(
+                "Unsupported or invalid XML signature schema content in {name}"
+            )));
+        }
+        if let Some(id) = node.attribute("Id") {
+            if !id_valid(id) || !ids.insert(id.to_owned()) {
+                return Err(invalid("Invalid or duplicate XML signature ID"));
+            }
+        }
+        if binary {
+            // xsd:base64Binary permits XML whitespace, not arbitrary Unicode whitespace.
+            let text = text_content(node);
+            let compact: String = text.chars().filter(|c| !xml_space(*c)).collect();
+            base64::engine::general_purpose::STANDARD
+                .decode(compact.as_bytes())
+                .map_err(|_| invalid(format!("Invalid base64 schema content in {name}")))?;
         }
     }
     Ok(())
@@ -683,4 +929,45 @@ fn verify_cert_digests(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod schema_tests {
+    use super::*;
+
+    const VALID: &str = r##"<Signature xmlns="http://www.w3.org/2000/09/xmldsig#" Id="sig">
+<SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+<SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+<Reference URI="#payload"><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+<DigestValue>AA==</DigestValue></Reference></SignedInfo>
+<SignatureValue>AA==</SignatureValue></Signature>"##;
+
+    #[test]
+    fn supported_schema_profile_rejects_ignored_invalid_content() {
+        let doc = parse(VALID).unwrap();
+        check_structure(doc.root_element()).unwrap();
+        for (from, to) in [
+            ("<SignatureValue>", "<SignatureValue bogus=\"1\">"),
+            ("<SignatureValue>", "<SignatureValue xml:lang=\"en\">"),
+            ("</SignatureValue>", "<DigestValue/></SignatureValue>"),
+            ("<SignedInfo>", "unexpected<SignedInfo>"),
+            ("<DigestValue>", "<DigestValue Id=\"x\">"),
+            ("<DigestValue>AA==", "<DigestValue>AA\u{a0}=="),
+            ("<Reference URI=", "<Reference Id=\"sig\" URI="),
+            ("Id=\"sig\"", "Id=\"1-invalid-id\""),
+            ("<DigestMethod Algorithm=", "<DigestMethod Unexpected="),
+            ("<DigestMethod", "<Transforms/><DigestMethod"),
+            ("</Signature>", "<KeyInfo/><KeyInfo/></Signature>"),
+            ("</Signature>", "<Object><unknown/></Object></Signature>"),
+            ("</SignatureValue>", "</SignatureValue><unknown/>"),
+        ] {
+            assert!(VALID.contains(from));
+            let xml = VALID.replacen(from, to, 1);
+            let doc = parse(&xml).unwrap();
+            assert!(
+                check_structure(doc.root_element()).is_err(),
+                "accepted {to}"
+            );
+        }
+    }
 }

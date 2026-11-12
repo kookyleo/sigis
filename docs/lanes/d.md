@@ -101,7 +101,7 @@ L1); see the README there.
   `x-hbot` private-use form); `subsetter` instead of fontTools (CFF subsets
   desubroutinized and rebuilt in fontTools' layout; TrueType subsets use a
   `/CIDToGIDMap` stream); one object stream per update; images: PNG and JPEG
-  only (1-bit and 16-bit accepted where Pillow rejects); barcodes: Code 128
+  only (1-bit and 16-bit grayscale PNGs rejected as Pillow does); barcodes: Code 128
   only; QR symbols from the `qrcode` crate with python-qrcode's segmentation,
   version and mask choice; standalone stamping takes no decode limits;
   inherited `/DecodeParms` are kept when importing pages.
@@ -246,3 +246,51 @@ When rebasing onto `main`, keep this section in your version of this file.
   `docs/hanko-lanes.md` §8). 2 done on `main` (run-time fixture paths).
   3 and 4 relayed to lane A (A-5, A-6). 5 relayed to lane B (B-4). The
   standard oracle venv is `/tmp/pyhanko-oracle/venv`.
+
+## Lead round 2 (2026-11-12)
+
+- **Not merged yet.** Your committed head `a9d07e0` does not compile on
+  `main`: 13 non-exhaustive `match`es on `DigestAlgorithm` in
+  `src/signer.rs` and `src/pkcs11.rs` (lane A added `Md5`, `Sha3_*`,
+  `Shake256`). Your session was still running with uncommitted edits in
+  those files, so the lead did not touch them.
+- D-2 decided: reading the run-time `CARGO_MANIFEST_DIR` first is fine;
+  prefer `sigis_testdata::manifest_dir()` for uniformity.
+- D-6 done: `HankoError::{Layout, Configuration, FormFilling}(String)`.
+- The layout was renamed (`docs/crates.md`): your crate is now
+  `crates/pades-sign` (`sigis-pades-sign`). To catch up: commit your work,
+  run `tools/migrate-crate-names.sh` on your branch, commit, then
+  `git rebase main` (keep both sides in `docs/lanes/d.md`; take `main`'s
+  `Cargo.lock` and run `cargo check --workspace`). Then the lead merges.
+- Divergence to review: images "1-bit and 16-bit accepted where Pillow
+  rejects" accepts input pyHanko rejects. It concerns appearance images, not
+  signature validation, but please either reject them as Pillow does or list
+  it explicitly as an accepted divergence with a reason.
+
+## Lead integration outcome (2026-11-12)
+
+The historical lead-round-2 notes above and the lane's answers are retained.
+The branch was migrated with `tools/migrate-crate-names.sh` and rebased onto
+`main` 1610639. Files introduced under old directories were moved to
+`crates/pades-sign` and `crates/testdata/data/lanes/d`; the signing package is
+`sigis-pades-sign`. Conflicting `Cargo.lock` content was taken from main and
+D dependencies were re-resolved. The newer 56af66c implementation already
+covers the added digest variants; the obsolete 13-match compilation blocker
+no longer applies.
+
+D-2 uses runtime fixture and oracle paths, with the shared oracle venv.
+The image divergence is closed: grayscale PNG modes `1` and `I;16` are
+rejected before pixel conversion, while indexed 1-bit and RGB(A) 16-bit
+images remain supported as Pillow does. Eight generated PNG modes are
+checked against the live oracle. D-6 uses the dedicated error variants.
+
+The 13 pending signing functions still need caller-side integration with
+lane A/B APIs that now exist: HTTP TSA (including seed URL), AC presign
+validation and DSS autofill, public-key encryption, and signed attachments.
+PDF MAC signing and decode-limit propagation through the temporary writer
+remain additional functionality gaps; merging D alone does not unblock
+lane B's five pending tests. Seed-value parsing is public (D-1), but lane E
+still needs to consume it; there was no existing ignored E test to enable.
+
+Function counts remain 297 total / 271 ported-pass / 13 skipped / 13 pending.
+Final validation and completion lanes are recorded in `docs/status.md`.

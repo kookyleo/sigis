@@ -59,12 +59,12 @@ The ignored test `path_validation_of_qualified_pki` checks that part and is
 to be enabled once R-E5 is fixed.
 
 Differential test: `tests/differential.rs` runs `oracle/tl_verdicts.py`
-(pyHanko) and this crate on 18 inputs — every trusted list and LOTL
+(pyHanko) and this crate on 22 inputs — every trusted list and LOTL
 fixture with its signer certificates, an expired-signer time, wrong
 signers, and three tampered lists — and compares signature verdicts,
 service definition counts, parsing errors and registry sizes. Any case
 where pyHanko rejects and the port accepts fails as "FAIL-OPEN". Last run:
-18/18 agree. It skips when the oracle cannot import pyHanko (run with
+22 inputs including four schema-invalid edits; the integration gate records the current result. It skips when the oracle cannot import pyHanko (run with
 `HANKO_ORACLE=<python>` and, if needed, `PYTHONPATH` for pyHanko).
 
 Time pinning: upstream tests that validate signatures at the current time
@@ -97,5 +97,15 @@ they do not break when the list signer certificates expire.
   small DER reader (`util::certificate_policy_oids`) because `const-oid`
   rejects arcs such as `2.999`. Same result as asn1crypto.
 - **D-E4** (XML schema validation): signxml validates the `ds:Signature`
-  element against the XMLDSig schema. The port checks the element order of
-  `Signature`, `SignedInfo` and `Reference` only.
+  element against the XMLDSig schema. The port now enforces a conservative
+  supported schema profile throughout the signature subtree: attribute
+  whitelists, required attributes, child namespace/order/cardinality,
+  scalar/base64 content, XML-only whitespace, ASCII NCName IDs and ID
+  uniqueness, certificate/EC/RSA key-value structure, and the XAdES signed
+  properties consumed by trusted-list verification. Unsupported elements,
+  extensions, algorithm parameters and unsigned XAdES properties are
+  rejected. Unicode IDs and otherwise-valid extension profiles can
+  therefore reject where signxml accepts. This is deliberately not a
+  general XML Schema validator. Regression differentials modify a valid
+  signed list's SignatureValue attributes/children, element-only text and
+  Object attributes; all must reject, matching the oracle schema check.

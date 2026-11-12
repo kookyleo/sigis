@@ -6,7 +6,9 @@
 //! helpers for timestamp tokens.
 
 use cms::content_info::{CmsVersion, ContentInfo};
-use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier, SignerInfo, SignerInfos};
+use cms::signed_data::{
+    EncapsulatedContentInfo, SignedData, SignerIdentifier, SignerInfo, SignerInfos,
+};
 use const_oid::ObjectIdentifier as Oid;
 use der::asn1::{Int, OctetString, SetOfVec};
 use der::{Any, Decode, Encode};
@@ -84,10 +86,7 @@ impl DummyTimeStamper {
         let md = match self.override_md {
             Some(md) => md,
             None => DigestAlgorithm::from_oid(&imprint.hash_algorithm.oid).ok_or_else(|| {
-                HankoError::Unsupported(format!(
-                    "digest algorithm {}",
-                    imprint.hash_algorithm.oid
-                ))
+                HankoError::Unsupported(format!("digest algorithm {}", imprint.hash_algorithm.oid))
             })?,
         };
         let dt = self.fixed_dt.unwrap_or_else(Moment::now);
@@ -141,9 +140,14 @@ impl DummyTimeStamper {
             unsigned_attrs: None,
         };
         let mut certs = SetOfVec::new();
-        for c in self.certs_to_embed.iter().chain(std::iter::once(&self.tsa_cert)) {
-            let choice =
-                cms::cert::CertificateChoices::Certificate(x509_cert::Certificate::from_der(c.der())?);
+        for c in self
+            .certs_to_embed
+            .iter()
+            .chain(std::iter::once(&self.tsa_cert))
+        {
+            let choice = cms::cert::CertificateChoices::Certificate(
+                x509_cert::Certificate::from_der(c.der())?,
+            );
             if !certs.iter().any(|x| x == &choice) {
                 certs.insert(choice)?;
             }
@@ -190,7 +194,9 @@ impl TimeStamper for DummyTimeStamper {
 pub fn tst_info(token_der: &[u8]) -> Result<TstInfo> {
     let sd = crate::cms::decode_signed_data(token_der)?;
     if sd.encap_content_info.econtent_type != ID_CT_TST_INFO {
-        return Err(HankoError::Malformed("timestamp token without TSTInfo".into()));
+        return Err(HankoError::Malformed(
+            "timestamp token without TSTInfo".into(),
+        ));
     }
     let content = sd
         .encap_content_info

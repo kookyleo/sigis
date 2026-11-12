@@ -10,7 +10,9 @@ use der::asn1::{OctetString, SetOfVec};
 use der::{Any, Decode, Encode, Sequence};
 use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::asn1::commitment::{CommitmentType, CommitmentTypeIndication};
-use sigis_pki_core::asn1::ess::{EssCertId, IssuerSerial, SigningCertificate, SigningCertificateV2};
+use sigis_pki_core::asn1::ess::{
+    EssCertId, IssuerSerial, SigningCertificate, SigningCertificateV2,
+};
 use sigis_pki_core::asn1::oids;
 use sigis_pki_core::asn1::sig_policy::SignaturePolicyIdentifier;
 use sigis_pki_core::cert::Cert;
@@ -53,7 +55,9 @@ pub fn utc_time(at: Moment) -> Result<x509_cert::time::Time> {
     let dt = at
         .to_der_datetime()
         .ok_or_else(|| HankoError::Signing(format!("time {at} cannot be encoded")))?;
-    Ok(x509_cert::time::Time::UtcTime(der::asn1::UtcTime::from_date_time(dt)?))
+    Ok(x509_cert::time::Time::UtcTime(
+        der::asn1::UtcTime::from_date_time(dt)?,
+    ))
 }
 
 /// `SigningCertificate` (ESS v1, SHA-1) for `cert` (`as_signing_certificate`).
@@ -68,7 +72,10 @@ pub fn as_signing_certificate(cert: &Cert) -> Result<SigningCertificate> {
 }
 
 /// `SigningCertificateV2` for `cert` (`as_signing_certificate_v2`).
-pub fn as_signing_certificate_v2(cert: &Cert, digest: DigestAlgorithm) -> Result<SigningCertificateV2> {
+pub fn as_signing_certificate_v2(
+    cert: &Cert,
+    digest: DigestAlgorithm,
+) -> Result<SigningCertificateV2> {
     let mut v2 = SigningCertificateV2::for_signer(cert.decoded(), digest)?;
     // `for_signer` re-encodes the certificate; hash the exact DER instead.
     if let Some(first) = v2.certs.first_mut() {

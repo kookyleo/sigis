@@ -21,6 +21,7 @@ from datetime import datetime
 
 def main():
     try:
+        from lxml.etree import DocumentInvalid
         from pyhanko.keys import load_certs_from_pemder
         from pyhanko.sign.validation.errors import SignatureValidationError
         from pyhanko.sign.validation.qualified import eutl_parse
@@ -44,7 +45,7 @@ def main():
             try:
                 xml = eutl_parse._validate_and_extract_tl_data_multiple_certs(xml, certs, when)
                 verdict['signature'] = 'valid'
-            except SignatureValidationError:
+            except (SignatureValidationError, DocumentInvalid):
                 verdict['signature'] = 'invalid'
                 out.append(verdict)
                 continue

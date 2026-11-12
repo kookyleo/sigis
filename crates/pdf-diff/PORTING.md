@@ -25,7 +25,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_diff_analysis.py` | `tests/test_diff_analysis.rs` (+ `tests/sweep.rs`, `tests/mutations.rs`, unit tests) | 94 | 87 | 6 | 1 |
+| `test_diff_analysis.py` | `tests/test_diff_analysis.rs` (+ `tests/sweep.rs`, `tests/mutations.rs`, unit tests) | 94 | 92 | 2 | 0 |
 
 pyHanko's tests build their inputs with pyHanko's signer and writer.
 `oracle/capture.sh` ran the upstream test module (183 cases, all passing)
@@ -44,23 +44,16 @@ updates per file, about 10,400 verdicts) agree as well. Both the sweep and
 the mutations also run through `DerivedSource`, the derivation that
 `PdfFileSource` uses on `sigis_pdf::PdfFile`.
 
-Skipped (no difference analysis runs in these tests):
-
-| Test | Reason |
-| --- | --- |
-| `test_anomalous_coverage` | Signature coverage (`pdf_embedded.evaluate_signature_coverage`, lane E) rejects before any diff |
-| `test_tamper_sig_obj` | Same: the in-place edit breaks coverage, no diff call |
-| `test_create_deep_sig_field`, `test_create_multi_deep_sig_field` | Signing into new deep fields; single signed revision (lane D signer tests) |
-| `test_deep_non_sig_field` | Signer refuses a non-signature field (lane D) |
-| `test_simple_sign_with_separate_annot` | Signing with a separate widget; single signed revision (lane D) |
-
-Pending: `test_duplicate_xref_table_entry_rejected` (reader check; the test
-is written and ignored until `sigis_pdf::PdfFile::parse` rejects duplicate
-xref subsections, lane B).
+The four signing-only cases now use `tests/support/signing.rs` and lane D's
+signer, with Rust and live pyHanko validation plus field/widget assertions.
+Only `test_anomalous_coverage` and `test_tamper_sig_obj` remain skipped here:
+coverage is decided by lane E before difference analysis. The duplicate-xref
+reader regression is active and passes; there are no pending functions.
 
 ## Known divergences
 
-All divergences are stricter than pyHanko (fail closed) unless noted.
+All divergences are stricter than pyHanko (fail closed) for PDF inputs
+parsed by `sigis-pdf`.
 
 1. **Reverse cross-reference cache in encrypted files.** pyHanko does not
    enter nested direct containers of encrypted objects (they are
@@ -85,18 +78,17 @@ All divergences are stricter than pyHanko (fail closed) unless noted.
    UTF-8, XML-1.0-illegal characters, `--` in comments and non-predefined
    entity references in text and attributes; streams whose filters `lopdf`
    cannot decode are rejected.
-7. **Reals** (possibly lenient, request C4): `lopdf` stores reals as `f32`,
-   so two different decimal literals that round to the same `f32` compare
-   equal; pyHanko compares them exactly as `Decimal`.
-   **Decision (lead round 2, 2026-11-12): accepted as a known divergence.**
-   Lane B keeps `lopdf::Object` (B-3): reals stay `f32`, numbers beyond
-   64-bit integers are rejected by the reader, and both revisions of an
-   object go through the same parser, so equal source text always compares
-   equal. The residual risk is a change between two reals that differ only
-   beyond about 7 significant digits (well below any visible effect) being
-   reviewed as unchanged. This is the only known divergence in the
-   workspace that can be more lenient than pyHanko; revisit if `lopdf`
-   gains `f64` reals.
+7. **Reals** (fail closed): `lopdf` stores reals as `f32`, so the PDF
+   reader rejects decimal literals whose value differs from the shortest
+   decimal rendering of that float (see `pdf/PORTING.md`). This prevents
+   source decimals with distinct values from comparing equal. Common
+   decimals remain supported; higher precision is rejected rather than
+   rounded. Mixed integer/real comparisons use the exact shortest decimal
+   rendering, without rounding the integer through `f64`. This supersedes
+   the lead round 2 decision to accept a potentially lenient divergence.
+   Custom `RevisionSource` implementations constructing `Object::Real`
+   directly are responsible for the same decimal-value convention; the
+   original source precision cannot be recovered from an `f32`.
 8. **`PdfFileSource`** (until request C1): the cross-reference stream,
    object streams and freed references of a revision are derived from the
    objects it writes; hybrid-reference streams are not cleared (pyHanko only

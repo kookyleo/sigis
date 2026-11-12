@@ -1,5 +1,5 @@
 [package]
-name = "hanko-sign"
+name = "sigis-pades-sign"
 description = "PDF and CMS signing, PAdES B-B to B-LTA (port of pyHanko signers)"
 version.workspace = true
 edition.workspace = true

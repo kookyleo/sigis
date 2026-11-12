@@ -150,7 +150,10 @@ pub fn load_pkcs12(data: &[u8], passphrase: Option<&[u8]>) -> Result<Pkcs12Conte
                 .as_bytes()
                 .to_vec()
         } else if ci.content_type == ID_ENCRYPTED_DATA {
-            let ed = ci.content.decode_as::<EncryptedData>().map_err(|e| err(e.to_string()))?;
+            let ed = ci
+                .content
+                .decode_as::<EncryptedData>()
+                .map_err(|e| err(e.to_string()))?;
             let enc = ed
                 .enc_content_info
                 .encrypted_content
@@ -164,8 +167,7 @@ pub fn load_pkcs12(data: &[u8], passphrase: Option<&[u8]>) -> Result<Pkcs12Conte
         } else {
             return Err(err(format!("unsupported content type {}", ci.content_type)));
         };
-        let safe_bags =
-            Vec::<SafeBag>::from_der(&contents).map_err(|e| err(e.to_string()))?;
+        let safe_bags = Vec::<SafeBag>::from_der(&contents).map_err(|e| err(e.to_string()))?;
         bags.extend(safe_bags);
     }
 
@@ -188,14 +190,19 @@ pub fn load_pkcs12(data: &[u8], passphrase: Option<&[u8]>) -> Result<Pkcs12Conte
                 key_id = local_id;
             }
             SHROUDED_KEY_BAG => {
-                let epki: EncryptedPrivateKeyInfo =
-                    bag.bag_value.decode_as::<EncryptedPrivateKeyInfo>().map_err(|e| err(e.to_string()))?;
+                let epki: EncryptedPrivateKeyInfo = bag
+                    .bag_value
+                    .decode_as::<EncryptedPrivateKeyInfo>()
+                    .map_err(|e| err(e.to_string()))?;
                 let der = pbe_decrypt(&epki.algorithm, pass, &bmp_pass, epki.data.as_bytes())?;
                 key = Some(PrivateKey::from_pkcs8_der(&der)?);
                 key_id = local_id;
             }
             CERT_BAG => {
-                let cb = bag.bag_value.decode_as::<CertBag>().map_err(|e| err(e.to_string()))?;
+                let cb = bag
+                    .bag_value
+                    .decode_as::<CertBag>()
+                    .map_err(|e| err(e.to_string()))?;
                 if cb.cert_id == X509_CERTIFICATE {
                     certs.push((Cert::from_der(cb.cert_value.as_bytes())?, local_id));
                 }
@@ -339,7 +346,14 @@ fn pkcs12_kdf(md: Md, bmp_pass: &[u8], salt: &[u8], id: u8, iterations: u32, n: 
 fn verify_mac(mac: &MacData, bmp_pass: &[u8], data: &[u8]) -> Result<bool> {
     let md = Md::from_oid(&mac.mac.algorithm.oid)
         .ok_or_else(|| err(format!("MAC digest {}", mac.mac.algorithm.oid)))?;
-    let key = pkcs12_kdf(md, bmp_pass, mac.mac_salt.as_bytes(), 3, mac.iterations, md.output_len());
+    let key = pkcs12_kdf(
+        md,
+        bmp_pass,
+        mac.mac_salt.as_bytes(),
+        3,
+        mac.iterations,
+        md.output_len(),
+    );
     Ok(md.hmac(&key, data) == mac.mac.digest.as_bytes())
 }
 

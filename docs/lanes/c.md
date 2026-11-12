@@ -34,7 +34,7 @@ For lane E (`pdf_embedded.evaluate_modifications`): check coverage first
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_diff_analysis.py` | 94 | 88 | 6 | 0 |
+| `test_diff_analysis.py` | 94 | 92 | 2 | 0 |
 
 Skipped (no difference analysis runs; reasons in PORTING.md):
 `test_anomalous_coverage`, `test_tamper_sig_obj` (coverage, lane E),
@@ -121,3 +121,20 @@ Merged into `main` with the lead round recorded in `docs/hanko-lanes.md` §8.
 - `hanko_diff::XrefSectionInfo` is lane B's type now (re-export).
 - B-3: `f32` reals stay; listed below under Known divergences (low risk).
 - Crate renamed: `crates/pdf-diff` (`sigis-pdf-diff`), see `docs/crates.md`.
+
+## Lead D integration (2026-11-12)
+
+Four signing-only cases now execute real lane D signing, verify the resulting
+field/widget structure, and validate with both `sigis-pades` and the shared
+pyHanko oracle: `test_create_deep_sig_field`,
+`test_create_multi_deep_sig_field`, `test_deep_non_sig_field`, and
+`test_simple_sign_with_separate_annot`. Only the two coverage-only cases
+remain skipped in this suite. The four tests are implemented in
+`tests/support/signing.rs`; signing and validation dependencies are dev-only.
+
+The previously accepted f32 decimal-collision exception is superseded:
+`sigis-pdf` now rejects decimal literals that would lose their source value
+when represented by the shortest f32 decimal; mixed integer/real comparisons
+also avoid f64 rounding. The restriction is conservative (fail closed).
+Custom `RevisionSource` implementations must preserve this input invariant.
+See `docs/status.md` for the final gate and remaining work.

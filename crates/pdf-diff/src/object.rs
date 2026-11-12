@@ -19,7 +19,10 @@ pub(crate) fn py_eq(a: &Object, b: &Object) -> bool {
         (Null, Null) => true,
         (Boolean(x), Boolean(y)) => x == y,
         (Integer(x), Integer(y)) => x == y,
-        (Integer(x), Real(y)) | (Real(y), Integer(x)) => (*x as f64) == f64::from(*y),
+        // sigis-pdf accepts only the decimal value of an f32's shortest
+        // rendering. Compare that value exactly: converting i64 to f64
+        // would collapse adjacent integers above 2^53.
+        (Integer(x), Real(y)) | (Real(y), Integer(x)) => y.to_string().parse::<i64>() == Ok(*x),
         (Real(x), Real(y)) => x == y,
         (Name(x), Name(y)) => x == y,
         (String(x, _), String(y, _)) => x == y,
@@ -203,6 +206,25 @@ mod tests {
     fn numbers_compare_across_types_for_eq_but_not_identity() {
         assert!(py_eq(&Object::Integer(1), &Object::Real(1.0)));
         assert!(!is_identical(&Object::Integer(1), &Object::Real(1.0)));
+    }
+
+    #[test]
+    fn large_integer_real_comparison_keeps_decimal_precision() {
+        let real = Object::Real(2.0_f32.powi(53));
+        assert!(!py_eq(&Object::Integer(9_007_199_254_740_993), &real));
+        assert!(!py_eq(&real, &Object::Integer(9_007_199_254_740_993)));
+        // The shortest decimal rendering, rather than the binary float's
+        // exact integer value, is the value accepted by the PDF reader.
+        assert!(py_eq(&Object::Integer(9_007_199_000_000_000), &real));
+        assert!(!py_eq(&Object::Integer(9_007_199_254_740_992), &real));
+        assert!(!py_eq(
+            &Object::Integer(i64::MAX),
+            &Object::Real(i64::MAX as f32)
+        ));
+        assert!(!py_eq(&Object::Integer(0), &Object::Real(f32::NAN)));
+        assert!(!py_eq(&Object::Integer(0), &Object::Real(f32::INFINITY)));
+        assert!(py_eq(&Object::Integer(0), &Object::Real(-0.0)));
+        assert!(!py_eq(&Object::Integer(1), &Object::Real(1.5)));
     }
 
     #[test]

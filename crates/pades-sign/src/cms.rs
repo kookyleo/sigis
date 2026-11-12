@@ -156,9 +156,11 @@ impl CmsSigner<'_> {
             AttrProfile::GenericCms | AttrProfile::GenericPdf => settings.signing_time,
             AttrProfile::Cades { is_pades: true } => None,
             // CAdES requires signingTime.
-            AttrProfile::Cades { is_pades: false } => {
-                Some(settings.signing_time.unwrap_or_else(sigis_pki_core::time::Moment::now))
-            }
+            AttrProfile::Cades { is_pades: false } => Some(
+                settings
+                    .signing_time
+                    .unwrap_or_else(sigis_pki_core::time::Moment::now),
+            ),
         };
         if let Some(t) = signing_time {
             attrs.push(attributes::simple_attribute(
@@ -178,10 +180,16 @@ impl CmsSigner<'_> {
                 }
             }
             if let Some(policy) = &cades.signature_policy_identifier {
-                attrs.push(attributes::simple_attribute(oids::AA_ETS_SIG_POLICY_ID, policy)?);
+                attrs.push(attributes::simple_attribute(
+                    oids::AA_ETS_SIG_POLICY_ID,
+                    policy,
+                )?);
             }
             if let Some(ct) = &cades.commitment_type {
-                attrs.push(attributes::simple_attribute(oids::AA_ETS_COMMITMENT_TYPE, ct)?);
+                attrs.push(attributes::simple_attribute(
+                    oids::AA_ETS_COMMITMENT_TYPE,
+                    ct,
+                )?);
             }
             if let Some(sa) = &cades.signer_attributes {
                 attrs.push(attributes::simple_attribute(
@@ -248,7 +256,15 @@ impl CmsSigner<'_> {
         } else {
             Some(attrs_to_set(unsigned)?)
         };
-        self.package(digest, mech, cms_version, signed_set, signature, unsigned, encap)
+        self.package(
+            digest,
+            mech,
+            cms_version,
+            signed_set,
+            signature,
+            unsigned,
+            encap,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -296,7 +312,9 @@ impl CmsSigner<'_> {
             // v2AttrCert [2] IMPLICIT AttributeCertificateV2
             let mut tagged = ac.clone();
             if tagged.first() != Some(&0x30) {
-                return Err(HankoError::Malformed("attribute certificate is not a SEQUENCE".into()));
+                return Err(HankoError::Malformed(
+                    "attribute certificate is not a SEQUENCE".into(),
+                ));
             }
             tagged[0] = 0xA2;
             add(&tagged)?;
@@ -372,7 +390,15 @@ impl CmsSigner<'_> {
         } else {
             AttrProfile::GenericCms
         };
-        self.sign(&data_digest, digest, settings, profile, timestamper, false, encap)
+        self.sign(
+            &data_digest,
+            digest,
+            settings,
+            profile,
+            timestamper,
+            false,
+            encap,
+        )
     }
 }
 
@@ -424,7 +450,11 @@ fn is_self_signed(cert: &Cert) -> bool {
     cert.is_self_issued()
         && sigis_pki_core::algorithms::validate_signature(
             cert.decoded().signature().raw_bytes(),
-            &cert.decoded().tbs_certificate().to_der().unwrap_or_default(),
+            &cert
+                .decoded()
+                .tbs_certificate()
+                .to_der()
+                .unwrap_or_default(),
             &cert.public_key(),
             cert.decoded().signature_algorithm(),
             &Default::default(),

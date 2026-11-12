@@ -13,10 +13,10 @@ counts: `docs/lanes/d.md`.
 | `sign/signers/pdf_cms.py` (`Signer`, `SimpleSigner`, `ExternalSigner`, attribute provider specs, `select_suitable_signing_md`) | `src/signer.rs`, `src/cms.rs` | ported; containers built from `cms` crate types (the `cms` builder needs an in-process key) |
 | `sign/general.py` (signing parts: ESS helpers, `optimal_pss_params`, `get_cms_hash_algo_for_mechanism`) | `src/attributes.rs`, `src/signer.rs` | ported |
 | `sign/attributes.py` | `src/attributes.rs`, `src/cms.rs` | ported |
-| `sign/ades/api.py`, `sign/ades/cades_asn1.py` | `src/attributes.rs` (+ `hanko-core::asn1` types) | ported |
+| `sign/ades/api.py`, `sign/ades/cades_asn1.py` | `src/attributes.rs` (+ `sigis_pki_core::asn1` types) | ported |
 | `sign/timestamps/dummy_client.py`, `common_utils.py` | `src/timestamps.rs` | ported |
 | `sign/timestamps/api.py` (`TimeStamper`) | `sigis_pki_core::sign::TimeStamper` + `src/pdf/timestamp.rs` (`tsa_validation_info`) | ported |
-| `sign/timestamps/requests_client.py`, `aiohttp_client.py` | — | lane A (`hanko-fetch::HttpTimeStamper`) |
+| `sign/timestamps/requests_client.py`, `aiohttp_client.py` | — | lane A (`sigis_pki_fetch::HttpTimeStamper`) |
 | `sign/signers/pdf_signer.py` | `src/pdf/signer.rs`, `src/pdf/timestamp.rs`, `src/ltv.rs` | ported (PdfSigner, signing session, locking rules, seed value enforcement, size estimation, interrupted signing, post-sign DSS/LTA, PdfTimeStamper) except PDF MAC (ISO 32004, pending lane B `pdfmac`) |
 | `sign/signers/cms_embedder.py` | `src/pdf/signer.rs` (`SigMdpSetup`, `write_and_digest`, `PdfTbsDocument`) | ported |
 | `sign/signers/pdf_byterange.py` | `src/pdf/signer.rs` (`SignatureObjectSpec`, `BuildProps`, `PreparedDocument`), `src/pdf/writer.rs` (placeholders) | ported |
@@ -60,3 +60,11 @@ check (`tests/support/pdfcheck.rs`: byte range, digest, signature value)
 and pyHanko's own verdict through `oracle/validate_pdf.py` (pinned clock,
 Certomancer services where pyHanko's tests use `pki_services`). Without an
 oracle the differential checks are skipped with a message.
+
+## Integration restrictions (2026-11-12)
+
+Runtime test and oracle paths use `sigis_testdata`; the shared oracle is
+`/tmp/pyhanko-oracle/venv`. Grayscale PNG modes `1` and `I;16` are rejected
+like Pillow (eight-mode live differential regression). Layout, configuration
+and form errors use the dedicated core variants. See `docs/status.md` for
+remaining signing/validation integration gaps and the final workspace gate.
