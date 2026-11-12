@@ -136,12 +136,12 @@ certificate/AC/time-slide producers retain actual typed cutoffs and still reject
 Five native regressions and seven constraint/three Python error property cases
 cover this helper API; they are not full algorithm-validation function ports.
 
-S owns typed CMS enforcement, path/AC/context horizon propagation, preserving
-original failure paths, horizon-sensitive status mapping and actual time-slide
-min(control_time, cutoff) behavior. V owns typed error matching, _NO_POE versus
-permanent mapping and LTA/hedging recovery with authenticated POE. Existing
-string-based CMS enforcement/permanent mappings and rejecting time-slide
-semantics remain pending consumer work. Never infer cutoff dates from reason
+S's typed CMS enforcement, path/AC/context horizon propagation, preserved
+original paths, horizon-sensitive status mapping and actual time-slide
+min(control_time, cutoff) behavior are accepted on mainc4158bd after all gates. V owns typed error matching, _NO_POE versus
+permanent mapping and LTA/hedging recovery with authenticated POE. The former string-based enforcement and unconditional time-slide rejection
+are superseded by that accepted consumer increment; full V LTA proof handling
+remains pending. Never infer cutoff dates from reason
 strings, create POE from a cutoff, or weaken mandatory checks. Exact audit:
 /home/l/.codex/artifacts/sigis/round3-launch/algorithm-horizon/audit.md.
 
@@ -250,3 +250,19 @@ replicated exact fixture files and native actual opened-path/hash receipts.
 Ambient HANKO_* selection variables are not forwarded by rust-remote. Do not
 change global scheduling, force local, bypass the wrapper or equate parent
 shell exports with native fresh-input proof.
+
+
+## Accepted typed consumers and live fixture checkpoint
+
+Sourcec4158bd passed the complete workspace gate:1321discovered/1313passed/
+8ignored/0failed/109reports. Sourcee476da8 previously passed all gates for
+PFX/AIA loopback routes and one native environment helper. No upstream count
+changes: overall1431/1052/66/313, S824/754/63/7, L11/4/0/7.
+
+Typed errors carry real cutoffs through CMS/path/AC/status. Time sliding uses
+the actual cutoff minimum for timed denial and rejects permanent policies.
+OCSP_NOCHECK no longer bypasses the mandatory responder certificate algorithm
+query; its other prior gates remain.28 native helpers and oracle exception-
+shape limitations are documented in s-algorithm-horizons.md. V/C can consume
+these accepted shared changes, but V's timestamp-POE guards, fresh-native
+provenance and ByteRange failure remain separate acceptance holds.

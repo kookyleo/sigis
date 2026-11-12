@@ -59,18 +59,20 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on maine476da8 found **1,293 Rust tests: 1,285 passed, eight
-ignored, zero failed**, across108 reports. Build, workspace tests, strict
+The latest gate on mainc4158bd found **1,321 Rust tests: 1,313 passed, eight
+ignored, zero failed**, across109 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/l-pki-routes/gate/`.
-The previous reader/CSC/P source8a1568c and S sourceb81c254 also passed
-the complete gate.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-algorithm-consumers-gate/`.
+The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
+sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
 fixed source then passed the complete gate again. Algorithm constraints now expose not_allowed_after;
 structured policy errors preserve banned_since without parsing reason strings.
-Certificate/AC/time-slide producers retain metadata and continue rejecting.
-Typed CMS enforcement, horizon-sensitive status mapping and time-slide/LTA
-recovery still require S/V; metadata alone is not timed-algorithm parity.
+Mainc4158bd now implements and gates typed CMS enforcement, contextual path/AC
+horizons, status mapping and timed-policy min(control_time, cutoff) sliding.
+Permanent denial and mandatory POE/revocation remain enforced. Complete LTA
+proof handling and timestamp-imprint policy remain V acceptance work; these
+shared consumers alone do not establish complete timed-algorithm parity.
 
 Main8a1568c additionally accepts P's attachment function and ten inherited
 signing skips, one restored S/CMS function and L's two live CSC functions.
@@ -319,8 +321,9 @@ An unmerged C configuration review reproduced a real fail-open for three
 unknown/misspelled nested signer policy keys: key-usage-forbiden,
 require-qualified-signature and match-all-key-usage. A preserved Cargo-produced
 CLI executable returned exit0/INTACT:TRUSTED for the signed PDF; the fresh
-pinned Python CLI rejected each configuration (exit1). Current C source still
-silently ignores the unknown keys. L blocked CLI integration and routed
+pinned Python CLI rejected each configuration (exit1). The reviewed C commit/executable
+silently ignored the unknown keys. C is preparing a source/test repair; it
+remains unaccepted. L blocked CLI integration and routed
 tests-first unknown-key/alias rejection before trust evaluation. Evidence:
 `round3-launch/c-config-review/unknown-policy-native-cli-differential.json`.
 These unmerged divergences are not fail closed; no CLI pass is accepted.
@@ -469,3 +472,17 @@ empty roots reject. Both existing TSA tests still pass; the full gate passed
 on e476da8. This is one native environment helper and zero upstream functions.
 P's presign missing-issuer collection and V's complete LTA acceptance still
 block the seven remaining live functions; the fixture alone does not close them.
+
+
+Mainc4158bd additionally accepts the independently reviewed S algorithm
+consumer delta, without its ancestor known-red caller suites.28 new native
+regressions cover typed CMS error/cutoff propagation, original path/leaf
+context, best-signature-time policy checks, timed/permanent time sliding and
+OCSP_NOCHECK responder algorithm enforcement. This adds zero upstream passes.
+Public time-slide comparisons agree in15 same-fixture calls;22 path/AC
+validations yield19 agreements and three pinned Python AC TypeErrors caused
+by unsupported denial-constructor arguments. Rust still rejects with the
+typed policy error; this is exception-shape divergence, not exact AC error
+parity. The bare LTV time-slide error interface retains an older path-context
+limitation. CMS fresh Python signing and native harvest-fixture semantic
+probes are separate inputs, not a same-fresh-bytes differential claim.

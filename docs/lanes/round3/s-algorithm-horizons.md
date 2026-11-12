@@ -226,3 +226,9 @@ main045decd, without its ancestor known-red caller suites. Counts remain
 S824/754/63/7, overall1431/1052/66/313 (zero new upstream functions). The
 three Python AC TypeError exception-shape mismatches remain explicit; this
 is not complete AC error parity or complete LTA/timestamp-POE acceptance.
+
+
+Lead acceptance: sourcec4158bd passed build/test/clippy-Dwarnings/strictdocs/
+layer-cycle/fmt on main;1321native tests,1313passed/8ignored/0failed. The28
+new helpers add0upstreampasses; all documented oracle-scope and error-shape
+limitations remain.

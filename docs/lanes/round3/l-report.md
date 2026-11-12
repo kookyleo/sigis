@@ -167,3 +167,19 @@ passed with both existing TSA variants. Eight separatePythonpreflightgroups
 are environment evidence. Zero upstream credit; L4/7and overallcountsunchanged.
 ActualPFX/DER/PEMfixturesbindonlyloopback; requestmetricsbounded; no shared
 venvorservicesmodified. Logs round3-launch/l-pki-routes/.
+
+
+## S typed-consumer acceptance
+
+Sourcec4158bd passed all six gates:1321discovered/1313passed/8ignored/0failed,
+109reports. Independent28nativehelpers add0upstreamcredit; overall and per-
+lane accepted function counts are unchanged. Typedcutoffs/status/context,
+actualmin(control,cutoff) sliding, best_signature_time andmandatoryNOCHECK
+responderpolicyquery are delivered. Oracle15timeSlideagree;22path/ACcalls
+19agree/3PythonTypeErrors are reported explicitly. Old bareLtvErrorcontextgap
+and fullVproof-policy work remain. No ancestorredCMS/caller source imported.
+
+C is preparing policy-schema/CMSsanity fixes but has no accepted CLI pass.
+Both workers now have exact CLI source + isolated platformdirs/pkcs11 extras;
+sharedvenvunchanged. AmbientHANKO/PYTHONPATHmustuseexplicitCargo--configenv
+forVM testselection, with actual nativepath/hashreceipts, not parentexports.

@@ -1,11 +1,12 @@
 # Round 3 lane S report
 
-Latest lead acceptance: mainb81c254 passed the complete workspace gate.
+Latest lead acceptance: mainc4158bd passed the complete workspace gate.
 S remains824/754/63/7; overall1431/1052/66/313. The historical baseline and
-checkpoint tables below are retained for comparison. Only the bounded
-certificate-position and forbidden-only KU follow-ups were newly integrated;
-their eight native regressions add zero upstream functions. Known-red and
-unfinished CMS/time-slide/coverage/decode/MAC work remains unaccepted.
+checkpoint tables below are retained for comparison. The bounded certificate-position, forbidden-only KU and typed algorithm
+consumer follow-ups are integrated; their native regressions add zero
+upstream functions. Known-red and
+unfinished signer CMS/coverage/decode/MAC and full V LTA work remains
+unaccepted.
 
 Session: `sigis-r3-s`; branch: `hanko/r3-s`; baseline: `34482bf`.
 Status: in progress. No new passes are claimed yet.
@@ -342,5 +343,5 @@ verification receipts: [typed horizon report](s-algorithm-horizons.md).
 
 L selected only this source delta and its28 helper regressions after
 main045decd. Accepted S824/754/63/7 and overall1431/1052/66/313 remain
-unchanged while its complete workspace gate is pending. No old caller
+unchanged after its complete workspace gate passed on mainc4158bd. No old caller
 regression or historical local pass proposal is imported.
