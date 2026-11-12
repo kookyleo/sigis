@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main df25c79 found **1,462 Rust tests: 1,454 passed, 8
-ignored, zero failed**, across 126 reports. Build, workspace tests, strict
+The latest gate on main03a156c found **1,535 Rust tests: 1,527 passed, 8
+ignored, zero failed**, across136 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/v-integration/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/ac-crl-recursion/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -173,16 +173,16 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
-| `sigis-cms` | 78 | 75 | 1 | 2 |
+| `sigis-cms` | 78 | 76 | 1 | 1 |
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
-| `sigis-pades-sign` | 297 | 282 | 3 | 12 |
+| `sigis-pades-sign` | 297 | 287 | 3 | 7 |
 | `sigis-pades` (including `ades`) | 47 | 45 | 0 | 2 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,117** | **30** | **21** |
+| **Library lanes A–E** | **1,168** | **1,123** | **30** | **15** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,121** | **30** | **280** |
+| **Overall** | **1,431** | **1,127** | **30** | **274** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -207,13 +207,13 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| A / CMS | 2 | `test_embed_ac_revinfo_adobe_style`; borrowed-buffer identity for `test_direct_pdfcmsembedder_usage` (low-level/DSS assertions now execute) |
+| A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`: complete authenticated AC/LTA and embedded material/RoleSyntax caller |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
-| D / signing | 12 | Eight PAdES HTTP-TSA/AC presign/DSS-attribute tests; one seed-value TSA URL; three public-key encrypted-signing/copy tests |
+| D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
 | E / AdES | 2 | Authenticated live AC validation and the AC-dependent validation report |
 | Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
 | Lead / live integration | 7 | Seven Certomancer functions, all requiring actual LTA validation; missing-issuer fetching and loopback PFX/AIA routes also remain |
-| **Total** | **280** | |
+| **Total** | **274** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
@@ -686,3 +686,44 @@ Only two immutable S/PDF-diff skips become passed; no V credit or wrapper count.
 PDF-diff94/94/0/0; S824/790/27/7; overall1431/1121/30/280.
 The five PDF integration functions, including real MAC signing callers, remain
 pending. Logs: round3-launch/s-coverage-acceptance/ and v-integration/gate/.
+
+
+## Accepted stateful signing and shared CRL trust repair
+
+The coherent P runtime source0054aee passed all six gates, then source03a156c
+passed the combined gate after closing a newly reproduced shared CRL defect:
+1535 discovered / 1527 passed / 8 ignored / zero failed,
+across136 reports. Five P functions become passed (seed HTTP URL,
+HTTP TSA/revinfo, two public-key signing modes and the signed plaintext copy).
+The exact borrowed-buffer CMS function becomes passed once under S/CMS, with
+original Vec identity retained through both signing and DSS continuation.
+No renderer/state/MAC helper or oracle call adds an upstream-function count.
+P297/287/3/7; CMS78/76/1/1; S824/791/27/6; overall1431/1127/30/274.
+
+Caller-selected reader options, decode snapshots and authentication now flow
+through signing/DSS/timestamps/stamps and borrowed operations. Session-local
+MAC state rejects concurrent shared-signer reuse; caller-buffer failure paths
+are staged atomically. The legacy post-parse set_strict method is still a
+separate declared compatibility gap. Complete five S PDF callers and seven
+P AC functions remain pending; component MAC proof is not whole-function LTA
+acceptance. The lockfile adds one existing pki-fetch edge, no version change.
+
+The shared CRL failure was real: a stack shortcut accepted an invalid signature.
+L's independent direct verify_ac_crl/full validate_ac tests first failed twice
+while the genuine control passed, using a different existing fixture from P's
+original ambiguous loop. Actual AC/AA/good/bad/TBS/algorithm SHA receipts match
+fresh pinned Python bytes. The fix exempts only issuer certificate path recursion;
+every current CRL still requires signed_by. Existing nonrecursive path/signature
+order, scope, key usage, freshness, reasons, delta and later policies remain.
+Three fixed tests exercise require and soft-fail; eight fresh same-input public
+Python decisions and197 existing CV tests pass. Helpers earn zero unique credit.
+The prior reference also has a narrower active-path shortcut; this bounded
+repair is not a universal claim of lexical equivalence or all-input trust parity.
+Evidence: round3-launch/ac-crl-recursion/ and p-integration/.
+
+AC HTTP source45a04d5 is an unmerged candidate under independent review.
+Its strict-DER envelope before-I/O check needs a focused correction; current
+long-serial support explicitly rejects beyond20 encoded bytes. A possible
+issuer-Name DER matcher difference is source-only until a real signed variant
+and native verdict establish it. These limits and report/time metadata gaps
+prevent any universal all-divergences-fail-closed statement.

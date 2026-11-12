@@ -136,3 +136,17 @@ upstream val_trusted assertions before/after. Extra AES256/MAC controls retain
 authentication and document-scoped session ownership. No root/S/V files or
 shared types/dependencies changed. Both upstream function IDs remain S-owned
 and add no P function credit; final S acceptance belongs to S/L.
+
+
+## Accepted round 3 stateful producer increment
+
+The coherent producer source0054aee and combined trust-repair source03a156c
+passed all six workspace gates. Current assigned counts:297/287/3/7.
+Five exact HTTP/seed/public-key/copy functions are newly accepted; all seven
+AC functions remain pending their complete native evidence/attribute/LTA flows.
+The borrowed CMS embedder is credited only once to S/CMS, never again here.
+State snapshots preserve options, remaining allowance and authentication;
+this is not a global sibling budget. The old post-parse set_strict setter
+remains a separate compatibility gap. Component MAC/session tests do not alone
+complete the two S-owned PDF MAC functions. Detailed source and oracle proof:
+[lead P report](../../docs/lanes/round3/p-report.md).

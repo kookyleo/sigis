@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "df25c796730b719db400126e08c57de5427a8a11",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/v-integration/gate/gate.json",
+  "accepted_source_commit": "03a156cab6095c95236d903dc4e2b0be9f338d4b",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/ac-crl-recursion/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -12,8 +12,9 @@
     },
     {
       "id": "pyhanko/test_cms.py::test_direct_pdfcmsembedder_usage",
-      "status": "pending",
-      "reason": "Native low-level signing, DocMDP and exact DSS assertions now execute, but the API still returns owned Vec outputs. Incremental prefix preservation does not satisfy upstream caller-buffer identity; the borrowed/in-place contract remains pending."
+      "status": "passed",
+      "reason": "Borrowed mutable Vec completion and DSS continuation return the exact original caller object, with low-level CMS phases, SHA256/reservation, NO_CHANGES DocMDP, trusted exact coverage/modification and DSS3cert/1OCSP assertions. Independent source/assertion/lifetime review and full combined workspace gate03a156c pass; credited once to S/CMS, not P.",
+      "rust_test": "test_round3_in_place::direct_cms_signing_and_dss_return_the_same_caller_vec_object; round3_signing_partial_assertions::test_direct_pdfcmsembedder_usage"
     },
     {
       "id": "integration-tests/test_live_certomancer.py::test_ts_fetch_default_session",
@@ -620,6 +621,36 @@
       "status": "passed",
       "rust_test": "validator_integrity::test_anomalous_coverage_tail_uncovered; validator_integrity::test_anomalous_coverage_signature_gap_too_big; validator_integrity::test_anomalous_coverage_one_byterange; validator_integrity::test_anomalous_coverage_weird_byterange",
       "reason": "Full native validator assertions cover all three tamper policy/skip modes or all four anomaly parameters, with valid CMS and positive controls. Exact pinned source manually audited by lead; fresh Python revalidation of the same input bytes has nine calls/seven original parameter cases. Full workspace gate df25c79 covers these wrappers. Credited only once to S/PDF-diff."
+    },
+    {
+      "id": "pyhanko/test_seed_values.py::test_sv_timestamp_url",
+      "status": "passed",
+      "rust_test": "test_round3_http_tsa::test_sv_timestamp_url",
+      "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_pades_revinfo_http_ts_dummydata",
+      "status": "passed",
+      "rust_test": "test_round3_http_tsa::test_pades_revinfo_http_ts_dummydata",
+      "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
+    },
+    {
+      "id": "pyhanko/test_sign_encrypted.py::test_sign_crypt_pubkey_aes256",
+      "status": "passed",
+      "rust_test": "test_sign_encrypted::test_sign_crypt_pubkey_aes256",
+      "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
+    },
+    {
+      "id": "pyhanko/test_sign_encrypted.py::test_sign_crypt_pubkey_rc4",
+      "status": "passed",
+      "rust_test": "test_sign_encrypted::test_sign_crypt_pubkey_rc4",
+      "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
+    },
+    {
+      "id": "pyhanko/test_sign_encrypted.py::test_copy_file_with_mdp_signature_and_backref",
+      "status": "passed",
+      "rust_test": "test_sign_encrypted::test_copy_file_with_mdp_signature_and_backref",
+      "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
     }
   ]
 }

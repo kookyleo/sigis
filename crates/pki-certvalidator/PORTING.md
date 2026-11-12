@@ -209,3 +209,16 @@ External exhaustive struct literals must supply the new public field or use
 Default/struct update. Certval-before-native-limit resource scope is unchanged.
 The bounded asymmetric Python empty+Any behavior is intentionally stricter;
 no universal policy/trust parity is claimed.
+
+
+## CRL recursion trust repair
+
+Source03a156c restricts the recursive issuer exemption to certificate path
+validation. Every current CRL still requires its own signature verification.
+Two named direct/full AC negative tests first accepted a signature-only forged
+CRL while a genuine control passed; the fixed three-test suite covers require
+and soft-fail without network, with six actual input hashes and eight fresh
+same-input pinned Python decisions. All197 CV tests and the complete workspace
+gate pass. These adversarial helpers add no immutable upstream credit; assigned
+counts remain133/131/2/0. The older Python shortcut has a narrower active-path
+identity boundary; universal lexical or trust parity is not inferred.

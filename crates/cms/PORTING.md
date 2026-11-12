@@ -21,7 +21,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_cms.py` | `tests/test_cms.rs`, cross-layer signer suites | 78 | 75 | 1 | 2 |
+| `test_cms.py` | `tests/test_cms.rs`, cross-layer signer suites | 78 | 76 | 1 | 1 |
 | `test_key_usage_constraints.py` | `tests/test_key_usage_constraints.rs` | 4 | 4 | 0 | 0 |
 
 How `test_cms.py` is ported: the upstream tests sign with pyHanko, then
@@ -91,3 +91,11 @@ and callers pass integration; the independent borrowed API review alone
 earns no pass. Larger P reader/MAC consumers and V LTA remain unaccepted.
 Logs: round3-launch/p-digest-policy-gate/; independent source review:
 round3-launch/p-borrowed-buffer-review.md.
+
+
+## Borrowed CMS caller accepted
+
+The exact direct embedder function now preserves caller Vec identity through
+CMS completion and DSS append, with all original phases/DocMDP/material/status
+assertions. Source03a156c passed the full workspace gate; CMS78/76/1/1.
+Key-based digest selection remains skipped; Adobe AC revinfo remains pending.
