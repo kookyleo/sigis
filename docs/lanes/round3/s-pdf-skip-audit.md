@@ -62,3 +62,22 @@ the same policy through every internal reopen, then require:
 Default-limit rejection remains an adversarial control. Reopening a
 pre-existing fixture, or checking only a Python recording, cannot satisfy
 these three functions.
+
+
+## Complete validator coverage callers accepted
+
+The lead independently reviewed both exact pinned validator functions against
+validator_integrity.rs. test_tamper_sig_obj retains all three default/no-changes/
+skip-diff assertions, including suspicious/absent diff and OTHER coverage result.
+test_anomalous_coverage retains all four real-file parameters, native valid/
+intact/distrust, exact coverage, false bottom line and NONSTANDARD_COVERAGE.
+Positive and explicitly trusted-CMS facade controls prevent vacuous distrust.
+The lead freshly revalidated the same committed/native input bytes in pinned
+Python: nine validation calls, seven original parameter cases, two functions.
+This is fresh oracle execution over existing inputs, not new signature creation.
+The existing complete workspace gate on df25c79 passed all these native wrappers;
+no source changed for this accounting increment and no gate repeat is needed.
+Only two immutable S/PDF-diff skips become passed; no V credit or wrapper count.
+PDF-diff94/94/0/0; S824/790/27/7; overall1431/1121/30/280.
+The five PDF integration functions, including real MAC signing callers, remain
+pending. Logs: round3-launch/s-coverage-acceptance/ and v-integration/gate/.

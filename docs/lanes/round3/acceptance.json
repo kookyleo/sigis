@@ -608,6 +608,18 @@
       "status": "passed",
       "rust_test": "ades_requests::test_pades_lta_happy_path_current_time_requests",
       "reason": "Exact pinned source assertions/parameters independently audited; coherent V source includes authenticated POE rollback, imprint policy and temporal qualification guards. Native actual fixture hashes checked, all workspace gates passed on df25c79; calls/helpers are not functions. Two AC-dependent functions remain pending."
+    },
+    {
+      "id": "pyhanko/test_diff_analysis.py::test_tamper_sig_obj",
+      "status": "passed",
+      "rust_test": "validator_integrity::test_tamper_sig_obj",
+      "reason": "Full native validator assertions cover all three tamper policy/skip modes or all four anomaly parameters, with valid CMS and positive controls. Exact pinned source manually audited by lead; fresh Python revalidation of the same input bytes has nine calls/seven original parameter cases. Full workspace gate df25c79 covers these wrappers. Credited only once to S/PDF-diff."
+    },
+    {
+      "id": "pyhanko/test_diff_analysis.py::test_anomalous_coverage",
+      "status": "passed",
+      "rust_test": "validator_integrity::test_anomalous_coverage_tail_uncovered; validator_integrity::test_anomalous_coverage_signature_gap_too_big; validator_integrity::test_anomalous_coverage_one_byterange; validator_integrity::test_anomalous_coverage_weird_byterange",
+      "reason": "Full native validator assertions cover all three tamper policy/skip modes or all four anomaly parameters, with valid CMS and positive controls. Exact pinned source manually audited by lead; fresh Python revalidation of the same input bytes has nine calls/seven original parameter cases. Full workspace gate df25c79 covers these wrappers. Credited only once to S/PDF-diff."
     }
   ]
 }

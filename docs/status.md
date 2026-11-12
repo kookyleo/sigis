@@ -175,14 +175,14 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
 | `sigis-cms` | 78 | 75 | 1 | 2 |
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
-| `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
+| `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 282 | 3 | 12 |
 | `sigis-pades` (including `ades`) | 47 | 45 | 0 | 2 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,115** | **32** | **21** |
+| **Library lanes A–E** | **1,168** | **1,117** | **30** | **21** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,119** | **32** | **280** |
+| **Overall** | **1,431** | **1,121** | **30** | **280** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -225,8 +225,8 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 32 skipped functions comprise certvalidator two, fetchers 13,
-CMS one, PDF 11, PDF-diff two and signing three. Skip reasons remain in the
+The 30 skipped functions comprise certvalidator two, fetchers 13,
+CMS one, PDF 11 and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
@@ -241,9 +241,9 @@ owning `PORTING.md` and lane files:
 - PDF skips retain object-model/trailer gaps. The four layout/resource
   functions now execute all exact upstream assertions in the P test crate;
   they are credited once to S/PDF ownership, not again to signing.
-- The two retained PDF-diff skips concern anomalous coverage and in-place
-  signature-object tampering, checked before modification analysis.
-  Validator coverage must retain those behaviours.
+- Both former PDF-diff skips now execute their complete native validator
+  assertions and exact parameters, credited once to S/PDF-diff. No empty
+  extraction wrapper or extra V function is counted.
 - Signing retains three skipped functions: the deprecated Python warning
   entry point, SafeNet signing-PIN hardware and raw DSA token signing. Eight
   certificate-less flows, duplicate SET values and detached-econtent rejection
@@ -667,3 +667,22 @@ best time2024 versus Python2020. Report encoding/layout and complete XML schema
 identity remain outside smoke assertions. Do not call all differences either
 identical or universally fail closed. Accepted overall1431/1119/32/280;
 P/S/C/L counts unchanged. Exact evidence: round3-launch/v-integration/.
+
+
+## Accepted S validator coverage callers
+
+The lead independently reviewed both exact pinned validator functions against
+validator_integrity.rs. test_tamper_sig_obj retains all three default/no-changes/
+skip-diff assertions, including suspicious/absent diff and OTHER coverage result.
+test_anomalous_coverage retains all four real-file parameters, native valid/
+intact/distrust, exact coverage, false bottom line and NONSTANDARD_COVERAGE.
+Positive and explicitly trusted-CMS facade controls prevent vacuous distrust.
+The lead freshly revalidated the same committed/native input bytes in pinned
+Python: nine validation calls, seven original parameter cases, two functions.
+This is fresh oracle execution over existing inputs, not new signature creation.
+The existing complete workspace gate on df25c79 passed all these native wrappers;
+no source changed for this accounting increment and no gate repeat is needed.
+Only two immutable S/PDF-diff skips become passed; no V credit or wrapper count.
+PDF-diff94/94/0/0; S824/790/27/7; overall1431/1121/30/280.
+The five PDF integration functions, including real MAC signing callers, remain
+pending. Logs: round3-launch/s-coverage-acceptance/ and v-integration/gate/.

@@ -107,3 +107,22 @@ may round floats; those rounded caches are not used by the production adapter.
 Recorded model verdicts otherwise: all 165 recorded reviews, all 982 sweep
 reviews and all 1,308 mutation verdicts agree with pyHanko, including the
 kind of rejection.
+
+
+## Round 3 complete validator callers
+
+The lead independently reviewed both exact pinned validator functions against
+validator_integrity.rs. test_tamper_sig_obj retains all three default/no-changes/
+skip-diff assertions, including suspicious/absent diff and OTHER coverage result.
+test_anomalous_coverage retains all four real-file parameters, native valid/
+intact/distrust, exact coverage, false bottom line and NONSTANDARD_COVERAGE.
+Positive and explicitly trusted-CMS facade controls prevent vacuous distrust.
+The lead freshly revalidated the same committed/native input bytes in pinned
+Python: nine validation calls, seven original parameter cases, two functions.
+This is fresh oracle execution over existing inputs, not new signature creation.
+The existing complete workspace gate on df25c79 passed all these native wrappers;
+no source changed for this accounting increment and no gate repeat is needed.
+Only two immutable S/PDF-diff skips become passed; no V credit or wrapper count.
+PDF-diff94/94/0/0; S824/790/27/7; overall1431/1121/30/280.
+The five PDF integration functions, including real MAC signing callers, remain
+pending. Logs: round3-launch/s-coverage-acceptance/ and v-integration/gate/.
