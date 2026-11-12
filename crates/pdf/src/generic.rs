@@ -876,6 +876,31 @@ pub enum PdfString {
 }
 
 /// Classify string bytes as text or bytes (`pdf_string`).
+///
+/// Integers cannot be classified as strings. This is the compile-time
+/// counterpart of `test_internal_utils.py::test_pdfstring_typing`:
+///
+/// ```compile_fail,E0308
+/// sigis_pdf::generic::pdf_string(-1);
+/// ```
+///
+/// Dictionary name keys likewise cannot be integers
+/// (`test_internal_utils.py::test_assign_non_name_to_dict`):
+///
+/// ```compile_fail,E0277
+/// let mut dictionary = sigis_pdf::lopdf::Dictionary::new();
+/// dictionary.set(10, sigis_pdf::lopdf::Object::Null);
+/// ```
+///
+/// The corresponding valid inputs remain usable:
+///
+/// ```
+/// use sigis_pdf::{generic::{pdf_string, PdfString}, lopdf::{Dictionary, Object}};
+/// assert!(matches!(pdf_string(b"text"), PdfString::Text(_, _)));
+/// let mut dictionary = Dictionary::new();
+/// dictionary.set("A", Object::Null);
+/// assert!(matches!(dictionary.get(b"A"), Ok(Object::Null)));
+/// ```
 pub fn pdf_string(b: &[u8]) -> PdfString {
     let guessed = TextStringEncoding::guess_by_bom(b);
     match guessed.decode(b) {
