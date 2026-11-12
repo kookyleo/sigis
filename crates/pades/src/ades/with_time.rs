@@ -28,6 +28,8 @@ pub struct WithTimeValidationResult {
     pub signature_not_before_time: Option<Moment>,
     /// Qualification of the signer, if assessed.
     pub qualification: Option<QualificationResult>,
+    /// Qualification of the signature timestamp, if assessed.
+    pub timestamp_qualification: Option<QualificationResult>,
 }
 
 /// Sub-indications that validation with time processes further
@@ -54,25 +56,46 @@ pub fn timestamp_subindication(
     qualification: &QualificationSpec<'_>,
     requirements: Option<&QualificationRequirements>,
 ) -> (AdesSubIndic, Option<String>) {
+    let (sub, message, _) = timestamp_assessment(ts, qualification, requirements);
+    (sub, message)
+}
+
+fn timestamp_assessment(
+    ts: &TimestampSignatureStatus,
+    qualification: &QualificationSpec<'_>,
+    requirements: Option<&QualificationRequirements>,
+) -> (AdesSubIndic, Option<String>, Option<QualificationResult>) {
     let sub = basic_subindication(&ts.signature);
     if sub != AdesSubIndic::Passed(AdesPassed::OK) {
-        return (sub, None);
+        return (sub, None, None);
     }
-    if let (Some(registry), Some(req), Some(path)) = (
+    if let (Some(registry), Some(path)) = (
         qualification.registry,
-        requirements,
         ts.signature.validation_path.as_ref(),
     ) {
-        match qualification_analysis(registry, path, Some(ts.timestamp)) {
+        // A token cannot establish POE of its own signature using genTime.
+        // Until external archival evidence supplies an earlier validation
+        // context, qualification uses the token's validation reference time.
+        match qualification_analysis(registry, path, ts.signature.validation_time) {
             Ok(qr) => {
-                if let Err(e) = enforce_requirements(req, &qr, path) {
-                    return (e.ades_subindication, Some(e.failure_message));
+                if let Some(req) = requirements {
+                    if let Err(e) = enforce_requirements(req, &qr, path) {
+                        return (e.ades_subindication, Some(e.failure_message), Some(qr));
+                    }
                 }
+                return (sub, None, Some(qr));
             }
-            Err(msg) => return (AdesIndeterminate::GENERIC.into(), Some(msg)),
+            Err(msg) => return (AdesIndeterminate::GENERIC.into(), Some(msg), None),
         }
     }
-    (sub, None)
+    if requirements.is_some() {
+        return (
+            AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into(),
+            Some("Timestamp qualification requirements need a trusted-service registry and validated path".into()),
+            None,
+        );
+    }
+    (sub, None, None)
 }
 
 fn revocation_date(status: &StandardCmsSignatureStatus) -> Option<Moment> {
@@ -145,16 +168,65 @@ pub fn with_time_result(
     signature_not_before: Option<Moment>,
     validation_time: Moment,
 ) -> WithTimeValidationResult {
+    process_with_time(
+        status,
+        qualification,
+        signature_poe_time,
+        signature_not_before,
+        validation_time,
+        true,
+    )
+}
+
+/// Use precisely the signature time selected by archival POE processing.
+/// A token retained for reporting cannot independently change that time or
+/// the qualification reference time after its imprint was denied for POE.
+pub(crate) fn with_time_result_at_poe(
+    status: StandardCmsSignatureStatus,
+    qualification: &QualificationSpec<'_>,
+    signature_poe_time: Moment,
+    signature_not_before: Option<Moment>,
+    validation_time: Moment,
+) -> WithTimeValidationResult {
+    process_with_time(
+        status,
+        qualification,
+        Some(signature_poe_time),
+        signature_not_before,
+        validation_time,
+        false,
+    )
+}
+
+fn process_with_time(
+    mut status: StandardCmsSignatureStatus,
+    qualification: &QualificationSpec<'_>,
+    signature_poe_time: Option<Moment>,
+    signature_not_before: Option<Moment>,
+    validation_time: Moment,
+    use_timestamp_poe: bool,
+) -> WithTimeValidationResult {
     let (sub, snb) = basic_with_content_ts(&status, qualification, signature_not_before);
     let mut result = WithTimeValidationResult {
         ades_subindic: sub,
         api_status: None,
         failure_msg: None,
-        best_signature_time: signature_poe_time,
+        best_signature_time: Some(signature_poe_time.unwrap_or(validation_time)),
         signature_not_before_time: snb,
         qualification: None,
+        timestamp_qualification: None,
     };
     if !processed_further(sub) {
+        result.api_status = Some(status);
+        return result;
+    }
+    if qualification.requirements.is_some() && qualification.registry.is_none() {
+        result.ades_subindic = AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into();
+        result.failure_msg =
+            Some("Signer qualification requirements need a trusted-service registry".into());
+        status.signature.trust_problem_indic = Some(result.ades_subindic);
+        status.timestamp_validity = None;
+        status.content_timestamp_validity = None;
         result.api_status = Some(status);
         return result;
     }
@@ -169,14 +241,21 @@ pub fn with_time_result(
         .ts_requirements
         .as_ref()
         .or(qualification.requirements.as_ref());
-    let (ts_sub, ts_msg) = timestamp_subindication(&ts, qualification, ts_req);
+    let (ts_sub, ts_msg, ts_qualification) = timestamp_assessment(&ts, qualification, ts_req);
+    result.timestamp_qualification = ts_qualification;
     if ts_sub != AdesSubIndic::Passed(AdesPassed::OK) {
         result.ades_subindic = ts_sub;
         result.failure_msg = ts_msg;
+        status.timestamp_validity = None;
+        status.content_timestamp_validity = None;
         result.api_status = Some(status);
         return result;
     }
-    let poe = signature_poe_time.map_or(ts.timestamp, |p| p.min(ts.timestamp));
+    let poe = if use_timestamp_poe {
+        signature_poe_time.map_or(ts.timestamp, |p| p.min(ts.timestamp))
+    } else {
+        signature_poe_time.unwrap_or(validation_time)
+    };
     result.best_signature_time = Some(poe);
     match sub {
         AdesSubIndic::Indeterminate(AdesIndeterminate::REVOKED_NO_POE) => {
@@ -211,6 +290,11 @@ pub fn with_time_result(
         result.api_status = Some(status);
         return result;
     }
+    // Time processing resolved the original trust problem. Retain the
+    // revocation details for reporting, as the oracle does, while restoring
+    // the trust verdict at the proven signature time.
+    status.signature.trust_problem = None;
+    status.signature.trust_problem_indic = None;
     if let (Some(registry), Some(path)) = (
         qualification.registry,
         status.signature.validation_path.as_ref(),
@@ -222,6 +306,9 @@ pub fn with_time_result(
                         result.ades_subindic = e.ades_subindication;
                         result.failure_msg = Some(e.failure_message);
                         result.qualification = Some(qr);
+                        status.signature.trust_problem_indic = Some(e.ades_subindication);
+                        status.timestamp_validity = None;
+                        status.content_timestamp_validity = None;
                         result.api_status = Some(status);
                         return result;
                     }
@@ -231,6 +318,7 @@ pub fn with_time_result(
             Err(msg) => {
                 result.ades_subindic = AdesIndeterminate::GENERIC.into();
                 result.failure_msg = Some(msg);
+                status.signature.trust_problem_indic = Some(result.ades_subindic);
                 result.api_status = Some(status);
                 return result;
             }
@@ -267,6 +355,7 @@ pub fn with_time_validation(
                 best_signature_time: signature_poe_time,
                 signature_not_before_time: None,
                 qualification: None,
+                timestamp_qualification: None,
             },
         },
     )
@@ -278,6 +367,102 @@ mod tests {
     use sigis_cms::SignatureStatus;
     use sigis_pki_certvalidator::{TrustAnchor, ValidationPath};
     use sigis_pki_core::cert::Cert;
+
+    #[test]
+    fn archival_time_processing_uses_only_selected_signature_poe() {
+        use crate::native_test_fixtures::{b64, data, default_revinfo_policy, read_fixture};
+        use sigis_pki_certvalidator::ValidationContext;
+        use sigis_pki_core::algorithms::DisallowWeakAlgorithmsPolicy;
+
+        let root = std::env::var_os("HANKO_POE_POLICY_FIXTURE_DIR")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| data(&["lanes", "r3-v", "poe-policy"]));
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&read_fixture(root.join("manifest.json"))).unwrap();
+        let file =
+            sigis_pdf::PdfFile::parse(&read_fixture(root.join(manifest["file"].as_str().unwrap())))
+                .unwrap();
+        let signature = file.embedded_signatures().unwrap().remove(0);
+        let now = Moment::parse_rfc3339(manifest["validation_time"].as_str().unwrap()).unwrap();
+        let signed_at = Moment::parse_rfc3339(manifest["signed_at"].as_str().unwrap()).unwrap();
+        let ctx = ValidationContext::builder()
+            .trust_root(Cert::from_der(&b64(manifest["trust_root"].as_str().unwrap())).unwrap())
+            .moment(now)
+            .revinfo_policy(default_revinfo_policy())
+            .algorithm_policy(std::sync::Arc::new(
+                DisallowWeakAlgorithmsPolicy::with_weak_hash_algos(&["sha512"]),
+            ))
+            .build()
+            .unwrap();
+        let dss = file.dss().unwrap().unwrap();
+        let crls: Vec<_> = dss
+            .material
+            .crls
+            .into_iter()
+            .chain(
+                manifest["current_crls"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|value| b64(value.as_str().unwrap())),
+            )
+            .collect();
+        let ocsps: Vec<_> = dss
+            .material
+            .ocsps
+            .into_iter()
+            .chain(
+                manifest["current_ocsps"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|value| b64(value.as_str().unwrap())),
+            )
+            .collect();
+        let ctx = ctx
+            .with_revinfo(
+                std::iter::empty::<&Cert>(),
+                crls.iter().map(Vec::as_slice),
+                ocsps.iter().map(Vec::as_slice),
+            )
+            .unwrap();
+        let status = sigis_cms::validate_cms_signature(
+            &signature.contents,
+            sigis_cms::SignedContent::Data(&signature.signed_data(&file).unwrap()),
+            &ctx,
+        )
+        .unwrap();
+        assert!(status.signature.intact && status.signature.valid);
+        let timestamp = status.timestamp_validity.as_ref().unwrap();
+        assert!(
+            timestamp.signature.intact
+                && timestamp.signature.valid
+                && timestamp.signature.trusted()
+        );
+        assert_eq!(timestamp.timestamp, signed_at);
+        assert!(
+            !ctx.algorithm_policy()
+                .digest_algorithm_allowed(
+                    &sigis_pki_core::algorithms::DigestAlgorithm::Sha512.oid(),
+                    Some(now)
+                )
+                .allowed
+        );
+        // The LTA caller selected only current-time observation after rejecting
+        // this imprint for POE. Neither best time nor qualification may borrow
+        // the token's old genTime from its still-valid CMS status.
+        let ordinary = with_time_result(
+            status.clone(),
+            &QualificationSpec::default(),
+            Some(now),
+            None,
+            now,
+        );
+        assert_eq!(ordinary.best_signature_time, Some(signed_at));
+        let bounded =
+            with_time_result_at_poe(status, &QualificationSpec::default(), now, None, now);
+        assert_eq!(bounded.best_signature_time, Some(now));
+    }
 
     fn cert() -> Cert {
         let p = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap())

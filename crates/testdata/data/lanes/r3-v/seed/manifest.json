@@ -1,0 +1,1796 @@
+{
+  "pyhanko": "0.38.1",
+  "certvalidator": "0.33.0",
+  "validation_time": "2020-11-01T00:00:00Z",
+  "trust_root": "MIIDzDCCArSgAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTAgFw0wMDAxMDEwMDAwMDBaGA8yNTAwMDEwMTAwMDAwMFowUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANB//m+farVsSmZXTNIJCmQcieVlbHkf0dXe+Vw27S2Op5FiNkDuLNJCCNsqhE+HhITzPjiv+BsUlJTzOssGqm7WhuNQCaKmtuOH701HImMdoJ4EcLXWycg2rJiR3R83BsyT+FJaGuPFGDc3ljzrG6ChzT/ZrgmjIaSStWX3JQDJhK71NUTWTzX1gzF+aitx5UZ5CewBQkeUD/EWcwhrBB6/xIrNMxsVPd6Ui6kOowfISQorusdnpxSaxeYeGY2f6Xdc5JtR9EIlY/ErJmAasmQlowXEVudFupX+YG1cGWK3p5NAoXGc1VS7jqNSyqXaJe+D4l6y5AhE4i5A+JcSrWkCAwEAAaOBqzCBqDAdBgNVHQ4EFgQU8bR5lQKytF85cv2wj8Jfr1uaULUwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwRQYDVR0fBD4wPDA6oDigNoY0aHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jcmxzL3Jvb3QvbGF0ZXN0LmNybDANBgkqhkiG9w0BAQsFAAOCAQEAL1KoggyZ9ZHvkN44Ht/jNlh5cRLqIjidcK408jDWAEwo3a4MCYQs26APAf0OXePYc5lM0+62NSdlgf5GhwetbyiY2FJE4BOV/iJkKr53cWBUz+kKAfQgT5ck/SZV+4J8BMadKQFxJB40JXyJmX+ZL05L0xJFcns8gtZWpyqwqIORjCH5GR0/j8wTo8y453cQaLdOODCoeVB7UagQy+xaIzsFClybGYQeLzuY0lJCYg0InBIKM5o2F01reW1UcVCRMh+RhXYwgoEKtXBKPJO3/WW83cxZkXNnibOeg1oCXktDW7JR6wO2LeOuQcbqP7DFjjiwhDcc+ANzHl1mbjQjzw==",
+  "signing_certificate": "MIIEcDCCA1igAwIBAgICEAEwDQYJKoZIhvcNAQELBQAwWTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEYMBYGA1UEAwwPSW50ZXJtZWRpYXRlIENBMB4XDTIwMDEwMTAwMDAwMFoXDTIyMDEwMTAwMDAwMFowcTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEOMAwGA1UEAwwFQWxpY2UxIDAeBgkqhkiG9w0BCQEWEWFsaWNlQGV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4XOCbh4vfi69RitfhqTIQGL6yfSAJijxQ62ECl+W7EXhxxoaEId2NlrU/BGlXdsMYVClRuE27SO4IGRhtEbFqxA6fUJQMXsMIKPO00R3vv1bBGUDl2epYwVTkiO2hq9JiX4IDUCx7Z53GrtSMRmviQibsAOVRWl0rEsi0kUQ/hA6Oq/mwQ26IYIqkypv8kaa+cvFF6/ENlDyEgNXazTuSsKiDyFEKGJ7f2YM2Zn9Ef8luAwTqYZj31sMCeG7zEfjWIGjwZ6YSaYV6zHxg+syK9xceTdA23YuwoIAZmUbnV+yu2ILfXvfZbT51zT0+ghNLQ0y8/z/fx1Cah3eS0kG6wIDAQABo4IBKDCCASQwHQYDVR0OBBYEFF7Hp7rUCmetna56Pa0Uaji1cwq4MB8GA1UdIwQYMBaAFO+/elGLLqQuSl3SzudheM5qNklPMA4GA1UdDwEB/wQEAwIGwDBHBgNVHR8EQDA+MDygOqA4hjZodHRwOi8vcHloYW5rby50ZXN0cy90ZXN0aW5nLWNhL2NybHMvaW50ZXJtL2xhdGVzdC5jcmwwgYgGCCsGAQUFBwEBBHwwejA3BggrBgEFBQcwAYYraHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9vY3NwL2ludGVybTA/BggrBgEFBQcwAoYzaHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jZXJ0cy9pbnRlcm0vY2EuY3J0MA0GCSqGSIb3DQEBCwUAA4IBAQCZs+7uCzIZWy0YRm7tJiEpdxFcdV+hw794AZTuvXN6JaApn99kzpIZMlh09sA5q6YX1w054cBKxRPgVWz2Ty3CmlMkj74T0GqbOMnxd+E8dAhhrq0FNWpsIzQ9nIjBx2cUKy1fBc+UcmBLr14uOFt7/6TawPNI+EVZ4SPY/wahlhAUSkFFnc0k6YT7BT7NEj1bjbnj7MCGDGuTil/vJBUGN8w0LQYxXvSNRkjn/Zi2J+vQEmYuqtAHDDmT5AeTdg/6r7xC3lGbE2n8rcj7iOdwcsIFJKSyMcGOTWJTAHCZHXF5T6NelFtIw1QQpkp6FRs2tc714a/J64EVNVqsd11i",
+  "intermediate_certificate": "MIID1zCCAr+gAwIBAgICEAEwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTAgFw0wMDAxMDEwMDAwMDBaGA8yMTAwMDEwMTAwMDAwMFowWTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEYMBYGA1UEAwwPSW50ZXJtZWRpYXRlIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwenaz96IFfFJ2NmDNBkRD1AghHuxV/dOfznJdjI8j8od/72n+eNixkFnQtZn93zULDLtnammU8FEKyicCLNO0Fe69Z6MN6ylDRvGMhrXWXysreo4DrH2meSgeeLFLVhsuCyk+HD6tLxFp5vJRaPdZLyalToxV1qVEisEz2CVfq4gZioNuQvvA9i+aCnTM0MXfKPStJACNHwxdQj26rQgfxiM8DdgqttG1/Xac022TpbyLp3QOIS2ATXH154oDy8pXN8d2McqaAaLUOS/TMSnHgYK79Un4LRAKsXmIFGXv1EHRBu40ctCSGBSkvxFrx3CeowF/r+uISniALJTv+u02wIDAQABo4GuMIGrMB0GA1UdDgQWBBTvv3pRiy6kLkpd0s7nYXjOajZJTzAfBgNVHSMEGDAWgBTxtHmVArK0Xzly/bCPwl+vW5pQtTASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBhjBFBgNVHR8EPjA8MDqgOKA2hjRodHRwOi8vcHloYW5rby50ZXN0cy90ZXN0aW5nLWNhL2NybHMvcm9vdC9sYXRlc3QuY3JsMA0GCSqGSIb3DQEBCwUAA4IBAQCYVgS0hYPH9dkvQ0JHcHw4tSL837FiCpoVQc5nDBtwmY6bQzn013XyJc3Jvbd3v44JkgBSU8960Bm11dvpSRtayJbb7dP5WccdozDnGezGuqEvlKyNhDlqevYDiF0Rks/7XACdZGD73+GOJPKrWFw1BFxHrPfHMZs4BpWpWq4l1VVQUGqYmCWKrrE6P9UpMA7Q4bCnLJieoRFocpNOPePIAony7hejlBdjS9wO6Hspm8oMd/bCSRPvlx93OrCJoATge9pH38eQbs86B8h0GpHdr0kbbZPyWe457oeqT6BX9bw6aT5IeU20Zttd9WgS+c/Yeni/rnNt+EWqOzIWr8N3",
+  "context": "dummy_ocsp_vc(): testing-ca root, weak_hash_algos empty, no fetching, soft-fail",
+  "cases": [
+    {
+      "id": "no_seed_control",
+      "group": "digest",
+      "file": "no_seed_control.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": false,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "digest_required_sha1_reject",
+      "group": "digest",
+      "file": "digest_required_sha1_reject.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_req",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha1",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The selected message digest sha1 is not allowed by the seed value dictionary.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "digest_required_default_sha256",
+      "group": "digest",
+      "file": "digest_required_default_sha256.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_req",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "digest_required_sha512",
+      "group": "digest",
+      "file": "digest_required_sha512.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_req",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha512",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "digest_hint_sha1",
+      "group": "digest",
+      "file": "digest_hint_sha1.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha1",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "digest_hint_default",
+      "group": "digest",
+      "file": "digest_hint_default.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "digest_hint_sha512",
+      "group": "digest",
+      "file": "digest_hint_sha512.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_md_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha512",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "reason_required_wrong",
+      "group": "reasons",
+      "file": "reason_required_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_req",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": "Aw yiss",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The reason for signing \"Aw yiss\" is not accepted by the seed value dictionary.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_required_missing",
+      "group": "reasons",
+      "file": "reason_required_missing.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_req",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The reason for signing \"None\" is not accepted by the seed value dictionary.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_required_allowed",
+      "group": "reasons",
+      "file": "reason_required_allowed.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_req",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": "I agree",
+        "error": null
+      }
+    },
+    {
+      "id": "reason_prohibited_none_text",
+      "group": "reasons",
+      "file": "reason_prohibited_none_text.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": "Aw yiss",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_none_dot",
+      "group": "reasons",
+      "file": "reason_prohibited_none_dot.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": ".",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_none_omitted",
+      "group": "reasons",
+      "file": "reason_prohibited_none_omitted.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "reason_prohibited_empty_text",
+      "group": "reasons",
+      "file": "reason_prohibited_empty_text.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": "Aw yiss",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_empty_dot",
+      "group": "reasons",
+      "file": "reason_prohibited_empty_dot.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": ".",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_empty_omitted",
+      "group": "reasons",
+      "file": "reason_prohibited_empty_omitted.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "reason_prohibited_dot_text",
+      "group": "reasons",
+      "file": "reason_prohibited_dot_text.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": "Aw yiss",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_dot_dot",
+      "group": "reasons",
+      "file": "reason_prohibited_dot_dot.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": ".",
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary prohibits giving a reason for signing.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "reason_prohibited_dot_omitted",
+      "group": "reasons",
+      "file": "reason_prohibited_dot_omitted.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_reason_prohibited",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "timestamp_required_trusted",
+      "group": "timestamp",
+      "file": "timestamp_required_trusted.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_timestamp_url",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "timestamp_required_missing",
+      "group": "timestamp",
+      "file": "timestamp_required_missing.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_timestamp_url",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary requires a trusted timestamp, but none was found, or the timestamp did not validate.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "timestamp_required_untrusted",
+      "group": "timestamp",
+      "file": "timestamp_required_untrusted.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_timestamp_url",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary requires a trusted timestamp, but none was found, or the timestamp did not validate.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "timestamp_optional_missing",
+      "group": "timestamp",
+      "file": "timestamp_optional_missing.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_timestamp_url",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "subfilter_required_mismatch",
+      "group": "subfilter",
+      "file": "subfilter_required_mismatch.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_subfilter_req",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha1",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary mandates subfilter '/ETSI.CAdES.detached', but '/adbe.pkcs7.detached' was used in the signature.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "subfilter_required_pades",
+      "group": "subfilter",
+      "file": "subfilter_required_pades.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_subfilter_req",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/ETSI.CAdES.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "subfilter_hint_adobe",
+      "group": "subfilter",
+      "file": "subfilter_hint_adobe.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_subfilter_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha1",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "subfilter_hint_default_pades",
+      "group": "subfilter",
+      "file": "subfilter_hint_default_pades.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_subfilter_hint",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/ETSI.CAdES.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "subfilter_unknown_then_supported",
+      "group": "subfilter",
+      "file": "subfilter_unknown_then_supported.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_subfilter_unsupported_partial",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/ETSI.CAdES.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "mdp_approval",
+      "group": "mdp",
+      "file": "mdp_approval.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_mdp_no_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "mdp_forbidden_certification",
+      "group": "mdp",
+      "file": "mdp_forbidden_certification.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_mdp_no_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary's /MDP entry specifies that this field should contain an approval signature, but a certification appears to have been used.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "mdp_certification",
+      "group": "mdp",
+      "file": "mdp_certification.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_mdp_must_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "mdp_missing_certification",
+      "group": "mdp",
+      "file": "mdp_missing_certification.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_mdp_must_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary's /MDP entry specifies that this field should contain a certification signature, but an approval appears to have been used.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "mdp_wrong_permission",
+      "group": "mdp",
+      "file": "mdp_wrong_permission.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_mdp_must_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dictionary specified that this certification signature should use the MDP policy 'MDPPerm.FILL_FORMS', but 'MDPPerm.NO_CHANGES' was used in the signature.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "lock_certify_1",
+      "group": "mdp",
+      "file": "lock_certify_1.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "lock_certify_2",
+      "group": "mdp",
+      "file": "lock_certify_2.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "lock_certify_3",
+      "group": "mdp",
+      "file": "lock_certify_3.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "lock_ignore_certify_2",
+      "group": "mdp",
+      "file": "lock_ignore_certify_2.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Document must be locked, but some changes are still allowed.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "lock_ignore_certify_3",
+      "group": "mdp",
+      "file": "lock_ignore_certify_3.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 3,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Document must be locked, but some changes are still allowed.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "lock_approval",
+      "group": "mdp",
+      "file": "lock_approval.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "no_lock_certify_2",
+      "group": "mdp",
+      "file": "no_lock_certify_2.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_no_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "no_lock_certify_3",
+      "group": "mdp",
+      "file": "no_lock_certify_3.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_no_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "no_lock_approval",
+      "group": "mdp",
+      "file": "no_lock_approval.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_no_lock_certify",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 2,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "no_lock_forbidden_certify_1",
+      "group": "mdp",
+      "file": "no_lock_forbidden_certify_1.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_no_lock_certify",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Document must not be locked, but the DocMDP level is set to NO_CHANGES.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "field_lock_compatible",
+      "group": "mdp",
+      "file": "field_lock_compatible.pdf",
+      "source": "pyhanko/test_seed_values.py::test_field_lock_compat",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "field_lock_conflict",
+      "group": "mdp",
+      "file": "field_lock_conflict.pdf",
+      "source": "pyhanko/test_seed_values.py::test_field_lock_compat",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": 1,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Document must not be locked, but the DocMDP level is set to NO_CHANGES.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_subject_dn_alice",
+      "group": "certificate",
+      "file": "cert_subject_dn_alice.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject_dn",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_subject_dn_alice_country",
+      "group": "certificate",
+      "file": "cert_subject_dn_alice_country.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject_dn",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_subject_dn_wrong",
+      "group": "certificate",
+      "file": "cert_subject_dn_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject_dn",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Subject does not have some of the following required attributes: Common Name: Alice & Bob, Country: BE",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_subject_dn_hint",
+      "group": "certificate",
+      "file": "cert_subject_dn_hint.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject_dn",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_subject_match",
+      "group": "certificate",
+      "file": "cert_subject_match.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_subject_match_multiple",
+      "group": "certificate",
+      "file": "cert_subject_match_multiple.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_subject_wrong",
+      "group": "certificate",
+      "file": "cert_subject_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Signer certificate not on SVCert whitelist.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_subject_hint",
+      "group": "certificate",
+      "file": "cert_subject_hint.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_subject",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_issuer_root",
+      "group": "certificate",
+      "file": "cert_issuer_root.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_issuer_intermediate",
+      "group": "certificate",
+      "file": "cert_issuer_intermediate.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_issuer_multiple",
+      "group": "certificate",
+      "file": "cert_issuer_multiple.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_issuer_wrong",
+      "group": "certificate",
+      "file": "cert_issuer_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Signer certificate cannot be traced back to approved issuer.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_issuer_hint",
+      "group": "certificate",
+      "file": "cert_issuer_hint.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_ku_match",
+      "group": "certificate",
+      "file": "cert_ku_match.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_key_usage_ok",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_ku_or",
+      "group": "certificate",
+      "file": "cert_ku_or.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_key_usage_ok",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_ku_wrong",
+      "group": "certificate",
+      "file": "cert_ku_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_key_usage_not_ok",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The signer satisfies none of the key usage extension profiles specified in the seed value dictionary.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_ku_empty",
+      "group": "certificate",
+      "file": "cert_ku_empty.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_key_usage_not_ok",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The signer satisfies none of the key usage extension profiles specified in the seed value dictionary.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "cert_composite_match",
+      "group": "certificate",
+      "file": "cert_composite_match.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_composite",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_composite_wrong",
+      "group": "certificate",
+      "file": "cert_composite_wrong.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_composite",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Subject does not have some of the following required attributes: Common Name: Alice & Bob, Country: BE",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "mandatory_legal_attestation",
+      "group": "unsupported",
+      "file": "mandatory_legal_attestation.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_flag_unsupported",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "NotImplementedError",
+          "message": "pyHanko does not support legal attestations, but the seed value dictionary mandates that they be restricted to a specific subset."
+        }
+      }
+    },
+    {
+      "id": "mandatory_cert_reserved",
+      "group": "unsupported",
+      "file": "mandatory_cert_reserved.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_cert_flag_unsupported",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "NotImplementedError",
+          "message": "Certificate constraint flags include mandatory constraints that are not supported."
+        }
+      }
+    },
+    {
+      "id": "mandatory_cert_oid",
+      "group": "unsupported",
+      "file": "mandatory_cert_oid.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_cert_flag_unsupported",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "NotImplementedError",
+          "message": "Certificate constraint flags include mandatory constraints that are not supported."
+        }
+      }
+    },
+    {
+      "id": "mandatory_unknown_subfilter",
+      "group": "unsupported",
+      "file": "mandatory_unknown_subfilter.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_subfilter_unsupported",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "NotImplementedError",
+          "message": "The signature encodings mandated by the seed value dictionary are not supported."
+        }
+      }
+    },
+    {
+      "id": "mandatory_unknown_filter",
+      "group": "unsupported",
+      "file": "mandatory_unknown_filter.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_deserialisation",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "SigningError",
+          "message": "Signature handler '/not.implemented' is not available, only the default /Adobe.PPKLite is supported."
+        }
+      }
+    },
+    {
+      "id": "mandatory_future_version",
+      "group": "unsupported",
+      "file": "mandatory_future_version.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_version",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "SigningError",
+          "message": "Seed value dictionary version 4 not supported."
+        }
+      }
+    },
+    {
+      "id": "mandatory_unknown_flag",
+      "group": "unsupported",
+      "file": "mandatory_unknown_flag.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_deserialisation",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "exception",
+        "exception": {
+          "type": "ValueError",
+          "message": "<flag 'SigSeedValFlags'> invalid value 1048576\n    given 0b0 100000000000000000000\n  allowed 0b0 000000000000111111111"
+        }
+      }
+    },
+    {
+      "id": "mandatory_appearance_unverifiable",
+      "group": "unsupported",
+      "file": "mandatory_appearance_unverifiable.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_flag_appearance_required",
+      "ignore_seed_during_signing": true,
+      "expectation": "stricter",
+      "divergence": "Rust rejects mandatory named appearance constraints that the oracle only warns about.",
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "revinfo_required_missing",
+      "group": "unsupported",
+      "file": "revinfo_required_missing.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_addrevinfo_req",
+      "ignore_seed_during_signing": true,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "The seed value dict mandates that revocation info be added, but it was not found in the signature.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    },
+    {
+      "id": "revinfo_forbidden_absent",
+      "group": "unsupported",
+      "file": "revinfo_forbidden_absent.pdf",
+      "source": "pyhanko/test_seed_values.py::test_sv_sign_addrevinfo_req",
+      "ignore_seed_during_signing": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": true,
+        "bottom_line": true,
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": null
+      }
+    },
+    {
+      "id": "cert_issuer_path_missing",
+      "group": "certificate",
+      "file": "cert_issuer_path_missing.pdf",
+      "source": "pyhanko/test_seed_values.py::test_cert_constraint_issuer",
+      "ignore_seed_during_signing": true,
+      "trust_signer": false,
+      "expectation": "parity",
+      "divergence": null,
+      "oracle": {
+        "outcome": "status",
+        "has_seed_values": true,
+        "seed_value_ok": false,
+        "bottom_line": false,
+        "intact": true,
+        "valid": true,
+        "trusted": false,
+        "md_algorithm": "sha256",
+        "subfilter": "/adbe.pkcs7.detached",
+        "docmdp_level": null,
+        "reason": null,
+        "error": {
+          "type": "SigSeedValueValidationError",
+          "message": "Validation path not provided.",
+          "ades_subindication": "GENERIC"
+        }
+      }
+    }
+  ]
+}

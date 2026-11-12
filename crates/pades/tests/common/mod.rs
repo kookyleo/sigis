@@ -32,13 +32,59 @@ pub fn b64(s: &str) -> Vec<u8> {
     base64::engine::general_purpose::STANDARD.decode(s).unwrap()
 }
 
+/// Read the actual native input and emit provenance after opening it.
+/// Cargo's explicit `--config env` selection, rather than the launcher's
+/// ambient environment, is required for scheduled worker fixture overrides.
+pub fn read_fixture(path: impl AsRef<std::path::Path>) -> Vec<u8> {
+    let path = path.as_ref();
+    let bytes = std::fs::read(path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    let digest = sigis_pki_core::algorithms::DigestAlgorithm::Sha256.digest(&bytes);
+    let hash = digest
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    let selections: serde_json::Map<String, Value> = [
+        "HANKO_ADES_RECORDING_DIR",
+        "HANKO_SEED_FIXTURE_DIR",
+        "HANKO_PDFMAC_FIXTURE_DIR",
+        "HANKO_INTEGRITY_FIXTURE_DIR",
+        "HANKO_POE_POLICY_FIXTURE_DIR",
+        "HANKO_POE_CHAIN_FIXTURE_DIR",
+    ]
+    .into_iter()
+    .filter_map(|key| {
+        std::env::var(key)
+            .ok()
+            .map(|value| (key.into(), Value::String(value)))
+    })
+    .collect();
+    // Render the complete record before printing: serde's streaming Display
+    // can otherwise interleave with the test harness's independent stdout.
+    let receipt = format!(
+        "V_FIXTURE_OPEN {}",
+        serde_json::json!({
+            "path": std::fs::canonicalize(path).unwrap(),
+            "sha256": hash,
+            "length": bytes.len(),
+            "host": std::fs::read_to_string("/etc/hostname").unwrap().trim(),
+            "slot": std::env::var("RUST_SLOTS_HELD").ok(),
+            "pid": std::process::id(),
+            "selections": selections,
+        })
+    );
+    eprintln!("{receipt}");
+    bytes
+}
+
 /// One recorded module.
 pub struct Recording(pub Value);
 
 impl Recording {
     pub fn load(module: &str) -> Self {
-        let p = data(&["lanes", "e", "ades", &format!("{module}.json")]);
-        Self(serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap())
+        let p = std::env::var_os("HANKO_ADES_RECORDING_DIR")
+            .map(|path| PathBuf::from(path).join(format!("{module}.json")))
+            .unwrap_or_else(|| data(&["lanes", "e", "ades", &format!("{module}.json")]));
+        Self(serde_json::from_slice(&read_fixture(p)).unwrap())
     }
 
     /// Certificate `label` of architecture `arch` in the recorded run.
@@ -52,11 +98,18 @@ impl Recording {
         let id = format!("tests/{module}.py::{test}");
         let t = &self.0["tests"][&id];
         assert_eq!(t["outcome"], "passed", "{id} did not pass under pyHanko");
-        t["calls"]
-            .as_array()
-            .unwrap()
+        let calls = t["calls"].as_array().unwrap();
+        let case_http: Vec<Value> = calls
             .iter()
-            .map(|c| Call(c.clone()))
+            .flat_map(|call| call["http"].as_array().into_iter().flatten().cloned())
+            .collect();
+        calls
+            .iter()
+            .map(|call| {
+                let mut call = call.clone();
+                call["case_http"] = Value::Array(case_http.clone());
+                Call(call)
+            })
             .collect()
     }
 }
@@ -100,8 +153,49 @@ impl Call {
         )
     }
 
+    /// Replay current-time HTTP revocation evidence as raw local material.
+    /// AC targets cannot use the Cert-only fetch trait yet; native validation
+    /// still authenticates every supplied response under the caller's policy.
+    pub fn with_recorded_revinfo(&self, ctx: &ValidationContext) -> ValidationContext {
+        let http = self
+            .0
+            .get("case_http")
+            .filter(|v| v.as_array().is_some_and(|a| !a.is_empty()))
+            .unwrap_or(&self.0["http"]);
+        let mut crls = Vec::new();
+        let mut ocsps = Vec::new();
+        for exchange in http
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|e| e["status"] == 200)
+        {
+            let mime = exchange["content_type"].as_str().unwrap_or("");
+            if mime.starts_with("application/pkix-crl") {
+                crls.push(b64(exchange["response_body"].as_str().unwrap()));
+            }
+            if mime.starts_with("application/ocsp-response") {
+                ocsps.push(b64(exchange["response_body"].as_str().unwrap()));
+            }
+        }
+        ctx.with_revinfo(
+            std::iter::empty::<&Cert>(),
+            crls.iter().map(Vec::as_slice),
+            ocsps.iter().map(Vec::as_slice),
+        )
+        .unwrap()
+    }
+
     pub fn fetchers(&self) -> Fetchers {
-        let replay = Arc::new(Replay::new(&self.0["http"]));
+        let http = if self.0["http"]
+            .as_array()
+            .is_some_and(|items| !items.is_empty())
+        {
+            &self.0["http"]
+        } else {
+            &self.0["case_http"]
+        };
+        let replay = Arc::new(Replay::new(http));
         Fetchers {
             ocsp: Some(replay.clone()),
             crl: Some(replay.clone()),

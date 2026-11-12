@@ -27,20 +27,27 @@
 /// referred to this crate as an external dependency).
 extern crate self as sigis_pades;
 
+#[cfg(test)]
+#[path = "../tests/common/mod.rs"]
+mod native_test_fixtures;
+
 pub mod ades;
 pub mod coverage;
 /// Validation errors; moved to [`sigis_ades_model::errors`] (re-exported here).
 pub use sigis_ades_model::errors;
 pub mod integrity;
+mod seed_values;
 /// AdES indications; moved to [`sigis_pki_core::ades`] (re-exported here).
 pub use sigis_pki_core::ades as report;
 /// Key usage settings; moved to [`sigis_pki_core::key_usage`] (re-exported here).
 pub use sigis_pki_core::key_usage as settings;
 
-use sigis_cms::{SignedContent, StandardCmsSignatureStatus, TimestampSignatureStatus};
+use sigis_cms::{
+    CmsValidationOptions, SignedContent, StandardCmsSignatureStatus, TimestampSignatureStatus,
+};
 use sigis_pdf::lopdf::{Dictionary, Object, ObjectId};
 use sigis_pdf::{EmbeddedSignature, PdfFile, SignatureKind};
-use sigis_pdf_diff::{DiffOutcome, DiffPolicy, MdpPerm};
+use sigis_pdf_diff::{DiffOutcome, DiffPolicy, MdpPerm, ModificationLevel};
 use sigis_pki_certvalidator::ValidationContext;
 use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::errors::{not_implemented, HankoError, Result};
@@ -91,6 +98,10 @@ pub struct PdfSignatureStatus {
     pub docmdp_level: Option<MdpPerm>,
     /// Modifications are compatible with the DocMDP level (`docmdp_ok`).
     pub docmdp_ok: Option<bool>,
+    /// Whether the signature field defines seed values.
+    pub has_seed_values: bool,
+    /// Failure to satisfy the signature field's seed constraints.
+    pub seed_value_constraint_error: Option<SignatureValidationError>,
 }
 
 impl PdfSignatureStatus {
@@ -98,7 +109,61 @@ impl PdfSignatureStatus {
     /// disallowed modifications.
     pub fn bottom_line(&self) -> bool {
         let coverage_ok = self.coverage >= SignatureCoverageLevel::EntireRevision;
-        self.cms.signature.bottom_line() && coverage_ok && self.docmdp_ok.unwrap_or(true)
+        self.cms.bottom_line()
+            && coverage_ok
+            && self.docmdp_ok.unwrap_or(true)
+            && self.seed_value_ok()
+    }
+
+    /// Whether every applicable seed-value constraint was satisfied.
+    pub fn seed_value_ok(&self) -> bool {
+        self.seed_value_constraint_error.is_none()
+    }
+
+    /// Degree of change, or None when an extended revision was not reviewed.
+    pub fn modification_level(&self) -> Option<ModificationLevel> {
+        match self.diff_result.as_ref() {
+            Some(DiffOutcome::Reviewed(result)) => Some(result.modification_level),
+            Some(DiffOutcome::Suspicious(_)) => Some(ModificationLevel::Other),
+            None => match self.coverage {
+                SignatureCoverageLevel::EntireFile => Some(ModificationLevel::None),
+                SignatureCoverageLevel::EntireRevision => None,
+                _ => Some(ModificationLevel::Other),
+            },
+        }
+    }
+
+    /// Compact CMS, coverage and modification summary.
+    pub fn summary(&self) -> String {
+        if !self.cms.signature.intact || !self.cms.signature.valid {
+            return "INVALID".into();
+        }
+        let mut fields = self.cms.summary_fields();
+        fields.push(match self.coverage {
+            SignatureCoverageLevel::EntireFile => "UNTOUCHED".into(),
+            SignatureCoverageLevel::EntireRevision => match self.modification_level() {
+                Some(level) => format!(
+                    "EXTENDED_WITH_{}",
+                    match level {
+                        ModificationLevel::None => "NONE",
+                        ModificationLevel::LtaUpdates => "LTA_UPDATES",
+                        ModificationLevel::FormFilling => "FORM_FILLING",
+                        ModificationLevel::Annotations => "ANNOTATIONS",
+                        ModificationLevel::Other => "OTHER",
+                    }
+                ),
+                None => "EXTENDED".into(),
+            },
+            _ => "NONSTANDARD_COVERAGE".into(),
+        });
+        if self.docmdp_ok == Some(true) {
+            if self.coverage != SignatureCoverageLevel::EntireFile {
+                fields.push("ACCEPTABLE_MODIFICATIONS".into());
+            }
+        } else {
+            fields.push("ILLEGAL_MODIFICATIONS".into());
+        }
+        format!("INTACT:{}", fields.join(","))
     }
 }
 
@@ -257,6 +322,23 @@ pub fn validate_pdf_signature(
     ctx: &ValidationContext,
     diff_policy: Option<&dyn DiffPolicy>,
 ) -> Result<PdfSignatureStatus> {
+    validate_pdf_signature_with_options(
+        file,
+        signature,
+        ctx,
+        diff_policy,
+        &CmsValidationOptions::default(),
+    )
+}
+
+/// Validate a PDF signature with explicit CMS key usage, algorithm and AC policy.
+pub fn validate_pdf_signature_with_options(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+    ctx: &ValidationContext,
+    diff_policy: Option<&dyn DiffPolicy>,
+    options: &CmsValidationOptions<'_>,
+) -> Result<PdfSignatureStatus> {
     if signature.kind != SignatureKind::Signature {
         return Err(sv_error(SignatureValidationError::new(
             "Signature object type must be /Sig",
@@ -294,7 +376,14 @@ pub fn validate_pdf_signature(
 
     let signed = signature.signed_data(file)?;
     let cms_der = cms_from_contents(&signature.contents)?;
-    let cms = sigis_cms::validate_cms_signature(cms_der, SignedContent::Data(&signed), ctx)?;
+    let cms = sigis_cms::validate_cms_signature_with(
+        cms_der,
+        SignedContent::Data(&signed),
+        ctx,
+        options,
+    )?;
+    let (has_seed_values, seed_value_constraint_error) =
+        seed_values::validate(file, signature, &sig_dict, &cms, docmdp)?;
 
     Ok(PdfSignatureStatus {
         field_name: signature.field_name.clone(),
@@ -303,6 +392,8 @@ pub fn validate_pdf_signature(
         diff_result,
         docmdp_level: docmdp,
         docmdp_ok: ok,
+        has_seed_values,
+        seed_value_constraint_error,
     })
 }
 

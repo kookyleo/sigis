@@ -1,0 +1,967 @@
+{
+  "cases": [
+    {
+      "file": "exact.pdf",
+      "id": "correct_password",
+      "oracle": {
+        "ades_status": "INDETERMINATE",
+        "ades_subindic": "NO_POE",
+        "auth_status": "OWNER",
+        "best_signature_time": "2020-11-01T00:00:00+00:00",
+        "bottom_line": true,
+        "content_timestamp": null,
+        "continue_after_failed_mac": false,
+        "coverage": "ENTIRE_REVISION",
+        "diagnostic_ignore_mac": false,
+        "docmdp_ok": true,
+        "encrypted": true,
+        "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+        "intact": true,
+        "iso_extension_levels": [
+          32002,
+          32004
+        ],
+        "lta_attempted": true,
+        "mac_failure_reason": null,
+        "mac_location": "/Standalone",
+        "mac_status": "SUCCESSFUL",
+        "modification_level": "LTA_UPDATES",
+        "sha256": "befa73a1868eefacd2f7981de3f235a6e12762e5a69d6fec02965f4844667070",
+        "signature_timestamp": {
+          "coverage": null,
+          "intact": true,
+          "modification_level": null,
+          "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "timestamp": "2020-11-01T00:00:00+00:00",
+          "trust_problem_indic": null,
+          "trusted": true,
+          "type": "TimestampSignatureStatus",
+          "valid": true,
+          "validation_path": [
+            "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+          ]
+        },
+        "signatures": [
+          {
+            "byte_range": [
+              0,
+              2326,
+              14504,
+              1272
+            ],
+            "field_name": "Sig1",
+            "signed_revision": 0,
+            "subfilter": "/ETSI.CAdES.detached",
+            "type": "/Sig"
+          },
+          {
+            "byte_range": [
+              0,
+              23320,
+              28670,
+              725
+            ],
+            "field_name": "Timestamp-9ce09451-8315-404d-a624-eb4ff435115d",
+            "signed_revision": 1,
+            "subfilter": "/ETSI.RFC3161",
+            "type": "/DocTimeStamp"
+          }
+        ],
+        "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": null,
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "PdfSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ],
+        "validation_trace": [
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "_scoped_ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          }
+        ]
+      },
+      "password": "secret"
+    },
+    {
+      "file": "exact.pdf",
+      "id": "wrong_password",
+      "oracle": {
+        "auth_status": "FAILED",
+        "continue_after_failed_mac": false,
+        "diagnostic_ignore_mac": false,
+        "encrypted": true,
+        "lta_attempted": false,
+        "mac_failure_reason": null,
+        "mac_status": "NOT_APPLICABLE",
+        "sha256": "befa73a1868eefacd2f7981de3f235a6e12762e5a69d6fec02965f4844667070"
+      },
+      "password": "incorrect-password"
+    },
+    {
+      "file": "mac-token-mutated.pdf",
+      "id": "mac_token_mutation",
+      "oracle": {
+        "auth_status": "FAILED",
+        "continue_after_failed_mac": false,
+        "diagnostic_ignore_mac": false,
+        "encrypted": true,
+        "lta_attempted": false,
+        "mac_failure_reason": "PDF MAC token has invalid MAC",
+        "mac_status": "FAILED",
+        "sha256": "83a910eeaff0fed246016c1bd5c4f3b6074670f38cf8f389d539977acd368d2e"
+      },
+      "password": "secret"
+    },
+    {
+      "file": "document-mutated.pdf",
+      "id": "document_mutation",
+      "oracle": {
+        "auth_status": "FAILED",
+        "continue_after_failed_mac": false,
+        "diagnostic_ignore_mac": false,
+        "encrypted": true,
+        "lta_attempted": false,
+        "mac_failure_reason": "Document digest does not match value in PdfMacIntegrityInfo",
+        "mac_status": "FAILED",
+        "sha256": "09cad18db4ab33110931c99f87873e4d47aa1d0ceb964311340095e5cb84a90b"
+      },
+      "password": "secret"
+    },
+    {
+      "file": "mac-token-mutated.pdf",
+      "id": "token_mutation_cms_control",
+      "oracle": {
+        "ades_status": "INDETERMINATE",
+        "ades_subindic": "NO_POE",
+        "auth_status": "OWNER",
+        "best_signature_time": "2020-11-01T00:00:00+00:00",
+        "bottom_line": true,
+        "content_timestamp": null,
+        "continue_after_failed_mac": false,
+        "coverage": "ENTIRE_REVISION",
+        "diagnostic_ignore_mac": true,
+        "docmdp_ok": true,
+        "encrypted": true,
+        "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+        "intact": true,
+        "iso_extension_levels": [
+          32002,
+          32004
+        ],
+        "lta_attempted": true,
+        "mac_failure_reason": null,
+        "mac_location": "/Standalone",
+        "mac_status": "NOT_APPLICABLE",
+        "modification_level": "LTA_UPDATES",
+        "sha256": "83a910eeaff0fed246016c1bd5c4f3b6074670f38cf8f389d539977acd368d2e",
+        "signature_timestamp": {
+          "coverage": null,
+          "intact": true,
+          "modification_level": null,
+          "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "timestamp": "2020-11-01T00:00:00+00:00",
+          "trust_problem_indic": null,
+          "trusted": true,
+          "type": "TimestampSignatureStatus",
+          "valid": true,
+          "validation_path": [
+            "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+          ]
+        },
+        "signatures": [
+          {
+            "byte_range": [
+              0,
+              2326,
+              14504,
+              1272
+            ],
+            "field_name": "Sig1",
+            "signed_revision": 0,
+            "subfilter": "/ETSI.CAdES.detached",
+            "type": "/Sig"
+          },
+          {
+            "byte_range": [
+              0,
+              23320,
+              28670,
+              725
+            ],
+            "field_name": "Timestamp-9ce09451-8315-404d-a624-eb4ff435115d",
+            "signed_revision": 1,
+            "subfilter": "/ETSI.RFC3161",
+            "type": "/DocTimeStamp"
+          }
+        ],
+        "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": null,
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "PdfSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ],
+        "validation_trace": [
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "_scoped_ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          }
+        ]
+      },
+      "password": "secret"
+    },
+    {
+      "file": "mac-token-mutated.pdf",
+      "id": "post_failed_mac_lta_diagnostic",
+      "oracle": {
+        "ades_status": "INDETERMINATE",
+        "ades_subindic": "NO_POE",
+        "auth_status": "FAILED",
+        "best_signature_time": "2020-11-01T00:00:00+00:00",
+        "bottom_line": true,
+        "content_timestamp": null,
+        "continue_after_failed_mac": true,
+        "coverage": "ENTIRE_REVISION",
+        "diagnostic_ignore_mac": false,
+        "docmdp_ok": true,
+        "encrypted": true,
+        "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+        "intact": true,
+        "iso_extension_levels": [
+          32002,
+          32004
+        ],
+        "lta_attempted": true,
+        "mac_failure_reason": "PDF MAC token has invalid MAC",
+        "mac_location": "/Standalone",
+        "mac_status": "FAILED",
+        "modification_level": "LTA_UPDATES",
+        "sha256": "83a910eeaff0fed246016c1bd5c4f3b6074670f38cf8f389d539977acd368d2e",
+        "signature_timestamp": {
+          "coverage": null,
+          "intact": true,
+          "modification_level": null,
+          "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "timestamp": "2020-11-01T00:00:00+00:00",
+          "trust_problem_indic": null,
+          "trusted": true,
+          "type": "TimestampSignatureStatus",
+          "valid": true,
+          "validation_path": [
+            "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+          ]
+        },
+        "signatures": [
+          {
+            "byte_range": [
+              0,
+              2326,
+              14504,
+              1272
+            ],
+            "field_name": "Sig1",
+            "signed_revision": 0,
+            "subfilter": "/ETSI.CAdES.detached",
+            "type": "/Sig"
+          },
+          {
+            "byte_range": [
+              0,
+              23320,
+              28670,
+              725
+            ],
+            "field_name": "Timestamp-9ce09451-8315-404d-a624-eb4ff435115d",
+            "signed_revision": 1,
+            "subfilter": "/ETSI.RFC3161",
+            "type": "/DocTimeStamp"
+          }
+        ],
+        "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": null,
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "PdfSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ],
+        "validation_trace": [
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "DocumentTimestampStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "_scoped_ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_with_time_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": "2020-11-01T00:00:00+00:00",
+              "bottom_line": true,
+              "content_timestamp": null,
+              "coverage": "ENTIRE_REVISION",
+              "docmdp_ok": true,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": "LTA_UPDATES",
+              "signature_timestamp": {
+                "coverage": null,
+                "intact": true,
+                "modification_level": null,
+                "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "timestamp": "2020-11-01T00:00:00+00:00",
+                "trust_problem_indic": null,
+                "trusted": true,
+                "type": "TimestampSignatureStatus",
+                "valid": true,
+                "validation_path": [
+                  "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                  "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+                ]
+              },
+              "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": null,
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "PdfSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation_internal",
+            "input_type": "SignedData",
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          },
+          {
+            "function": "ades_timestamp_validation",
+            "input_type": null,
+            "result": {
+              "ades_status": "PASSED",
+              "ades_subindic": "OK",
+              "best_signature_time": null,
+              "content_timestamp": null,
+              "coverage": null,
+              "failure_msg": null,
+              "intact": true,
+              "modification_level": null,
+              "signature_timestamp": null,
+              "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "timestamp": "2020-11-01T00:00:00+00:00",
+              "trust_problem_indic": null,
+              "trusted": true,
+              "type": "TimestampSignatureStatus",
+              "valid": true,
+              "validation_path": [
+                "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+              ]
+            }
+          }
+        ]
+      },
+      "password": "secret"
+    }
+  ],
+  "certvalidator": "0.33.0",
+  "document_mutation_file": "document-mutated.pdf",
+  "encryption": "STANDARD",
+  "frozen_time": "2020-11-01T00:00:00Z",
+  "native_rust_acceptance": false,
+  "original_assertions": [
+    "ades_status.api_status.bottom_line",
+    "decrypt.mac_status == SUCCESSFUL",
+    "32004 in root.Extensions.ISO_.ExtensionLevel"
+  ],
+  "password": "secret",
+  "positive_file": "exact.pdf",
+  "pyhanko": "0.38.1",
+  "root_certificate": "root.der",
+  "token_mutation": {
+    "altered_mac": "4PN/27dHqzqKiAFRvaMObndkCZsGpKzc8DfxMmV/5RU=",
+    "byte_range": [
+      0,
+      31161,
+      31827,
+      254
+    ],
+    "contents_end": 31827,
+    "contents_start": 31161,
+    "location": "/Standalone",
+    "mutation": "flip first bit of CMS AuthenticatedData.mac",
+    "original_mac": "4fN/27dHqzqKiAFRvaMObndkCZsGpKzc8DfxMmV/5RU="
+  },
+  "token_mutation_file": "mac-token-mutated.pdf",
+  "trust_root": "MIICgjCCAgmgAwIBAgICEAAwCgYIKoZIzj0EAwIwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTAgFw0wMDAxMDEwMDAwMDBaGA8yNTAwMDEwMTAwMDAwMFowUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTB2MBAGByqGSM49AgEGBSuBBAAiA2IABGhJ4oc8oXy3Nu5jz+RU2DLr/ZObopTgfYJGwxMIJpN84aFA4kW7mEuiZ+tbpL6YzPlXOv5z/rxNSygfy8svdzqauWxkNmEv3l6w9kIrdJzHIEVQdKEpoIwzrVOHdRU7GqOBsTCBrjAdBgNVHQ4EFgQUYVz/xyYHSUJuNbPZOE9MyF6/Tk0wHwYDVR0jBBgwFoAUYVz/xyYHSUJuNbPZOE9MyF6/Tk0wDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS1lY2RzYS9jcmxzL3Jvb3QvbGF0ZXN0LmNybDAKBggqhkjOPQQDAgNnADBkAjBOP1mlBN+hoMmHu+uVSHHLtoe4XkILDjBDIU5+FxYuUO3e8mywZwgJmx2MJo2eN/8CMGQLKBb3nweP9F0fhQar+7yCSRV3QA2iPKBUlRn8kk3yJHvtLUAjYQWJmKVQks0kAA==",
+  "upstream_evidence": "upstream-evidence.json",
+  "upstream_function": "pyhanko/test_pdfmac.py::test_pdf_mac_pades",
+  "validation_time": "2020-11-01T00:00:00Z"
+}

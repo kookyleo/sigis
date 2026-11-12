@@ -1,0 +1,12 @@
+{
+  "pyhanko": "0.38.1",
+  "source": "test_sv_deserialisation parser extension",
+  "root_seed_flags": 0,
+  "oracle": {
+    "type": "PdfStrictReadError",
+    "message": "Object addressed by Reference(idnum=999999, generation=0) not found in the current context. This is an error in strict mode."
+  },
+  "cms_intact": true,
+  "cms_valid": true,
+  "cms_trusted": true
+}

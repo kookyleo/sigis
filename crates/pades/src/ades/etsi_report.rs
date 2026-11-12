@@ -11,11 +11,17 @@
 use std::io::Cursor;
 
 use base64::Engine as _;
+use der::{Decode, Encode};
 use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;
 use sigis_pades::report::{AdesStatus, AdesSubIndic};
 use sigis_pki_certvalidator::ltv::poe::digest_for_poe;
 use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::asn1::ess::{SigningCertificate, SigningCertificateV2};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::asn1::raw_oid::RawOid;
+use sigis_pki_core::asn1::tlv::{tag, Tlv};
+use sigis_pki_core::errors::{HankoError, Result as HankoResult};
 use sigis_pki_core::time::Moment;
 
 /// Namespace of TS 119 102-2 reports.
@@ -141,8 +147,8 @@ pub struct SignatureAttributes {
     pub contact_info: Option<String>,
     /// `/SubFilter` without the slash.
     pub sub_filter: String,
-    /// `/ByteRange`.
-    pub byte_range: [u64; 4],
+    /// Complete `/ByteRange` offset-length pairs, in their original order.
+    pub byte_range: Vec<u64>,
     /// `/Filter` without the slash.
     pub filter: String,
 }
@@ -154,7 +160,8 @@ pub struct ReportInput {
     pub signature_value: Vec<u8>,
     /// Message digest algorithm.
     pub md_algorithm: DigestAlgorithm,
-    /// DER of the signed attributes (as a `SET`).
+    /// Original `[0] IMPLICIT` encoding of the signed attributes. The pinned
+    /// report hashes this encoding; CMS verification uses a universal SET.
     pub signed_attrs_der: Vec<u8>,
     /// Digest of the signed document (byte range digest).
     pub document_digest: Vec<u8>,
@@ -172,6 +179,268 @@ pub struct ReportInput {
     pub attributes: SignatureAttributes,
     /// Validation objects.
     pub validation_objects: Vec<ValidationObject>,
+}
+
+/// Validation evidence consumed by the report input builders.
+///
+/// Certified signer roles are taken exclusively from successfully validated
+/// attribute-certificate results in `status`.
+pub struct ReportValidation<'a> {
+    /// Time at which validation was requested.
+    pub validation_time: Moment,
+    /// Proven upper bound on the signature time, if established.
+    pub best_signature_time: Option<Moment>,
+    /// Validation procedure that produced the result.
+    pub process: ValidationProcess,
+    /// Result of that procedure.
+    pub subindication: AdesSubIndic,
+    /// CMS validation result, including timestamp and attribute evidence.
+    pub status: &'a sigis_cms::StandardCmsSignatureStatus,
+}
+
+fn report_error(error: impl std::fmt::Display) -> HankoError {
+    HankoError::Malformed(format!("cannot construct validation report: {error}"))
+}
+
+fn unique_attribute(
+    signer: &sigis_cms::SignerInfo,
+    oid: der::asn1::ObjectIdentifier,
+) -> HankoResult<Option<&[u8]>> {
+    use sigis_cms::signed_data::{find_unique_cms_attribute, AttributeLookupError};
+    match find_unique_cms_attribute(signer.signed_attr_list(), oid) {
+        Ok(value) => Ok(Some(value)),
+        Err(AttributeLookupError::Nonexistent(_)) => Ok(None),
+        Err(error) => Err(report_error(error)),
+    }
+}
+
+fn first_oid(value: &[u8]) -> HankoResult<String> {
+    let sequence = Tlv::parse_exact(value).map_err(report_error)?;
+    if !sequence.is_universal(tag::SEQUENCE) {
+        return Err(report_error("attribute value must be a SEQUENCE"));
+    }
+    let children = sequence.children().map_err(report_error)?;
+    let oid = children
+        .first()
+        .ok_or_else(|| report_error("attribute value has no identifier"))?;
+    Ok(RawOid::from_tlv(oid).map_err(report_error)?.dotted())
+}
+
+fn role_description(info: &sigis_cms::status::AttributeInfo, certified: bool) -> String {
+    let values = info
+        .attr_values
+        .iter()
+        .map(|value| match Tlv::parse_exact(value) {
+            Ok(value) if [12, 19, 22].iter().any(|tag| value.is_universal(*tag)) => {
+                String::from_utf8_lossy(value.value).into_owned()
+            }
+            _ => format!("DER:{}", b64(value)),
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    format!(
+        "{}{} {values}",
+        info.attr_type,
+        if certified { "" } else { ":" }
+    )
+}
+
+impl ReportInput {
+    /// Construct a report from the original CMS encoding and a Rust validation
+    /// result. `document_digest` is the digest of the actual detached content.
+    pub fn from_cms(
+        content_info: &[u8],
+        document_digest: &[u8],
+        validation: &ReportValidation<'_>,
+    ) -> HankoResult<Self> {
+        let signed_data = sigis_cms::SignedData::from_der(content_info)?;
+        let signer = sigis_cms::signed_data::extract_signer_info(&signed_data)?;
+        let md_algorithm = signer
+            .digest()
+            .ok_or_else(|| report_error("unsupported signer digest algorithm"))?;
+        let signed_attrs = signer
+            .signed_attrs
+            .as_ref()
+            .ok_or_else(|| report_error("signed attributes are required"))?;
+        let signer_cert = sigis_cms::signed_data::extract_certificate_info(&signed_data)?
+            .signer_cert
+            .der()
+            .to_vec();
+        let status = validation.status;
+        let mut attributes = SignatureAttributes {
+            signing_time: status
+                .signer_reported_dt
+                .or_else(|| status.timestamp_validity.as_ref().map(|t| t.timestamp)),
+            content_timestamp: status
+                .content_timestamp_validity
+                .as_ref()
+                .map(|t| t.timestamp),
+            signature_timestamp: status.timestamp_validity.as_ref().map(|t| t.timestamp),
+            ..Default::default()
+        };
+        let message_digest = unique_attribute(signer, oids::MESSAGE_DIGEST)?
+            .ok_or_else(|| report_error("required messageDigest attribute is missing"))?;
+        attributes.message_digest = der::asn1::OctetString::from_der(message_digest)
+            .map_err(report_error)?
+            .as_bytes()
+            .to_vec();
+        if let Some(value) = unique_attribute(signer, oids::AA_ETS_COMMITMENT_TYPE)? {
+            attributes.commitment_type = Some(first_oid(value)?);
+        }
+        for value in sigis_cms::signed_data::find_cms_attribute_iter(
+            signer.signed_attr_list(),
+            oids::AA_ETS_SIG_POLICY_ID,
+        ) {
+            // The NULL alternative means an implied policy, with no OID.
+            if !Tlv::parse_exact(value)
+                .map_err(report_error)?
+                .is_universal(5)
+            {
+                attributes.policy_oids.push(first_oid(value)?);
+            }
+        }
+        if let Some(value) = unique_attribute(signer, oids::AA_SIGNING_CERTIFICATE)? {
+            let certificate = SigningCertificate::from_der(value).map_err(report_error)?;
+            attributes.signing_certificate = Some(
+                certificate
+                    .certs
+                    .into_iter()
+                    .map(|id| {
+                        Ok(CertIdRef {
+                            digest_algorithm: DigestAlgorithm::Sha1,
+                            digest: id.cert_hash.as_bytes().to_vec(),
+                            issuer_serial: id
+                                .issuer_serial
+                                .map(|s| s.to_der())
+                                .transpose()
+                                .map_err(report_error)?,
+                        })
+                    })
+                    .collect::<HankoResult<Vec<_>>>()?,
+            );
+        } else if let Some(value) = unique_attribute(signer, oids::AA_SIGNING_CERTIFICATE_V2)? {
+            let certificate = SigningCertificateV2::from_der(value).map_err(report_error)?;
+            attributes.signing_certificate = Some(
+                certificate
+                    .certs
+                    .into_iter()
+                    .map(|id| {
+                        Ok(CertIdRef {
+                            digest_algorithm: id
+                                .digest_algorithm()
+                                .ok_or_else(|| report_error("unsupported certificate digest"))?,
+                            digest: id.cert_hash.as_bytes().to_vec(),
+                            issuer_serial: id
+                                .issuer_serial
+                                .map(|s| s.to_der())
+                                .transpose()
+                                .map_err(report_error)?,
+                        })
+                    })
+                    .collect::<HankoResult<Vec<_>>>()?,
+            );
+        }
+        if let Some(roles) = &status.cades_signer_attrs {
+            attributes.signer_roles.extend(
+                roles
+                    .claimed_attrs
+                    .0
+                    .values()
+                    .map(|info| (false, role_description(info, false))),
+            );
+            if let Some(certified) = &roles.certified_attrs {
+                attributes.signer_roles.extend(
+                    certified
+                        .0
+                        .values()
+                        .map(|info| (true, role_description(info, true))),
+                );
+            }
+        }
+        let validation_objects = signed_data
+            .certificates
+            .iter()
+            .map(|data| ValidationObject {
+                object_type: ValidationObjectType::Certificate,
+                data: data.clone(),
+            })
+            .collect();
+        Ok(Self {
+            signature_value: signer.signature.clone(),
+            md_algorithm,
+            signed_attrs_der: sigis_pki_core::asn1::tlv::encode(0xa0, &signed_attrs.contents),
+            document_digest: document_digest.to_vec(),
+            validation_time: validation.validation_time,
+            best_signature_time: validation.best_signature_time,
+            process: validation.process,
+            subindication: validation.subindication,
+            signer_cert,
+            attributes,
+            validation_objects,
+        })
+    }
+
+    /// Construct a report using the actual PDF byte range and signature
+    /// dictionary, preserving metadata from the signed revision.
+    pub fn from_pdf(
+        file: &sigis_pdf::PdfFile,
+        signature: &sigis_pdf::EmbeddedSignature,
+        validation: &ReportValidation<'_>,
+    ) -> HankoResult<Self> {
+        use sigis_pdf::lopdf::Object;
+        let signed_data = sigis_cms::SignedData::from_der(&signature.contents)?;
+        let signer = sigis_cms::signed_data::extract_signer_info(&signed_data)?;
+        let algorithm = signer
+            .digest()
+            .ok_or_else(|| report_error("unsupported signer digest"))?;
+        let digest = algorithm.digest(&signature.signed_data(file)?);
+        let mut input = Self::from_cms(&signature.contents, &digest, validation)?;
+        let Some(Object::Dictionary(dictionary)) =
+            file.object_in_revision(signature.sig_object, signature.signed_revision)?
+        else {
+            return Err(report_error("signature dictionary is unavailable"));
+        };
+        let text = |key: &[u8]| {
+            dictionary
+                .get(key)
+                .ok()
+                .and_then(sigis_pdf::signatures::text_of)
+        };
+        input.attributes.name = text(b"Name");
+        input.attributes.reason = text(b"Reason");
+        input.attributes.contact_info = text(b"ContactInfo");
+        input.attributes.location = text(b"Location");
+        if validation.status.signer_reported_dt.is_none() {
+            if let Ok(date) = dictionary.get(b"M") {
+                let date = sigis_pdf::generic::parse_pdf_date_obj(date, file.strict())
+                    .map_err(report_error)?;
+                input.attributes.signing_time = Some(Moment::from_unix_secs(date.unix_timestamp()));
+            }
+        }
+        input.attributes.sub_filter = signature.sub_filter.clone().unwrap_or_default();
+        input.attributes.byte_range = signature.byte_range.clone();
+        input.attributes.filter = dictionary
+            .get(b"Filter")
+            .ok()
+            .and_then(|o| o.as_name().ok())
+            .map(|name| String::from_utf8_lossy(name).into_owned())
+            .unwrap_or_default();
+        if let Some(dss) = file.dss()? {
+            for (object_type, objects) in [
+                (ValidationObjectType::Certificate, dss.material.certs),
+                (ValidationObjectType::OcspResponse, dss.material.ocsps),
+                (ValidationObjectType::Crl, dss.material.crls),
+            ] {
+                for data in objects {
+                    let object = ValidationObject { object_type, data };
+                    if !input.validation_objects.contains(&object) {
+                        input.validation_objects.push(object);
+                    }
+                }
+            }
+        }
+        Ok(input)
+    }
 }
 
 /// XML Signature URI of a digest algorithm (`DIGEST_ALGO_URIS`); `None`
@@ -278,14 +547,14 @@ fn write_attributes(w: &mut W, a: &SignatureAttributes) -> XmlResult {
         w.start("vr:SigningCertificate", &signed)?;
         for id in ids {
             w.start("vr:CertID", &[])?;
+            if let Some(is) = &id.issuer_serial {
+                w.leaf("vr:X509IssuerSerial", &[], &b64(is))?;
+            }
             w.empty(
                 "ds:DigestMethod",
                 &[("Algorithm", digest_uri(id.digest_algorithm)?)],
             )?;
             w.leaf("ds:DigestValue", &[], &b64(&id.digest))?;
-            if let Some(is) = &id.issuer_serial {
-                w.leaf("vr:X509IssuerSerial", &[], &b64(is))?;
-            }
             w.end("vr:CertID")?;
         }
         w.end("vr:SigningCertificate")?;
@@ -382,7 +651,7 @@ pub fn generate_report(input: &ReportInput) -> Result<String, quick_xml::Error> 
     // SignatureIdentifier
     w.start("vr:SignatureIdentifier", &[])?;
     let dtbsr = input.md_algorithm.digest(&input.signed_attrs_der);
-    w.digest("XAdES:DigestAlgAndValue", input.md_algorithm, &dtbsr)?;
+    w.digest("vr:DigestAlgAndValue", input.md_algorithm, &dtbsr)?;
     w.leaf("ds:SignatureValue", &[], &b64(&input.signature_value))?;
     w.leaf("vr:HashOnly", &[], "false")?;
     w.leaf("vr:DocHashOnly", &[], "false")?;
@@ -412,9 +681,10 @@ pub fn generate_report(input: &ReportInput) -> Result<String, quick_xml::Error> 
         data: input.signer_cert.clone(),
     };
     w.start("vr:SignerInformation", &[])?;
-    w.start("vr:SignerCertificate", &[])?;
-    w.leaf("vr:VOReference", &[], &signer_vo.identifier())?;
-    w.end("vr:SignerCertificate")?;
+    w.empty(
+        "vr:SignerCertificate",
+        &[("VOReference", &signer_vo.identifier())],
+    )?;
     w.end("vr:SignerInformation")?;
     // SignatureValidationProcess
     w.start("vr:SignatureValidationProcess", &[])?;
@@ -477,7 +747,7 @@ mod tests {
             attributes: SignatureAttributes {
                 message_digest: vec![7; 32],
                 sub_filter: "ETSI.CAdES.detached".into(),
-                byte_range: [0, 10, 20, 30],
+                byte_range: vec![0, 10, 20, 30],
                 filter: "Adobe.PPKLite".into(),
                 reason: Some("a < b & c".into()),
                 ..Default::default()

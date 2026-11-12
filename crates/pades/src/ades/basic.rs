@@ -25,8 +25,12 @@ use sigis_pki_core::time::Moment;
 pub fn subindication_for_validation_error(err: &ValidationError, is_ee_cert: bool) -> AdesSubIndic {
     match err {
         ValidationError::StaleRevinfo { .. } => AdesIndeterminate::TRY_LATER.into(),
-        ValidationError::DisallowedAlgorithm { .. } => {
-            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into()
+        ValidationError::DisallowedAlgorithm { banned_since, .. } => {
+            if banned_since.is_some() {
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE.into()
+            } else {
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into()
+            }
         }
         ValidationError::Revoked { .. } => {
             if is_ee_cert {
@@ -74,6 +78,17 @@ pub fn basic_subindication(status: &SignatureStatus) -> AdesSubIndic {
     if !status.valid {
         return AdesFailure::SIG_CRYPTO_FAILURE.into();
     }
+    // The structured path error is authoritative for algorithm denials.
+    // A stale cached indication must never turn a permanent ban into a
+    // timed denial (or OK), nor discard a real policy cutoff.
+    if let Some(TrustProblem::Path(error @ ValidationError::DisallowedAlgorithm { .. })) =
+        &status.trust_problem
+    {
+        return subindication_for_validation_error(error, true);
+    }
+    if let Some(sub) = status.trust_problem_indic {
+        return sub;
+    }
     if let Some(p) = &status.trust_problem {
         return subindication_for_trust_problem(p);
     }
@@ -113,7 +128,7 @@ pub struct BasicValidationResult {
 /// Turn a CMS validation status into a basic validation result, including
 /// the qualification analysis (`_scoped_ades_basic_validation`).
 pub fn basic_result(
-    status: StandardCmsSignatureStatus,
+    mut status: StandardCmsSignatureStatus,
     qualification: &QualificationSpec<'_>,
     poe_time: Option<Moment>,
 ) -> BasicValidationResult {
@@ -128,6 +143,14 @@ pub fn basic_result(
         result.api_status = Some(status);
         return result;
     }
+    if qualification.requirements.is_some() && qualification.registry.is_none() {
+        result.ades_subindic = AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into();
+        result.failure_msg =
+            Some("Signer qualification requirements need a trusted-service registry".into());
+        status.signature.trust_problem_indic = Some(result.ades_subindic);
+        result.api_status = Some(status);
+        return result;
+    }
     if let (Some(registry), Some(path)) = (
         qualification.registry,
         status.signature.validation_path.as_ref(),
@@ -138,6 +161,7 @@ pub fn basic_result(
                     if let Err(e) = enforce_requirements(req, &qr, path) {
                         result.ades_subindic = e.ades_subindication;
                         result.failure_msg = Some(e.failure_message.clone());
+                        status.signature.trust_problem_indic = Some(e.ades_subindication);
                     }
                 }
                 result.qualification = Some(qr);
@@ -146,6 +170,7 @@ pub fn basic_result(
                 // pyHanko raises here; fail closed.
                 result.ades_subindic = AdesIndeterminate::GENERIC.into();
                 result.failure_msg = Some(msg);
+                status.signature.trust_problem_indic = Some(result.ades_subindic);
             }
         }
     }
@@ -160,6 +185,66 @@ fn signer_digest_algorithm(content_info: &[u8]) -> Option<DigestAlgorithm> {
     let sd: cms::signed_data::SignedData = ci.content.decode_as().ok()?;
     let si = sd.signer_infos.0.iter().next()?;
     DigestAlgorithm::from_oid(&si.digest_alg.oid)
+}
+
+/// Check that attached timestamp message-imprint digests are available.
+pub(crate) fn check_timestamp_digests(content_info: &[u8]) -> Result<(), HankoError> {
+    use der::{Decode, Encode};
+    let Ok(ci) = cms::content_info::ContentInfo::from_der(content_info) else {
+        return Ok(());
+    };
+    let Ok(sd) = ci.content.decode_as::<cms::signed_data::SignedData>() else {
+        return Ok(());
+    };
+    let Some(si) = sd.signer_infos.0.iter().next() else {
+        return Ok(());
+    };
+    if let Some(attrs) = &si.signed_attrs {
+        for attr in attrs
+            .iter()
+            .filter(|a| a.oid.to_string() == "1.2.840.113549.1.9.16.2.20")
+        {
+            for value in attr.values.iter() {
+                let token = value
+                    .to_der()
+                    .map_err(|e| HankoError::Malformed(e.to_string()))?;
+                let algorithm = crate::tst_imprint_algorithm(&token).map_err(|_| {
+                    HankoError::NotImplemented(
+                        "TSTDigestNotAvailableError: content timestamp digest is not supported",
+                    )
+                })?;
+                if algorithm.oid() != si.digest_alg.oid {
+                    return Err(HankoError::NotImplemented("TSTDigestNotAvailableError: content timestamp digest differs from the surrounding signature digest"));
+                }
+            }
+        }
+    }
+    let mut available = false;
+    let mut unavailable = None;
+    if let Some(attrs) = &si.unsigned_attrs {
+        for attr in attrs
+            .iter()
+            .filter(|a| a.oid.to_string() == "1.2.840.113549.1.9.16.2.14")
+        {
+            for value in attr.values.iter() {
+                let token = value
+                    .to_der()
+                    .map_err(|e| HankoError::Malformed(e.to_string()))?;
+                match crate::tst_imprint_algorithm(&token) {
+                    Ok(_) => available = true,
+                    Err(error) => unavailable = Some(error),
+                }
+            }
+        }
+    }
+    if !available {
+        if let Some(error) = unavailable {
+            return Err(HankoError::Malformed(format!(
+                "TSTDigestNotAvailableError: {error}"
+            )));
+        }
+    }
+    Ok(())
 }
 
 /// Basic validation of a CMS signature (`ades_basic_validation`).
@@ -197,6 +282,7 @@ pub(crate) fn cms_status(
     raw_digest: Option<&[u8]>,
     ctx: &ValidationContext,
 ) -> Result<Result<StandardCmsSignatureStatus, (AdesSubIndic, String)>, HankoError> {
+    check_timestamp_digests(content_info)?;
     let content = match raw_digest {
         Some(d) => {
             let alg = signer_digest_algorithm(content_info).ok_or_else(|| {
@@ -292,6 +378,16 @@ mod tests {
             "CRYPTO_CONSTRAINTS_FAILURE"
         );
         assert_eq!(
+            s(
+                ValidationError::DisallowedAlgorithm {
+                    msg: "x".into(),
+                    banned_since: Some(Moment::parse_rfc3339("2019-12-31T23:59:59Z").unwrap()),
+                },
+                true
+            ),
+            "CRYPTO_CONSTRAINTS_FAILURE_NO_POE"
+        );
+        assert_eq!(
             s(ValidationError::InsufficientRevinfo("x".into()), true),
             "CERTIFICATE_CHAIN_GENERAL_FAILURE"
         );
@@ -353,5 +449,49 @@ mod tests {
                 .name(),
             "FAILED"
         );
+    }
+
+    #[test]
+    fn algorithm_indications_follow_typed_path_error() {
+        let cutoff = Moment::parse_rfc3339("2019-12-31T23:59:59Z").unwrap();
+        for banned_since in [None, Some(cutoff)] {
+            let mut signature = status(
+                true,
+                true,
+                Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm {
+                    // A date in the display text is deliberately unrelated
+                    // to the authoritative structured horizon.
+                    msg: "reason mentions 2099-01-01T00:00:00Z".into(),
+                    banned_since,
+                })),
+                true,
+            );
+            let expected = if banned_since.is_some() {
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE.into()
+            } else {
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into()
+            };
+            for cached in [
+                AdesPassed::OK.into(),
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into(),
+                AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE.into(),
+            ] {
+                signature.trust_problem_indic = Some(cached);
+                signature.error_time_horizon = Some(cutoff);
+                assert_eq!(basic_subindication(&signature), expected);
+                signature.intact = false;
+                assert_eq!(
+                    basic_subindication(&signature),
+                    AdesFailure::HASH_FAILURE.into()
+                );
+                signature.intact = true;
+                signature.valid = false;
+                assert_eq!(
+                    basic_subindication(&signature),
+                    AdesFailure::SIG_CRYPTO_FAILURE.into()
+                );
+                signature.valid = true;
+            }
+        }
     }
 }

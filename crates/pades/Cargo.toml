@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 sigis-pki-core = { workspace = true }
 sigis-pki-certvalidator = { workspace = true }
+sigis-pki-fetch = { workspace = true }
 sigis-cms = { workspace = true }
 sigis-pdf = { workspace = true }
 sigis-pdf-diff = { workspace = true }
@@ -28,3 +29,4 @@ x509-cert = { workspace = true }
 [dev-dependencies]
 sigis-testdata = { workspace = true }
 const-oid = { workspace = true }
+spki = { workspace = true }

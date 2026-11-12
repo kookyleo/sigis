@@ -110,7 +110,9 @@ fn with_tl(case: &str, requirements: Option<QualificationRequirements>) {
         requirements,
         ts_requirements: None,
     };
-    for call in rec.calls(MODULE, &id) {
+    let calls = rec.calls(MODULE, &id);
+    assert!(!calls.is_empty(), "missing validation input: {id}");
+    for call in calls {
         let ctx = tl_context(&registry)(&rec, &call);
         let result = basic_validation(
             &call.content_info(),
@@ -173,7 +175,9 @@ fn test_pades_fail_qualification_requirements() {
             requirements: Some(req),
             ts_requirements: None,
         };
-        for call in rec.calls(MODULE, &id) {
+        let calls = rec.calls(MODULE, &id);
+        assert!(!calls.is_empty(), "missing validation input: {id}");
+        for call in calls {
             let ctx = tl_context(&registry)(&rec, &call);
             let result = basic_validation(
                 &call.content_info(),
@@ -206,7 +210,9 @@ fn recordings_are_complete() {
 
 fn run_with_time(test: &str, expect_best_time: Option<&str>) {
     let rec = Recording::load(MODULE);
-    for call in rec.calls(MODULE, test) {
+    let calls = rec.calls(MODULE, test);
+    assert!(!calls.is_empty(), "missing validation input: {test}");
+    for call in calls {
         let ctx = default_context(&rec, &call);
         let result = match call.function() {
             "ades_with_time_validation" => sigis_pades::ades::with_time::with_time_validation(

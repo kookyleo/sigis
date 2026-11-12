@@ -1,0 +1,205 @@
+{
+  "anomalous": [
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        690,
+        6692,
+        400
+      ],
+      "coverage": "CONTIGUOUS_BLOCK_FROM_START",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "default",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "name": "tail-uncovered.pdf",
+      "sha256": "20561be3ee5648213713254694f73a794636da607719e1cb507b3c056d495775",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    },
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        690,
+        6692,
+        400
+      ],
+      "coverage": "UNCLEAR",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "default",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "name": "signature-gap-too-big.pdf",
+      "sha256": "73dc0c19842d8932340407fc745bdf5a4d3864eac246db46cd96c843695a3069",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    },
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        690
+      ],
+      "coverage": "UNCLEAR",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "default",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "name": "one-byterange.pdf",
+      "sha256": "9b5dadd12b9223abf7fabf724b834cf096422c92d981bac9dec233fceed06d56",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    },
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        10,
+        20,
+        30
+      ],
+      "coverage": "UNCLEAR",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "default",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "name": "weird-byterange.pdf",
+      "sha256": "d1868dc15529973047309b7cc477675cf3923b0f3906272073275d7ba77970ef",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    }
+  ],
+  "certvalidator": "0.33.0",
+  "clean_control": {
+    "bottom_line": true,
+    "byte_range": [
+      0,
+      1160,
+      12802,
+      614
+    ],
+    "coverage": "ENTIRE_FILE",
+    "diff_none": false,
+    "diff_suspicious": false,
+    "docmdp_ok": true,
+    "intact": true,
+    "mode": "default",
+    "modification_level": "NONE",
+    "modification_level_rust": "None",
+    "sha256": "d35f81e152121fa7ad2bcaa5f25e144439415c7517829358eb47155a53b09586",
+    "summary": "INTACT:TRUSTED,UNTOUCHED",
+    "trusted": true,
+    "valid": true
+  },
+  "modification_control": {
+    "bottom_line": false,
+    "byte_range": [
+      0,
+      1160,
+      12802,
+      614
+    ],
+    "coverage": "ENTIRE_REVISION",
+    "diff_none": false,
+    "diff_suspicious": true,
+    "docmdp_ok": false,
+    "intact": true,
+    "mode": "default",
+    "modification_level": "OTHER",
+    "modification_level_rust": "Other",
+    "sha256": "2bb3560fb91fa806316e8eda96ef1161a05607bea67907824dfd4bb7c119486c",
+    "summary": "INTACT:TRUSTED,EXTENDED_WITH_OTHER,ILLEGAL_MODIFICATIONS",
+    "trusted": true,
+    "valid": true
+  },
+  "pyhanko": "0.38.1",
+  "tamper": [
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        1160,
+        12802,
+        614
+      ],
+      "coverage": "CONTIGUOUS_BLOCK_FROM_START",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "default",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "sha256": "6d0107019766800d2ca97b9b8a6acf10aa8e985d8cf1cac4dc1b41e2c194c510",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    },
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        1160,
+        12802,
+        614
+      ],
+      "coverage": "CONTIGUOUS_BLOCK_FROM_START",
+      "diff_none": false,
+      "diff_suspicious": true,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "no_changes",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "sha256": "6d0107019766800d2ca97b9b8a6acf10aa8e985d8cf1cac4dc1b41e2c194c510",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    },
+    {
+      "bottom_line": false,
+      "byte_range": [
+        0,
+        1160,
+        12802,
+        614
+      ],
+      "coverage": "CONTIGUOUS_BLOCK_FROM_START",
+      "diff_none": true,
+      "diff_suspicious": false,
+      "docmdp_ok": false,
+      "intact": true,
+      "mode": "skip_diff",
+      "modification_level": "OTHER",
+      "modification_level_rust": "Other",
+      "sha256": "6d0107019766800d2ca97b9b8a6acf10aa8e985d8cf1cac4dc1b41e2c194c510",
+      "summary": "INTACT:UNTRUSTED,NONSTANDARD_COVERAGE,ILLEGAL_MODIFICATIONS",
+      "trusted": false,
+      "valid": true
+    }
+  ],
+  "trust_root": "MIIDzDCCArSgAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTAgFw0wMDAxMDEwMDAwMDBaGA8yNTAwMDEwMTAwMDAwMFowUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANB//m+farVsSmZXTNIJCmQcieVlbHkf0dXe+Vw27S2Op5FiNkDuLNJCCNsqhE+HhITzPjiv+BsUlJTzOssGqm7WhuNQCaKmtuOH701HImMdoJ4EcLXWycg2rJiR3R83BsyT+FJaGuPFGDc3ljzrG6ChzT/ZrgmjIaSStWX3JQDJhK71NUTWTzX1gzF+aitx5UZ5CewBQkeUD/EWcwhrBB6/xIrNMxsVPd6Ui6kOowfISQorusdnpxSaxeYeGY2f6Xdc5JtR9EIlY/ErJmAasmQlowXEVudFupX+YG1cGWK3p5NAoXGc1VS7jqNSyqXaJe+D4l6y5AhE4i5A+JcSrWkCAwEAAaOBqzCBqDAdBgNVHQ4EFgQU8bR5lQKytF85cv2wj8Jfr1uaULUwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwRQYDVR0fBD4wPDA6oDigNoY0aHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jcmxzL3Jvb3QvbGF0ZXN0LmNybDANBgkqhkiG9w0BAQsFAAOCAQEAL1KoggyZ9ZHvkN44Ht/jNlh5cRLqIjidcK408jDWAEwo3a4MCYQs26APAf0OXePYc5lM0+62NSdlgf5GhwetbyiY2FJE4BOV/iJkKr53cWBUz+kKAfQgT5ck/SZV+4J8BMadKQFxJB40JXyJmX+ZL05L0xJFcns8gtZWpyqwqIORjCH5GR0/j8wTo8y453cQaLdOODCoeVB7UagQy+xaIzsFClybGYQeLzuY0lJCYg0InBIKM5o2F01reW1UcVCRMh+RhXYwgoEKtXBKPJO3/WW83cxZkXNnibOeg1oCXktDW7JR6wO2LeOuQcbqP7DFjjiwhDcc+ANzHl1mbjQjzw==",
+  "upstream_functions": [
+    "pyhanko/test_diff_analysis.py::test_tamper_sig_obj",
+    "pyhanko/test_diff_analysis.py::test_anomalous_coverage"
+  ],
+  "validation_time": "2020-11-01T00:00:00Z"
+}

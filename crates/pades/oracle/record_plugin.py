@@ -149,6 +149,36 @@ def _patch_dispatch():
     registry_cls._dispatch = dispatch
 
 
+
+def _patch_requests_dispatch():
+    """Capture the requests backend in addition to aiohttp service dispatch."""
+    import requests
+    from urllib.parse import urlsplit
+
+    original = requests.Session.request
+
+    def request(self, *args, **kwargs):
+        response = original(self, *args, **kwargs)
+        request = response.request
+        http = _CURRENT['http']
+        if http is not None:
+            url = urlsplit(request.url)
+            body = request.body or b''
+            if isinstance(body, str):
+                body = body.encode('utf-8')
+            http.append({
+                'method': request.method,
+                'path': url.path + ('?' + url.query if url.query else ''),
+                'request_body': _b64(body),
+                'status': response.status_code,
+                'content_type': response.headers.get('Content-Type', ''),
+                'response_body': _b64(response.content),
+            })
+        return response
+
+    requests.Session.request = request
+
+
 _GENERATED_TLS = []
 PKI_ARCHS = [
     'testing-ca',
@@ -208,6 +238,7 @@ def pytest_configure(config):
     ):
         _wrap(ades, name)
     _patch_dispatch()
+    _patch_requests_dispatch()
 
 
 @pytest.hookimpl(hookwrapper=True)

@@ -24,12 +24,13 @@
 
 pub mod basic;
 pub mod etsi_report;
+pub mod lta;
+pub mod policy;
 pub mod with_time;
 
-use sigis_cms::SignedContent;
 use sigis_pdf::{EmbeddedSignature, PdfFile};
 use sigis_pki_certvalidator::ValidationContext;
-use sigis_pki_core::errors::{not_implemented, Result};
+use sigis_pki_core::errors::Result;
 
 pub use sigis_pades::report::{
     AdesFailure, AdesIndeterminate, AdesPassed, AdesStatus, AdesSubIndic,
@@ -81,8 +82,8 @@ pub enum AdesLevel {
 /// `ades_with_time_validation`, `ades_lta_validation`).
 ///
 /// Basic validation and validation with time are implemented on top of
-/// `sigis_cms`; long-term validation needs the POE and time-slide machinery
-/// of `sigis_pki_certvalidator::ltv` (lane A) and is pending.
+/// `sigis_cms`; long-term validation authenticates archival evidence using
+/// the POE and time-slide machinery of `sigis_pki_certvalidator::ltv`.
 pub fn validate_pdf_ades(
     file: &PdfFile,
     signature: &EmbeddedSignature,
@@ -91,16 +92,40 @@ pub fn validate_pdf_ades(
 ) -> Result<AdesValidationResult> {
     match level {
         AdesLevel::Basic => {
-            let signed = signature.signed_data(file)?;
-            let cms = sigis_pades::cms_from_contents(&signature.contents)?;
-            let status = sigis_cms::validate_cms_signature(cms, SignedContent::Data(&signed), ctx)?;
+            let pdf = crate::validate_pdf_signature(
+                file,
+                signature,
+                ctx,
+                Some(&sigis_pdf_diff::StandardDiffPolicy),
+            )?;
+            if pdf.seed_value_constraint_error.is_some()
+                || pdf.docmdp_ok == Some(false)
+                || pdf.coverage < crate::SignatureCoverageLevel::EntireRevision
+            {
+                return Ok(AdesValidationResult::from_subindic(
+                    AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into(),
+                ));
+            }
+            let status = pdf.cms;
             let result = basic::basic_result(status, &basic::QualificationSpec::default(), None);
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
         AdesLevel::WithTimestamps => {
-            let signed = signature.signed_data(file)?;
-            let cms = sigis_pades::cms_from_contents(&signature.contents)?;
-            let status = sigis_cms::validate_cms_signature(cms, SignedContent::Data(&signed), ctx)?;
+            let pdf = crate::validate_pdf_signature(
+                file,
+                signature,
+                ctx,
+                Some(&sigis_pdf_diff::StandardDiffPolicy),
+            )?;
+            if pdf.seed_value_constraint_error.is_some()
+                || pdf.docmdp_ok == Some(false)
+                || pdf.coverage < crate::SignatureCoverageLevel::EntireRevision
+            {
+                return Ok(AdesValidationResult::from_subindic(
+                    AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into(),
+                ));
+            }
+            let status = pdf.cms;
             let result = with_time::with_time_result(
                 status,
                 &basic::QualificationSpec::default(),
@@ -110,7 +135,11 @@ pub fn validate_pdf_ades(
             );
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
-        AdesLevel::LongTerm => not_implemented("sigis_pades::ades::validate_pdf_ades (long-term)"),
+        AdesLevel::LongTerm => {
+            let result =
+                lta::lta_validation(file, signature, ctx, &basic::QualificationSpec::default())?;
+            Ok(AdesValidationResult::from_subindic(result.ades_subindic))
+        }
     }
 }
 

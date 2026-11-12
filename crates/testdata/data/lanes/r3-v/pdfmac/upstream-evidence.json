@@ -1,0 +1,314 @@
+{
+  "http": [
+    {
+      "content_type": "application/pkix-crl",
+      "method": "GET",
+      "path": "/testing-ca-ecdsa/crls/root/latest.crl",
+      "request_body": "",
+      "response_body": "MIIBfzCCAQUCAQEwCgYIKoZIzj0EAwIwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQRgPMjAyMDA5MTIwMDAwMDBaGA8yMDIwMTIxMTAwMDAwMFowAKB9MHswCgYDVR0UBAMCAVQwHwYDVR0jBBgwFoAUYVz/xyYHSUJuNbPZOE9MyF6/Tk0wTAYDVR0cAQH/BEIwQKA+oDyGOmh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EtZWNkc2EvY3Jscy9yb290L2xhdGVzdC5jcmwwCgYIKoZIzj0EAwIDaAAwZQIwDqMAuYFIIGV9fb9kiybRGAl5/cLCYg1mLKf3313NVV7bIHmD4UfAP6y3v02TbL1PAjEAuv5UmcIcgZuZXd4gylEnjZPBuvvBLF5ECNvnXBnGVxau4MkZkeX2fmJIDAtSFuBY",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    },
+    {
+      "content_type": "application/ocsp-response",
+      "method": "POST",
+      "path": "/testing-ca-ecdsa/ocsp/interm",
+      "request_body": "MGgwZjA/MD0wOzAJBgUrDgMCGgUABBRYbbNmrFtUE7pQJBP7k0zwnniDVgQU2CmJJtFoQAlowu/bTSPPUWtE1XwCAhABoiMwITAfBgkrBgEFBQcwAQIEEgQQWtGCDja05TZE1omAUzQKsg==",
+      "response_body": "MIIDtAoBAKCCA60wggOpBgkrBgEFBQcwAQEEggOaMIIDljCBtaIWBBTJ0LuQmC/4yyjVmaIABdmd4fVd3xgPMjAyMDExMDEwMDAwMDBaMGUwYzA7MAkGBSsOAwIaBQAEFFhts2asW1QTulAkE/uTTPCeeINWBBTYKYkm0WhACWjC79tNI89Ra0TVfAICEAGAABgPMjAyMDExMDEwMDAwMDBaoBEYDzIwMjAxMTAxMDAxMDAwWqEjMCEwHwYJKwYBBQUHMAECBBIEEFrRgg42tOU2RNaJgFM0CrIwCgYIKoZIzj0EAwIDaAAwZQIxALWRYSlnBC7NaynRzQDgcytU5oelSxBUgsGp2GYTCzU3nW2b9Kv/mq4Ytju8da7zFQIwFuYCZhDYF901G1h8MZjDwwhC29v4JSN3JgXF2bR8vp0MBwGDrNT1Zw2JDMigemEQoIICZDCCAmAwggJcMIIB4aADAgECAgIQADAKBggqhkjOPQQDAjBZMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MRgwFgYDVQQDDA9JbnRlcm1lZGlhdGUgQ0EwIBcNMDAwMTAxMDAwMDAwWhgPMjEwMDAxMDEwMDAwMDBaMFgxCzAJBgNVBAYTAkJFMRQwEgYDVQQKDAtFeGFtcGxlIEluYzEaMBgGA1UECwwRVGVzdGluZyBBdXRob3JpdHkxFzAVBgNVBAMMDk9DU1AgcmVzcG9uZGVyMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEQ3CKta7P0LOuWixC5HrOQVYMmLzy9Mv+Wjdk1dqdIsMwbXDLBnsT7PUkoaeaiQpVaQlEMKtJEJwmeGi3OZYkfLiX/VHJCjYhvgY1H2RqcKwtLlAM6w9fF9OjR+mjy6DXo3sweTAdBgNVHQ4EFgQUydC7kJgv+Mso1ZmiAAXZneH1Xd8wHwYDVR0jBBgwFoAU2CmJJtFoQAlowu/bTSPPUWtE1XwwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMJMA8GCSsGAQUFBzABBQQCBQAwCgYIKoZIzj0EAwIDaQAwZgIxAOcTUwYwa9ShhVk8MTYCE6acCJuT+kfZ2LPRIWruLLhQn3xn3/2NCO8K5ARDFJ9SWwIxAJWAdp6ZnK3QZYT50x8hOFm2xdc+ZYIYkyoa2eAOjr5XXbyhXVesdpnyXu5ZK2PIBA==",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    },
+    {
+      "content_type": "application/timestamp-reply",
+      "method": "POST",
+      "path": "/testing-ca-ecdsa/tsa/tsa",
+      "request_body": "MEMCAQEwMTANBglghkgBZQMEAgEFAAQg47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFUCCAEIrliXXd07AQH/",
+      "response_body": "MIIFOTADAgEAMIIFMAYJKoZIhvcNAQcCoIIFITCCBR0CAQMxDzANBglghkgBZQMEAgEFADCB4wYLKoZIhvcNAQkQAQSggdMEgdAwgc0CAQEGCSsGAQQBoDICAzAxMA0GCWCGSAFlAwQCAQUABCDjsMRCmPwcFJr79MiZb7kkJ65B5GSbk0yklZkbeFK4VQIIARO/WZgscTMYDzIwMjAxMTAxMDAwMDAwWgIIAQiuWJdd3TugZaRjMGExCzAJBgNVBAYTAkJFMRQwEgYDVQQKDAtFeGFtcGxlIEluYzEaMBgGA1UECwwRVGVzdGluZyBBdXRob3JpdHkxIDAeBgNVBAMMF1RpbWUgU3RhbXBpbmcgQXV0aG9yaXR5oIICnDCCApgwggIeoAMCAQICAhACMAoGCCqGSM49BAMCMFExCzAJBgNVBAYTAkJFMRQwEgYDVQQKDAtFeGFtcGxlIEluYzEaMBgGA1UECwwRVGVzdGluZyBBdXRob3JpdHkxEDAOBgNVBAMMB1Jvb3QgQ0EwHhcNMDAwMTAxMDAwMDAwWhcNMzAwMTAxMDAwMDAwWjBhMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MSAwHgYDVQQDDBdUaW1lIFN0YW1waW5nIEF1dGhvcml0eTB2MBAGByqGSM49AgEGBSuBBAAiA2IABEeYiiSh15PvJqLUGcAqi2RMVv1EoTk4WdQuLBbV0Y2Z2Xb5HtYGF/mTMx/pjAQ727vlcmW63bqV5ojJ6biM9B1wfh/8SMcni9k+vFWvX/mabm1Em1YLGG9d2RCxE4Kw9qOBuDCBtTAdBgNVHQ4EFgQUWypAtjXctmZ7yCXZWi+XhJCURQwwHwYDVR0jBBgwFoAUYVz/xyYHSUJuNbPZOE9MyF6/Tk0wSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS1lY2RzYS9jcmxzL3Jvb3QvbGF0ZXN0LmNybDAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwgwCgYIKoZIzj0EAwIDaAAwZQIwKJpa2b0QNjhwLmShrWtXPFQoijlNQRtJ3aSnCXS9SDF3T9W9vS3e3gQF4ChOawNQAjEAusuoPzi8b2P0bIf3LXGZiG8Vg4IT52NljvWoSc3CgYrrhSSqb09EDhZJqbalhl+OMYIBfzCCAXsCAQEwVzBRMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MRAwDgYDVQQDDAdSb290IENBAgIQAjANBglghkgBZQMEAgEFAKCBmDAaBgkqhkiG9w0BCQMxDQYLKoZIhvcNAQkQAQQwHAYJKoZIhvcNAQkFMQ8XDTIwMTEwMTAwMDAwMFowKwYLKoZIhvcNAQkQAgwxHDAaMBgwFgQU7IBC5WK4XFwmIB22fhuLqcQX8YkwLwYJKoZIhvcNAQkEMSIEIGTA6hjXVPv+BgtD2q7peVqJaU1abB8/92qpr+lMGRs9MAoGCCqGSM49BAMCBGcwZQIxAOS0OfULLUIA1bmYTZlqRqRn39tQJpMrIb2OSn5WIXNo1idoXn2PlynbaTx46WKDbQIwEkAB7bpOXez3inrULJXi9LBM2VBNZdP7hGta4jGdZKXTnDHYX8Ha5PtuUch3QT8R",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    },
+    {
+      "content_type": "application/timestamp-reply",
+      "method": "POST",
+      "path": "/testing-ca-ecdsa/tsa/tsa",
+      "request_body": "MFMCAQEwQTANBglghkgBZQMEAgIFAAQwOLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlbAggB34ON6xMOEQEB/w==",
+      "response_body": "MIIFSTADAgEAMIIFQAYJKoZIhvcNAQcCoIIFMTCCBS0CAQMxDzANBglghkgBZQMEAgEFADCB8wYLKoZIhvcNAQkQAQSggeMEgeAwgd0CAQEGCSsGAQQBoDICAzBBMA0GCWCGSAFlAwQCAgUABDA4sGCnUayWOEzZMn6xseNqIf23ERS+B0NMDMe/Y/bh2idO3r/nb2X71RrS8UiYuVsCCAEXwzWpqJZ9GA8yMDIwMTEwMTAwMDAwMFoCCAHfg43rEw4RoGWkYzBhMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MSAwHgYDVQQDDBdUaW1lIFN0YW1waW5nIEF1dGhvcml0eaCCApwwggKYMIICHqADAgECAgIQAjAKBggqhkjOPQQDAjBRMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MRAwDgYDVQQDDAdSb290IENBMB4XDTAwMDEwMTAwMDAwMFoXDTMwMDEwMTAwMDAwMFowYTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEgMB4GA1UEAwwXVGltZSBTdGFtcGluZyBBdXRob3JpdHkwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARHmIokodeT7yai1BnAKotkTFb9RKE5OFnULiwW1dGNmdl2+R7WBhf5kzMf6YwEO9u75XJlut26leaIyem4jPQdcH4f/EjHJ4vZPrxVr1/5mm5tRJtWCxhvXdkQsROCsPajgbgwgbUwHQYDVR0OBBYEFFsqQLY13LZme8gl2Vovl4SQlEUMMB8GA1UdIwQYMBaAFGFc/8cmB0lCbjWz2ThPTMhev05NMEsGA1UdHwREMEIwQKA+oDyGOmh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EtZWNkc2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMIMAoGCCqGSM49BAMCA2gAMGUCMCiaWtm9EDY4cC5koa1rVzxUKIo5TUEbSd2kpwl0vUgxd0/Vvb0t3t4EBeAoTmsDUAIxALrLqD84vG9j9GyH9y1xmYhvFYOCE+djZY71qEnNwoGK64Ukqm9PRA4WSam2pYZfjjGCAX8wggF7AgEBMFcwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQQICEAIwDQYJYIZIAWUDBAIBBQCggZgwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMDExMDEwMDAwMDBaMCsGCyqGSIb3DQEJEAIMMRwwGjAYMBYEFOyAQuViuFxcJiAdtn4bi6nEF/GJMC8GCSqGSIb3DQEJBDEiBCBR8o/GQI6rh+G4y2yArtf9yvN0qm0MKGqNaYGoftMjKDAKBggqhkjOPQQDAgRnMGUCMAHVf8zPEPpvpUKRRndvZo20YXfZcomDMZn9UBtpHPz/PkZ6f5vA0z3bmwf/lY0aGQIxAPdsP7nkgaKspEkERNX/m3HQjRnKKTHfM4Sf4rI0xO2GRXobfwcv08vDjjNMD5t/6A==",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    },
+    {
+      "content_type": "application/timestamp-reply",
+      "method": "POST",
+      "path": "/testing-ca-ecdsa/tsa/tsa",
+      "request_body": "MFMCAQEwQTANBglghkgBZQMEAgIFAAQw6zCAhugosTTqhH5xJokqISe3Yi0lVe0xuLOv+blrjebTMcuZgoVbgNQyuTqMWpa0AggBtU0mSgRDpAEB/w==",
+      "response_body": "MIIFSTADAgEAMIIFQAYJKoZIhvcNAQcCoIIFMTCCBS0CAQMxDzANBglghkgBZQMEAgEFADCB8wYLKoZIhvcNAQkQAQSggeMEgeAwgd0CAQEGCSsGAQQBoDICAzBBMA0GCWCGSAFlAwQCAgUABDDrMICG6CixNOqEfnEmiSohJ7diLSVV7TG4s6/5uWuN5tMxy5mChVuA1DK5OoxalrQCCAG+sjtDhlxcGA8yMDIwMTEwMTAwMDAwMFoCCAG1TSZKBEOkoGWkYzBhMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MSAwHgYDVQQDDBdUaW1lIFN0YW1waW5nIEF1dGhvcml0eaCCApwwggKYMIICHqADAgECAgIQAjAKBggqhkjOPQQDAjBRMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MRAwDgYDVQQDDAdSb290IENBMB4XDTAwMDEwMTAwMDAwMFoXDTMwMDEwMTAwMDAwMFowYTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEgMB4GA1UEAwwXVGltZSBTdGFtcGluZyBBdXRob3JpdHkwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARHmIokodeT7yai1BnAKotkTFb9RKE5OFnULiwW1dGNmdl2+R7WBhf5kzMf6YwEO9u75XJlut26leaIyem4jPQdcH4f/EjHJ4vZPrxVr1/5mm5tRJtWCxhvXdkQsROCsPajgbgwgbUwHQYDVR0OBBYEFFsqQLY13LZme8gl2Vovl4SQlEUMMB8GA1UdIwQYMBaAFGFc/8cmB0lCbjWz2ThPTMhev05NMEsGA1UdHwREMEIwQKA+oDyGOmh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EtZWNkc2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMIMAoGCCqGSM49BAMCA2gAMGUCMCiaWtm9EDY4cC5koa1rVzxUKIo5TUEbSd2kpwl0vUgxd0/Vvb0t3t4EBeAoTmsDUAIxALrLqD84vG9j9GyH9y1xmYhvFYOCE+djZY71qEnNwoGK64Ukqm9PRA4WSam2pYZfjjGCAX8wggF7AgEBMFcwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQQICEAIwDQYJYIZIAWUDBAIBBQCggZgwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMDExMDEwMDAwMDBaMCsGCyqGSIb3DQEJEAIMMRwwGjAYMBYEFOyAQuViuFxcJiAdtn4bi6nEF/GJMC8GCSqGSIb3DQEJBDEiBCB6MkuVTOA+khbAPsAafren5F+B/Mmfksp9JeKghWUyPDAKBggqhkjOPQQDAgRnMGUCMQC6WS+Wc5fI4dJErCzJDXcFRi13XAj454nyzQzb01Pd9pESiVjNeeMMg1SQ+xXnNVMCMBIQfA5xMAk47nZF+DO1fnbeGRYU8bPu3D0HqFUNxnwJe+TaGH03f47YKzzfM5+cjw==",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    },
+    {
+      "content_type": "application/timestamp-reply",
+      "method": "POST",
+      "path": "/testing-ca-ecdsa/tsa/tsa",
+      "request_body": "MFMCAQEwQTANBglghkgBZQMEAgIFAAQwMPDVu51wt3S4d4FLARrXEA6J1X4/rqP4+Af4fmucp5fRZIcP+k1vbjctLO3RYxxQAggBjrWtk0hgugEB/w==",
+      "response_body": "MIIFSTADAgEAMIIFQAYJKoZIhvcNAQcCoIIFMTCCBS0CAQMxDzANBglghkgBZQMEAgEFADCB8wYLKoZIhvcNAQkQAQSggeMEgeAwgd0CAQEGCSsGAQQBoDICAzBBMA0GCWCGSAFlAwQCAgUABDAw8NW7nXC3dLh3gUsBGtcQDonVfj+uo/j4B/h+a5ynl9Fkhw/6TW9uNy0s7dFjHFACCAFgs5aPSPkjGA8yMDIwMTEwMTAwMDAwMFoCCAGOta2TSGC6oGWkYzBhMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MSAwHgYDVQQDDBdUaW1lIFN0YW1waW5nIEF1dGhvcml0eaCCApwwggKYMIICHqADAgECAgIQAjAKBggqhkjOPQQDAjBRMQswCQYDVQQGEwJCRTEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGjAYBgNVBAsMEVRlc3RpbmcgQXV0aG9yaXR5MRAwDgYDVQQDDAdSb290IENBMB4XDTAwMDEwMTAwMDAwMFoXDTMwMDEwMTAwMDAwMFowYTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEgMB4GA1UEAwwXVGltZSBTdGFtcGluZyBBdXRob3JpdHkwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARHmIokodeT7yai1BnAKotkTFb9RKE5OFnULiwW1dGNmdl2+R7WBhf5kzMf6YwEO9u75XJlut26leaIyem4jPQdcH4f/EjHJ4vZPrxVr1/5mm5tRJtWCxhvXdkQsROCsPajgbgwgbUwHQYDVR0OBBYEFFsqQLY13LZme8gl2Vovl4SQlEUMMB8GA1UdIwQYMBaAFGFc/8cmB0lCbjWz2ThPTMhev05NMEsGA1UdHwREMEIwQKA+oDyGOmh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EtZWNkc2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsGAQUFBwMIMAoGCCqGSM49BAMCA2gAMGUCMCiaWtm9EDY4cC5koa1rVzxUKIo5TUEbSd2kpwl0vUgxd0/Vvb0t3t4EBeAoTmsDUAIxALrLqD84vG9j9GyH9y1xmYhvFYOCE+djZY71qEnNwoGK64Ukqm9PRA4WSam2pYZfjjGCAX8wggF7AgEBMFcwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQQICEAIwDQYJYIZIAWUDBAIBBQCggZgwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMDExMDEwMDAwMDBaMCsGCyqGSIb3DQEJEAIMMRwwGjAYMBYEFOyAQuViuFxcJiAdtn4bi6nEF/GJMC8GCSqGSIb3DQEJBDEiBCBGUL69WgcJNFqXn/QgEAK5j4hx6XLBWdSJNevZ/1UaWzAKBggqhkjOPQQDAgRnMGUCMQCsnVNSVEFHHCXqqoef8VqDDYpX6AytOjv1xVePMdlkuYhuOjgdwH8xo/Hhq2YI8sACMB5Lcxyc8R6SnaIcJ7teVQY2pW5ZGgovbkQCONvP6qU7uyEQYlnbl5cYesq8Gu+WBQ==",
+      "status": 200,
+      "time": "2020-11-01T00:00:00+00:00"
+    }
+  ],
+  "lta_calls": [
+    {
+      "ades_status": "INDETERMINATE",
+      "ades_subindic": "NO_POE",
+      "best_signature_time": "2020-11-01T00:00:00+00:00",
+      "bottom_line": true,
+      "content_timestamp": null,
+      "coverage": "ENTIRE_REVISION",
+      "docmdp_ok": true,
+      "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+      "intact": true,
+      "modification_level": "LTA_UPDATES",
+      "signature_timestamp": {
+        "coverage": null,
+        "intact": true,
+        "modification_level": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "TimestampSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      },
+      "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+      "timestamp": null,
+      "trust_problem_indic": null,
+      "trusted": true,
+      "type": "PdfSignatureStatus",
+      "valid": true,
+      "validation_path": [
+        "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+      ]
+    }
+  ],
+  "outcome": "passed",
+  "pytest_exitstatus": 0,
+  "upstream_function": "pyhanko/test_pdfmac.py::test_pdf_mac_pades",
+  "validation_trace": [
+    {
+      "function": "ades_timestamp_validation_internal",
+      "input_type": "SignedData",
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": null,
+        "content_timestamp": null,
+        "coverage": "ENTIRE_REVISION",
+        "docmdp_ok": true,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": "LTA_UPDATES",
+        "signature_timestamp": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "DocumentTimestampStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "ades_timestamp_validation",
+      "input_type": null,
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": null,
+        "content_timestamp": null,
+        "coverage": "ENTIRE_REVISION",
+        "docmdp_ok": true,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": "LTA_UPDATES",
+        "signature_timestamp": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "DocumentTimestampStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "ades_timestamp_validation_internal",
+      "input_type": "SignedData",
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": null,
+        "content_timestamp": null,
+        "coverage": null,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": null,
+        "signature_timestamp": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "TimestampSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "_scoped_ades_with_time_validation",
+      "input_type": null,
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": "2020-11-01T00:00:00+00:00",
+        "bottom_line": true,
+        "content_timestamp": null,
+        "coverage": "ENTIRE_REVISION",
+        "docmdp_ok": true,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": "LTA_UPDATES",
+        "signature_timestamp": {
+          "coverage": null,
+          "intact": true,
+          "modification_level": null,
+          "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "timestamp": "2020-11-01T00:00:00+00:00",
+          "trust_problem_indic": null,
+          "trusted": true,
+          "type": "TimestampSignatureStatus",
+          "valid": true,
+          "validation_path": [
+            "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+          ]
+        },
+        "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": null,
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "PdfSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "ades_with_time_validation",
+      "input_type": null,
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": "2020-11-01T00:00:00+00:00",
+        "bottom_line": true,
+        "content_timestamp": null,
+        "coverage": "ENTIRE_REVISION",
+        "docmdp_ok": true,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": "LTA_UPDATES",
+        "signature_timestamp": {
+          "coverage": null,
+          "intact": true,
+          "modification_level": null,
+          "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "timestamp": "2020-11-01T00:00:00+00:00",
+          "trust_problem_indic": null,
+          "trusted": true,
+          "type": "TimestampSignatureStatus",
+          "valid": true,
+          "validation_path": [
+            "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+          ]
+        },
+        "signing_certificate_subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": null,
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "PdfSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "ades_timestamp_validation_internal",
+      "input_type": "SignedData",
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": null,
+        "content_timestamp": null,
+        "coverage": null,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": null,
+        "signature_timestamp": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "TimestampSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    },
+    {
+      "function": "ades_timestamp_validation",
+      "input_type": null,
+      "result": {
+        "ades_status": "PASSED",
+        "ades_subindic": "OK",
+        "best_signature_time": null,
+        "content_timestamp": null,
+        "coverage": null,
+        "failure_msg": null,
+        "intact": true,
+        "modification_level": null,
+        "signature_timestamp": null,
+        "signing_certificate_subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "timestamp": "2020-11-01T00:00:00+00:00",
+        "trust_problem_indic": null,
+        "trusted": true,
+        "type": "TimestampSignatureStatus",
+        "valid": true,
+        "validation_path": [
+          "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+          "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE"
+        ]
+      }
+    }
+  ]
+}
