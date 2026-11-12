@@ -6,7 +6,7 @@ Status: active; lead sigis-cx. Launch commit b5bb72f.
 
 | Crate / assigned suite | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| root live integrations | 11 | 2 | 0 | 9 |
+| root live integrations | 11 | 4 | 0 | 7 |
 
 The four Codex aoa sessions were created in dedicated worktrees and all
 reported busy at launch. Their scope and exact ownership are in the briefs.
@@ -98,3 +98,43 @@ operations. Independent CSC live integrations are being ported against the
 actual pinned Python CSC service, with isolated test dependencies and actual
 Rust PDF signing/trust verification. No helper, draft or oracle call adds an
 upstream pass before acceptance. No new Cargo gate has started yet.
+
+
+## Accepted reader, CSC and independent P increment
+
+Main8a1568c passed build/test/clippy-Dwarnings/strictdocs/layer/fmt. Latest
+Rust1284discovered/1276passed/8ignored/0failed/107reports. A preceding full
+test run passed but clippy rejected a CSC helper fixed-size chunk lint; the
+corrected source then passed all stages again. Logs: reader-csc-p-gate-final/.
+Accepted unique functions: overall1431/1052/66/313; P297/282/3/12;
+S824/754/63/7; L11/4/0/7. V/C acceptance unchanged. Exact14function overrides
+are in acceptance.json; native helpers earn0.
+
+The two CSC functions preserve every original batch tuple and authorization
+count, use the actual pinned Python CSC service, generate16PDFs per language,
+validate both origins in both implementations, and reject empty-root trust.
+Optional CSC0.4.2/PAE0.1.0 dependencies are isolated and verified on all hosts;
+shared oracle venv unchanged. Four P cross-validator suites and four old
+PDF-diff signers now run centrally; all assertions/owners retained. The complete
+package graph is acyclic and the layer gate checks dev cycles too.
+
+PdfFile::reopen and the public MAC factory getter pass10native regressions.
+The remaining-budget snapshot reaches eager xref parsing; key reuse checks
+raw nested Encrypt identity and permanent ID; plaintext copies drop keys.
+Real password/pubkey updates retain access. This does not create shared
+sibling allowance or a MAC verdict. P/C real-operation consumers are pending.
+
+All seven remaining Certomancer functions require complete V LTA. Exact
+AST/assertion/dependency preparation is in round3/l-certomancer-next/. P must
+fetch missing issuers for leaf-only inputs; L still needs PFX/AIA routes.
+C now proposes230local passes but is unaccepted. Independent quoted-policy
+configuration review found an object interpretation risk; eight real CLI
+comparisons did not show more native trust. Fix and review remain C-owned.
+S metadata/KU follow-up is independently reviewed, not yet integrated.
+
+
+Independent C review also reproduced a distinct actual fail-open: three
+unknown nested policy keys are ignored by native CLI (exit0/INTACT:TRUSTED)
+but rejected by fresh Python CLI (exit1). C source remains unmerged and
+accepted0/252; exact evidence/routing are recorded. C must reject unknown keys
+and alias conflicts before trust. No claim that all differences fail closed.

@@ -309,3 +309,21 @@ pure EdDSA mechanism. Ed448 is enabled in the existing algorithm matrix;
 the live PKCS#11 suite passes (34 tests, two ignored). Remaining runtime
 parameter exclusions are DSA/ML-DSA and unsupported combined ECDSA
 mechanisms, as recorded in `docs/status.md`.
+
+## Round 3 continuation (lane P, 2026-11-13)
+
+Historical D evidence above is preserved. P has a verified independent
+increment proposing **297 / 282 / 2 / 13**, pending L acceptance; the last
+accepted baseline remains **297 / 271 / 13 / 13**. It completes eight
+certificate-less functions, duplicate-attribute and detached-eContent
+rejections, and signed attachments. Raw token DSA is an implementation gap
+rather than a harmless skip. The SafeNet and Python warning exclusions remain.
+
+Native caller-policy preservation is tested through real signing operations.
+Nine affected suites passed 172 Rust tests with live oracle checks, and the
+four S-owned layout/resource assertion ports are already integrated separately.
+No S-owned function adds P credit. The larger state/MAC/AC/HTTP increment is
+preserved for continued work while shared APIs are routed through L.
+
+[Current P report](round3/p-report.md) contains exact APIs, mappings, commit
+heads, provider limitations, logs, lockfile state and recovery instructions.

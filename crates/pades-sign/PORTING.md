@@ -68,3 +68,28 @@ Runtime test and oracle paths use `sigis_testdata`; the shared oracle is
 like Pillow (eight-mode live differential regression). Layout, configuration
 and form errors use the dedicated core variants. See `docs/status.md` for
 remaining signing/validation integration gaps and the final workspace gate.
+
+## Round 3 independent increment (2026-11-13)
+
+Lane P's last accepted baseline remains 297/271/13/13. Ready local commits
+3a0a2ad, 21ac460 and 8e2107b propose **297/282/2/13** after eleven completed
+functions and an honest raw-DSA reclassification to pending; L owns acceptance.
+Eight certificate-less functions, duplicate signer-attribute rejection,
+detached-eContent rejection and signed attachments pass substantive Rust and
+mandatory fresh oracle assertions. The nine affected suites pass 172 Rust tests.
+Two S-owned CMS partial ports and three inherited PAdES matrices have complete
+extra native assertions without double counting.
+
+A real presign algorithm-policy bypass was reproduced and fixed by extending
+a clone of the caller context. Deny/allow controls agree with pinned pyHanko.
+Core KeySigner remains unchanged; the optional-certificate SigningProvider,
+DeferredSigner and legacy constructor adapter expose the new signing flow.
+
+Native bounded writer/state/MAC/HTTP/AC work is preserved outside the active
+source while shared APIs are pending, as detailed in the P report. Raw DSA
+verification is available in core; token signing still needs a safe cryptoki
+mechanism constructor and native token import. SafeNet and the Python warning
+remain explicit exclusions. Existing old D fixtures stay read-only.
+
+Exact interfaces, function mappings, runtime exclusions, commands/results and
+recovery evidence: `docs/lanes/round3/p-report.md`.

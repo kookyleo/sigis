@@ -1,18 +1,19 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "33bc36826342cd71a989b8eb398b3fc9ca3f23f6",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/algorithm-horizon/integration/gate/gate.json",
+  "accepted_source_commit": "8a1568c18572fca3beeab8211472545564c8591b",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/reader-csc-p-gate-final/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
-      "status": "pending",
-      "reason": "Main only replays positive validation; actual fixed-mechanism signing and conflicting-digest refusal are missing. S implementation is not integrated."
+      "status": "passed",
+      "rust_test": "round3_signing_partial_assertions::test_overspecify_cms_digest_algo",
+      "reason": "Actual fixed SHA256 mechanism signing/integrity with empty-root distrust and conflicting SHA512 Signing refusal; mandatory live oracle for produced output. Accepted after the complete workspace gate on8a1568c."
     },
     {
       "id": "pyhanko/test_cms.py::test_direct_pdfcmsembedder_usage",
       "status": "pending",
-      "reason": "Main replay omits low-level phases, borrowed-buffer identity and DSS assertions. S supplemental coverage is not a complete port."
+      "reason": "Native low-level signing, DocMDP and exact DSS assertions now execute, but the API still returns owned Vec outputs. Incremental prefix preservation does not satisfy upstream caller-buffer identity; the borrowed/in-place contract remains pending."
     },
     {
       "id": "integration-tests/test_live_certomancer.py::test_ts_fetch_default_session",
@@ -127,6 +128,84 @@
       "status": "passed",
       "rust_test": "test_round3_layout::test_duplicate_resource",
       "reason": "All 28 upstream assertions/exception contexts across four functions were independently reviewed and passed the full workspace gate; implemented in P test crate but credited only to assigned S/PDF ownership."
+    },
+    {
+      "id": "integration-tests/test_live_csc_dummy.py::test_implicit_batch_sign_with_dummy",
+      "status": "passed",
+      "rust_test": "live_csc::test_implicit_batch_sign_with_dummy",
+      "reason": "Actual pinned Python CSC service, production Rust signer and automatic batches; all original parameters/authorization counts, bidirectional fresh PDF validation and empty-root denial. No provider or oracle skip. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "integration-tests/test_live_csc_dummy.py::test_simple_sign_with_dummy",
+      "status": "passed",
+      "rust_test": "live_csc::test_simple_sign_with_dummy",
+      "reason": "Actual pinned Python CSC service, production Rust signer and automatic batches; all original parameters/authorization counts, bidirectional fresh PDF validation and empty-root denial. No provider or oracle skip. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_multivalued",
+      "status": "passed",
+      "rust_test": "round3_signing_skips::test_cades_signer_attrs_multivalued",
+      "reason": "Exact malformed CMS boundary/refusal and positive integrity controls; both AC-context parameters for duplicate SET case; mandatory fresh same-output oracle. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_seed_values.py::test_sign_with_sv_missing_cert",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_sign_with_sv_missing_cert",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_determine_mechanism_no_signing_cert",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_determine_mechanism_no_signing_cert",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_embed_signed_attachment",
+      "status": "passed",
+      "rust_test": "test_round3_attachment::test_embed_signed_attachment",
+      "reason": "Complete original signed-payload/related-files/attachment assertions over actual native PDF and fresh pinned oracle. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_interrupted_could_not_determine_digest_algo",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_interrupted_could_not_determine_digest_algo",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_interrupted_no_estimation",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_interrupted_no_estimation",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_interrupted_with_delayed_signing_cert_directly_specify_md",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_interrupted_with_delayed_signing_cert_directly_specify_md",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_interrupted_with_delayed_signing_cert_mech",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_interrupted_with_delayed_signing_cert_mech",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_interrupted_with_delayed_signing_no_prevalidation",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_interrupted_with_delayed_signing_no_prevalidation",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_sign_reject_econtent_if_detached",
+      "status": "passed",
+      "rust_test": "round3_signing_skips::test_sign_reject_econtent_if_detached",
+      "reason": "Exact malformed CMS boundary/refusal and positive integrity controls; both AC-context parameters for duplicate SET case; mandatory fresh same-output oracle. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko/test_signing.py::test_signer_info_no_signing_cert",
+      "status": "passed",
+      "rust_test": "round3_signing_certless::test_signer_info_no_signing_cert",
+      "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
     }
   ]
 }

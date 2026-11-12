@@ -40,8 +40,10 @@ build/test/clippy/strict-doc/layer/fmt gate passed. Logs and exact test counts:
 The accepted CMS count corrects two historical partial-pass claims to pending:
 `test_overspecify_cms_digest_algo` lacked actual signer/refusal assertions;
 `test_direct_pdfcmsembedder_usage` lacked low-level/buffer/DSS assertions.
-S's newer positive coverage is not yet integrated. Thus the two L completions
-and two CMS corrections offset in the overall count; they are separate changes.
+The later P increment restores the overspecify function with actual signing
+and refusal assertions. Direct embedder now has low-level/DocMDP/DSS coverage
+but remains pending because caller-buffer identity is still absent. The two
+earlier L completions and CMS corrections were separate accounting changes.
 The 12 inherited V functions remain provisional pending fresh assertion review.
 
 Main `6dc97bb` accepts the independently reviewed S primitive subset after a
@@ -54,12 +56,38 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate found **1,249 Rust tests: 1,241 passed, eight ignored, zero
-failed**, across99 reports. Algorithm constraints now expose not_allowed_after;
+The latest gate on main8a1568c found **1,284 Rust tests: 1,276 passed, eight
+ignored, zero failed**, across107 reports. Build, workspace tests, strict
+clippy, strict documentation, layer/cycle checking and formatting all passed.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/reader-csc-p-gate-final/`.
+The preceding attempt passed all tests but failed one CSC helper lint; the
+fixed source then passed the complete gate again. Algorithm constraints now expose not_allowed_after;
 structured policy errors preserve banned_since without parsing reason strings.
 Certificate/AC/time-slide producers retain metadata and continue rejecting.
 Typed CMS enforcement, horizon-sensitive status mapping and time-slide/LTA
 recovery still require S/V; metadata alone is not timed-algorithm parity.
+
+Main8a1568c additionally accepts P's attachment function and ten inherited
+signing skips, one restored S/CMS function and L's two live CSC functions.
+The CSC tests preserve all four original parameter executions, use the real
+pinned Python service and production Rust automatic batches, compare 16 new
+PDFs per implementation in both validators and reject empty-root trust. The
+isolated CSC0.4.2/PAE0.1.0 dependencies are verified on both workers; the
+shared oracle venv is unchanged. Native helpers add no upstream credit.
+
+The shared PdfFile::reopen and MAC factory getter pass ten native regressions:
+eager xref decode uses the remaining allowance before parsing, file growth
+does not replenish it, strict/lossless policy and fresh caches survive, and
+reused keys require unchanged Encrypt settings and permanent ID. Real password
+and public-key incremental outputs retain access. Plaintext copies discard
+keys. This is sequential snapshot transfer, not a global sibling budget or
+a PDF MAC/integrity verdict; P/C operation consumers remain pending.
+
+Cross-layer signer/validator callers now run in root integration tests. Four
+new P suites and four previously accepted PDF-diff signing functions moved
+without losing assertions or changing function ownership. Both new and old
+package cycles were removed; the layer gate now also checks dev-dependency
+cycles. No layer-map exemption was added.
 
 ## Integration and verification
 
@@ -91,8 +119,9 @@ SoftHSM signing matrix.
 | Worktrees at D acceptance | Five old `hanko/*` lanes and `lead/d-sign-merge` synchronized to `34482bf`; clean |
 | Actual oracle, SoftHSM and rendering-tool availability | pyHanko 0.38.1, certvalidator 0.33.0, Pillow 13.0.0, SoftHSM 2.6.1, `pdftoppm` and ImageMagick available |
 
-Cargo uses the shared target selected by `rust-target-env`; only one
-Cargo build runs at a time for this repository. Dependency layers follow
+Cargo uses the canonical target selected by `rust-target-env`. Round3 uses
+system rust-slots for per-host worktree locks and automatic placement; the
+old repository-wide serialization is superseded. Dependency layers follow
 [crates.md](crates.md), with `cargo test --test layering` in the gate.
 The integration uses local commits without pushing or restarting services.
 
@@ -126,16 +155,16 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 98 | 35 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
-| `sigis-cms` | 78 | 73 | 2 | 3 |
+| `sigis-cms` | 78 | 74 | 2 | 2 |
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
-| `sigis-pades-sign` | 297 | 271 | 13 | 13 |
+| `sigis-pades-sign` | 297 | 282 | 3 | 12 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,036** | **76** | **56** |
+| **Library lanes A–E** | **1,168** | **1,048** | **66** | **54** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
-| Lead: live integration (round-3 L) | 11 | 2 | 0 | 9 |
-| **Overall** | **1,431** | **1,038** | **76** | **317** |
+| Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
+| **Overall** | **1,431** | **1,052** | **66** | **313** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -160,13 +189,13 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| A / CMS | 3 | `test_embed_ac_revinfo_adobe_style`; complete signer assertions for `test_overspecify_cms_digest_algo`; borrowed-buffer/low-level/DSS assertions for `test_direct_pdfcmsembedder_usage` |
+| A / CMS | 2 | `test_embed_ac_revinfo_adobe_style`; borrowed-buffer identity for `test_direct_pdfcmsembedder_usage` (low-level/DSS assertions now execute) |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
-| D / signing | 13 | One signed attachment; eight PAdES HTTP-TSA/AC presign/DSS-attribute tests; one seed-value TSA URL; three public-key encrypted-signing/copy tests |
+| D / signing | 12 | Eight PAdES HTTP-TSA/AC presign/DSS-attribute tests; one seed-value TSA URL; three public-key encrypted-signing/copy tests |
 | E / AdES | 35 | 28 validation functions, five report functions and two request functions; past/LTA/POE/revinfo and report integration |
 | Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
-| Lead / live integration | 9 | Seven remaining Certomancer and two CSC dummy-service functions |
-| **Total** | **317** | |
+| Lead / live integration | 7 | Seven Certomancer functions, all requiring actual LTA validation; missing-issuer fetching and loopback PFX/AIA routes also remain |
+| **Total** | **313** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
@@ -178,8 +207,8 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 76 skipped functions comprise certvalidator 35, fetchers 13,
-CMS two, PDF 11, PDF-diff two and signing 13. Skip reasons remain in the
+The 66 skipped functions comprise certvalidator 35, fetchers 13,
+CMS two, PDF 11, PDF-diff two and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains 33 policy-graph internal functions and two deprecated
@@ -197,14 +226,14 @@ owning `PORTING.md` and lane files:
 - The two retained PDF-diff skips concern anomalous coverage and in-place
   signature-object tampering, checked before modification analysis.
   Validator coverage must retain those behaviours.
-- Signing skips include certificate-less `ExternalSigner` flows excluded
-  by `KeySigner`, duplicate SET values unsupported by the DER model,
-  validation-only fixtures, deprecated entry points and provider-specific
-  SafeNet/DSA behaviour.
+- Signing retains three skipped functions: the deprecated Python warning
+  entry point, SafeNet signing-PIN hardware and raw DSA token signing. Eight
+  certificate-less flows, duplicate SET values and detached-econtent rejection
+  now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-certificate-less signing, duplicate attributes and provider behaviour; the
-317 pending functions alone do not describe all remaining parity work.
+provider behaviour and internal policy-graph parity; the313 pending
+functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
 SoftHSM run now covers Ed448 (the stale exclusion was removed). Providers
@@ -269,6 +298,34 @@ were fixed or pinned by regression inputs. This integration does not
 claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
+
+An unmerged C configuration review reproduced a real fail-open for three
+unknown/misspelled nested signer policy keys: key-usage-forbiden,
+require-qualified-signature and match-all-key-usage. A preserved Cargo-produced
+CLI executable returned exit0/INTACT:TRUSTED for the signed PDF; the fresh
+pinned Python CLI rejected each configuration (exit1). Current C source still
+silently ignores the unknown keys. L blocked CLI integration and routed
+tests-first unknown-key/alias rejection before trust evaluation. Evidence:
+`round3-launch/c-config-review/unknown-policy-native-cli-differential.json`.
+These unmerged divergences are not fail closed; no CLI pass is accepted.
+
+A separate configuration risk: quoted nonempty
+YAML strings such as no/off can be coerced to false, weakening match-all KU
+or explicit-EKU requirements relative to Python truthiness. Fresh pinned
+oracle cases and the native source consumption path establish the discrepancy;
+Eight comparisons using C's preserved Cargo-produced CLI executable did
+not show a more trusting native CLI verdict: the Python CLI itself drops
+one policy flag and another shared default rejects the EKU adversary. This
+does not repair the configuration-object discrepancy. L blocked CLI acceptance
+and routed the policy interpretation/regressions to C. The proposed230 CLI passes remain
+unaccepted; this is not merely an encoding difference.
+
+S also reproduced the current default DSS operation accepting an oversized
+object-stream input that Python rejects. The native default reader rejects,
+but a CLI preflight or shared reopen helper does not fix P's internal writer.
+This observed resource-policy gap remains P-owned and is not a trust-verdict
+parity proof. Selected-limit/budget/authentication operation callers stay pending.
+
 
 Round-3 primitive compatibility boundaries are explicit: Rust typing rejects
 the exact invalid PDF/auth inputs at compilation rather than Python runtime
@@ -338,15 +395,15 @@ trust-verdict exception should be silently reintroduced.
 Root manifests, `tools/layers.json`, shared type changes, shared fixture
 allocation and facade wiring remain lead-owned. Each lane owns only its
 listed paths; cross-lane API changes go through L. Agents can work in
-parallel while Cargo builds remain serialized on the shared target.
+parallel with system per-host worktree locks and automatic worker placement.
 
 | Lane | Exclusive file scope | Work and dependencies | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, D fixtures, `docs/lanes/d.md` | Finish D's 13 pending functions; consume B writer/encryption/embedding and A TSA/AC APIs; PDF MAC signing, AC/DSS autofill, metadata and provider gaps | Every assigned function passing or explicitly justified; oracle verifies produced PDF/CMS; unsupported mandatory requirements reject |
+| P — Signing completion | `crates/pades-sign/`, D fixtures, `docs/lanes/d.md` | Finish D's 12 pending functions; consume B writer/encryption/embedding and A TSA/AC APIs; PDF MAC signing, AC/DSS autofill, metadata and provider gaps | Every assigned function passing or explicitly justified; oracle verifies produced PDF/CMS; unsupported mandatory requirements reject |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, E AdES fixtures, `docs/lanes/e.md` | Finish 35 pending functions; seed values/status, DSS, past/LTA/POE, revinfo/local knowledge and full reports/requests using A/B/C/D interfaces | Complete assigned function accounting; tampered, expired and revoked replays agree with oracle; no fail-open verdict |
 | S — Structural / PKI parity | `crates/pdf/`, `crates/pdf-diff/`, `crates/pki-core/src/{algorithms.rs,asn1/,key_usage.rs}`, `crates/pki-certvalidator/`, `crates/pki-fetch/`, `crates/cms/`, `crates/eutl/`, their fixtures and A/B/C status files | Finish B's five pending integration tests, consume qualified policies/trust-manager APIs, audit runtime skips, numeric/schema bounds and algorithm gaps; close A's three pending CMS functions with P/V | Corpus and fresh adversarial differential verdicts remain fail closed; five PDF and three CMS pending functions become substantive assertions; exceptions explicit |
 | C — CLI / configuration | New lead-assigned CLI crate and its tests/configuration fixtures | Port 252 functions through current APIs; begin config/runtime/fields immediately, complete LTV commands after P/V | Match upstream output, error and exit behaviour; complete function accounting with local transport doubles |
-| L — Lead / integration | Root, `tools/`, facades/service, central fixtures and consolidated status docs | Central Certomancer export and collected-case inventory; nine remaining live integrations; merge lanes, final gates and service switch after parity | Repeatable oracle setup, skip audit, full gate and layer check; service backend switch only after acceptance |
+| L — Lead / integration | Root, `tools/`, facades/service, central fixtures and consolidated status docs | Central Certomancer export and collected-case inventory; seven remaining live integrations; merge lanes, final gates and service switch after parity | Repeatable oracle setup, skip audit, full gate and layer check; service backend switch only after acceptance |
 
 P, V, S and C can start concurrently. S starts decode-limit assertions and
 independent parity work while coordinating PDF MAC/PAdES acceptance with

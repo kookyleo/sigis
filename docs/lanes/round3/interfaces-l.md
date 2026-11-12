@@ -40,6 +40,31 @@ If its current report lacks the IDs, add the exact IDs above after checking the
 pinned source; report discrepancies rather than inventing substitutes. Route
 necessary acyclic test-only dependency requests through L.
 
+### Accepted shared reader primitive
+
+Main8a1568c passes the complete workspace gate and delivers:
+
+```rust
+impl sigis_pdf::PdfFile {
+    pub fn reopen(&self, bytes: &[u8]) -> sigis_pdf::PdfResult<Self>;
+}
+impl sigis_pdf::crypt::SecurityHandler {
+    pub fn mac_token_handler(&self)
+        -> Option<std::sync::Arc<dyn sigis_pdf::crypt::pdfmac::PdfMacTokenHandlerFactory>>;
+}
+```
+
+Ten native regressions cover remaining allowance before eager xref parsing,
+file growth, precision/strictness/cache isolation, actual password/public-key
+authentication, nested Encrypt identity/permanent ID guards, plaintext key
+removal and factory handle identity. Continue sequential operations with the
+returned reader; sibling reopens hold independent snapshots. Reusing keys
+does not establish output integrity or a valid PDF MAC. Unsupported identity
+graphs reject within bounded traversal. These helpers earn no upstream credit.
+P's operation/state/sign/stamp consumers and S/C exact callers still need
+implementation and complete real-operation assertions; the helper alone does
+not fix the reproduced default DSS writer limit bypass.
+
 ## P, V and S: PDF MAC and inherited signing skips
 
 P supplies PDF MAC attributes scoped to each individual signing session and
@@ -128,8 +153,8 @@ lane worktrees were synced previously. V's shared-repository-lock wording is
 stale and must be corrected. Existing old jobs/sessions stay unchanged; L owns
 the fresh old-lock audit. No service restart or process killing is authorized.
 
-Accepted unique-function counts at main62a72a2 are P 297/271/13/13,
-V 47/12/0/35, S 824/753/63/8, C 252/0/0/252 and L 11/2/0/9
+Accepted unique-function counts at main8a1568c are P 297/282/3/12,
+V 47/12/0/35, S 824/754/63/7, C 252/0/0/252 and L 11/4/0/7
 (total/passed/skipped/pending). The acceptance ledger is authoritative; lane
 working-copy counts are proposals until review and the workspace gate pass. Cross-lane assistance does not add
 S-owned functions to P/V counts. Python's 14 cases across three functions are
@@ -156,3 +181,39 @@ None versus explicit-empty usage semantics. CLI must continue enforcing
 mandatory negative policies until the shared implementation is accepted. V
 owns qualified AdES/LTA results; unsupported mandatory qualification must
 reject before network or output, rather than silently run basic validation.
+
+
+## Acyclic integration callers and remaining live flows
+
+Root tests now host the four round3_signing cross-validator suites and four
+previously accepted PDF-diff signer callers. Original function owners/counts
+are unchanged. Package cycles, including dev edges, are rejected by the layer
+gate. Deliver cross-layer caller patches to L for central integration when
+adding the equivalent dev edge would form a cycle. Do not weaken layer rules.
+
+All seven remaining L Certomancer functions require real V LTA results and
+exact LTA_UPDATES. P must collect missing issuer certificates through the
+configured fetchers for the five affected leaf-only flows; preloading the
+intermediate would bypass their assertion. L owns loopback PFX and strict
+DER/PEM certificate-repo fixtures and CLI harness. Exact dependencies:
+/home/l/.codex/artifacts/sigis/round3/l-certomancer-next/DEPENDENCY_MAP.md.
+
+C now proposes230/252 locally; all remain unaccepted until coherent source
+review and integration. Quoted policy booleans have a confirmed configuration
+object interpretation difference. Eight preserved-binary CLI comparisons did
+not reproduce a more-trusting native CLI verdict (upstream CLI drops a flag
+and another default rejects); do not claim a proved final CLI fail-open.
+Still repair/test mandatory policy interpretation and stop labelling it only
+semantic encoding. S's forbidden-only KU fix is intentionally stricter than
+Python's same early-return bug and remains unaccepted until its commit/gate.
+
+
+C configuration acceptance is blocked by a confirmed unknown-key fail-open:
+three unknown/misspelled nested signer policy keys lead the preserved native
+CLI to exit0/INTACT:TRUSTED while Python rejects exit1. Current C source drops
+those keys. C must port rejection tests first, validate nested policy keys and
+alias conflicts, and reject before trust evaluation. Exact reproduction and
+routing: c-config-review/unknown-policy-native-cli-differential.json and
+c-config-fail-open-routing.json under round3-launch artifacts. The quoted-
+boolean object discrepancy is separate; its eight tested final CLI verdicts
+did not demonstrate more native trust. Keep both evidence scopes explicit.
