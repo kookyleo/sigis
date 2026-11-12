@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "0823cefb84b1ad114d105a0316ff0b1ae09610b1",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/l-live-gate/gate.json",
+  "accepted_source_commit": "6dc97bb60d8a221d7aefddd3a3afae99d6a4ac00",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-primitives/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -25,6 +25,84 @@
       "status": "passed",
       "rust_test": "live_certomancer::test_ts_fetch_aiohttp",
       "reason": "Explicit HTTP transport/session variant; exact upstream assertions, fresh pinned oracle and wrong-imprint rejection; full workspace gate passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_dns_tree_contains",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_dns_tree_contains",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_host_tree_contains",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_host_tree_contains",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_host_tree_contains_rejects_empty_base",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_host_tree_contains_rejects_empty_base",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_email_tree_contains",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_email_tree_contains",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_uri_tree_contains",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_uri_tree_contains",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_name_trees.py::test_uri_tree_contains_requires_fqdn",
+      "status": "passed",
+      "rust_test": "validate::name_constraints_tests::test_uri_tree_contains_requires_fqdn",
+      "reason": "Exact pinned fixture parameters (54 cases over six functions); production name predicates and error propagation. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_fetcher_lifecycle.py::test_context_leaves_supplied_fetchers_alone",
+      "status": "passed",
+      "rust_test": "test_fetcher_lifecycle::test_context_leaves_supplied_fetchers_alone",
+      "reason": "Real transport ownership/lazy factory/drop assertions; no provider early returns. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_fetcher_lifecycle.py::test_no_backend_without_fetching",
+      "status": "passed",
+      "rust_test": "test_fetcher_lifecycle::test_no_backend_without_fetching",
+      "reason": "Real transport ownership/lazy factory/drop assertions; no provider early returns. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_fetcher_lifecycle.py::test_lazy_session_is_reusable_after_closing",
+      "status": "passed",
+      "rust_test": "test_fetcher_lifecycle::test_lazy_session_is_reusable_after_closing",
+      "reason": "Real transport ownership/lazy factory/drop assertions; no provider early returns. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_fetcher_lifecycle.py::test_lazy_session_close_without_a_session",
+      "status": "passed",
+      "rust_test": "test_fetcher_lifecycle::test_lazy_session_close_without_a_session",
+      "reason": "Real transport ownership/lazy factory/drop assertions; no provider early returns. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko/test_tsa_fetcher.py::test_auth_coercion_rejects_nonsense",
+      "status": "passed",
+      "rust_test": "HttpTimeStamper::with_basic_auth compile-fail doctest",
+      "reason": "Exact nonsensical auth argument is rejected by Rust types instead of Python runtime TypeError. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_pdfstring_typing",
+      "status": "passed",
+      "rust_test": "generic::pdf_string compile-fail doctest",
+      "reason": "Exact integer input/key rejection is represented as Rust compile-time type failure; legal input remains accepted. Curated source accepted after complete workspace gate."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_assign_non_name_to_dict",
+      "status": "passed",
+      "rust_test": "generic::pdf_string compile-fail doctest",
+      "reason": "Exact integer input/key rejection is represented as Rust compile-time type failure; legal input remains accepted. Curated source accepted after complete workspace gate."
     }
   ]
 }

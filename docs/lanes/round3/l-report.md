@@ -61,3 +61,11 @@ The accepted ledger also downgrades two historically partial CMS passes;
 overall counts therefore remain1431/1021/93/317 until further lane acceptance.
 The immutable ownership baseline is unchanged. See acceptance.json and
 python3 tools/port-status.py for reproducible counts.
+
+## S primitive acceptance
+
+Main6dc97bb integrates only the reviewed fetch/name-policy/PDF subset and
+passes the complete serial workspace gate. Accepted13 formerly skipped
+functions, no CMS source known-red suite. Policy graph8 adapters remain
+partial and count0; stronger main context tests remain intact. Accepted
+S824/749/67/8, overall1431/1034/80/317. See acceptance.json for exact IDs.

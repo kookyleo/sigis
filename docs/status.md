@@ -44,6 +44,13 @@ S's newer positive coverage is not yet integrated. Thus the two L completions
 and two CMS corrections offset in the overall count; they are separate changes.
 The 12 inherited V functions remain provisional pending fresh assertion review.
 
+Main `6dc97bb` accepts the independently reviewed S primitive subset after a
+second complete serial workspace gate: six name functions, five fetcher/auth
+functions and two PDF typing functions, 13 unique completions from inherited
+skips. No CMS known-red suite or weaker duplicate context helper was imported.
+The accepted S count is 824/749/67/8; lane reports can contain additional
+provisional claims. Eight policy-graph adapter tests remain partial.
+
 ## Integration and verification
 
 Lane D source is `hanko/d-sign`, original head `56af66c`. The integration
@@ -107,18 +114,18 @@ integration and the lead gate; their claimed passes are not accepted early.
 | Crate / assigned test owner | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
-| `sigis-pki-certvalidator` | 133 | 92 | 41 | 0 |
-| `sigis-pki-fetch` | 56 | 38 | 18 | 0 |
+| `sigis-pki-certvalidator` | 133 | 98 | 35 | 0 |
+| `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
 | `sigis-cms` | 78 | 73 | 2 | 3 |
-| `sigis-pdf` | 406 | 384 | 17 | 5 |
+| `sigis-pdf` | 406 | 386 | 15 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
 | `sigis-pades-sign` | 297 | 271 | 13 | 13 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,019** | **93** | **56** |
+| **Library lanes A–E** | **1,168** | **1,032** | **80** | **56** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 2 | 0 | 9 |
-| **Overall** | **1,431** | **1,021** | **93** | **317** |
+| **Overall** | **1,431** | **1,034** | **80** | **317** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -161,14 +168,16 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 93 skipped functions comprise certvalidator 41, fetchers 18,
-CMS two, PDF 17, PDF-diff two and signing 13. Skip reasons remain in the
+The 80 skipped functions comprise certvalidator 35, fetchers 13,
+CMS two, PDF 15, PDF-diff two and signing 13. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
-- Certvalidator replaces 39 internal name-tree/policy-graph tests with
-  `certval` and equivalent PKITS/policy coverage; two deprecated trust-store
-  entry points have no Rust counterpart. Fetcher skips cover asyncio
-  session lifecycle, a deprecated alias and a Python runtime type check.
+- Certvalidator retains 33 policy-graph internal functions and two deprecated
+  registry entries as skipped. Eight synthetic final-graph adapter tests are
+  partial and earn no full-function credit. All six name-predicate functions
+  now exercise their 54 exact pinned cases. Fetchers retain 12 ownership/
+  bootstrap gaps and one deprecated TSA alias; four lifecycle functions and
+  nonsensical auth rejection are accepted.
 - The two CMS skips concern signer-side weak-digest prevention and
   key-based digest selection. Signing completion must revisit their
   assertions rather than count validation replays as full signing tests.
@@ -250,6 +259,17 @@ were fixed or pinned by regression inputs. This integration does not
 claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
+
+Round-3 primitive compatibility boundaries are explicit: Rust typing rejects
+the exact invalid PDF/auth inputs at compilation rather than Python runtime
+exceptions. Lazy transport close releases its idle session while in-flight
+requests retain an Arc until completion. The hand-written URI predicate is
+used for normalized exclusions only: it rejects scheme-less references that
+Python accepts and may match a malformed port that Python does not; the two
+reviewed exclusion cases are stricter. Permitted subtrees still use certval.
+These observations do not prove universal URI-parser conservatism or turn
+resource/type-model differences into trust-verdict proofs. See the PKI audit.
+
 
 The integration removes the known decimal-collision, image-mode and
 schema-content leniency. Retained known trust-verdict divergences are
