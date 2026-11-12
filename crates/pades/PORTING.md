@@ -48,7 +48,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_ades_validation.py` | `tests/ades_validation.rs` | 40 | 0 | 0 | 40 (13 written, ignored until lane A) |
+| `test_ades_validation.py` | `tests/ades_validation.rs` | 40 | 12 | 0 | 28 |
 | `test_ades_validation_report.py` | — | 5 | 0 | 0 | 5 |
 | `test_ades_validation_requests.py` | — | 2 | 0 | 0 | 2 |
 
@@ -85,3 +85,12 @@ Unit tests: `src/ades/basic.rs` (error and status mapping), `src/ades/with_time.
 - XML layout: element order follows TS 119 102-2; namespace prefixes are
   the ones pyHanko passes (`vr`, `XAdES`, `ds`, `xs`); date-times are
   written in UTC with `Z`.
+
+## Integrated count correction (2026-11-12)
+
+The 13 replay wrappers run and pass, but the two
+`test_pades_basic_happy_path_with_tl` parameter wrappers represent one
+upstream function. The strict upstream-function accounting is therefore
+47 total / 12 passed / 0 skipped / 35 pending (28 validation, five report,
+two requests). The wrappers replay 17 recorded cases/calls. See
+`docs/status.md` for the final workspace and differential evidence.

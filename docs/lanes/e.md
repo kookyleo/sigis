@@ -58,7 +58,7 @@ Rust ports will replay these once lanes A, B and C fill
 
 | Suite | Total | Ported-pass | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
-| `test_ades_validation.py` | 40 | 13 | 0 | 27 (oracle recorded) |
+| `test_ades_validation.py` | 40 | 12 | 0 | 28 (oracle recorded) |
 | `test_ades_validation_report.py` | 5 | 0 | 0 | 5 (oracle recorded) |
 | `test_ades_validation_requests.py` | 2 | 0 | 0 | 2 (oracle recorded) |
 | `test_trusted_list.py` | 53 | 53 | 0 | 0 |
@@ -178,3 +178,12 @@ Merged into `main` with the lead round recorded in `docs/hanko-lanes.md` §8.
 - `is_ee_cert` / `is_side_validation`: decided to stay on lane A's
   `PathFailure` (returned by `find_valid_path` / `validate_path_detailed`);
   use `sigis_cms::validate::handle_path_failure` for the AdES mapping.
+
+## Integrated upstream-function accounting (2026-11-12)
+
+The 13 passing replay wrappers cover 12 unique upstream functions:
+`test_pades_basic_happy_path_with_tl__true` and `__false` are parameters of
+one upstream function. Correct AdES accounting is 47 / 12 / 0 / 35;
+including the trusted-list suite, E is 100 / 65 / 0 / 35. Historical
+references above to 13 replay tests describe Rust wrappers, not unique
+upstream functions. The replay subset covers 17 recorded cases and calls.
