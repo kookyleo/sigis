@@ -21,7 +21,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_cms.py` | `tests/test_cms.rs` | 78 | 60 | 2 | 16 |
+| `test_cms.py` | `tests/test_cms.rs`, cross-layer signer suites | 78 | 75 | 1 | 2 |
 | `test_key_usage_constraints.py` | `tests/test_key_usage_constraints.rs` | 4 | 4 | 0 | 0 |
 
 How `test_cms.py` is ported: the upstream tests sign with pyHanko, then
@@ -36,11 +36,11 @@ closed. All 161 recorded calls agree (`KNOWN` is empty).
 
 Skipped (signing side, lane D):
 
-- `test_sign_weak_digest_prevention`: the signer refuses MD5.
 - `test_key_based_digest_selection`: `select_suitable_signing_md` (signer).
 
-Partly ported: `test_overspecify_cms_digest_algo` (its signer-refusal half
-is lane D), `test_direct_pdfcmsembedder_usage` (DSS half is lanes B/E).
+The accepted overspecified-digest function includes actual signer refusal.
+`test_direct_pdfcmsembedder_usage` remains pending for caller-buffer identity;
+low-level, DocMDP and exact DSS assertions already execute.
 
 Pending:
 
@@ -69,3 +69,25 @@ The OCSP_NOCHECK responder policy omission is covered by a substantive new
 regression. These native helpers add zero unique upstream-function credit; the
 current accepted ledger (main045decd, CMS78/74/2/2) remains authoritative
 until the complete lead integration gate passes.
+
+
+## Accepted caller digest policy
+
+Source c69886c passed all six workspace stages: 1363 discovered,
+1355 passed, 8 ignored, zero failed, 110 reports. The one exact
+S/CMS-owned test_sign_weak_digest_prevention changes skipped -> passed. P's
+function count is unchanged. Digest selection now asks a supplied caller
+policy at current signing time before explicit-digest mechanism resolution.
+Tests require actual MD5 Signing refusal, zero mechanism calls under explicit
+denial, a permitted intact native signature and preserved no-VC preparation.
+All four native tests require fresh pinned Python operation probes. The three
+additional controls add no upstream IDs; no-VC MD5 preparation is not a claim
+that full weak signing is permitted by a supplied policy.
+
+Accepted CMS78/75/1/2; S824/788/29/7; overall1431/1086/32/313.
+Key-based digest selection remains skipped pending its full assertion port.
+Direct embedder remains pending until the coherent borrowed-buffer runtime
+and callers pass integration; the independent borrowed API review alone
+earns no pass. Larger P reader/MAC consumers and V LTA remain unaccepted.
+Logs: round3-launch/p-digest-policy-gate/; independent source review:
+round3-launch/p-borrowed-buffer-review.md.

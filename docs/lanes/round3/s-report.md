@@ -385,3 +385,25 @@ No universal fail-closed parity claim follows from this increment.
 Existing S comparisons cover21 public policy/limit results, five actual DER
 hashes and four qualifier encodings; the lead's separate33-function Python run
 is fresh execution. Logs: round3-launch/s-policy-graph-gate/ artifacts.
+
+
+## Caller digest policy accepted
+
+Source c69886c passed all six workspace stages: 1363 discovered,
+1355 passed, 8 ignored, zero failed, 110 reports. The one exact
+S/CMS-owned test_sign_weak_digest_prevention changes skipped -> passed. P's
+function count is unchanged. Digest selection now asks a supplied caller
+policy at current signing time before explicit-digest mechanism resolution.
+Tests require actual MD5 Signing refusal, zero mechanism calls under explicit
+denial, a permitted intact native signature and preserved no-VC preparation.
+All four native tests require fresh pinned Python operation probes. The three
+additional controls add no upstream IDs; no-VC MD5 preparation is not a claim
+that full weak signing is permitted by a supplied policy.
+
+Accepted CMS78/75/1/2; S824/788/29/7; overall1431/1086/32/313.
+Key-based digest selection remains skipped pending its full assertion port.
+Direct embedder remains pending until the coherent borrowed-buffer runtime
+and callers pass integration; the independent borrowed API review alone
+earns no pass. Larger P reader/MAC consumers and V LTA remain unaccepted.
+Logs: round3-launch/p-digest-policy-gate/; independent source review:
+round3-launch/p-borrowed-buffer-review.md.

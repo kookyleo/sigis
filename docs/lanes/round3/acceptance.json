@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "d1e38df4fd8f2fccaaf724774f15f660b4964c5d",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-policy-graph-gate/gate.json",
+  "accepted_source_commit": "c69886cd8bc0aa0f032619f65151a338cf0a3a84",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-digest-policy-gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -404,6 +404,12 @@
       "status": "passed",
       "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_trailing_any_policy_expands_to_user_initial_policy_set",
       "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko/test_cms.py::test_sign_weak_digest_prevention",
+      "status": "passed",
+      "rust_test": "test_round3_digest_policy::test_sign_weak_digest_prevention",
+      "reason": "Actual MD5 signing with a caller validation context returns the required Signing refusal before mechanism resolution. Three ordering/current-clock/permitted/no-VC controls and mandatory fresh pinned oracle probes pass; independently reviewed and full workspace gate on c69886c."
     }
   ]
 }

@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main d1e38df found **1,359 Rust tests: 1,351 passed, 8
-ignored, zero failed**, across 109 reports. Build, workspace tests, strict
+The latest gate on main c69886c found **1,363 Rust tests: 1,355 passed, 8
+ignored, zero failed**, across 110 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-policy-graph-gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/p-digest-policy-gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -173,16 +173,16 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
-| `sigis-cms` | 78 | 74 | 2 | 2 |
+| `sigis-cms` | 78 | 75 | 1 | 2 |
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 92 | 2 | 0 |
 | `sigis-pades-sign` | 297 | 282 | 3 | 12 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,081** | **33** | **54** |
+| **Library lanes A–E** | **1,168** | **1,082** | **32** | **54** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,085** | **33** | **313** |
+| **Overall** | **1,431** | **1,086** | **32** | **313** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -225,8 +225,8 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 33 skipped functions comprise certvalidator two, fetchers 13,
-CMS two, PDF 11, PDF-diff two and signing three. Skip reasons remain in the
+The 32 skipped functions comprise certvalidator two, fetchers 13,
+CMS one, PDF 11, PDF-diff two and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
@@ -235,9 +235,9 @@ owning `PORTING.md` and lane files:
   exercise their54 exact pinned cases. Fetchers retain12 ownership/
   bootstrap gaps and one deprecated TSA alias; four lifecycle functions and
   nonsensical auth rejection are accepted.
-- The two CMS skips concern signer-side weak-digest prevention and
-  key-based digest selection. Signing completion must revisit their
-  assertions rather than count validation replays as full signing tests.
+- The remaining CMS skip is key-based digest selection. Weak-digest
+  prevention now requires the actual MD5 signer refusal under a caller policy;
+  validation replay alone does not satisfy signing assertions.
 - PDF skips retain object-model/trailer gaps. The four layout/resource
   functions now execute all exact upstream assertions in the P test crate;
   they are credited once to S/PDF ownership, not again to signing.
@@ -569,3 +569,25 @@ No universal fail-closed parity claim follows from this increment.
 Existing S comparisons cover21 public policy/limit results, five actual DER
 hashes and four qualifier encodings; the lead's separate33-function Python run
 is fresh execution. Logs: round3-launch/s-policy-graph-gate/ artifacts.
+
+
+## Accepted caller digest policy
+
+Source c69886c passed all six workspace stages: 1363 discovered,
+1355 passed, 8 ignored, zero failed, 110 reports. The one exact
+S/CMS-owned test_sign_weak_digest_prevention changes skipped -> passed. P's
+function count is unchanged. Digest selection now asks a supplied caller
+policy at current signing time before explicit-digest mechanism resolution.
+Tests require actual MD5 Signing refusal, zero mechanism calls under explicit
+denial, a permitted intact native signature and preserved no-VC preparation.
+All four native tests require fresh pinned Python operation probes. The three
+additional controls add no upstream IDs; no-VC MD5 preparation is not a claim
+that full weak signing is permitted by a supplied policy.
+
+Accepted CMS78/75/1/2; S824/788/29/7; overall1431/1086/32/313.
+Key-based digest selection remains skipped pending its full assertion port.
+Direct embedder remains pending until the coherent borrowed-buffer runtime
+and callers pass integration; the independent borrowed API review alone
+earns no pass. Larger P reader/MAC consumers and V LTA remain unaccepted.
+Logs: round3-launch/p-digest-policy-gate/; independent source review:
+round3-launch/p-borrowed-buffer-review.md.
