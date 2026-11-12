@@ -31,7 +31,7 @@ use crate::attributes::{
     ADOBE_REVOCATION_INFO_ARCHIVAL, CONTENT_TIME_STAMP, ID_DATA, ID_SIGNED_DATA,
     SIGNER_ATTRIBUTES_V2,
 };
-use crate::signer::implied_digest;
+use crate::signer::{implied_digest, BorrowedKeySignerAdapter, SigningProvider};
 
 fn signing_error(msg: impl Into<String>) -> HankoError {
     HankoError::Signing(msg.into())
@@ -69,11 +69,11 @@ impl Default for CmsSignerOptions {
     }
 }
 
-/// A CMS signer over a [`KeySigner`].
+/// A CMS signer over a [`SigningProvider`].
 #[derive(Clone, Copy, Debug)]
 pub struct CmsSigner<'a> {
     /// The key.
-    pub signer: &'a dyn KeySigner,
+    pub signer: &'a dyn SigningProvider,
     /// Options.
     pub options: &'a CmsSignerOptions,
 }
@@ -143,15 +143,16 @@ impl CmsSigner<'_> {
         timestamper: Option<&dyn TimeStamper>,
         dry_run: bool,
     ) -> Result<Vec<Attribute>> {
-        let cert = self.signer.signing_cert();
         let mut attrs = vec![
             attributes::content_type_attribute(content_type)?,
             attributes::message_digest_attribute(data_digest)?,
         ];
-        attrs.push(attributes::simple_attribute(
-            oids::AA_SIGNING_CERTIFICATE_V2,
-            &as_signing_certificate_v2(cert, DigestAlgorithm::Sha256)?,
-        )?);
+        if let Some(cert) = self.signer.signing_cert() {
+            attrs.push(attributes::simple_attribute(
+                oids::AA_SIGNING_CERTIFICATE_V2,
+                &as_signing_certificate_v2(cert, DigestAlgorithm::Sha256)?,
+            )?);
+        }
         let signing_time = match profile {
             AttrProfile::GenericCms | AttrProfile::GenericPdf => settings.signing_time,
             AttrProfile::Cades { is_pades: true } => None,
@@ -232,10 +233,11 @@ impl CmsSigner<'_> {
         encap: Option<EncapsulatedContentInfo>,
     ) -> Result<Vec<u8>> {
         let mech = self.mechanism(digest)?;
+        let cert = self.require_signing_cert()?;
         let signed_set = attrs_to_set(signed_attrs)?;
         let to_sign = signed_set.to_der()?;
         let signature = if dry_run {
-            placeholder_signature(self.signer.signing_cert())
+            placeholder_signature(cert)
         } else {
             self.signer.sign_raw(&to_sign, digest)?
         };
@@ -278,7 +280,7 @@ impl CmsSigner<'_> {
         unsigned_attrs: Option<SetOfVec<Attribute>>,
         encap: Option<EncapsulatedContentInfo>,
     ) -> Result<Vec<u8>> {
-        let cert = self.signer.signing_cert();
+        let cert = self.require_signing_cert()?;
         let strict = x509_cert::Certificate::from_der(cert.der())?;
         let sid = SignerIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
             issuer: strict.tbs_certificate().issuer().clone(),
@@ -400,6 +402,12 @@ impl CmsSigner<'_> {
             encap,
         )
     }
+
+    fn require_signing_cert(&self) -> Result<&Cert> {
+        self.signer.signing_cert().ok_or_else(|| {
+            signing_error("A signing certificate must be available to create a SignerInfo.")
+        })
+    }
 }
 
 /// `SignedData` for encoding, with the certificate set kept as raw
@@ -471,8 +479,9 @@ pub fn sign_general_data(
     timestamper: Option<&dyn TimeStamper>,
 ) -> Result<Vec<u8>> {
     let options = CmsSignerOptions::default();
+    let provider = BorrowedKeySignerAdapter(signer);
     CmsSigner {
-        signer,
+        signer: &provider,
         options: &options,
     }
     .sign_general_data(

@@ -143,26 +143,13 @@ pub fn extended_context(
     certs: &[Cert],
     info: &ValidationInfo,
 ) -> Result<ValidationContext> {
-    let timing = ctx.timing();
-    let mut b = ValidationContext::builder()
-        .moment(timing.validation_time)
-        .best_signature_time(timing.best_signature_time)
-        .time_tolerance(timing.time_tolerance)
-        .revinfo_policy(*ctx.revinfo_policy())
-        .fetchers(ctx.fetchers().clone());
-    for a in ctx.trust_anchors() {
-        b = b.trust_anchor(a.clone());
-    }
-    for c in ctx.other_certs().iter().chain(certs) {
-        b = b.other_cert(c.clone());
-    }
-    for o in &info.ocsps {
-        b = b.ocsp_response(o.clone());
-    }
-    for c in &info.crls {
-        b = b.crl(c.clone());
-    }
-    Ok(b.build()?)
+    // Extend a clone so algorithm policy, freshness requirements, trust
+    // managers, assertions and AC target restrictions survive presigning.
+    Ok(ctx.with_revinfo(
+        certs,
+        info.crls.iter().map(Vec::as_slice),
+        info.ocsps.iter().map(Vec::as_slice),
+    )?)
 }
 
 /// Validate `cert` (with candidate intermediates `pool`), collecting the

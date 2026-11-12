@@ -49,7 +49,9 @@ pub use crate::cms::CmsSignerOptions;
 pub use crate::pdf::fields::{FieldMdpAction, FieldMdpSpec, SigFieldSpec};
 pub use crate::pdf::seed::{SigSeedSubFilter, SigSeedValueSpec};
 pub use crate::pdf::signer::{BuildProps, SigAuthType, SignOptions};
-pub use crate::signer::{ExternalSigner, SimpleSigner};
+pub use crate::signer::{
+    DeferredSignatureValue, DeferredSigner, ExternalSigner, SigningProvider, SimpleSigner,
+};
 pub use crate::stamp::StampStyle;
 pub use crate::timestamps::DummyTimeStamper;
 
@@ -159,7 +161,7 @@ pub struct PdfSigner {
     /// Signature options.
     pub metadata: PdfSignatureMetadata,
     /// The key.
-    pub signer: Arc<dyn KeySigner>,
+    pub signer: Arc<dyn SigningProvider>,
     /// TSA for signature timestamps (B-T) and document timestamps (B-LTA).
     pub timestamper: Option<Arc<dyn TimeStamper>>,
     /// Field to create if the field does not exist (`new_field_spec`).
@@ -179,6 +181,17 @@ pub struct PdfSigner {
 impl PdfSigner {
     /// A signer with default settings.
     pub fn new(metadata: PdfSignatureMetadata, signer: Arc<dyn KeySigner>) -> Self {
+        Self::with_signing_provider(
+            metadata,
+            Arc::new(crate::signer::LegacyKeySignerAdapter(signer)),
+        )
+    }
+
+    /// Configure a provider whose certificate may arrive after digest preparation.
+    pub fn with_signing_provider(
+        metadata: PdfSignatureMetadata,
+        signer: Arc<dyn SigningProvider>,
+    ) -> Self {
         Self {
             metadata,
             signer,

@@ -59,4 +59,7 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 sigis-testdata = { workspace = true }
+sigis-pades = { workspace = true }
+sigis-cms = { workspace = true }
+sigis-pdf-diff = { workspace = true }
 tiny_http = "0.12.0"

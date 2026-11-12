@@ -786,9 +786,10 @@ impl PdfSigner {
             return digest_from_name(dm)
                 .ok_or_else(|| HankoError::Unsupported(format!("digest method {dm}")));
         }
-        Ok(select_suitable_signing_md(
-            &self.signer.signing_cert().public_key(),
-        ))
+        let cert = self.signer.signing_cert().ok_or_else(|| signing_error(
+            "Could not select a digest algorithm without a signing certificate, explicit mechanism or digest algorithm",
+        ))?;
+        Ok(select_suitable_signing_md(&cert.public_key()))
     }
 
     /// Sign `pdf` with explicit options (`PdfSigner.sign_pdf`).
@@ -878,6 +879,11 @@ impl PdfSigner {
     )> {
         use crate::ltv::{validate_and_collect, ValidationInfo};
         let meta = self.meta();
+        if meta.embed_validation_info && self.signer.signing_cert().is_none() {
+            return Err(signing_error(
+                "A signer's certificate must be provided if validation/revocation info is to be embedded into the signature.",
+            ));
+        }
         if meta.embed_validation_info && meta.validation_context.is_none() {
             return Err(signing_error(
                 "A validation context must be provided if validation/revocation info is to be embedded into the signature.",
@@ -887,7 +893,9 @@ impl PdfSigner {
             return Ok((None, None));
         };
         let mut info = ValidationInfo::default();
-        let cert = self.signer.signing_cert();
+        let cert = self.signer.signing_cert().ok_or_else(|| {
+            signing_error("A signing certificate must be provided for pre-signing validation")
+        })?;
         validate_and_collect(ctx, cert, self.signer.cert_chain(), &mut info).map_err(|e| {
             signing_error(format!(
                 "The signer's certificate could not be validated: {e}"
@@ -984,30 +992,33 @@ impl PdfSigner {
         if subfilter == SigSeedSubFilter::Pades {
             ensure_esic_ext(update)?;
         }
-        let mech = self.signer.signature_algorithm(md)?;
-        let ec_iso_curve = mech.oid != sigis_pki_core::asn1::oids::ED25519
-            && self.signer.signing_cert().public_key().algorithm.oid
-                == sigis_pki_core::asn1::oids::EC_PUBLIC_KEY
-            && self
-                .signer
-                .signing_cert()
-                .public_key()
-                .algorithm
-                .parameters
-                .as_ref()
-                .and_then(|p| p.decode_as::<const_oid::ObjectIdentifier>().ok())
-                .is_some_and(|c| {
-                    [
-                        sigis_pki_core::asn1::oids::SECP256R1,
-                        sigis_pki_core::asn1::oids::SECP384R1,
-                        sigis_pki_core::asn1::oids::SECP521R1,
-                    ]
-                    .contains(&c)
-                });
-        // `register_extensions`
-        if mech.oid == sigis_pki_core::asn1::oids::ED25519 {
+        // Delayed-certificate preparation with an explicit digest need not
+        // determine the eventual mechanism before the external signer returns.
+        let mech = match self.signer.signing_cert() {
+            Some(_) => Some(self.signer.signature_algorithm(md)?),
+            None => self.signer.signature_algorithm(md).ok(),
+        };
+        let ec_iso_curve = self.signer.signing_cert().is_some_and(|cert| {
+            let key = cert.public_key();
+            key.algorithm.oid == sigis_pki_core::asn1::oids::EC_PUBLIC_KEY
+                && key
+                    .algorithm
+                    .parameters
+                    .as_ref()
+                    .and_then(|params| params.decode_as::<const_oid::ObjectIdentifier>().ok())
+                    .is_some_and(|curve| {
+                        [
+                            sigis_pki_core::asn1::oids::SECP256R1,
+                            sigis_pki_core::asn1::oids::SECP384R1,
+                            sigis_pki_core::asn1::oids::SECP521R1,
+                        ]
+                        .contains(&curve)
+                    })
+        });
+        let mechanism_oid = mech.as_ref().map(|algorithm| algorithm.oid);
+        if mechanism_oid == Some(sigis_pki_core::asn1::oids::ED25519) {
             ensure_iso32002_ext(update)?;
-        } else if mech.oid == sigis_pki_core::asn1::oids::ED448 {
+        } else if mechanism_oid == Some(sigis_pki_core::asn1::oids::ED448) {
             ensure_iso32001_ext(update)?;
             ensure_iso32002_ext(update)?;
         } else {
@@ -1115,7 +1126,7 @@ impl PdfSigner {
             .meta()
             .name
             .clone()
-            .or_else(|| subject_display_name(self.signer.signing_cert()));
+            .or_else(|| self.signer.signing_cert().and_then(subject_display_name));
         crate::stamp::apply_signature_appearance(
             update,
             annot,
@@ -1278,7 +1289,12 @@ impl PdfSigner {
         let meta = self.meta();
         if let Some(c) = &sv.cert {
             let chain = self.signer.cert_chain().to_vec();
-            c.satisfied_by(self.signer.signing_cert(), Some(&chain))?;
+            let cert = self.signer.signing_cert().ok_or_else(|| {
+                signing_error(
+                "Cannot verify seed value certificate constraints without a signing certificate",
+            )
+            })?;
+            c.satisfied_by(cert, Some(&chain))?;
         }
         if let Some(st) = &sv.seed_signature_type {
             let sv_certify = st.is_some();
@@ -1383,6 +1399,9 @@ impl PdfSigner {
 
     /// `estimate_signature_container_size`.
     fn estimate_signature_container_size(&self, session: &Session<'_>) -> Result<usize> {
+        if self.signer.signing_cert().is_none() {
+            return Err(signing_error("Automatic signature size estimation is unavailable without a signing certificate; specify bytes_reserved explicitly"));
+        }
         let test_md = session.md.digest(b"");
         let cms = CmsSigner {
             signer: self.signer.as_ref(),

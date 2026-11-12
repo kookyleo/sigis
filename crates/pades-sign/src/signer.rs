@@ -20,6 +20,154 @@ fn signing_error(msg: impl Into<String>) -> HankoError {
     HankoError::Signing(msg.into())
 }
 
+/// A signing provider whose certificate may become available after PDF preparation.
+///
+/// Certificate-dependent operations must explicitly reject `None`; a provider
+/// without a certificate can still select a digest from an explicit mechanism
+/// and prepare an interrupted signature with an explicit reservation.
+pub trait SigningProvider: Send + Sync + std::fmt::Debug {
+    /// The signing certificate, if it is already known.
+    fn signing_cert(&self) -> Option<&Cert>;
+
+    /// Other certificates available for CMS embedding and path building.
+    fn cert_chain(&self) -> &[Cert];
+
+    /// The signature mechanism for the selected digest.
+    fn signature_algorithm(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned>;
+
+    /// Produce a raw signature over the supplied data.
+    fn sign_raw(&self, data: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>>;
+}
+
+impl<T: KeySigner> SigningProvider for T {
+    fn signing_cert(&self) -> Option<&Cert> {
+        Some(KeySigner::signing_cert(self))
+    }
+
+    fn cert_chain(&self) -> &[Cert] {
+        KeySigner::cert_chain(self)
+    }
+
+    fn signature_algorithm(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
+        KeySigner::signature_algorithm(self, digest)
+    }
+
+    fn sign_raw(&self, data: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>> {
+        KeySigner::sign_raw(self, data, digest)
+    }
+}
+
+/// Adapt an existing erased key signer to the optional-certificate interface.
+#[derive(Debug, Clone)]
+pub struct LegacyKeySignerAdapter(pub std::sync::Arc<dyn KeySigner>);
+
+impl SigningProvider for LegacyKeySignerAdapter {
+    fn signing_cert(&self) -> Option<&Cert> {
+        Some(self.0.signing_cert())
+    }
+
+    fn cert_chain(&self) -> &[Cert] {
+        self.0.cert_chain()
+    }
+
+    fn signature_algorithm(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
+        self.0.signature_algorithm(digest)
+    }
+
+    fn sign_raw(&self, data: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>> {
+        self.0.sign_raw(data, digest)
+    }
+}
+
+/// Borrowed adapter used by the legacy general-data signing entry point.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct BorrowedKeySignerAdapter<'a>(pub &'a dyn KeySigner);
+
+impl SigningProvider for BorrowedKeySignerAdapter<'_> {
+    fn signing_cert(&self) -> Option<&Cert> {
+        Some(self.0.signing_cert())
+    }
+
+    fn cert_chain(&self) -> &[Cert] {
+        self.0.cert_chain()
+    }
+
+    fn signature_algorithm(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
+        self.0.signature_algorithm(digest)
+    }
+
+    fn sign_raw(&self, data: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>> {
+        self.0.sign_raw(data, digest)
+    }
+}
+
+/// A signature supplied externally, or a placeholder of the requested size.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DeferredSignatureValue {
+    /// A placeholder containing this many zero octets.
+    Size(usize),
+    /// A raw signature or explicit placeholder supplied by the caller.
+    Bytes(Vec<u8>),
+}
+
+/// An external provider that permits delayed availability of its certificate.
+///
+/// It deliberately does not implement [`KeySigner`], whose mandatory
+/// certificate contract cannot represent this state.
+#[derive(Debug, Clone)]
+pub struct DeferredSigner {
+    cert: Option<Cert>,
+    chain: Vec<Cert>,
+    signature_value: DeferredSignatureValue,
+    mechanism: Option<AlgorithmIdentifierOwned>,
+}
+
+impl DeferredSigner {
+    /// Create an external provider with an optional certificate and mechanism.
+    pub fn new(
+        cert: Option<Cert>,
+        chain: Vec<Cert>,
+        signature_value: DeferredSignatureValue,
+        mechanism: Option<AlgorithmIdentifierOwned>,
+    ) -> Self {
+        Self {
+            cert,
+            chain,
+            signature_value,
+            mechanism,
+        }
+    }
+}
+
+impl SigningProvider for DeferredSigner {
+    fn signing_cert(&self) -> Option<&Cert> {
+        self.cert.as_ref()
+    }
+
+    fn cert_chain(&self) -> &[Cert] {
+        &self.chain
+    }
+
+    fn signature_algorithm(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
+        if let Some(mechanism) = &self.mechanism {
+            return Ok(mechanism.clone());
+        }
+        let cert = self.cert.as_ref().ok_or_else(|| {
+            signing_error(
+                "Could not set up a signature mechanism: a signing certificate or an explicit signature mechanism is required.",
+            )
+        })?;
+        default_signature_mechanism(cert, digest, false)
+    }
+
+    fn sign_raw(&self, _data: &[u8], _digest: DigestAlgorithm) -> Result<Vec<u8>> {
+        Ok(match &self.signature_value {
+            DeferredSignatureValue::Size(size) => vec![0; *size],
+            DeferredSignatureValue::Bytes(value) => value.clone(),
+        })
+    }
+}
+
 /// A software key held in memory (`SimpleSigner`).
 #[derive(Debug, Clone)]
 pub struct SimpleSigner {
@@ -130,7 +278,7 @@ impl KeySigner for SimpleSigner {
     }
 
     fn sign_raw(&self, data: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>> {
-        let mech = self.signature_algorithm(digest)?;
+        let mech = KeySigner::signature_algorithm(self, digest)?;
         sign_with_key(&self.key, &mech, data, digest)
     }
 }

@@ -63,7 +63,7 @@ pub const ALL_ALGOS: &[(&str, &str, Option<&str>)] = &[
     (
         "dsa",
         "testing-ca-dsa",
-        Some("cryptoki 0.12 cannot invoke CKM_DSA* mechanisms (no MechanismType for them)"),
+        Some("cryptoki 0.12.1 cannot construct standard CKM_DSA through its safe API; native DSA token import is not enabled"),
     ),
     ("ed448", "testing-ca-ed448", None),
     (

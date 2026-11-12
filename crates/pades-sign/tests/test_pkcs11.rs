@@ -500,7 +500,7 @@ fn test_simple_sign_from_config() {
 }
 
 #[test]
-#[ignore = "SafeNet-only in pyHanko (`hsm(platform='safenet')`): SoftHSM has no CKA_ALWAYS_AUTHENTICATE keys"]
+#[ignore = "Provider exclusion: upstream requires hsm(platform='safenet'); no SafeNet provider is configured"]
 fn test_simple_sign_from_config_with_signing_pin() {
     let Some((_g, cfg)) = p11("rsa", None) else {
         return;
@@ -584,7 +584,7 @@ fn test_simple_sign_with_raw_rsa() {
 }
 
 #[test]
-#[ignore = "DSA: cryptoki 0.12 cannot invoke CKM_DSA (no MechanismType constant); hanko-core cannot verify DSA"]
+#[ignore = "Implementation gap: cryptoki 0.12.1 cannot construct standard CKM_DSA through its safe API; native DSA token import is not enabled"]
 fn test_simple_sign_with_raw_dsa() {
     let Some((_g, cfg)) = p11("dsa", Some(Pkcs11Mechanism::Dsa)) else {
         return;
