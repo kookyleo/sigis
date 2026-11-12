@@ -285,7 +285,24 @@ fn rejected_fetched_path_does_not_publish_partial_validation_info() {
 
 fn ac_context(fetcher: Arc<FixedIssuers>, forbid_issuer: bool) -> ValidationContext {
     let pki = support::pki("testing-ca-with-aa");
-    let mut fetchers = support::services::Services::new(&["testing-ca-with-aa"], TIME).fetchers();
+    let mut fetchers = support::services::Services::new(&["testing-ca-with-aa"], TIME)
+        .fetchers_with_ac_ocsp(
+            std::fs::read(support::data_path(&[
+                "lanes",
+                "r3-p",
+                "ac",
+                "alice-role-with-rev.der",
+            ]))
+            .unwrap(),
+            pki.cert("leaf-aa"),
+            std::fs::read(support::data_path(&[
+                "lanes",
+                "r3-p",
+                "ac",
+                "ocsp-alice-role-with-rev.der",
+            ]))
+            .unwrap(),
+        );
     fetchers.cert = Some(fetcher);
     let mut builder = ValidationContext::builder()
         .trust_root(pki.cert("root-aa"))

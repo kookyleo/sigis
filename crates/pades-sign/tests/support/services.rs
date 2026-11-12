@@ -47,6 +47,48 @@ impl Services {
             cert: None,
         }
     }
+
+    /// Explicit local AC evidence, bound to the entire AC and actual AA.
+    /// Other target retrieval remains unchanged; validation grants no trust
+    /// merely because these fixture bytes were returned by the provider.
+    pub fn fetchers_with_ac_ocsp(
+        self: &Arc<Self>,
+        ac_der: Vec<u8>,
+        issuer: Cert,
+        response: Vec<u8>,
+    ) -> Fetchers {
+        let mut fetchers = self.fetchers();
+        fetchers.ocsp = Some(Arc::new(ExplicitAcEvidence {
+            pkc: self.clone(),
+            ac_der,
+            issuer,
+            response,
+        }));
+        fetchers
+    }
+}
+
+#[derive(Debug)]
+struct ExplicitAcEvidence {
+    pkc: Arc<Services>,
+    ac_der: Vec<u8>,
+    issuer: Cert,
+    response: Vec<u8>,
+}
+
+impl OcspFetcher for ExplicitAcEvidence {
+    fn fetch_ocsp(&self, cert: &Cert, issuer: &Cert) -> Result<Vec<u8>, FetchError> {
+        self.pkc.fetch_ocsp(cert, issuer)
+    }
+
+    fn fetch_ac_ocsp(&self, ac_der: &[u8], issuer: &Cert) -> Result<Vec<u8>, FetchError> {
+        if ac_der != self.ac_der || issuer != &self.issuer {
+            return Err(not_found(
+                "no explicit evidence for this AC and authority".into(),
+            ));
+        }
+        Ok(self.response.clone())
+    }
 }
 
 fn not_found(what: String) -> FetchError {

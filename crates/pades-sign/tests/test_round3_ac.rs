@@ -46,17 +46,28 @@ fn authorities() -> Vec<sigis_pki_core::cert::Cert> {
 
 fn context(ac: bool) -> ValidationContext {
     let p = pki(ARCH);
+    let services = Services::new(&[ARCH], T);
+    let fetchers = if ac {
+        services.fetchers_with_ac_ocsp(
+            fixture("alice-role-with-rev.der"),
+            p.cert("leaf-aa"),
+            fixture("ocsp-alice-role-with-rev.der"),
+        )
+    } else {
+        services.fetchers()
+    };
     let mut builder = ValidationContext::builder()
         .trust_root(p.cert(if ac { "root-aa" } else { "root" }))
         .moment(at(T))
         .revocation_mode("require")
-        .fetchers(Services::new(&[ARCH], T).fetchers());
+        .fetchers(fetchers);
     for cert in authorities() {
         builder = builder.other_cert(cert);
     }
     if ac {
-        // The current lower fetcher interface accepts X.509 certificates
-        // only. Supply the AC OCSP response explicitly until L adds AC fetch.
+        // Keep the same explicit raw fixture for DSS collection. Configured
+        // fetching now also supplies it through the bound AC method above;
+        // native validation still authenticates it under this caller policy.
         builder = builder.ocsp_response(fixture("ocsp-alice-role-with-rev.der"));
     }
     builder.build().unwrap()
