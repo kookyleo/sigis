@@ -25,3 +25,9 @@ The installed system cache adapter is backed up before replacement; no
 cache server, active build or service is stopped. Installation is limited
 to s7, vm2064 and vm2065 after verifying the old adapter and workspace
 wrapper contents. The repository contains the reviewed repair source.
+
+The repository launcher explicitly calls the installed system Cargo shim
+at /usr/local/lib/rust-slots/bin/cargo. Lane session PATH may put rustup
+Cargo first, so PATH lookup alone does not guarantee scheduler admission.
+The historical FD 9 interaction and isolated reproduction are documented in
+[cargo-lock-audit.md](cargo-lock-audit.md).
