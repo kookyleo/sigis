@@ -10,3 +10,18 @@ description = "Rust command-line interface compatible with pyHanko"
 [[bin]]
 name = "pyhanko"
 path = "src/main.rs"
+
+[dependencies]
+clap = { version = "=4.6.7", features = ["derive"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_yaml = "=0.9.34"
+yaml-rust2 = { version = "=0.13.0", default-features = false }
+regex = { workspace = true }
+serde_json = { workspace = true }
+sigis-pades-sign = { workspace = true }
+sigis-pki-core = { workspace = true }
+
+[dev-dependencies]
+openssl = "=0.10.81"
+sigis-testdata = { workspace = true }
+tempfile = "=3.27.0"

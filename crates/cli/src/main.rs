@@ -1,6 +1,8 @@
-//! Round-3 CLI entry point. Lane C owns the implementation and its tests.
-
+//! Command-line entry point.
+use std::io::Write;
 fn main() {
-    eprintln!("The pyHanko-compatible Rust CLI is not implemented yet.");
-    std::process::exit(2);
+    let output = sigis_cli::run(&std::env::args().skip(1).collect::<Vec<_>>());
+    let _ = std::io::stdout().write_all(output.stdout.as_bytes());
+    let _ = std::io::stderr().write_all(output.stderr.as_bytes());
+    std::process::exit(output.code);
 }
