@@ -115,6 +115,14 @@ underskrift = { version = "0.1.4", default-features = false, features = ["verify
 uuid = { version = "1", features = ["v4"] }
 zeroize = "1"
 
+[dev-dependencies]
+sigis-cms.workspace = true
+sigis-pki-core.workspace = true
+sigis-pki-certvalidator.workspace = true
+sigis-pki-fetch.workspace = true
+sigis-testdata.workspace = true
+tempfile = "3"
+
 # Vendored underskrift 0.1.4 with a minimal patch that embeds an RFC 3161
 # signature timestamp (PAdES B-T). See vendor/README.md.
 [patch.crates-io]

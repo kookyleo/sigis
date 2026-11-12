@@ -25,4 +25,7 @@ Layout of scripts:
 - `crates/<crate>/oracle/*.py` — generators and verdict scripts owned by the
   lane that owns the crate. Each script writes JSON to stdout.
 
-A script must never use the network, and must pin the validation time.
+Scripts must pin the validation time and never contact external hosts.
+The round-3 live integration sidecar binds only `127.0.0.1:0` and serves
+Certomancer over actual loopback HTTP; its parent test owns its lifetime.
+Other verdict scripts remain offline and disable fetching.
