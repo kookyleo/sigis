@@ -102,3 +102,18 @@ additional upstream-function count. Log: `slots-pki-pkits.log`.
 
 
 The lead acceptance above supersedes the historical targeted verification:133/131/2/0.
+
+
+## Subsequent shared policy-composition acceptance
+
+Source f91dccd closes the preceding materialized-empty/zero-issued policy gap
+after12 tests-first supplemental regressions and all six workspace gates.
+Current assigned counts stay133/131/2/0. The additional conjunctive field and
+explicit replacement API are documented in
+[L policy composition](../../docs/lanes/round3/l-policy-composition.md).
+Legacy empty Vec remains wildcard; an explicit empty effective constraint
+remains empty through merge, clone, anchor composition and high-level validation.
+External exhaustive struct literals must supply the new public field or use
+Default/struct update. Certval-before-native-limit resource scope is unchanged.
+The bounded asymmetric Python empty+Any behavior is intentionally stricter;
+no universal policy/trust parity is claimed.

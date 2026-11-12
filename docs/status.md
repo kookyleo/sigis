@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main c69886c found **1,363 Rust tests: 1,355 passed, 8
-ignored, zero failed**, across 110 reports. Build, workspace tests, strict
+The latest gate on main f91dccd found **1,375 Rust tests: 1,367 passed, 8
+ignored, zero failed**, across 111 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/p-digest-policy-gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/policy-merge-api/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -250,7 +250,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and shared policy-merge semantics; the313 pending
+provider behaviour and remaining validator compatibility; the313 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -591,3 +591,46 @@ and callers pass integration; the independent borrowed API review alone
 earns no pass. Larger P reader/MAC consumers and V LTA remain unaccepted.
 Logs: round3-launch/p-digest-policy-gate/; independent source review:
 round3-launch/p-borrowed-buffer-review.md.
+
+
+## Accepted explicit policy composition
+
+Source f91dccd passed all six workspace gates: 1375 discovered,
+1367 passed, 8 ignored, zero failed, 111 suite reports. The
+lead first reproduced six actual failures with two positive controls using
+the existing public API: a materialized empty policy intersection validated
+successfully, and a zero-issued path returned wildcard instead of its finite
+policy. The repaired12-test suite passes, including high-level validation,
+clone/mutation/replacement, composition algebra and caller/anchor controls.
+Related library/policy tests also pass. These are supplemental regressions,
+not new immutable upstream functions; overall stays1431/1086/32/313.
+
+PkixValidationParams retains its legacy Vec input (empty means wildcard) and
+adds user_initial_policy_constraint: Option<BTreeSet<ObjectIdentifier>> as
+an additional conjunction. None/anyPolicy means wildcard; Some(empty) permits
+no policies. effective_user_initial_policy_set() returns the combined meaning.
+replace_user_initial_policy_set(&mut self, Option<BTreeSet<ObjectIdentifier>>)
+deliberately replaces both inputs. Legacy field mutation alone cannot erase
+a computed merged restriction. Public merge/anchor composition preserve empty
+sets; zero-issued paths still apply final policy wrap-up with anchor context.
+Certval policy denial remains denial, including when native replay succeeds.
+
+Existing Default/struct-update callers remain compatible. Adding a public
+field can break external exhaustive struct literals; this source compatibility
+limit is explicit. No dependency, layer exception or build setting changed.
+
+The lead freshly executed10 pinned Python public validations over the same
+three NIST certificate files with SHA256 receipts. Python's asymmetric empty
+set plus anyPolicy helper can restore P1: the native fix intentionally retains
+empty constraints instead. In the mandatory case native rejects more strictly;
+in the optional case it returns no qualified policy. Other finite/default and
+zero-issued controls retain their assertions. Do not label all10 calls exact
+agreements or infer universal fail-closed parity. Evidence and independent
+source review are under round3-launch/policy-merge-api/.
+
+The earlier C unknown-policy-key trusting verdict now has a candidate rejection
+fix e19d2db with ten saved-binary fresh CLI controls. It remains unmerged;
+three key-loader functions still need actual CMS integrity assertions, and
+the complete CLI/qualified-validation package has not passed acceptance.
+V supplied new archival-proof controls for review; the earlier independent
+101-test result predates those controls. No V/C completion is booked early.
