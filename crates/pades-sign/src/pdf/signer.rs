@@ -776,20 +776,38 @@ impl PdfSigner {
     }
 
     fn select_md(&self, sv: Option<&SigSeedValueSpec>) -> Result<DigestAlgorithm> {
-        if let Some(md) = self.default_md_for_signer() {
-            return Ok(md);
-        }
-        if let Some(dm) = sv
+        let md = if let Some(md) = self.default_md_for_signer() {
+            md
+        } else if let Some(dm) = sv
             .and_then(|s| s.digest_methods.as_ref())
             .and_then(|v| v.first())
         {
-            return digest_from_name(dm)
-                .ok_or_else(|| HankoError::Unsupported(format!("digest method {dm}")));
+            digest_from_name(dm)
+                .ok_or_else(|| HankoError::Unsupported(format!("digest method {dm}")))?
+        } else {
+            let cert = self.signer.signing_cert().ok_or_else(|| signing_error(
+                "Could not select a digest algorithm without a signing certificate, explicit mechanism or digest algorithm",
+            ))?;
+            select_suitable_signing_md(&cert.public_key())
+        };
+        if let Some(context) = self.meta().validation_context.as_deref() {
+            // This is a signing-time usage decision, independent of reported
+            // signature metadata or the context's historical validation time.
+            let constraint = context
+                .algorithm_policy()
+                .digest_algorithm_allowed(&md.oid(), Some(Moment::now()));
+            if !constraint.allowed {
+                let reason = constraint
+                    .failure_reason
+                    .as_deref()
+                    .unwrap_or("digest policy denied usage");
+                return Err(signing_error(format!(
+                    "The hash algorithm {} is not allowed in the specified validation context: {reason}",
+                    md.name(),
+                )));
+            }
         }
-        let cert = self.signer.signing_cert().ok_or_else(|| signing_error(
-            "Could not select a digest algorithm without a signing certificate, explicit mechanism or digest algorithm",
-        ))?;
-        Ok(select_suitable_signing_md(&cert.public_key()))
+        Ok(md)
     }
 
     /// Sign `pdf` with explicit options (`PdfSigner.sign_pdf`).
