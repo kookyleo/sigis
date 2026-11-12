@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "b81c2540969e5d81d4a7d7b8c825f3a6038a6901",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-shared-followup-gate/gate.json",
+  "accepted_source_commit": "e476da8cbcf558d203664d6631bba37c562ed0e9",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/l-pki-routes/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",

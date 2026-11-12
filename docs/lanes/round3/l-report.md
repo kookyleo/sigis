@@ -156,3 +156,14 @@ V45/47 remains provisional: retained package failure, fresh native provenance
 gap and source-level POE policy findings were routed for tests-first repairs.
 L prepared loopback PFX/AIA fixtures with eight Python smoke groups only in
 artifacts; no new live-function credit or main fixture change yet.
+
+
+## L PFX/AIA environment acceptance
+
+Sourcee476da8 passed all six workspace gates:1293discovered/1285passed/
+8ignored/0failed,108reports. PFX firstfailed404, then nativeproduction
+PKCS12keyimport/signverify/AIAissuerlookup/requiredlivepath+negativecontrols
+passed with both existing TSA variants. Eight separatePythonpreflightgroups
+are environment evidence. Zero upstream credit; L4/7and overallcountsunchanged.
+ActualPFX/DER/PEMfixturesbindonlyloopback; requestmetricsbounded; no shared
+venvorservicesmodified. Logs round3-launch/l-pki-routes/.

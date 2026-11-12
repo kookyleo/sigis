@@ -59,11 +59,12 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on mainb81c254 found **1,292 Rust tests: 1,284 passed, eight
+The latest gate on maine476da8 found **1,293 Rust tests: 1,285 passed, eight
 ignored, zero failed**, across108 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-shared-followup-gate/`.
-The previous reader/CSC/P source8a1568c also passed the complete gate.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/l-pki-routes/gate/`.
+The previous reader/CSC/P source8a1568c and S sourceb81c254 also passed
+the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
 fixed source then passed the complete gate again. Algorithm constraints now expose not_allowed_after;
 structured policy errors preserve banned_since without parsing reason strings.
@@ -457,3 +458,14 @@ source inspection alone. V remains unmerged. The bounded variable ByteRange
 API is approved for S, with V coverage consumers and central caller tests;
 nonstandard ranges must never acquire standard coverage or a trusting bottom
 line. No pending function earns a pass from that approval.
+
+
+The L loopback fixture now serves synthetic signer PFX and strict DER/PEM
+issuer routes with bounded request counters and pinned oracle version checks.
+Tests first reproduced404 for PFX; native verification then downloaded/imported
+the real PFX, rejected a wrong password, signed/verified with its key, fetched
+the issuer and built a path with mandatory live OCSP/CRL. Missing evidence and
+empty roots reject. Both existing TSA tests still pass; the full gate passed
+on e476da8. This is one native environment helper and zero upstream functions.
+P's presign missing-issuer collection and V's complete LTA acceptance still
+block the seven remaining live functions; the fixture alone does not close them.
