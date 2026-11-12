@@ -104,9 +104,20 @@ fn sha256(bytes: &[u8]) -> String {
 
 #[test]
 fn test_async_strict_cert_fetchers_happy_path() {
+    check_live_lta_case(false, true, "test_async_strict_cert_fetchers_happy_path");
+}
+
+#[test]
+fn test_pades_lta_live() {
+    for full_chain in [true, false] {
+        check_live_lta_case(full_chain, false, "test_pades_lta_live");
+    }
+}
+
+fn check_live_lta_case(full_chain: bool, explicit_strict: bool, function: &str) {
     let live = LivePki::start();
     let limits = FetchLimits {
-        timeout: Duration::from_secs(10),
+        timeout: Duration::from_secs(if explicit_strict { 10 } else { 5 }),
         ..Default::default()
     };
     // Eagerly create one actual HTTP session. Downloads, fetchers and TSA
@@ -122,16 +133,20 @@ fn test_async_strict_cert_fetchers_happy_path() {
     );
     let signer = {
         let imported = SimpleSigner::from_pkcs12(&pfx, Some(b"secret")).unwrap();
-        // Exact skip_other_certs=True behavior. Merely removing candidates
-        // from the validation context would leave the PFX signer chain usable.
-        SimpleSigner::new(
-            imported.key().clone(),
-            imported.signing_cert().clone(),
-            Vec::new(),
-        )
-        .unwrap()
+        if full_chain {
+            assert!(!imported.cert_chain().is_empty());
+            imported
+        } else {
+            // Removing only context candidates would leave the PFX chain usable.
+            SimpleSigner::new(
+                imported.key().clone(),
+                imported.signing_cert().clone(),
+                Vec::new(),
+            )
+            .unwrap()
+        }
     };
-    assert!(signer.cert_chain().is_empty());
+    assert_eq!(signer.cert_chain().is_empty(), !full_chain);
     let signing_leaf_der = signer.signing_cert().der().to_vec();
     let root_der = request(
         session.as_ref(),
@@ -142,22 +157,27 @@ fn test_async_strict_cert_fetchers_happy_path() {
     );
     let root = Cert::from_der(&root_der).unwrap();
     let settings = FetcherSettings {
-        permit_pem: false,
+        permit_pem: !explicit_strict,
         limits: limits.clone(),
         ..Default::default()
     };
-    // The original constructs three explicit fetchers sharing one session.
-    let cert_http = HttpFetchers::with_transport(session.clone(), settings.clone());
-    let ocsp_http = HttpFetchers::with_transport(session.clone(), settings.clone());
-    let crl_http = HttpFetchers::with_transport(session.clone(), settings);
-    assert!(!cert_http.settings().permit_pem);
-    for http in [&cert_http, &ocsp_http, &crl_http] {
-        assert_eq!(http.settings().limits.timeout, Duration::from_secs(10));
-    }
-    let fetchers = Fetchers {
-        cert: cert_http.as_fetchers().cert,
-        ocsp: ocsp_http.as_fetchers().ocsp,
-        crl: crl_http.as_fetchers().crl,
+    let fetchers = if explicit_strict {
+        // Three explicit fetchers share the original strict case's session.
+        let cert_http = HttpFetchers::with_transport(session.clone(), settings.clone());
+        let ocsp_http = HttpFetchers::with_transport(session.clone(), settings.clone());
+        let crl_http = HttpFetchers::with_transport(session.clone(), settings);
+        assert!(!cert_http.settings().permit_pem);
+        for http in [&cert_http, &ocsp_http, &crl_http] {
+            assert_eq!(http.settings().limits.timeout, Duration::from_secs(10));
+        }
+        Fetchers {
+            cert: cert_http.as_fetchers().cert,
+            ocsp: ocsp_http.as_fetchers().ocsp,
+            crl: crl_http.as_fetchers().crl,
+        }
+    } else {
+        // The base test uses the aggregate backend and its five-second timeout.
+        HttpFetchers::with_transport(session.clone(), settings).as_fetchers()
     };
     let requested = Arc::new(Mutex::new(Vec::new()));
     let mut signing_fetchers = fetchers.clone();
@@ -200,15 +220,19 @@ fn test_async_strict_cert_fetchers_happy_path() {
         .expect("leaf-only signing must fetch issuers and produce real B-LTA");
     // Snapshot before V/native/Python validation can request any candidates.
     let signing_requested = requested.lock().unwrap().clone();
-    assert!(
-        signing_requested.contains(&signing_leaf_der),
-        "the signing context must ask the real certificate fetcher for the exact downloaded signer leaf"
-    );
+    if !full_chain {
+        assert!(
+            signing_requested.contains(&signing_leaf_der),
+            "the signing context must ask the real certificate fetcher for the exact downloaded signer leaf"
+        );
+    }
     let after_signing = request_metrics(session.as_ref(), &live);
-    assert!(
-        issuer_requests(&after_signing) > issuer_requests(&before),
-        "P signing must perform actual live AIA retrieval before validation"
-    );
+    if !full_chain {
+        assert!(
+            issuer_requests(&after_signing) > issuer_requests(&before),
+            "P signing must perform actual live AIA retrieval before validation"
+        );
+    }
     let file = PdfFile::parse(&output).unwrap();
     let signature = file
         .embedded_signatures()
@@ -271,7 +295,8 @@ fn test_async_strict_cert_fetchers_happy_path() {
     std::fs::write(&pdf_path, &output).unwrap();
     std::fs::write(&root_path, &root_der).unwrap();
     if let Some(directory) = std::env::var_os("SIGIS_LIVE_LTA_ARTIFACT_DIR") {
-        let directory = std::path::PathBuf::from(directory);
+        let directory = std::path::PathBuf::from(directory)
+            .join(format!("{function}-{}", if full_chain { "full" } else { "leaf" }));
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(directory.join("strict-live-lta.pdf"), &output).unwrap();
         std::fs::write(directory.join("root.der"), &root_der).unwrap();
@@ -298,9 +323,11 @@ fn test_async_strict_cert_fetchers_happy_path() {
     assert_eq!(verdict["correct"]["modification_level"], "LTA_UPDATES");
     assert_eq!(verdict["empty_roots"]["trusted"], false);
     eprintln!(
-        "STRICT_LIVE_LTA {}",
+        "LIVE_PADES_LTA {}",
         serde_json::json!({
-            "upstream_id": "integration-tests/test_live_certomancer.py::test_async_strict_cert_fetchers_happy_path",
+            "upstream_id": format!("integration-tests/test_live_certomancer.py::{function}"),
+            "full_chain": full_chain,
+            "explicit_strict": explicit_strict,
             "pdf_sha256": sha256(&output),
             "signing_leaf_sha256": sha256(&signing_leaf_der),
             "signing_fetch_target_sha256": signing_requested.iter().map(|der| sha256(der)).collect::<Vec<_>>(),
