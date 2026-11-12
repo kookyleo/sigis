@@ -76,7 +76,10 @@ impl LazyTransport {
     /// Defer creation of a reqwest session until the first request.
     pub fn new(timeout: Duration, max_response_bytes: usize) -> Self {
         Self::with_factory(move || {
-            Ok(Arc::new(ReqwestTransport::new(timeout, max_response_bytes)?))
+            Ok(Arc::new(ReqwestTransport::new(
+                timeout,
+                max_response_bytes,
+            )?))
         })
     }
 

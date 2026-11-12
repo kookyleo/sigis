@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use sigis_pki_certvalidator::ValidationContext;
 use sigis_pki_fetch::transport::HttpRequest;
-use sigis_pki_fetch::{FetcherSettings, HttpFetchers, HttpResponse, HttpTransport, TransportError};
 use sigis_pki_fetch::transport::LazyTransport;
+use sigis_pki_fetch::{FetcherSettings, HttpFetchers, HttpResponse, HttpTransport, TransportError};
 
 #[derive(Debug)]
 struct RecordingTransport {

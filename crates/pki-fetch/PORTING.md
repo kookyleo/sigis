@@ -22,9 +22,10 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_common_utils.py` | `tests/test_common_utils.rs` | 15 | 15 | 0 | 0 |
 | `test_fetch_limits.py` | `tests/test_fetch_limits.rs` | 11 | 11 | 0 | 0 |
-| `test_fetcher_lifecycle.py` | — | 16 | 0 | 16 | 0 |
-| `test_tsa_fetcher.py` | `tests/test_tsa_fetcher.rs` | 10 | 8 | 2 | 0 |
+| `test_fetcher_lifecycle.py` | `tests/test_fetcher_lifecycle.rs` | 16 | 4 | 12 | 0 |
+| `test_tsa_fetcher.py` | `tests/test_tsa_fetcher.rs`, `src/tsa.rs` compile-fail doctest | 10 | 9 | 1 | 0 |
 | `test_tsa_fetcher_requests.py` | `tests/test_tsa_fetcher_requests.rs` | 4 | 4 | 0 | 0 |
+| **Total** | | **56** | **43** | **13** | **0** |
 
 Notes:
 
@@ -37,10 +38,11 @@ Notes:
   ownership assertions, but it does not supply the missing context/bootstrap
   ownership-transfer protocol. These are feature gaps, not harmless language
   differences.
-- `test_tsa_fetcher.py` skips `test_deprecated_aiohttp_timestamper_forwards`
-  (a deprecated Python alias) and `test_auth_coercion_rejects_nonsense`
-  (passing a non-credential object is a type error in Rust).
-- No test uses the network: a local server on 127.0.0.1 plays the TSA,
+- `test_tsa_fetcher.py` retains one skip:
+  `test_deprecated_aiohttp_timestamper_forwards` (a deprecated Python alias).
+  `test_auth_coercion_rejects_nonsense` now passes through the compile-fail
+  doctest: a non-credential object fails Rust's string parameter type check.
+- Tests avoid external network access: a local server on 127.0.0.1 plays the TSA,
   serving a response of pyHanko's test TSA for a fixed request
   (`oracle/gen_tsa_fixtures.py`); "unreachable host" is a closed local
   port. The PDF-signing halves of the TSA tests are lane D; their
@@ -58,9 +60,30 @@ session until completion; this native resource lifetime differs from closing
 an aiohttp session while a request is running. The upstream tests exercise
 idle sessions only.
 
-Validation is pending; the accepted baseline remains **56 / 38 / 18 / 0**.
-After the new tests and compile-fail doctest pass, the candidate count is
-**56 / 43 / 13 / 0**. No recording or test-wrapper count earns a function pass.
+The verified round-3 count is **56 total / 43 passed / 13 skipped / 0 pending**.
+The five newly established passes are the four same-named lifecycle tests
+below and the `HttpTimeStamper::with_basic_auth` compile-fail doctest for
+`test_auth_coercion_rejects_nonsense`. Each upstream function counts once.
+The 13 retained skips remain explicit assertion or API gaps below.
+
+The repository-wrapper check completed on vm2064 slot2 in 19.74 seconds.
+The full package test log records vm2065 slot0 and all eight successful
+suite summaries: 0 library unit tests, 4 supplemental fetcher tests,
+15 common-utils tests, 11 limit tests, 4 lifecycle tests, 8 TSA tests,
+4 requests-TSA tests and 1 compile-fail doctest. This is **47 Rust tests**,
+with zero failed, ignored or filtered tests. Four supplemental fetcher
+tests earn no upstream-function credit, leaving **43 unique functions**.
+The full-test command followed a successful package formatting command.
+After a tool-host reset the original outer process exit code is unavailable;
+all final Cargo suite summaries are complete and successful, and the
+original command processes have exited. Tests were not rerun to recover
+that outer status.
+
+Reproducible commands and complete logs are recorded in
+`~/.codex/artifacts/sigis/round3/s/pki-fetch-handoff.md`,
+`pki-fetch-resume-check.log`, `pki-fetch-resume-test.log` and
+`pki-fetch-resume-test-summary.json`. No recording, oracle call or Rust
+wrapper count earns an additional upstream-function pass.
 
 The first 16 IDs below have prefix
 `pyhanko-certvalidator/test_fetcher_lifecycle.py::`. The last two have prefix
@@ -92,5 +115,14 @@ tests explicitly cover repeated close and reuse; ownership tests observe
 actual destructor counts. No provider/tool availability branch skips these
 new assertions. Existing fetch tests have no runtime provider exclusions;
 their CMS validation halves use committed fixture replay, not fresh oracle
-generation. Oracle calls and live results are reported separately in the
-lane artifact handoff.
+generation. The prior live reference audit executed 18 unique upstream
+functions (16 lifecycle and two TSA assertions), with no parameter skips.
+That historical reference execution is separate from this resumed Rust
+test run and earns no additional passes or trust-verdict comparisons.
+
+The central runtime audit also uses a separate denominator: 54 lexical
+candidate occurrences, comprising 38 false positives, nine conditional
+oracle occurrences in three supplemental tests, six static inherited-gap
+occurrences covering five assigned functions, and one ignored diagnostic
+survey. None is a runtime provider exclusion in this crate. An exclusion
+branch's presence does not establish that a test actually took it.
