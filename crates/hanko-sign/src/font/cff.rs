@@ -9,7 +9,7 @@
 
 use std::ops::Range;
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 
 fn malformed(msg: &str) -> HankoError {
     HankoError::Malformed(format!("CFF: {msg}"))

@@ -5,8 +5,8 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use hanko_sign::content::ContentWriter;
-use hanko_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::content::ContentWriter;
+use sigis_pades_sign::pdf::writer::PdfUpdate;
 use lopdf::{dictionary, Document, Object, Stream};
 
 fn tool(env: &str, default: &str) -> Option<PathBuf> {

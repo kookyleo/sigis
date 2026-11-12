@@ -7,11 +7,11 @@
 //! choice of signature mechanism and digest.
 
 use der::{Any, Decode, Encode};
-use hanko_core::algorithms::{DigestAlgorithm, RsaPssParams, SignatureMechanism};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::KeySigner;
+use sigis_pki_core::algorithms::{DigestAlgorithm, RsaPssParams, SignatureMechanism};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::KeySigner;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 use crate::keys::{self, PrivateKey};
@@ -205,7 +205,7 @@ pub fn optimal_pss_params(
     spki: &SubjectPublicKeyInfoOwned,
     digest: DigestAlgorithm,
 ) -> Result<RsaPssParams> {
-    let bits = hanko_core::algorithms::rsa_key_size(spki)
+    let bits = sigis_pki_core::algorithms::rsa_key_size(spki)
         .ok_or_else(|| signing_error("Expected RSA key"))?;
     let em_len = (bits - 1).div_ceil(8);
     let salt = em_len
@@ -281,7 +281,7 @@ pub fn select_suitable_signing_md(spki: &SubjectPublicKeyInfoOwned) -> DigestAlg
     }
     match spki.algorithm.oid {
         oids::RSA_ENCRYPTION | oids::RSASSA_PSS => {
-            let size = hanko_core::algorithms::rsa_key_size(spki).unwrap_or(2048);
+            let size = sigis_pki_core::algorithms::rsa_key_size(spki).unwrap_or(2048);
             with_thresholds(
                 size,
                 &[(2048, DigestAlgorithm::Sha256), (3072, DigestAlgorithm::Sha384)],

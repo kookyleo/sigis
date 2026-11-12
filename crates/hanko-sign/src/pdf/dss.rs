@@ -5,9 +5,9 @@
 
 //! Document Security Store updates (`/DSS`).
 
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::cert::Cert;
-use hanko_core::errors::Result;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::Result;
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 
 use crate::ltv::ocsp_certs;
@@ -215,7 +215,7 @@ pub fn add_dss_with_password(
     if modified || force_write {
         // pyHanko refreshes the document metadata on every write
         update.update_info(
-            &crate::pdf::util::pdf_date(hanko_core::time::Moment::now()),
+            &crate::pdf::util::pdf_date(sigis_pki_core::time::Moment::now()),
             crate::pdf::signer::PRODUCER,
         )?;
         Ok(update.write()?.0)

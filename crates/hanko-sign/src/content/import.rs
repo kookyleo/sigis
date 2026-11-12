@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 
 use crate::pdf::writer::PdfUpdate;

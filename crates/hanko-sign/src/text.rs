@@ -2,7 +2,7 @@
 
 //! Text rendering and layout (`pyhanko.pdf_utils.text`).
 
-use hanko_core::errors::Result;
+use sigis_pki_core::errors::Result;
 
 use crate::content::ops::fmt_g;
 use crate::content::{ContentWriter, PdfContent, PdfResources, ResourceType};

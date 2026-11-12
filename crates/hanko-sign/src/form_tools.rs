@@ -2,7 +2,7 @@
 
 //! Filling text fields with static appearances (`pyhanko.pdf_utils.form_tools`).
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::{Dictionary, Object, ObjectId};
 
 use crate::content::{ContentWriter, PdfContent, PdfResources};

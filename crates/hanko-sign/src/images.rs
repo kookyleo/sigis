@@ -10,7 +10,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::{Dictionary, Object, ObjectId, Stream, StringFormat};
 
 use crate::content::ops::{fmt_g, uuid4};

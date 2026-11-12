@@ -8,7 +8,7 @@
 //! automatic code set switching) and its module layout are ported here;
 //! other symbologies are not supported.
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 
 use crate::content::ops::{fmt_g, rd};
 use crate::content::{ContentWriter, PdfContent, PdfResources};

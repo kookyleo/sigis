@@ -6,7 +6,7 @@
 //!
 //! Keys may use dashes or underscores; unknown keys are errors.
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use serde_json::{Map, Value};
 
 use super::{BaseStampStyle, QrPosition, QrStampStyle, StaticStampStyle, TextStampStyle};

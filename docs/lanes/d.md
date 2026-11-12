@@ -27,7 +27,7 @@ In progress. Landed on the lane branch:
   embedding and subsetting), images, QR codes, Code 128 barcodes.
 
 Validation of produced files: Rust-side integrity checks plus pyHanko's own
-verdict through the oracle (`crates/hanko-sign/oracle/validate_pdf.py`,
+verdict through the oracle (`crates/pades-sign/oracle/validate_pdf.py`,
 with Certomancer's live services for AdES-LTA checks), until lane E lands.
 
 ## Per-suite counts
@@ -60,7 +60,7 @@ Tests find the oracle via `HANKO_ORACLE`, then `/tmp/pyhanko-oracle`, then
 the lane venv, and skip differential checks when none imports pyHanko.
 
 Lane D exported the Certomancer PKI and revocation data locally into
-`crates/hanko-testdata/data/lanes/d/{pki,revinfo}` (§5.4 allows this before
+`crates/testdata/data/lanes/d/{pki,revinfo}` (§5.4 allows this before
 L1); see the README there.
 
 ### `test_signing.py` details
@@ -96,7 +96,7 @@ L1); see the README there.
   (`tests/support/layout.rs`), skipping only if a tool is missing.
 - Divergences: layout / form-filling / configuration errors are
   `HankoError::Malformed` with a message prefix (a dedicated variant would
-  need `hanko-core`); stamp timestamps render in UTC (pyHanko: local zone for
+  need `sigis-pki-core`); stamp timestamps render in UTC (pyHanko: local zone for
   standalone stamps); `rustybuzz` instead of HarfBuzz (language tags via the
   `x-hbot` private-use form); `subsetter` instead of fontTools (CFF subsets
   desubroutinized and rebuilt in fontTools' layout; TrueType subsets use a
@@ -115,7 +115,7 @@ L1); see the README there.
   absent). Skipped (2): `test_simple_sign_from_config_with_signing_pin`
   (pyHanko runs it on SafeNet only; SoftHSM cannot require per-signature
   login), `test_simple_sign_with_raw_dsa` (no DSA in `cryptoki` 0.12 /
-  `hanko-core`). Inside passing parametrized tests, Ed448 / ML-DSA / DSA
+  `sigis-pki-core`). Inside passing parametrized tests, Ed448 / ML-DSA / DSA
   cases and three `CKM_ECDSA_SHA256` cases are skipped at run time (not
   supported by SoftHSM 2.6.1 or the core); raw `CKM_ECDSA` covers ECDSA.
 - Divergences: `Pkcs11Signer::new` loads the certificate and key handles
@@ -168,11 +168,11 @@ L1); see the README there.
 - Producer string is `sigis-hanko`, not `pyHanko 0.38.1`.
 - A seed value dictionary that requires a timestamp without a configured
   timestamper fails (pyHanko builds an HTTP timestamper from `/TimeStamp
-  /URL`; pending `hanko-fetch`).
+  /URL`; pending `sigis-pki-fetch`).
 - `test_sign_with_policy` uses policy OID `1.3.6.1.4.1.99999.1` instead of
   `2.999`: `const-oid` cannot encode a first subidentifier above 127.
 - Revocation information is fetched before validation (OCSP first, CRLs if
-  no OCSP response), since `hanko-certvalidator` does not fetch during
+  no OCSP response), since `sigis-pki-certvalidator` does not fetch during
   validation; pyHanko's validator records what it fetched.
 
 ## Service switch (final step, through the lead)
@@ -196,23 +196,23 @@ is required first.
    `timestamp_field_name`, `signer_key_usage`, `dss_settings`) and
    `PdfSigner` (`new_field_spec`, `stamp_style`, `appearance_text_params`,
    `cms_options`, `signing_time`, `ignore_sv`, constructor `PdfSigner::new`).
-   `SimpleSigner` moved to `hanko_sign::signer` (re-exported at the root).
+   `SimpleSigner` moved to `sigis_pades_sign::signer` (re-exported at the root).
    `SubFilter` gained `PbadPades`. `pkcs11::Pkcs11Config` gained fields.
-2. **Shared target directory breaks lane fixtures:** `hanko_testdata::data_dir()`
+2. **Shared target directory breaks lane fixtures:** `sigis_testdata::data_dir()`
    uses compile-time `env!("CARGO_MANIFEST_DIR")`; with the shared
-   `/build/sigis/target`, the linked `hanko-testdata` can come from another
+   `/build/sigis/target`, the linked `sigis-testdata` can come from another
    worktree (observed: `sigis-wt/e-validate`, `sigis`), so lane-specific
    fixtures are not found. Lane D resolves paths at run time from the test
-   process's `CARGO_MANIFEST_DIR`. Suggest the same in `hanko-testdata`
+   process's `CARGO_MANIFEST_DIR`. Suggest the same in `sigis-testdata`
    (or a `HANKO_TESTDATA` override).
 3. **Lane A (`hanko-core::algorithms`):** done on `main` (SHA-3, SHAKE256,
    Ed448, DSA); lane D signs SHA-3 / SHAKE256 / Ed448 / ML-DSA now.
    `validate_signature` cannot verify ML-DSA yet (Rust-side test check skipped
    for it; the oracle verifies).
-4. **Lane A (`hanko-certvalidator`):** a getter for the CRLs / OCSP responses
+4. **Lane A (`sigis-pki-certvalidator`):** a getter for the CRLs / OCSP responses
    supplied to a `ValidationContext` (pyHanko embeds `vc.ocsps` / `vc.crls`,
    e.g. `dummy_ocsp_vc` in `test_ocsp_embed`, `test_pades_revinfo_dummydata`).
-5. **Lane B:** signing needs from `hanko-pdf` an incremental writer with
+5. **Lane B:** signing needs from `sigis-pdf` an incremental writer with
    object get/put/add, a way to locate placeholder offsets in the output
    (or a hook to serialize one object with placeholders), xref-stream
    output when the previous revision used one, and encryption of new
@@ -224,24 +224,24 @@ is required first.
 
 When rebasing onto `main`, keep this section in your version of this file.
 
-- **D-1 (from lane E).** Seed value validation in `hanko-validate` is pending
+- **D-1 (from lane E).** Seed value validation in `sigis-pades` is pending
   on `SigSeedValueSpec` (pyHanko `sign/fields.py`). Please expose the seed
   value model with parsing from a PDF dictionary
   (`SigSeedValueSpec::from_pdf_object`, including `/MDP`, `/LockDocument`,
   `/Cert` constraints, `/Reasons`, `/SubFilter`, `/DigestMethod`, `/TimeStamp`,
-  `/AppearanceFilter`, `/Ff`) as public API of `hanko-sign`. `hanko-validate`
-  may depend on `hanko-sign` (no cycle: `hanko-sign` must not depend on
-  `hanko-validate`; dev-dependencies may).
+  `/AppearanceFilter`, `/Ff`) as public API of `sigis-pades-sign`. `sigis-pades`
+  may depend on `sigis-pades-sign` (no cycle: `sigis-pades-sign` must not depend on
+  `sigis-pades`; dev-dependencies may).
   *Lane D answer:* done. `SigSeedValueSpec::from_pdf_object`,
   `SigCertConstraints::from_pdf_object` and `FieldMdpSpec::from_pdf_object`
-  take any `hanko_sign::pdf::util::ObjectResolver`, implemented for
+  take any `sigis_pades_sign::pdf::util::ObjectResolver`, implemented for
   `lopdf::Document` and for the signing writer; `SigCertConstraints::satisfied_by`
-  checks a certificate. `hanko-sign` does not depend on `hanko-validate`.
-- **D-2 (from the lead).** `crates/hanko-sign/tests/support/mod.rs` uses
-  `env!("CARGO_MANIFEST_DIR")`; switch to `hanko_testdata::manifest_dir()` /
-  `hanko_testdata::data_dir()` (run-time paths, see `docs/hanko-lanes.md`
+  checks a certificate. `sigis-pades-sign` does not depend on `sigis-pades`.
+- **D-2 (from the lead).** `crates/pades-sign/tests/support/mod.rs` uses
+  `env!("CARGO_MANIFEST_DIR")`; switch to `sigis_testdata::manifest_dir()` /
+  `sigis_testdata::data_dir()` (run-time paths, see `docs/hanko-lanes.md`
   §5.2).
-  *Lane D answer:* done (`tests/support` uses `hanko_testdata::data_dir()`).
+  *Lane D answer:* done (`tests/support` uses `sigis_testdata::data_dir()`).
 - **Lead answers to your requests:** 1 approved (recorded in
   `docs/hanko-lanes.md` §8). 2 done on `main` (run-time fixture paths).
   3 and 4 relayed to lane A (A-5, A-6). 5 relayed to lane B (B-4). The

@@ -1,15 +1,15 @@
 //! Test-side inspection of signed PDFs: signature discovery with `lopdf`,
 //! Rust-side integrity checks, and pyHanko's verdict through the oracle.
 //!
-//! This stands in for `hanko-pdf` / `hanko-validate` (lanes B and E) until
+//! This stands in for `sigis-pdf` / `sigis-pades` (lanes B and E) until
 //! they land; the oracle provides the authoritative verdict.
 
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use der::Encode;
-use hanko_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
+use sigis_pki_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
 use lopdf::{Dictionary, Object, ObjectId};
 
 use super::{oracle, path_str, temp_file, Pki};
@@ -65,7 +65,7 @@ pub fn root(doc: &lopdf::Document) -> &Dictionary {
 
 fn text(o: Option<&Object>) -> String {
     match o {
-        Some(Object::String(s, _)) => hanko_sign::pdf::util::decode_text_string(s),
+        Some(Object::String(s, _)) => sigis_pades_sign::pdf::util::decode_text_string(s),
         _ => String::new(),
     }
 }
@@ -168,7 +168,7 @@ pub fn check_integrity(pdf: &[u8], sig: &FoundSig) -> Cert {
     let mut data = pdf[..a].to_vec();
     data.extend_from_slice(&pdf[b..b + c]);
     let cms = cms_bytes(sig);
-    let sd = hanko_sign::cms::decode_signed_data(&cms).unwrap();
+    let sd = sigis_pades_sign::cms::decode_signed_data(&cms).unwrap();
     let si = sd.signer_infos.0.iter().next().unwrap();
     let md = DigestAlgorithm::from_oid(&si.digest_alg.oid).unwrap();
     let certs: Vec<Cert> = sd
@@ -220,7 +220,7 @@ pub fn check_integrity(pdf: &[u8], sig: &FoundSig) -> Cert {
         Ok(()) => {}
         // e.g. ML-DSA: lane A's verifier does not support it yet; the
         // oracle still checks the signature
-        Err(hanko_core::errors::SignatureError::AlgorithmNotSupported(a)) => {
+        Err(sigis_pki_core::errors::SignatureError::AlgorithmNotSupported(a)) => {
             eprintln!("Rust-side signature check skipped: {a}");
         }
         Err(e) => panic!("signature verifies: {e:?}"),

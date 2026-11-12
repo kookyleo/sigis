@@ -26,11 +26,11 @@ use std::time::{Duration, Instant};
 use base64ct::{Base64, Encoding};
 use der::asn1::ObjectIdentifier;
 use der::{Encode, Tagged};
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::KeySigner;
-use hanko_core::time::Moment;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::KeySigner;
+use sigis_pki_core::time::Moment;
 use serde_json::{json, Map, Value};
 use spki::AlgorithmIdentifierOwned;
 

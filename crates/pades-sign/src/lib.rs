@@ -38,11 +38,11 @@ pub mod text;
 
 use std::sync::Arc;
 
-use hanko_certvalidator::ValidationContext;
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::errors::Result;
-use hanko_core::sign::{KeySigner, TimeStamper};
-use hanko_pdf::MdpPerm;
+use sigis_pki_certvalidator::ValidationContext;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::errors::Result;
+use sigis_pki_core::sign::{KeySigner, TimeStamper};
+use sigis_pdf::MdpPerm;
 
 pub use crate::attributes::{CadesSignedAttrSpec, CmsSignedAttributes, SignerAttrSpec};
 pub use crate::cms::CmsSignerOptions;
@@ -171,7 +171,7 @@ pub struct PdfSigner {
     /// CMS options of the signer (`embed_roots`, attribute certificates).
     pub cms_options: CmsSignerOptions,
     /// Signing time (`/M`, `signingTime`); the current time if `None`.
-    pub signing_time: Option<hanko_core::time::Moment>,
+    pub signing_time: Option<sigis_pki_core::time::Moment>,
     /// Ignore seed value dictionaries (testing).
     pub ignore_sv: bool,
 }
@@ -199,7 +199,7 @@ impl PdfSigner {
     }
 
     /// Set the signing time.
-    pub fn at(mut self, t: hanko_core::time::Moment) -> Self {
+    pub fn at(mut self, t: sigis_pki_core::time::Moment) -> Self {
         self.signing_time = Some(t);
         self
     }

@@ -17,9 +17,9 @@
 use base64ct::Encoding;
 use der::asn1::{ObjectIdentifier, OctetString};
 use der::{Decode, Encode};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
 use pkcs8::{EncryptedPrivateKeyInfoRef, PrivateKeyInfoOwned};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 

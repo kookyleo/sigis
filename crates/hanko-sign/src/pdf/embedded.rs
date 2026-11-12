@@ -6,7 +6,7 @@
 //! workflows (DSS updates, LTA renewal). Lane B's `PdfFile::
 //! embedded_signatures` replaces this once it lands.
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::{Object, ObjectId};
 
 use crate::pdf::fields::enumerate_sig_fields;

@@ -10,12 +10,12 @@ mod support;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use hanko_core::sign::KeySigner;
-use hanko_sign::layout::is_layout_error;
-use hanko_sign::pdf::fields::append_signature_field;
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::stamp::{QrStampStyle, StampStyle, TextStampStyle};
-use hanko_sign::{PdfSignatureMetadata, PdfSigner, SigFieldSpec, SignOptions, SimpleSigner};
+use sigis_pki_core::sign::KeySigner;
+use sigis_pades_sign::layout::is_layout_error;
+use sigis_pades_sign::pdf::fields::append_signature_field;
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::stamp::{QrStampStyle, StampStyle, TextStampStyle};
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner, SigFieldSpec, SignOptions, SimpleSigner};
 use lopdf::Object;
 use support::pdfcheck::*;
 use support::*;
@@ -102,7 +102,7 @@ fn test_no_email() {
         vec![],
     )
     .unwrap();
-    let cn = hanko_sign::signer::subject_display_name(tsa.signing_cert()).unwrap();
+    let cn = sigis_pades_sign::signer::subject_display_name(tsa.signing_cert()).unwrap();
     let style = StampStyle::Text(TextStampStyle::with_text("%(signer)s\n%(ts)s"));
     let out = signer(PdfSignatureMetadata::pyhanko_defaults("Sig1"), tsa, Some(style))
         .sign_pdf(&pdf("minimal-with-field.pdf"))

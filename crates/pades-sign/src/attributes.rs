@@ -8,14 +8,14 @@
 use const_oid::ObjectIdentifier as Oid;
 use der::asn1::{OctetString, SetOfVec};
 use der::{Any, Decode, Encode, Sequence};
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::asn1::commitment::{CommitmentType, CommitmentTypeIndication};
-use hanko_core::asn1::ess::{EssCertId, IssuerSerial, SigningCertificate, SigningCertificateV2};
-use hanko_core::asn1::oids;
-use hanko_core::asn1::sig_policy::SignaturePolicyIdentifier;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::time::Moment;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::asn1::commitment::{CommitmentType, CommitmentTypeIndication};
+use sigis_pki_core::asn1::ess::{EssCertId, IssuerSerial, SigningCertificate, SigningCertificateV2};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::asn1::sig_policy::SignaturePolicyIdentifier;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::time::Moment;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attribute;
 

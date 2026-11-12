@@ -9,7 +9,7 @@
 //! which pyHanko uses, so that the symbols are identical: python-qrcode
 //! scores masks with the format information left blank.
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use qrcode::bits::Bits;
 use qrcode::canvas::{Canvas, MaskPattern};
 use qrcode::types::{Color, EcLevel, Version};

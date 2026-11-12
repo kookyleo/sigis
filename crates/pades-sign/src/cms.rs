@@ -18,11 +18,11 @@ use cms::signed_data::{
 use const_oid::ObjectIdentifier as Oid;
 use der::asn1::{OctetString, SetOfVec};
 use der::{Any, Decode, Encode};
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::{KeySigner, TimeStamper};
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::{KeySigner, TimeStamper};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attribute;
 
@@ -83,7 +83,7 @@ fn placeholder_signature(cert: &Cert) -> Vec<u8> {
     let spki = cert.public_key();
     let len = match spki.algorithm.oid {
         oids::RSA_ENCRYPTION | oids::RSASSA_PSS => {
-            hanko_core::algorithms::rsa_key_size(&spki).map_or(512, |b| b.div_ceil(8))
+            sigis_pki_core::algorithms::rsa_key_size(&spki).map_or(512, |b| b.div_ceil(8))
         }
         oids::EC_PUBLIC_KEY => {
             // DER ECDSA-Sig-Value of maximal size for the curve.
@@ -157,7 +157,7 @@ impl CmsSigner<'_> {
             AttrProfile::Cades { is_pades: true } => None,
             // CAdES requires signingTime.
             AttrProfile::Cades { is_pades: false } => {
-                Some(settings.signing_time.unwrap_or_else(hanko_core::time::Moment::now))
+                Some(settings.signing_time.unwrap_or_else(sigis_pki_core::time::Moment::now))
             }
         };
         if let Some(t) = signing_time {
@@ -422,7 +422,7 @@ pub fn attrs_to_set(attrs: Vec<Attribute>) -> Result<SetOfVec<Attribute>> {
 
 fn is_self_signed(cert: &Cert) -> bool {
     cert.is_self_issued()
-        && hanko_core::algorithms::validate_signature(
+        && sigis_pki_core::algorithms::validate_signature(
             cert.decoded().signature().raw_bytes(),
             &cert.decoded().tbs_certificate().to_der().unwrap_or_default(),
             &cert.public_key(),

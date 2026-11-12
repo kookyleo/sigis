@@ -6,9 +6,9 @@
 //! Seed value dictionaries (`/SV`) of signature fields.
 
 use const_oid::ObjectIdentifier as Oid;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_pdf::MdpPerm;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pdf::MdpPerm;
 use lopdf::{Dictionary, Object, StringFormat};
 
 use crate::pdf::util::{ObjectResolver};

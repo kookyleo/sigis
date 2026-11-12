@@ -12,8 +12,8 @@ pub mod strftime;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use hanko_core::errors::Result;
-use hanko_core::time::Moment;
+use sigis_pki_core::errors::Result;
+use sigis_pki_core::time::Moment;
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 use qrcode::types::EcLevel;
 

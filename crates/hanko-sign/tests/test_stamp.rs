@@ -9,18 +9,18 @@ mod support;
 
 use std::collections::BTreeMap;
 
-use hanko_sign::content::{Content, ContentWriter, ImportedPdfPage, RawContent};
-use hanko_sign::font::{FontEngineFactory, GlyphAccumulatorFactory};
-use hanko_sign::images::PdfImage;
-use hanko_sign::layout::{
+use sigis_pades_sign::content::{Content, ContentWriter, ImportedPdfPage, RawContent};
+use sigis_pades_sign::font::{FontEngineFactory, GlyphAccumulatorFactory};
+use sigis_pades_sign::images::PdfImage;
+use sigis_pades_sign::layout::{
     is_layout_error, AxisAlignment, BoxConstraints, Fraction, InnerScaling, Margins, SimpleBoxLayoutRule,
 };
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::stamp::{
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::stamp::{
     qr_stamp_file, stamp_art_content, text_stamp_file, CoordinateSystem, QrPosition, QrStampStyle, Stamp,
     StampStyle, StaticStampStyle, TextStampStyle, STAMP_ART_DATA,
 };
-use hanko_sign::text::TextBoxStyle;
+use sigis_pades_sign::text::TextBoxStyle;
 use support::layout::{compare_output, empty_page, with_writer};
 use support::*;
 
@@ -144,7 +144,7 @@ fn test_text_stamp_color() {
                 text_color: Some([0.5, 0.43, 0.1]),
                 ..TextBoxStyle::default()
             },
-            base: hanko_sign::stamp::BaseStampStyle {
+            base: sigis_pades_sign::stamp::BaseStampStyle {
                 border_color: Some([0.29, 0.404, 0.839]),
                 ..Default::default()
             },

@@ -15,7 +15,7 @@ counts: `docs/lanes/d.md`.
 | `sign/attributes.py` | `src/attributes.rs`, `src/cms.rs` | ported |
 | `sign/ades/api.py`, `sign/ades/cades_asn1.py` | `src/attributes.rs` (+ `hanko-core::asn1` types) | ported |
 | `sign/timestamps/dummy_client.py`, `common_utils.py` | `src/timestamps.rs` | ported |
-| `sign/timestamps/api.py` (`TimeStamper`) | `hanko_core::sign::TimeStamper` + `src/pdf/timestamp.rs` (`tsa_validation_info`) | ported |
+| `sign/timestamps/api.py` (`TimeStamper`) | `sigis_pki_core::sign::TimeStamper` + `src/pdf/timestamp.rs` (`tsa_validation_info`) | ported |
 | `sign/timestamps/requests_client.py`, `aiohttp_client.py` | — | lane A (`hanko-fetch::HttpTimeStamper`) |
 | `sign/signers/pdf_signer.py` | `src/pdf/signer.rs`, `src/pdf/timestamp.rs`, `src/ltv.rs` | ported (PdfSigner, signing session, locking rules, seed value enforcement, size estimation, interrupted signing, post-sign DSS/LTA, PdfTimeStamper) except PDF MAC (ISO 32004, pending lane B `pdfmac`) |
 | `sign/signers/cms_embedder.py` | `src/pdf/signer.rs` (`SigMdpSetup`, `write_and_digest`, `PdfTbsDocument`) | ported |
@@ -24,7 +24,7 @@ counts: `docs/lanes/d.md`.
 | `sign/signers/constants.py` | `src/pdf/signer.rs` | ported (extensions, defaults) |
 | `sign/fields.py` | `src/pdf/fields.rs`, `src/pdf/seed.rs` | ported |
 | `sign/validation/dss.py` (writing: `supply_dss_in_writer`, `add_dss`, `add_validation_info`, `collect_validation_info`) | `src/pdf/dss.rs`, `src/pdf/timestamp.rs`, `src/ltv.rs` | ported |
-| `pdf_utils/incremental_writer.py`, writing parts of `writer.py`, `xref.py` (`write_xref_table`, `XRefStream`) | `src/pdf/writer.rs` | ported on `lopdf`, temporary until lane B's `hanko_pdf::IncrementalWriter` |
+| `pdf_utils/incremental_writer.py`, writing parts of `writer.py`, `xref.py` (`write_xref_table`, `XRefStream`) | `src/pdf/writer.rs` | ported on `lopdf`, temporary until lane B's `sigis_pdf::IncrementalWriter` |
 | `pdf_utils/form_tools.py` (`enumerate_fields_in`, `get_single_field_annot`, `annot_width_height`) | `src/pdf/fields.rs` | ported |
 | `pdf_utils/generic.py` (`pdf_date`, `pdf_string`) | `src/pdf/util.rs` | ported |
 | Encryption for updates of encrypted files (`crypt/` standard handler) | `src/pdf/writer.rs` via `lopdf::encryption` | standard handler supported; public-key handler pending (lane B) |

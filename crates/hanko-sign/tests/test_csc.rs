@@ -18,18 +18,18 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use hanko_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::HankoError;
-use hanko_core::sign::KeySigner;
-use hanko_sign::csc::{
+use sigis_pki_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::HankoError;
+use sigis_pki_core::sign::KeySigner;
+use sigis_pades_sign::csc::{
     self, fetch_certs_in_csc_credential, http_client, parse_csc_auth_response_at,
     process_certificate_info_response, CscAuthRequest, CscAuthorizationInfo, CscAuthorizationManager,
     CscCredentialInfo, CscServiceSessionInfo, CscSigner, CscSignerOptions,
     PrefetchedSadAuthorizationManager,
 };
-use hanko_sign::{PdfSignatureMetadata, PdfSigner};
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner};
 use serde_json::{json, Value};
 use spki::AlgorithmIdentifierOwned;
 use support::csc_server::{closed_url, CscDummy, DummyClientAuthManager, DummyServiceParams, FakeServer};
@@ -79,7 +79,7 @@ YEkSIm0lhec3xR6siySnZI2whU3twY37WcnxwjkAczSdHZJpyzrSyjp8rCwk0zOF4HGQr3WuJhHo
 kS0gHz5+cFMDBZxeP5Oq5UFvFtU=
 ";
 
-fn signing_msg<T: std::fmt::Debug>(r: hanko_core::errors::Result<T>) -> String {
+fn signing_msg<T: std::fmt::Debug>(r: sigis_pki_core::errors::Result<T>) -> String {
     match r {
         Err(HankoError::Signing(m)) => m,
         other => panic!("expected SigningError, got {other:?}"),
@@ -147,7 +147,7 @@ fn test_proc_cert_info_response() {
     assert_eq!(cred_info.max_batch_size, 10);
     assert!(cred_info.hash_pinning_required);
     assert!(cred_info.supported_mechanisms.contains("sha256_rsa"));
-    let name = hanko_sign::signer::subject_display_name(&cred_info.signing_cert).unwrap();
+    let name = sigis_pades_sign::signer::subject_display_name(&cred_info.signing_cert).unwrap();
     assert!(name.contains("Alice"), "{name}");
 }
 

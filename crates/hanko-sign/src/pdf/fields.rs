@@ -7,8 +7,8 @@
 
 use std::collections::BTreeSet;
 
-use hanko_core::errors::{HankoError, Result};
-use hanko_pdf::MdpPerm;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pdf::MdpPerm;
 use lopdf::{Dictionary, Object, ObjectId};
 
 use crate::pdf::seed::SigSeedValueSpec;

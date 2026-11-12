@@ -6,10 +6,10 @@ mod support;
 
 use std::sync::Arc;
 
-use hanko_pdf::MdpPerm;
-use hanko_sign::pdf::fields::{self, FieldMdpAction, FieldMdpSpec, InvisSigSettings, SigFieldSpec, VisibleSigSettings};
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::{PdfSignatureMetadata, PdfSigner, SignOptions};
+use sigis_pdf::MdpPerm;
+use sigis_pades_sign::pdf::fields::{self, FieldMdpAction, FieldMdpSpec, InvisSigSettings, SigFieldSpec, VisibleSigSettings};
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner, SignOptions};
 use lopdf::{Dictionary, Object};
 use support::pdfcheck::*;
 use support::*;
@@ -24,7 +24,7 @@ fn signer() -> PdfSigner {
     PdfSigner::new(meta(""), Arc::new(pki("testing-ca").signer("signer1"))).at(at(T))
 }
 
-fn sign_field(pdf_in: &[u8], field: &str, existing_only: bool) -> hanko_core::errors::Result<Vec<u8>> {
+fn sign_field(pdf_in: &[u8], field: &str, existing_only: bool) -> sigis_pki_core::errors::Result<Vec<u8>> {
     let mut s = signer();
     s.metadata.field_name = field.into();
     s.sign_pdf_with(pdf_in, &SignOptions { existing_fields_only: existing_only, ..Default::default() })
@@ -131,9 +131,9 @@ fn test_add_sigfield_with_lock() {
 #[test]
 fn test_sign_field_unclear() {
     let two = pdf("minimal-two-fields.pdf");
-    assert!(matches!(sign_field(&two, "", false), Err(hanko_core::errors::HankoError::Signing(_))));
-    assert!(matches!(sign_field(&two, "", true), Err(hanko_core::errors::HankoError::Signing(_))));
-    assert!(matches!(sign_field(&two, "SigExtra", true), Err(hanko_core::errors::HankoError::Signing(_))));
+    assert!(matches!(sign_field(&two, "", false), Err(sigis_pki_core::errors::HankoError::Signing(_))));
+    assert!(matches!(sign_field(&two, "", true), Err(sigis_pki_core::errors::HankoError::Signing(_))));
+    assert!(matches!(sign_field(&two, "SigExtra", true), Err(sigis_pki_core::errors::HankoError::Signing(_))));
 }
 
 #[test]
@@ -203,7 +203,7 @@ fn test_double_sign_lock_second() {
 #[test]
 fn test_sign_new_existingonly() {
     for f in ["minimal.pdf", "minimal-with-field.pdf"] {
-        assert!(matches!(sign_field(&pdf(f), "SigNew", true), Err(hanko_core::errors::HankoError::Signing(_))));
+        assert!(matches!(sign_field(&pdf(f), "SigNew", true), Err(sigis_pki_core::errors::HankoError::Signing(_))));
     }
 }
 
@@ -338,7 +338,7 @@ fn test_invisible_field_flags() {
         let (doc, pg) = pages(&out);
         let a = &annots(&doc, &pg[0])[0];
         assert_eq!(a.get(b"F").unwrap(), &Object::Integer(flags));
-        let rect: Vec<i64> = a.get(b"Rect").unwrap().as_array().unwrap().iter().map(|x| hanko_sign::pdf::util::as_number(x).unwrap() as i64).collect();
+        let rect: Vec<i64> = a.get(b"Rect").unwrap().as_array().unwrap().iter().map(|x| sigis_pades_sign::pdf::util::as_number(x).unwrap() as i64).collect();
         assert_eq!(rect, bx);
     }
 }
@@ -403,7 +403,7 @@ fn test_create_with_separate_annot() {
 fn test_sign_with_cert_no_common_name_appearance() {
     // falls back to the organisation name
     let p = pki("testing-ca-with-errors");
-    let signer = hanko_sign::SimpleSigner::new(
+    let signer = sigis_pades_sign::SimpleSigner::new(
         p.key("signer1"),
         p.cert("signer-no-cn"),
         vec![pki("testing-ca").cert("root"), pki("testing-ca").cert("interm")],

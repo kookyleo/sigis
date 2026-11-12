@@ -19,14 +19,14 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 use base64ct::{Base64, Encoding};
-use hanko_core::algorithms::{DigestAlgorithm, SignatureMechanism};
-use hanko_core::asn1::oids;
-use hanko_core::errors::Result;
-use hanko_sign::csc::{
+use sigis_pki_core::algorithms::{DigestAlgorithm, SignatureMechanism};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::errors::Result;
+use sigis_pades_sign::csc::{
     parse_csc_auth_response, CscAuthRequest, CscAuthorizationInfo, CscAuthorizationManager,
     CscCredentialInfo, CscServiceSessionInfo,
 };
-use hanko_sign::keys::PrivateKey;
+use sigis_pades_sign::keys::PrivateKey;
 use hmac::{Hmac, KeyInit, Mac};
 use serde_json::{json, Value};
 
@@ -426,7 +426,7 @@ pub struct DummyClientAuthManager {
 impl DummyClientAuthManager {
     pub fn new(session_info: CscServiceSessionInfo, credential_info: CscCredentialInfo) -> Self {
         Self {
-            client: hanko_sign::csc::http_client().unwrap(),
+            client: sigis_pades_sign::csc::http_client().unwrap(),
             session_info,
             credential_info,
             authorizations_requested: AtomicUsize::new(0),
@@ -458,7 +458,7 @@ impl CscAuthorizationManager for DummyClientAuthManager {
             .and_then(reqwest::blocking::Response::error_for_status)
             .and_then(|r| r.json::<Value>())
             .map_err(|e| {
-                hanko_core::errors::HankoError::Signing(format!(
+                sigis_pki_core::errors::HankoError::Signing(format!(
                     "Credential auth request failed: {e}"
                 ))
             })?;

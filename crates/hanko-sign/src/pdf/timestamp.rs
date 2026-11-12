@@ -7,11 +7,11 @@
 
 use std::sync::Arc;
 
-use hanko_certvalidator::ValidationContext;
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::TimeStamper;
+use sigis_pki_certvalidator::ValidationContext;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::TimeStamper;
 use lopdf::Object;
 
 use crate::cms::dummy_digest;
@@ -317,7 +317,7 @@ fn timestamp_pdf_full(
         let sig_id = update.add(Object::Dictionary(spec.to_dict(true)));
         update.get_dict_mut(field_id)?.set("V", Object::Reference(sig_id));
         update.update_info(
-            &crate::pdf::util::pdf_date(hanko_core::time::Moment::now()),
+            &crate::pdf::util::pdf_date(sigis_pki_core::time::Moment::now()),
             crate::pdf::signer::PRODUCER,
         )?;
         let prepared = write_and_digest(&mut update, sig_id, bytes_reserved, md)?;
@@ -404,7 +404,7 @@ pub fn collect_signature_info(
             let attr_sets = [si.unsigned_attrs.as_ref(), si.signed_attrs.as_ref()];
             for attrs in attr_sets.into_iter().flatten() {
                 for a in attrs.iter() {
-                    if a.oid == hanko_core::asn1::oids::AA_SIGNATURE_TIME_STAMP_TOKEN
+                    if a.oid == sigis_pki_core::asn1::oids::AA_SIGNATURE_TIME_STAMP_TOKEN
                         || a.oid == crate::attributes::CONTENT_TIME_STAMP
                     {
                         for v in a.values.iter() {

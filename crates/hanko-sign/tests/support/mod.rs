@@ -14,15 +14,15 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
 
-use hanko_core::cert::Cert;
-use hanko_core::time::Moment;
-use hanko_sign::keys::{load_private_key_from_pemder_data, PrivateKey};
-use hanko_sign::{DummyTimeStamper, SimpleSigner};
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::time::Moment;
+use sigis_pades_sign::keys::{load_private_key_from_pemder_data, PrivateKey};
+use sigis_pades_sign::{DummyTimeStamper, SimpleSigner};
 
-/// The fixture root `crates/hanko-testdata/data` of this checkout
-/// (resolved at run time by `hanko_testdata`).
+/// The fixture root `crates/testdata/data` of this checkout
+/// (resolved at run time by `sigis_testdata`).
 pub fn data_dir() -> PathBuf {
-    hanko_testdata::data_dir()
+    sigis_testdata::data_dir()
 }
 
 pub fn data_path(parts: &[&str]) -> PathBuf {

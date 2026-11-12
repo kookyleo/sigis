@@ -33,11 +33,11 @@ use cryptoki::slot::Slot;
 use cryptoki::types::AuthPin;
 use der::asn1::{OctetString, UintRef};
 use der::{Encode, Sequence};
-use hanko_core::algorithms::{DigestAlgorithm, SignatureMechanism};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::KeySigner;
+use sigis_pki_core::algorithms::{DigestAlgorithm, SignatureMechanism};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::KeySigner;
 use spki::AlgorithmIdentifierOwned;
 
 pub use cryptoki;
@@ -1435,7 +1435,7 @@ pub fn open_signer(config: &Pkcs11Config, pin: Option<&str>) -> Result<Pkcs11Sig
     )
 }
 
-/// Open a PKCS#11 signer; returns a [`hanko_core::sign::KeySigner`].
+/// Open a PKCS#11 signer; returns a [`sigis_pki_core::sign::KeySigner`].
 ///
 /// `pin` overrides `config.user_pin`.
 pub fn open(config: &Pkcs11Config, pin: Option<&str>) -> Result<Arc<dyn KeySigner>> {

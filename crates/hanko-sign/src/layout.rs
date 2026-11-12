@@ -3,7 +3,7 @@
 //! Layout utilities (`pyhanko.pdf_utils.layout`): boxes, alignment, margins
 //! and scaling rules.
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 
 use crate::content::ops::{fmt_g, py_num};
 

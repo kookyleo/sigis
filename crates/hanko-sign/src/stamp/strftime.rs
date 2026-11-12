@@ -1,7 +1,7 @@
 //! A subset of C's `strftime` for UTC moments, used to render the `ts`
 //! stamp parameter (`datetime.strftime`).
 
-use hanko_core::time::Moment;
+use sigis_pki_core::time::Moment;
 
 const MONTHS: [&str; 12] = [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October",

@@ -5,7 +5,7 @@
 
 //! Incremental updates for signing (`IncrementalPdfFileWriter`).
 //!
-//! Lane B owns the general PDF layer (`hanko_pdf::IncrementalWriter`); until
+//! Lane B owns the general PDF layer (`sigis_pdf::IncrementalWriter`); until
 //! it lands, signing uses this writer, which reads the latest revision with
 //! `lopdf` and appends an update section (classic xref table or xref
 //! stream, following the previous revision) after the original bytes, which
@@ -14,7 +14,7 @@
 use std::collections::BTreeMap;
 use std::io::Write as _;
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 
 /// Width of the `/ByteRange` placeholder, as in pyHanko

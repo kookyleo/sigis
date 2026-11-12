@@ -6,27 +6,27 @@ mod support;
 
 use std::sync::Arc;
 
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::cert::Cert;
-use hanko_core::errors::HankoError;
-use hanko_core::sign::KeySigner;
-use hanko_pdf::MdpPerm;
-use hanko_sign::pdf::fields::{self, FieldMdpAction, FieldMdpSpec, SigFieldSpec};
-use hanko_sign::pdf::seed::*;
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::{PdfSignatureMetadata, PdfSigner, SubFilter};
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::HankoError;
+use sigis_pki_core::sign::KeySigner;
+use sigis_pdf::MdpPerm;
+use sigis_pades_sign::pdf::fields::{self, FieldMdpAction, FieldMdpSpec, SigFieldSpec};
+use sigis_pades_sign::pdf::seed::*;
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner, SubFilter};
 use lopdf::{Dictionary, Object};
 use support::pdfcheck::*;
 use support::*;
 
 const T: &str = "2020-11-01T00:00:00+00:00";
 
-fn from_ca() -> hanko_sign::SimpleSigner {
+fn from_ca() -> sigis_pades_sign::SimpleSigner {
     pki("testing-ca").signer("signer1")
 }
 
 fn self_sign_cert() -> Cert {
-    hanko_sign::keys::load_cert_from_pemder_data(&pyhanko_data(&["crypto", "selfsigned.cert.pem"])).unwrap()
+    sigis_pades_sign::keys::load_cert_from_pemder_data(&pyhanko_data(&["crypto", "selfsigned.cert.pem"])).unwrap()
 }
 
 fn tsa_cert() -> Cert {
@@ -34,7 +34,7 @@ fn tsa_cert() -> Cert {
 }
 
 /// Parse a seed value dictionary given as a standalone PDF dictionary.
-fn parse_sv(d: Dictionary) -> hanko_core::errors::Result<SigSeedValueSpec> {
+fn parse_sv(d: Dictionary) -> sigis_pki_core::errors::Result<SigSeedValueSpec> {
     let w = PdfUpdate::new(&pdf("minimal.pdf")).unwrap();
     SigSeedValueSpec::from_pdf_object(&w, &d)
 }
@@ -220,8 +220,8 @@ fn test_cert_constraint_subject() {
 /// Issuer certificates of the validation path of `cert`.
 fn path_issuers(cert: &Cert) -> Vec<Cert> {
     let vc = support::services::live_testing_vc("testing-ca", T, &[]);
-    let mut info = hanko_sign::ltv::ValidationInfo::default();
-    let path = hanko_sign::ltv::validate_and_collect(&vc, cert, from_ca().cert_chain(), &mut info).unwrap();
+    let mut info = sigis_pades_sign::ltv::ValidationInfo::default();
+    let path = sigis_pades_sign::ltv::validate_and_collect(&vc, cert, from_ca().cert_chain(), &mut info).unwrap();
     path[1..].to_vec()
 }
 
@@ -280,7 +280,7 @@ fn prepare_sv_field(sv: &SigSeedValueSpec, add_field_lock: bool) -> Vec<u8> {
 
 /// `sign_with_sv`: sign the `Sig` field carrying `sv`, then check pyHanko's
 /// seed value verdict. Returns the signed file.
-fn sign_with_sv_opts(sv: &SigSeedValueSpec, meta: PdfSignatureMetadata, test_violation: bool, add_field_lock: bool, with_ts: bool) -> hanko_core::errors::Result<Vec<u8>> {
+fn sign_with_sv_opts(sv: &SigSeedValueSpec, meta: PdfSignatureMetadata, test_violation: bool, add_field_lock: bool, with_ts: bool) -> sigis_pki_core::errors::Result<Vec<u8>> {
     let input = prepare_sv_field(sv, add_field_lock);
     let mut s = PdfSigner::new(meta, Arc::new(from_ca())).at(at(T));
     if with_ts {
@@ -297,7 +297,7 @@ fn sign_with_sv_opts(sv: &SigSeedValueSpec, meta: PdfSignatureMetadata, test_vio
     Ok(out)
 }
 
-fn sign_with_sv(sv: &SigSeedValueSpec, meta: PdfSignatureMetadata, test_violation: bool) -> hanko_core::errors::Result<Vec<u8>> {
+fn sign_with_sv(sv: &SigSeedValueSpec, meta: PdfSignatureMetadata, test_violation: bool) -> sigis_pki_core::errors::Result<Vec<u8>> {
     sign_with_sv_opts(sv, meta, test_violation, false, true)
 }
 
@@ -313,12 +313,12 @@ fn meta_md(md: DigestAlgorithm) -> PdfSignatureMetadata {
 
 fn md_of(out: &[u8]) -> String {
     let s = &embedded_signatures(out)[0];
-    let sd = hanko_sign::cms::decode_signed_data(&cms_bytes(s)).unwrap();
+    let sd = sigis_pades_sign::cms::decode_signed_data(&cms_bytes(s)).unwrap();
     let si = sd.signer_infos.0.iter().next().unwrap();
     DigestAlgorithm::from_oid(&si.digest_alg.oid).unwrap().name().to_owned()
 }
 
-fn is_signing_err(r: hanko_core::errors::Result<Vec<u8>>) -> bool {
+fn is_signing_err(r: sigis_pki_core::errors::Result<Vec<u8>>) -> bool {
     matches!(r, Err(HankoError::Signing(_)))
 }
 
@@ -364,7 +364,7 @@ fn test_sv_sign_subfilter_hint() {
     assert_eq!(subfilter_of(&sign_with_sv(&sv, meta(), false).unwrap()), "ETSI.CAdES.detached");
 }
 
-fn revinfo_meta(sf: SubFilter, embed: bool, vc: hanko_certvalidator::ValidationContext) -> PdfSignatureMetadata {
+fn revinfo_meta(sf: SubFilter, embed: bool, vc: sigis_pki_certvalidator::ValidationContext) -> PdfSignatureMetadata {
     let mut m = meta();
     m.validation_context = Some(Arc::new(vc));
     m.subfilter = Some(sf);
@@ -406,7 +406,7 @@ fn test_sv_sign_addrevinfo_subfilter_conflict() {
 
 #[test]
 fn test_add_revinfo_wrong_subfilter() {
-    use hanko_sign::pdf::signer as ps;
+    use sigis_pades_sign::pdf::signer as ps;
     let sv = SigSeedValueSpec { flags: SigSeedValFlags::ADD_REV_INFO, add_rev_info: Some(true), ..Default::default() };
     let input = prepare_sv_field(&sv, false);
     let mut w = PdfUpdate::new(&input).unwrap();
@@ -416,12 +416,12 @@ fn test_add_revinfo_wrong_subfilter() {
     w.get_dict_mut(field.id).unwrap().set("V", Object::Reference(sig_id));
     let prepared = ps::write_and_digest(&mut w, sig_id, 8192, DigestAlgorithm::Sha256).unwrap();
     let signer = from_ca();
-    let settings = hanko_sign::CmsSignedAttributes {
-        adobe_revinfo_attr: Some(hanko_sign::attributes::RevocationInfoArchival { ocsp: Some(vec![]), ..Default::default() }),
+    let settings = sigis_pades_sign::CmsSignedAttributes {
+        adobe_revinfo_attr: Some(sigis_pades_sign::attributes::RevocationInfoArchival { ocsp: Some(vec![]), ..Default::default() }),
         ..Default::default()
     };
-    let cms = hanko_sign::cms::CmsSigner { signer: &signer, options: &Default::default() }
-        .sign(&prepared.document_digest, DigestAlgorithm::Sha256, &settings, hanko_sign::cms::AttrProfile::GenericPdf, None, false, None)
+    let cms = sigis_pades_sign::cms::CmsSigner { signer: &signer, options: &Default::default() }
+        .sign(&prepared.document_digest, DigestAlgorithm::Sha256, &settings, sigis_pades_sign::cms::AttrProfile::GenericPdf, None, false, None)
         .unwrap();
     let out = ps::PdfTbsDocument::finish_signing(prepared, &cms, None, None).unwrap();
     let root = pki("testing-ca").cert_path("root");
@@ -522,7 +522,7 @@ fn break_sv_subfilter(sv: &SigSeedValueSpec) -> Vec<u8> {
     w.write().unwrap().0
 }
 
-fn sign_plain(input: &[u8], m: PdfSignatureMetadata) -> hanko_core::errors::Result<Vec<u8>> {
+fn sign_plain(input: &[u8], m: PdfSignatureMetadata) -> sigis_pki_core::errors::Result<Vec<u8>> {
     PdfSigner::new(m, Arc::new(from_ca()))
         .at(at(T))
         .with_timestamper(Arc::new(pki("testing-ca").tsa("tsa", at(T))))

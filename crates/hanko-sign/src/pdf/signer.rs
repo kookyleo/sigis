@@ -7,11 +7,11 @@
 
 //! The PDF signing workflow.
 
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::{KeySigner, TimeStamper};
-use hanko_core::time::Moment;
-use hanko_pdf::MdpPerm;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::{KeySigner, TimeStamper};
+use sigis_pki_core::time::Moment;
+use sigis_pdf::MdpPerm;
 use lopdf::{Dictionary, Object, ObjectId, StringFormat};
 
 use crate::attributes::CmsSignedAttributes;
@@ -629,7 +629,7 @@ impl PdfTbsDocument {
         prepared: PreparedDocument,
         cms: &[u8],
         psi: Option<&PostSignInstructions>,
-        validation_context: Option<&hanko_certvalidator::ValidationContext>,
+        validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
     ) -> Result<Vec<u8>> {
         let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
         let mut sig_contents = cms.to_vec();
@@ -648,7 +648,7 @@ pub fn post_signature_processing(
     signed: Vec<u8>,
     sig_contents: &[u8],
     psi: &PostSignInstructions,
-    validation_context: Option<&hanko_certvalidator::ValidationContext>,
+    validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
 ) -> Result<Vec<u8>> {
     use crate::pdf::dss::{add_dss_with_password, DssContent};
     let info = &psi.validation_info;
@@ -929,8 +929,8 @@ impl PdfSigner {
             ensure_esic_ext(update)?;
         }
         let mech = self.signer.signature_algorithm(md)?;
-        let ec_iso_curve = mech.oid != hanko_core::asn1::oids::ED25519
-            && self.signer.signing_cert().public_key().algorithm.oid == hanko_core::asn1::oids::EC_PUBLIC_KEY
+        let ec_iso_curve = mech.oid != sigis_pki_core::asn1::oids::ED25519
+            && self.signer.signing_cert().public_key().algorithm.oid == sigis_pki_core::asn1::oids::EC_PUBLIC_KEY
             && self
                 .signer
                 .signing_cert()
@@ -941,16 +941,16 @@ impl PdfSigner {
                 .and_then(|p| p.decode_as::<const_oid::ObjectIdentifier>().ok())
                 .is_some_and(|c| {
                     [
-                        hanko_core::asn1::oids::SECP256R1,
-                        hanko_core::asn1::oids::SECP384R1,
-                        hanko_core::asn1::oids::SECP521R1,
+                        sigis_pki_core::asn1::oids::SECP256R1,
+                        sigis_pki_core::asn1::oids::SECP384R1,
+                        sigis_pki_core::asn1::oids::SECP521R1,
                     ]
                     .contains(&c)
                 });
         // `register_extensions`
-        if mech.oid == hanko_core::asn1::oids::ED25519 {
+        if mech.oid == sigis_pki_core::asn1::oids::ED25519 {
             ensure_iso32002_ext(update)?;
-        } else if mech.oid == hanko_core::asn1::oids::ED448 {
+        } else if mech.oid == sigis_pki_core::asn1::oids::ED448 {
             ensure_iso32001_ext(update)?;
             ensure_iso32002_ext(update)?;
         } else {

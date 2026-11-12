@@ -11,7 +11,7 @@ pub mod opentype;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet};
 
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::errors::{HankoError, Result};
 use lopdf::Object;
 
 use crate::content::ContentWriter;

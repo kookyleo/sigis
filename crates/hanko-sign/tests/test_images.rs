@@ -4,9 +4,9 @@
 
 mod support;
 
-use hanko_sign::content::{find_page_for_modification, ContentWriter, PageResources, PdfContent};
-use hanko_sign::images::{pil_image, Image, PdfImage};
-use hanko_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::content::{find_page_for_modification, ContentWriter, PageResources, PdfContent};
+use sigis_pades_sign::images::{pil_image, Image, PdfImage};
+use sigis_pades_sign::pdf::writer::PdfUpdate;
 use lopdf::{Dictionary, Object};
 use support::*;
 

@@ -6,13 +6,13 @@ mod support;
 
 use std::sync::Arc;
 
-use hanko_sign::{PdfSignatureMetadata, PdfSigner, SignOptions, SubFilter};
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner, SignOptions, SubFilter};
 use support::pdfcheck::*;
 use support::*;
 
 const T: &str = "2020-11-01T00:00:00+00:00";
 
-fn signer() -> Arc<hanko_sign::SimpleSigner> {
+fn signer() -> Arc<sigis_pades_sign::SimpleSigner> {
     Arc::new(pki("testing-ca").signer("signer1"))
 }
 
@@ -109,7 +109,7 @@ fn test_sign_crypt_aes256_new() {
 
 #[test]
 fn test_sign_encrypted_with_post_sign() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
     let files = ["minimal-aes256.pdf", "minimal-with-field-aes256.pdf"];
     for (pw, f) in NEW_PARAMS {
         let mut m = PdfSignatureMetadata::pyhanko_defaults("Sig1");

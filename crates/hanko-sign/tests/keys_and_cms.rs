@@ -9,11 +9,11 @@
 mod support;
 
 use der::{Decode, Encode};
-use hanko_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
-use hanko_core::sign::{KeySigner, TimeStamper};
-use hanko_sign::cms::decode_signed_data;
-use hanko_sign::keys::{load_private_key_from_pemder_data, PrivateKey};
-use hanko_sign::SimpleSigner;
+use sigis_pki_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
+use sigis_pki_core::sign::{KeySigner, TimeStamper};
+use sigis_pades_sign::cms::decode_signed_data;
+use sigis_pades_sign::keys::{load_private_key_from_pemder_data, PrivateKey};
+use sigis_pades_sign::SimpleSigner;
 use support::*;
 
 #[test]
@@ -66,7 +66,7 @@ fn load_pkcs12_files() {
     let pfx = pyhanko_data(&["crypto", "selfsigned.pfx"]);
     assert!(SimpleSigner::from_pkcs12(&pfx, Some(b"wrong")).is_err());
     let s = SimpleSigner::from_pkcs12(&pfx, Some(b"exportsecret")).unwrap();
-    let expected = hanko_sign::keys::load_cert_from_pemder_data(&pyhanko_data(&[
+    let expected = sigis_pades_sign::keys::load_cert_from_pemder_data(&pyhanko_data(&[
         "crypto",
         "selfsigned.cert.pem",
     ]))
@@ -80,7 +80,7 @@ fn check_signer_info(cms_der: &[u8], data: &[u8], signer: &SimpleSigner, md: Dig
     let attrs = si.signed_attrs.as_ref().unwrap();
     let md_attr = attrs
         .iter()
-        .find(|a| a.oid == hanko_core::asn1::oids::MESSAGE_DIGEST)
+        .find(|a| a.oid == sigis_pki_core::asn1::oids::MESSAGE_DIGEST)
         .unwrap();
     let digest = md_attr
         .values
@@ -142,7 +142,7 @@ fn sign_general_data_all_key_types() {
         let p = pki(arch);
         let signer = p.signer("signer1");
         for detached in [true, false] {
-            let out = hanko_sign::sign_general_data(data, &signer, md, detached, None).unwrap();
+            let out = sigis_pades_sign::sign_general_data(data, &signer, md, detached, None).unwrap();
             check_signer_info(&out, data, &signer, md);
             let verdict = oracle_check_cms(
                 &p,
@@ -164,7 +164,7 @@ fn sign_general_data_all_key_types() {
 fn ed25519_rejects_other_digest() {
     let p = pki("testing-ca-ed25519");
     let signer = p.signer("signer1");
-    let err = hanko_sign::sign_general_data(b"x", &signer, DigestAlgorithm::Sha256, true, None)
+    let err = sigis_pades_sign::sign_general_data(b"x", &signer, DigestAlgorithm::Sha256, true, None)
         .unwrap_err();
     assert!(err.to_string().contains("specifies message digest sha512"), "{err}");
 }
@@ -175,7 +175,7 @@ fn rsa_pss_signature() {
     let signer = p.signer("signer1").with_prefer_pss(true);
     let data = b"Hello world!";
     let out =
-        hanko_sign::sign_general_data(data, &signer, DigestAlgorithm::Sha256, true, None).unwrap();
+        sigis_pades_sign::sign_general_data(data, &signer, DigestAlgorithm::Sha256, true, None).unwrap();
     check_signer_info(&out, data, &signer, DigestAlgorithm::Sha256);
     if let Some(v) = oracle_check_cms(&p, &out, Some(data), "2020-11-01T00:00:00+00:00") {
         assert_eq!(v["valid"], true, "{v}");
@@ -189,7 +189,7 @@ fn signature_timestamp_from_dummy_tsa() {
     let signer = p.signer("signer1");
     let ts = p.tsa("tsa", at("2020-11-01T00:00:00Z"));
     let data = b"Hello world!";
-    let out = hanko_sign::sign_general_data(data, &signer, DigestAlgorithm::Sha256, true, Some(&ts))
+    let out = sigis_pades_sign::sign_general_data(data, &signer, DigestAlgorithm::Sha256, true, Some(&ts))
         .unwrap();
     check_signer_info(&out, data, &signer, DigestAlgorithm::Sha256);
     if let Some(v) = oracle_check_cms(&p, &out, Some(data), "2020-11-01T00:00:00+00:00") {
@@ -209,10 +209,10 @@ fn dummy_tsa_token_validates() {
     for md in [DigestAlgorithm::Sha256, DigestAlgorithm::Sha512] {
         let imprint = md.digest(b"some data");
         let token = ts.timestamp(&imprint, md).unwrap();
-        let info = hanko_sign::timestamps::tst_info(&token).unwrap();
+        let info = sigis_pades_sign::timestamps::tst_info(&token).unwrap();
         assert_eq!(info.message_imprint.hashed_message.as_bytes(), imprint);
         assert_eq!(
-            hanko_sign::timestamps::token_time(&token).unwrap(),
+            sigis_pades_sign::timestamps::token_time(&token).unwrap(),
             at("2020-11-01T00:00:00Z")
         );
         let cms_path = temp_file("tst.der", &token);
@@ -243,7 +243,7 @@ fn signed_data_round_trips() {
     let p = pki("testing-ca");
     let signer = p.signer("signer1");
     let out =
-        hanko_sign::sign_general_data(b"abc", &signer, DigestAlgorithm::Sha256, true, None).unwrap();
+        sigis_pades_sign::sign_general_data(b"abc", &signer, DigestAlgorithm::Sha256, true, None).unwrap();
     let ci = cms::content_info::ContentInfo::from_der(&out).unwrap();
     assert_eq!(ci.to_der().unwrap(), out);
     let sd = decode_signed_data(&out).unwrap();

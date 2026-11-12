@@ -9,15 +9,15 @@
 //!
 //! pyHanko lets the certificate validator fetch revocation information and
 //! records what it fetched in the `ValidationContext`. The Rust validator
-//! (`hanko-certvalidator`) performs no network access during validation, so
+//! (`sigis-pki-certvalidator`) performs no network access during validation, so
 //! this module fetches first, with the context's fetchers (OCSP first, CRLs
 //! when no OCSP response is available, as pyHanko's default policy does),
 //! and then validates against a context extended with the fetched data.
 
-use hanko_certvalidator::{CertificateValidator, ValidationContext};
-use hanko_core::algorithms::{validate_signature, SignatureValidationContext};
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_certvalidator::{CertificateValidator, ValidationContext};
+use sigis_pki_core::algorithms::{validate_signature, SignatureValidationContext};
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
 use der::Encode;
 
 /// Validation information collected before or after signing
@@ -171,7 +171,7 @@ pub fn validate_and_collect(
     info: &mut ValidationInfo,
 ) -> Result<Vec<Cert>> {
     let path = build_path(ctx, cert, pool).ok_or_else(|| {
-        HankoError::Validation(hanko_core::errors::ValidationError::PathBuilding(
+        HankoError::Validation(sigis_pki_core::errors::ValidationError::PathBuilding(
             "Unable to build a validation path for the certificate".into(),
         ))
     })?;

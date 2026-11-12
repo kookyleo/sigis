@@ -4,7 +4,7 @@
 
 use std::any::Any;
 
-use hanko_core::errors::Result;
+use sigis_pki_core::errors::Result;
 use lopdf::{Dictionary, Object};
 
 use super::{FontEngine, FontHandle, ShapeResult};

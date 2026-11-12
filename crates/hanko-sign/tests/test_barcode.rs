@@ -4,11 +4,11 @@
 
 mod support;
 
-use hanko_sign::barcodes::BarcodeBox;
-use hanko_sign::content::{add_stream_to_page, ContentWriter, PdfContent};
-use hanko_sign::layout::BoxConstraints;
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::stamp::{CoordinateSystem, QrStampStyle, Stamp};
+use sigis_pades_sign::barcodes::BarcodeBox;
+use sigis_pades_sign::content::{add_stream_to_page, ContentWriter, PdfContent};
+use sigis_pades_sign::layout::BoxConstraints;
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::stamp::{CoordinateSystem, QrStampStyle, Stamp};
 use lopdf::{dictionary, Object, Stream};
 use support::layout::compare_output;
 use support::*;

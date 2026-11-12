@@ -1,7 +1,7 @@
 """Export the Certomancer test PKI used by pyHanko's signing tests.
 
 Writes DER certificates and a manifest (JSON) per architecture to
-``crates/hanko-testdata/data/lanes/d/pki/<arch>/``. Private keys are not
+``crates/testdata/data/lanes/d/pki/<arch>/``. Private keys are not
 copied: the manifest names the key file in ``data/pyhanko/crypto/`` (pyHanko's
 public test keys) and its passphrase.
 

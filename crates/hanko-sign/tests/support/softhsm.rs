@@ -15,15 +15,15 @@ use std::process::Command;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use der::{Decode, Encode};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_sign::keys::PrivateKey;
-use hanko_sign::pkcs11::cryptoki::object::{
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pades_sign::keys::PrivateKey;
+use sigis_pades_sign::pkcs11::cryptoki::object::{
     Attribute, CertificateType, KeyType, ObjectClass,
 };
-use hanko_sign::pkcs11::cryptoki::session::UserType;
-use hanko_sign::pkcs11::cryptoki::types::AuthPin;
-use hanko_sign::pkcs11::load_module;
+use sigis_pades_sign::pkcs11::cryptoki::session::UserType;
+use sigis_pades_sign::pkcs11::cryptoki::types::AuthPin;
+use sigis_pades_sign::pkcs11::load_module;
 
 use super::{pki, Pki};
 
@@ -227,7 +227,7 @@ fn key_base(label: &str, key_type: KeyType) -> Vec<Attribute> {
 }
 
 fn import_key(
-    session: &hanko_sign::pkcs11::cryptoki::session::Session,
+    session: &sigis_pades_sign::pkcs11::cryptoki::session::Session,
     key: &PrivateKey,
     label: &str,
 ) -> Result<(), String> {

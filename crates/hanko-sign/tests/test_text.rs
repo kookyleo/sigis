@@ -6,12 +6,12 @@ mod support;
 
 use std::sync::Arc;
 
-use hanko_sign::content::{add_stream_to_page, ContentWriter, PdfContent, ResourceType};
-use hanko_sign::font::{FontEngineFactory, FontHandle, GlyphAccumulator, GlyphAccumulatorFactory, GlyphAccumulatorOptions};
-use hanko_sign::form_tools::{is_form_filling_error, populate_static_text_field};
-use hanko_sign::layout::{AxisAlignment, BoxConstraints, SimpleBoxLayoutRule};
-use hanko_sign::pdf::writer::PdfUpdate;
-use hanko_sign::text::{TextBox, TextBoxStyle};
+use sigis_pades_sign::content::{add_stream_to_page, ContentWriter, PdfContent, ResourceType};
+use sigis_pades_sign::font::{FontEngineFactory, FontHandle, GlyphAccumulator, GlyphAccumulatorFactory, GlyphAccumulatorOptions};
+use sigis_pades_sign::form_tools::{is_form_filling_error, populate_static_text_field};
+use sigis_pades_sign::layout::{AxisAlignment, BoxConstraints, SimpleBoxLayoutRule};
+use sigis_pades_sign::pdf::writer::PdfUpdate;
+use sigis_pades_sign::text::{TextBox, TextBoxStyle};
 use lopdf::{dictionary, Object, Stream};
 use support::layout::compare_output;
 use support::*;
@@ -57,7 +57,7 @@ fn test_simple_textbox_render() {
             .as_array()
             .unwrap()
             .iter()
-            .map(|o| hanko_sign::pdf::util::as_number(o).unwrap())
+            .map(|o| sigis_pades_sign::pdf::util::as_number(o).unwrap())
             .collect();
         assert!(tb.resources().contains(ResourceType::Font, "F1"));
         if !natural_size {
@@ -311,7 +311,7 @@ fn test_fill_form_field() {
     compare_output(&out, "form-fill-result.pdf");
 }
 
-fn fill_err(base: &[u8], name: &str) -> hanko_core::errors::HankoError {
+fn fill_err(base: &[u8], name: &str) -> sigis_pki_core::errors::HankoError {
     let mut update = PdfUpdate::new(base).unwrap();
     let mut w = ContentWriter::new(&mut update);
     populate_static_text_field(&mut w, name, &jp_style(), "文字").unwrap_err()

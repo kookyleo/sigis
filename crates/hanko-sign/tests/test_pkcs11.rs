@@ -14,18 +14,18 @@ mod support;
 use std::sync::Arc;
 
 use der::{Any, Decode, Encode};
-use hanko_core::algorithms::{DigestAlgorithm, RsaPssParams};
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::HankoError;
-use hanko_core::sign::KeySigner;
-use hanko_sign::pkcs11::{
+use sigis_pki_core::algorithms::{DigestAlgorithm, RsaPssParams};
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::HankoError;
+use sigis_pki_core::sign::KeySigner;
+use sigis_pades_sign::pkcs11::{
     self, criteria_satisfied_by, find_token, open_pkcs11_session, ObjectSelectors, PinEntryMode,
     Pkcs11Config, Pkcs11Error, Pkcs11Mechanism, Pkcs11Session, Pkcs11Signer, Pkcs11SignerOptions,
     SlotView, TokenCriteria, TokenView, UserPin,
 };
-use hanko_sign::signer::digest_algorithm_id;
-use hanko_sign::{PdfSignatureMetadata, PdfSigner};
+use sigis_pades_sign::signer::digest_algorithm_id;
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner};
 use spki::AlgorithmIdentifierOwned;
 use support::pdfcheck::*;
 use support::softhsm::{self, P11Config, ALL_ALGOS};
@@ -90,7 +90,7 @@ fn meta() -> PdfSignatureMetadata {
     PdfSignatureMetadata::pyhanko_defaults("Sig1")
 }
 
-fn sign_with(signer: Arc<dyn KeySigner>, meta: PdfSignatureMetadata) -> hanko_core::errors::Result<Vec<u8>> {
+fn sign_with(signer: Arc<dyn KeySigner>, meta: PdfSignatureMetadata) -> sigis_pki_core::errors::Result<Vec<u8>> {
     PdfSigner::new(meta, signer).at(at(T)).sign_pdf(&pdf("minimal.pdf"))
 }
 
@@ -107,11 +107,11 @@ fn check_signed(out: &[u8], cfg: &P11Config) -> Cert {
 
 fn signer_info_algorithm(out: &[u8]) -> AlgorithmIdentifierOwned {
     let sigs = embedded_signatures(out);
-    let sd = hanko_sign::cms::decode_signed_data(&cms_bytes(&sigs[0])).unwrap();
+    let sd = sigis_pades_sign::cms::decode_signed_data(&cms_bytes(&sigs[0])).unwrap();
     sd.signer_infos.0.iter().next().unwrap().signature_algorithm.clone()
 }
 
-fn signing_err(r: hanko_core::errors::Result<impl std::fmt::Debug>) -> String {
+fn signing_err(r: sigis_pki_core::errors::Result<impl std::fmt::Debug>) -> String {
     match r {
         Err(HankoError::Signing(m)) => m,
         Err(HankoError::Unsupported(m)) => format!("NotImplementedError: {m}"),

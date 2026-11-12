@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use hanko_certvalidator::ValidationContext;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{FetchError, FetchErrorKind};
-use hanko_core::fetch::{CrlFetcher, Fetchers, OcspFetcher};
+use sigis_pki_certvalidator::ValidationContext;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{FetchError, FetchErrorKind};
+use sigis_pki_core::fetch::{CrlFetcher, Fetchers, OcspFetcher};
 
 use super::{at, data_path, pki, Pki};
 

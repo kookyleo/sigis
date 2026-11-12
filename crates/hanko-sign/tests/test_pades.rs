@@ -1,7 +1,7 @@
 //! Port of pyHanko 0.38.1 `pkgs/pyhanko/tests/test_pades.py`.
 //!
 //! The AdES checks (`_simple_pades_check`, `ades_lta_validation`) run in
-//! pyHanko through the oracle until lane E's `hanko-ades` lands.
+//! pyHanko through the oracle until lane E's `sigis-pades` lands.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -9,9 +9,9 @@ mod support;
 
 use std::sync::Arc;
 
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_sign::pdf::timestamp::{PdfTimeStamper, TimestampOptions};
-use hanko_sign::{PdfSignatureMetadata, PdfSigner, SubFilter};
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pades_sign::pdf::timestamp::{PdfTimeStamper, TimestampOptions};
+use sigis_pades_sign::{PdfSignatureMetadata, PdfSigner, SubFilter};
 use support::pdfcheck::*;
 use support::services::*;
 use support::*;
@@ -32,7 +32,7 @@ fn signer_at(meta: PdfSignatureMetadata, time: &str) -> PdfSigner {
     PdfSigner::new(meta, Arc::new(ca().signer("signer1"))).at(at(time))
 }
 
-fn dummy_ts(time: &str) -> Arc<hanko_sign::DummyTimeStamper> {
+fn dummy_ts(time: &str) -> Arc<sigis_pades_sign::DummyTimeStamper> {
     Arc::new(ca().tsa("tsa", at(time)))
 }
 
@@ -76,8 +76,8 @@ fn test_pades_flag() {
 fn test_pades_pdf2() {
     // pyHanko raises the version in the signing revision; we do it in a
     // preceding update, which is equivalent for this check
-    let mut w = hanko_sign::pdf::writer::PdfUpdate::new(&one_field()).unwrap();
-    hanko_sign::pdf::signer::ensure_output_version(&mut w, (2, 0)).unwrap();
+    let mut w = sigis_pades_sign::pdf::writer::PdfUpdate::new(&one_field()).unwrap();
+    sigis_pades_sign::pdf::signer::ensure_output_version(&mut w, (2, 0)).unwrap();
     let (bytes, _) = w.write().unwrap();
     let out = signer_at(pades_meta("Sig1"), T).sign_pdf(&bytes).unwrap();
     let s = &embedded_signatures(&out)[0];
@@ -293,9 +293,9 @@ fn add_revinfo_later(with_vri: bool) {
         .unwrap();
     let t2 = "2020-12-01T00:00:00+00:00";
     let vc = live_testing_vc("testing-ca", t2, &[]);
-    let w = hanko_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
-    let sig = hanko_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
-    let out = hanko_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, with_vri, false).unwrap();
+    let w = sigis_pades_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
+    let sig = sigis_pades_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
+    let out = sigis_pades_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, with_vri, false).unwrap();
     if let Some(s) = pades_check(&out, 0, t2) {
         assert_eq!(s["bottom_line"], true, "{s}");
     }
@@ -319,9 +319,9 @@ fn test_add_revinfo_and_timestamp() {
         .unwrap();
     let t2 = "2020-12-01T00:00:00+00:00";
     let vc = live_testing_vc("testing-ca", t2, &[]);
-    let w = hanko_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
-    let sig = hanko_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
-    let out = hanko_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, true, false).unwrap();
+    let w = sigis_pades_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
+    let sig = sigis_pades_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
+    let out = sigis_pades_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, true, false).unwrap();
     let mut opts = TimestampOptions::new(DigestAlgorithm::Sha256);
     opts.validation_context = Some(&vc);
     let out = PdfTimeStamper::new(dummy_ts(t2)).timestamp_pdf(&out, &opts).unwrap();
@@ -333,10 +333,10 @@ fn test_add_revinfo_and_timestamp() {
 
 #[test]
 fn test_sign_with_commitment() {
-    use hanko_core::asn1::commitment::CommitmentType;
+    use sigis_pki_core::asn1::commitment::CommitmentType;
     let mut m = pades_meta("Sig1");
-    m.cades_signed_attr_spec = Some(hanko_sign::CadesSignedAttrSpec {
-        commitment_type: Some(hanko_sign::attributes::commitment_indication(
+    m.cades_signed_attr_spec = Some(sigis_pades_sign::CadesSignedAttrSpec {
+        commitment_type: Some(sigis_pades_sign::attributes::commitment_indication(
             CommitmentType::ProofOfOrigin,
         )),
         ..Default::default()
@@ -344,15 +344,15 @@ fn test_sign_with_commitment() {
     let out = signer_at(m, T).sign_pdf(&pdf("minimal.pdf")).unwrap();
     assert_eq!(embedded_signatures(&out)[0].field_name, "Sig1");
     val_trusted(&out, 0, &ca(), T, false);
-    let attr = signed_attr(&out, hanko_core::asn1::oids::AA_ETS_COMMITMENT_TYPE).unwrap();
-    let ind: hanko_core::asn1::commitment::CommitmentTypeIndication = attr.decode_as().unwrap();
-    assert_eq!(ind.commitment_type_id, hanko_core::asn1::oids::CTI_PROOF_OF_ORIGIN);
+    let attr = signed_attr(&out, sigis_pki_core::asn1::oids::AA_ETS_COMMITMENT_TYPE).unwrap();
+    let ind: sigis_pki_core::asn1::commitment::CommitmentTypeIndication = attr.decode_as().unwrap();
+    assert_eq!(ind.commitment_type_id, sigis_pki_core::asn1::oids::CTI_PROOF_OF_ORIGIN);
 }
 
 /// The first value of signed attribute `oid` of the first signature.
 fn signed_attr(pdf: &[u8], oid: const_oid::ObjectIdentifier) -> Option<der::Any> {
     let sig = &embedded_signatures(pdf)[0];
-    let sd = hanko_sign::cms::decode_signed_data(&cms_bytes(sig)).unwrap();
+    let sd = sigis_pades_sign::cms::decode_signed_data(&cms_bytes(sig)).unwrap();
     let si = sd.signer_infos.0.iter().next().unwrap().clone();
     let attrs = si.signed_attrs?;
     let a = attrs.iter().find(|a| a.oid == oid)?;
@@ -362,7 +362,7 @@ fn signed_attr(pdf: &[u8], oid: const_oid::ObjectIdentifier) -> Option<der::Any>
 #[test]
 fn test_sign_with_content_sig() {
     let mut m = pades_meta("Sig1");
-    m.cades_signed_attr_spec = Some(hanko_sign::CadesSignedAttrSpec {
+    m.cades_signed_attr_spec = Some(sigis_pades_sign::CadesSignedAttrSpec {
         timestamp_content: true,
         ..Default::default()
     });
@@ -373,8 +373,8 @@ fn test_sign_with_content_sig() {
         assert_eq!(c["valid"], true, "{s}");
         assert_eq!(c["trusted"], true, "{s}");
     }
-    let tok = signed_attr(&out, hanko_sign::attributes::CONTENT_TIME_STAMP).unwrap();
-    let info = hanko_sign::timestamps::tst_info(&der::Encode::to_der(&tok).unwrap()).unwrap();
+    let tok = signed_attr(&out, sigis_pades_sign::attributes::CONTENT_TIME_STAMP).unwrap();
+    let info = sigis_pades_sign::timestamps::tst_info(&der::Encode::to_der(&tok).unwrap()).unwrap();
     assert_eq!(info.version, x509_tsp::TspVersion::V1);
 }
 
@@ -382,14 +382,14 @@ fn test_sign_with_content_sig() {
 fn test_sign_with_wrong_content_sig() {
     // pyHanko installs a custom signed attribute provider that timestamps
     // the wrong data; we build the same attribute set with the low-level API
-    use hanko_sign::cms::{AttrProfile, CmsSigner, CmsSignerOptions};
+    use sigis_pades_sign::cms::{AttrProfile, CmsSigner, CmsSignerOptions};
     let m = pades_meta("Sig1");
     let signer = ca().signer("signer1");
     let ts = dummy_ts(T);
     let pdf_signer = PdfSigner::new(m, Arc::new(signer.clone())).at(at(T));
     // the extra attribute does not take part in the size estimate
     let tbs = pdf_signer
-        .digest_doc_for_signing(&pdf("minimal.pdf"), &hanko_sign::SignOptions { bytes_reserved: Some(32768), ..Default::default() })
+        .digest_doc_for_signing(&pdf("minimal.pdf"), &sigis_pades_sign::SignOptions { bytes_reserved: Some(32768), ..Default::default() })
         .unwrap();
     let opts = CmsSignerOptions::default();
     let cs = CmsSigner { signer: &signer, options: &opts };
@@ -399,18 +399,18 @@ fn test_sign_with_wrong_content_sig() {
             DigestAlgorithm::Sha256,
             &tbs.signed_attr_settings,
             AttrProfile::Cades { is_pades: true },
-            hanko_sign::attributes::ID_DATA,
+            sigis_pades_sign::attributes::ID_DATA,
             None,
             false,
         )
         .unwrap();
-    use hanko_core::sign::TimeStamper;
+    use sigis_pki_core::sign::TimeStamper;
     let wrong = ts.timestamp(&DigestAlgorithm::Sha256.digest(b"\xde\xad\xbe\xef"), DigestAlgorithm::Sha256).unwrap();
-    attrs.push(hanko_sign::attributes::raw_attribute(hanko_sign::attributes::CONTENT_TIME_STAMP, &wrong).unwrap());
+    attrs.push(sigis_pades_sign::attributes::raw_attribute(sigis_pades_sign::attributes::CONTENT_TIME_STAMP, &wrong).unwrap());
     let cms = cs
         .sign_prescribed_attributes(DigestAlgorithm::Sha256, attrs, cms::content_info::CmsVersion::V1, Some(ts.as_ref()), false, None)
         .unwrap();
-    let out = hanko_sign::pdf::signer::PdfTbsDocument::finish_signing(tbs.prepared, &cms, None, None).unwrap();
+    let out = sigis_pades_sign::pdf::signer::PdfTbsDocument::finish_signing(tbs.prepared, &cms, None, None).unwrap();
     let root = trust_root();
     if let Some(v) = oracle_verdicts(&out, &[&root], T, &[]) {
         let s = &v[0];
@@ -430,12 +430,12 @@ fn test_sign_with_wrong_content_sig() {
 }
 
 fn interrupted_pades_lta(different_tsa: bool) {
-    use hanko_sign::cms::{AttrProfile, CmsSigner, CmsSignerOptions};
-    use hanko_sign::pdf::signer::{DssContentSettings, PdfTbsDocument, PostSignInstructions};
+    use sigis_pades_sign::cms::{AttrProfile, CmsSigner, CmsSignerOptions};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, PdfTbsDocument, PostSignInstructions};
     let signer_cert = ca().cert("signer1");
     let chain = vec![ca().cert("root"), ca().cert("interm")];
-    let mech = hanko_sign::signer::default_signature_mechanism(&signer_cert, DigestAlgorithm::Sha256, false).unwrap();
-    let ext = |v: Vec<u8>| hanko_sign::ExternalSigner::new(signer_cert.clone(), chain.clone(), mech.clone(), v);
+    let mech = sigis_pades_sign::signer::default_signature_mechanism(&signer_cert, DigestAlgorithm::Sha256, false).unwrap();
+    let ext = |v: Vec<u8>| sigis_pades_sign::ExternalSigner::new(signer_cert.clone(), chain.clone(), mech.clone(), v);
     let mut m = pades_meta("SigNew");
     m.embed_validation_info = true;
     m.use_pades_lta = true;
@@ -457,20 +457,20 @@ fn interrupted_pades_lta(different_tsa: bool) {
             DigestAlgorithm::Sha256,
             &tbs.signed_attr_settings,
             AttrProfile::Cades { is_pades: true },
-            hanko_sign::attributes::ID_DATA,
+            sigis_pades_sign::attributes::ID_DATA,
             None,
             false,
         )
         .unwrap();
     // the "remote" signature over the signed attributes
-    let to_sign = der::Encode::to_der(&hanko_sign::cms::attrs_to_set(attrs.clone()).unwrap()).unwrap();
-    use hanko_core::sign::KeySigner;
+    let to_sign = der::Encode::to_der(&sigis_pades_sign::cms::attrs_to_set(attrs.clone()).unwrap()).unwrap();
+    use sigis_pki_core::sign::KeySigner;
     let sig_value = ca().signer("signer1").sign_raw(&to_sign, DigestAlgorithm::Sha256).unwrap();
     let real = ext(sig_value);
     let cms = CmsSigner { signer: &real, options: &opts }
         .sign_prescribed_attributes(DigestAlgorithm::Sha256, attrs, cms::content_info::CmsVersion::V1, Some(ts.as_ref()), false, None)
         .unwrap();
-    let (vc, docts): (_, Arc<dyn hanko_core::sign::TimeStamper>) = if different_tsa {
+    let (vc, docts): (_, Arc<dyn sigis_pki_core::sign::TimeStamper>) = if different_tsa {
         (
             live_testing_vc("testing-ca", T, &["unrelated-tsa"]),
             Arc::new(pki("unrelated-tsa").tsa("tsa", at(T))),
@@ -514,8 +514,8 @@ fn test_interrupted_pades_lta_signature_different_tsa() {
 
 #[test]
 fn test_dss_setting_validation() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
-    use hanko_sign::pdf::timestamp::TimestampDssSettings;
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::timestamp::TimestampDssSettings;
     let bad = TimestampDssSettings { include_vri: true, update_before_ts: true, skip_if_unneeded: true };
     assert!(bad.assert_viable().is_err());
     assert!(DssContentSettings { include_vri: true, placement: SigDssPlacement::TogetherWithSignature, ..Default::default() }
@@ -540,7 +540,7 @@ fn test_dss_setting_validation() {
 fn fresh_sign(m: PdfSignatureMetadata) -> Vec<u8> {
     signer_at(m, T)
         .with_timestamper(dummy_ts(T))
-        .sign_pdf_with(&one_field(), &hanko_sign::SignOptions { fresh_document: true, ..Default::default() })
+        .sign_pdf_with(&one_field(), &sigis_pades_sign::SignOptions { fresh_document: true, ..Default::default() })
         .unwrap()
 }
 
@@ -553,7 +553,7 @@ fn total_revisions(pdf: &[u8]) -> usize {
 
 #[test]
 fn test_pades_two_revisions() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
     for dss in [
         DssContentSettings { placement: SigDssPlacement::SeparateRevision, ..Default::default() },
         DssContentSettings { placement: SigDssPlacement::TogetherWithNextTs, ..Default::default() },
@@ -574,8 +574,8 @@ fn test_pades_two_revisions() {
 
 #[test]
 fn test_pades_lta_two_revisions() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
-    use hanko_sign::pdf::timestamp::TimestampDssSettings;
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::timestamp::TimestampDssSettings;
     let before_ts = TimestampDssSettings { update_before_ts: true, include_vri: false, skip_if_unneeded: true };
     let cases = [
         DssContentSettings { placement: SigDssPlacement::TogetherWithNextTs, next_ts_settings: Some(before_ts), ..Default::default() },
@@ -596,7 +596,7 @@ fn test_pades_lta_two_revisions() {
 
 #[test]
 fn test_pades_lta_noskip() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
     let mut m = lta_meta(T);
     m.dss_settings = DssContentSettings {
         placement: SigDssPlacement::SeparateRevision,
@@ -617,7 +617,7 @@ fn dss_last_change(pdf: &[u8]) -> Option<u64> {
 
 #[test]
 fn test_pades_post_ts_autosuppress() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
     let mut m = lta_meta(T);
     m.dss_settings = DssContentSettings { placement: SigDssPlacement::TogetherWithNextTs, include_vri: false, ..Default::default() };
     let out = fresh_sign(m);
@@ -632,7 +632,7 @@ fn test_pades_post_ts_autosuppress() {
 
 #[test]
 fn test_pades_max_autosuppress() {
-    use hanko_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
+    use sigis_pades_sign::pdf::signer::{DssContentSettings, SigDssPlacement};
     let mut m = lta_meta(T);
     m.dss_settings = DssContentSettings { placement: SigDssPlacement::TogetherWithSignature, include_vri: false, ..Default::default() };
     let out = fresh_sign(m);
@@ -652,7 +652,7 @@ fn test_pades_independent_tsa() {
     m.embed_validation_info = true;
     let out = signer_at(m, T)
         .with_timestamper(Arc::new(pki("unrelated-tsa").tsa("tsa", at(T))))
-        .sign_pdf_with(&one_field(), &hanko_sign::SignOptions { fresh_document: true, ..Default::default() })
+        .sign_pdf_with(&one_field(), &sigis_pades_sign::SignOptions { fresh_document: true, ..Default::default() })
         .unwrap();
     let (certs, ocsps, crls, _) = dss_counts(&out).unwrap();
     assert_eq!((crls, ocsps, certs), (2, 1, 6));
@@ -671,23 +671,23 @@ const POLICY_OID: &str = "1.3.6.1.4.1.99999.1";
 
 #[test]
 fn test_sign_with_policy() {
-    use hanko_core::asn1::sig_policy::{SignaturePolicyId, SignaturePolicyIdentifier};
+    use sigis_pki_core::asn1::sig_policy::{SignaturePolicyId, SignaturePolicyIdentifier};
     let policy = SignaturePolicyIdentifier::SignaturePolicyId(SignaturePolicyId {
         sig_policy_id: const_oid::ObjectIdentifier::new_unwrap(POLICY_OID),
-        sig_policy_hash: hanko_core::asn1::OtherHashAlgAndValue {
-            hash_algorithm: hanko_sign::signer::digest_algorithm_id(DigestAlgorithm::Sha256),
+        sig_policy_hash: sigis_pki_core::asn1::OtherHashAlgAndValue {
+            hash_algorithm: sigis_pades_sign::signer::digest_algorithm_id(DigestAlgorithm::Sha256),
             hash_value: der::asn1::OctetString::new(DigestAlgorithm::Sha256.digest(b"")).unwrap(),
         },
         sig_policy_qualifiers: None,
     });
     let mut m = pades_meta("Sig1");
-    m.cades_signed_attr_spec = Some(hanko_sign::CadesSignedAttrSpec {
+    m.cades_signed_attr_spec = Some(sigis_pades_sign::CadesSignedAttrSpec {
         signature_policy_identifier: Some(policy),
         ..Default::default()
     });
     let out = signer_at(m, T).sign_pdf(&pdf("minimal.pdf")).unwrap();
     val_trusted(&out, 0, &ca(), T, false);
-    let attr = signed_attr(&out, hanko_core::asn1::oids::AA_ETS_SIG_POLICY_ID).unwrap();
+    let attr = signed_attr(&out, sigis_pki_core::asn1::oids::AA_ETS_SIG_POLICY_ID).unwrap();
     let spi: SignaturePolicyIdentifier = attr.decode_as().unwrap();
     let SignaturePolicyIdentifier::SignaturePolicyId(id) = spi else { panic!() };
     assert_eq!(id.sig_policy_id.to_string(), POLICY_OID);
@@ -703,7 +703,7 @@ fn test_pades_lta_no_embed_root() {
     let sig = &embedded_signatures(&out)[0];
     assert_eq!(sig.field_name, "Sig1");
     assert!(sig.field.get(b"AP").is_err());
-    let sd = hanko_sign::cms::decode_signed_data(&cms_bytes(sig)).unwrap();
+    let sd = sigis_pades_sign::cms::decode_signed_data(&cms_bytes(sig)).unwrap();
     assert_eq!(sd.certificates.unwrap().0.len(), 2);
     let (certs, ..) = dss_counts(&out).unwrap();
     assert_eq!(certs, 4);
@@ -714,22 +714,22 @@ fn test_pades_lta_no_embed_root() {
 
 #[test]
 fn test_interrupted_nonstrict_with_psi() {
-    use hanko_sign::pdf::signer::PdfTbsDocument;
+    use sigis_pades_sign::pdf::signer::PdfTbsDocument;
     let mut m = pades_meta("SigNew");
     m.embed_validation_info = true;
     m.validation_context = Some(Arc::new(simple_vc("testing-ca", T)));
     let tbs = signer_at(m, T)
         .with_timestamper(dummy_ts(T))
-        .digest_doc_for_signing(&pdf("minimal-startxref-obo2.pdf"), &hanko_sign::SignOptions { strict: false, ..Default::default() })
+        .digest_doc_for_signing(&pdf("minimal-startxref-obo2.pdf"), &sigis_pades_sign::SignOptions { strict: false, ..Default::default() })
         .unwrap();
     assert!(tbs.post_sign_instructions.is_some());
     let signer = ca().signer("signer1");
-    let cms = hanko_sign::cms::CmsSigner { signer: &signer, options: &Default::default() }
+    let cms = sigis_pades_sign::cms::CmsSigner { signer: &signer, options: &Default::default() }
         .sign(
             &tbs.prepared.document_digest,
             tbs.md_algorithm,
-            &hanko_sign::CmsSignedAttributes::default(),
-            hanko_sign::cms::AttrProfile::GenericCms,
+            &sigis_pades_sign::CmsSignedAttributes::default(),
+            sigis_pades_sign::cms::AttrProfile::GenericCms,
             None,
             false,
             None,
@@ -749,8 +749,8 @@ fn test_interrupted_nonstrict_with_psi() {
 
 #[test]
 fn test_brazilian_pades() {
-    let mut w = hanko_sign::pdf::writer::PdfUpdate::new(&one_field()).unwrap();
-    hanko_sign::pdf::signer::ensure_output_version(&mut w, (2, 0)).unwrap();
+    let mut w = sigis_pades_sign::pdf::writer::PdfUpdate::new(&one_field()).unwrap();
+    sigis_pades_sign::pdf::signer::ensure_output_version(&mut w, (2, 0)).unwrap();
     let (bytes, _) = w.write().unwrap();
     let mut m = pades_meta("Sig1");
     m.subfilter = Some(SubFilter::PbadPades);
@@ -840,9 +840,9 @@ fn test_pades_lta_dss_indirect_arrs() {
     }
     let before = dss_counts(&input).unwrap();
     let extra = ca().cert("tsa2");
-    let out = hanko_sign::pdf::dss::add_dss(
+    let out = sigis_pades_sign::pdf::dss::add_dss(
         &input,
-        &hanko_sign::pdf::dss::DssContent { certs: vec![extra], embed_roots: true, ..Default::default() },
+        &sigis_pades_sign::pdf::dss::DssContent { certs: vec![extra], embed_roots: true, ..Default::default() },
         false,
     )
     .unwrap();
@@ -853,7 +853,7 @@ fn test_pades_lta_dss_indirect_arrs() {
 
 fn fix_incomplete_revinfo_later(with_vri: bool) {
     // trust the intermediate CA and the TSA absolutely
-    let incomplete = hanko_certvalidator::ValidationContext::builder()
+    let incomplete = sigis_pki_certvalidator::ValidationContext::builder()
         .trust_root(ca().cert("interm"))
         .trust_root(ca().cert("tsa"))
         .moment(at(T))
@@ -866,9 +866,9 @@ fn fix_incomplete_revinfo_later(with_vri: bool) {
     let out = signer_at(m, T).with_timestamper(dummy_ts(T)).sign_pdf(&pdf("minimal.pdf")).unwrap();
     let t2 = "2020-12-01T00:00:00+00:00";
     let vc = live_testing_vc("testing-ca", t2, &[]);
-    let w = hanko_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
-    let sig = hanko_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
-    let out = hanko_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, with_vri, false).unwrap();
+    let w = sigis_pades_sign::pdf::writer::PdfUpdate::new(&out).unwrap();
+    let sig = sigis_pades_sign::pdf::embedded::embedded_signatures(&w).unwrap().remove(0);
+    let out = sigis_pades_sign::pdf::timestamp::add_validation_info_for(&out, &sig, &vc, true, with_vri, false).unwrap();
     if let Some(s) = pades_check(&out, 0, t2) {
         assert_eq!(s["bottom_line"], true, "{s}");
     }
@@ -933,12 +933,12 @@ fn check_claimed_only(out: &[u8], pass_ac_vc: bool, unknown: bool) {
 
 #[test]
 fn test_cades_signer_attrs_claimed_only() {
-    use hanko_core::asn1::commitment::CommitmentType;
+    use sigis_pki_core::asn1::commitment::CommitmentType;
     for pass_ac_vc in [true, false] {
         let mut m = pades_meta("Sig1");
-        m.cades_signed_attr_spec = Some(hanko_sign::CadesSignedAttrSpec {
-            commitment_type: Some(hanko_sign::attributes::commitment_indication(CommitmentType::ProofOfApproval)),
-            signer_attributes: Some(hanko_sign::SignerAttrSpec {
+        m.cades_signed_attr_spec = Some(sigis_pades_sign::CadesSignedAttrSpec {
+            commitment_type: Some(sigis_pades_sign::attributes::commitment_indication(CommitmentType::ProofOfApproval)),
+            signer_attributes: Some(sigis_pades_sign::SignerAttrSpec {
                 claimed_attrs: vec![sample_group_attr()],
                 certified_attrs: vec![],
             }),
@@ -952,7 +952,7 @@ fn test_cades_signer_attrs_claimed_only() {
 /// Sign with extra signed attributes appended by `extra` (pyHanko's custom
 /// attribute providers / overridden `signed_attrs`).
 fn sign_with_extra_attrs(extra: impl Fn(&mut Vec<x509_cert::attr::Attribute>)) -> Vec<u8> {
-    use hanko_sign::cms::{CmsSigner, CmsSignerOptions};
+    use sigis_pades_sign::cms::{CmsSigner, CmsSignerOptions};
     let signer = ca().signer("signer1");
     let tbs = signer_at(pades_meta("Sig1"), T)
         .digest_doc_for_signing(&pdf("minimal.pdf"), &Default::default())
@@ -965,17 +965,17 @@ fn sign_with_extra_attrs(extra: impl Fn(&mut Vec<x509_cert::attr::Attribute>)) -
             tbs.md_algorithm,
             &tbs.signed_attr_settings,
             tbs.attr_profile,
-            hanko_sign::attributes::ID_DATA,
+            sigis_pades_sign::attributes::ID_DATA,
             None,
             false,
         )
         .unwrap();
     extra(&mut attrs);
-    let set = hanko_sign::cms::attrs_to_set(attrs).unwrap();
+    let set = sigis_pades_sign::cms::attrs_to_set(attrs).unwrap();
     let cms = cs
         .sign_prescribed_attributes(tbs.md_algorithm, set.into_vec(), cms::content_info::CmsVersion::V1, None, false, None)
         .unwrap();
-    hanko_sign::pdf::signer::PdfTbsDocument::finish_signing(tbs.prepared, &cms, None, None).unwrap()
+    sigis_pades_sign::pdf::signer::PdfTbsDocument::finish_signing(tbs.prepared, &cms, None, None).unwrap()
 }
 
 #[test]
@@ -993,7 +993,7 @@ fn test_cades_signer_attrs_unknown_attrs() {
                 value: Any,
             }
             let pair = Any::encode_from(&Pair { id: oid_2_999.clone(), value: value.clone() }).unwrap();
-            let mut v = hanko_sign::attributes::SignerAttributesV2 { claimed_attributes: claimed, ..Default::default() };
+            let mut v = sigis_pades_sign::attributes::SignerAttributesV2 { claimed_attributes: claimed, ..Default::default() };
             if as_signed_assertions {
                 v.signed_assertions = Some(vec![pair]);
             } else {
@@ -1005,7 +1005,7 @@ fn test_cades_signer_attrs_unknown_attrs() {
                 };
                 v.certified_attributes_v2 = Some(vec![Any::encode_from(&tagged).unwrap()]);
             }
-            attrs.push(hanko_sign::attributes::simple_attribute(hanko_sign::attributes::SIGNER_ATTRIBUTES_V2, &v).unwrap());
+            attrs.push(sigis_pades_sign::attributes::simple_attribute(sigis_pades_sign::attributes::SIGNER_ATTRIBUTES_V2, &v).unwrap());
         });
         assert!(Any::from_der(&value.to_der().unwrap()).is_ok());
         check_claimed_only(&out, pass_ac_vc, true);

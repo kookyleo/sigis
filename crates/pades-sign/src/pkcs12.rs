@@ -16,8 +16,8 @@ use cms::content_info::ContentInfo;
 use cms::encrypted_data::EncryptedData;
 use der::asn1::{ObjectIdentifier as Oid, OctetString};
 use der::{Any, Decode, Encode, Sequence};
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
 use spki::AlgorithmIdentifierOwned;
 
 use crate::keys::PrivateKey;

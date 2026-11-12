@@ -10,12 +10,12 @@ use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier, Si
 use const_oid::ObjectIdentifier as Oid;
 use der::asn1::{Int, OctetString, SetOfVec};
 use der::{Any, Decode, Encode};
-use hanko_core::algorithms::DigestAlgorithm;
-use hanko_core::asn1::oids;
-use hanko_core::cert::Cert;
-use hanko_core::errors::{HankoError, Result};
-use hanko_core::sign::TimeStamper;
-use hanko_core::time::Moment;
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use sigis_pki_core::asn1::oids;
+use sigis_pki_core::cert::Cert;
+use sigis_pki_core::errors::{HankoError, Result};
+use sigis_pki_core::sign::TimeStamper;
+use sigis_pki_core::time::Moment;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::ext::pkix::name::GeneralName;
 use x509_tsp::{GeneralizedTimeNanos, MessageImprint, TspVersion, TstInfo};
