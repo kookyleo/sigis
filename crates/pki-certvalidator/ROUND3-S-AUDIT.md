@@ -131,3 +131,12 @@ Eight synthetic policy adapter tests earn no upstream-function passes; the
 two context regressions also earn none. Fresh oracle calls remain a separate
 measurement: 54 name invocations and eight graph invocations passed. Lead
 acceptance and the complete workspace gate are outside this targeted result.
+
+The targeted `pkits` integration suite subsequently passed 2/2 on vm2065
+slot0 (compile 0.72s, tests 1.89s), with zero ignored tests. It exercises
+the existing 246-case corpus and simulated CRL fetches after the production
+name-predicate change. The exact known-divergence guard still permits only
+case 40203 (the Rust DER decoder rejects UTCTime year 1950); no newly
+accepted oracle rejection or additional divergence was introduced. This
+is committed-fixture replay, not a fresh Python comparison, and earns no
+additional upstream-function count. Log: `slots-pki-pkits.log`.
