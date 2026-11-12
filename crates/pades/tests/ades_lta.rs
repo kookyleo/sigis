@@ -472,7 +472,7 @@ fn test_pades_lta_live_ac_validation() {
         );
         let status = result.api_status.unwrap();
         let attrs = status.ac_attrs.expect("validated AC attributes");
-        assert_eq!(attrs.0.len(), 1);
+        assert_eq!(attrs.0.len(), 1, "{id}: {:?}", status.ac_validation_errs);
         let role = attrs.get("role").unwrap();
         assert_eq!(role.attr_values.len(), 1);
         let role = Tlv::parse_exact(&role.attr_values[0]).unwrap();

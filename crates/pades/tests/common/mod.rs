@@ -154,8 +154,8 @@ impl Call {
     }
 
     /// Replay current-time HTTP revocation evidence as raw local material.
-    /// AC targets cannot use the Cert-only fetch trait yet; native validation
-    /// still authenticates every supplied response under the caller's policy.
+    /// Native validation still authenticates every supplied response under
+    /// the caller's policy; configured AC fetching retains normal precedence.
     pub fn with_recorded_revinfo(&self, ctx: &ValidationContext) -> ValidationContext {
         let http = self
             .0
@@ -249,6 +249,7 @@ pub fn wrap_signed_data(sd: &[u8]) -> Vec<u8> {
 #[derive(Debug)]
 pub struct Replay {
     exchanges: Vec<(String, String, Vec<u8>)>, // (method, path, body)
+    ac_http: sigis_pki_fetch::HttpFetchers,
 }
 
 impl Replay {
@@ -268,7 +269,16 @@ impl Replay {
                     .collect()
             })
             .unwrap_or_default();
-        Self { exchanges }
+        // Recorded responses retain their signed nonce; do not invent an echo
+        // of a fresh nonce. Only AC methods use this production HTTP adapter.
+        let ac_http = sigis_pki_fetch::HttpFetchers::with_transport(
+            Arc::new(AcRecordedTransport(http.clone())),
+            sigis_pki_fetch::FetcherSettings {
+                request_nonces: false,
+                ..Default::default()
+            },
+        );
+        Self { exchanges, ac_http }
     }
 
     fn get(&self, url: &str) -> Result<Vec<u8>, FetchError> {
@@ -284,6 +294,110 @@ impl Replay {
                     format!("no recorded response for {url}"),
                 )
             })
+    }
+}
+
+// Strict recorded transport for AC retrieval. No sockets, live HTTP or fresh
+// oracle evidence: the production fetcher authenticates request binding before
+// the normal validator authenticates response signatures and trust.
+#[derive(Debug)]
+struct AcRecordedTransport(Value);
+
+#[derive(Debug, PartialEq, Eq)]
+struct RecordedAcCertId {
+    algorithm: Vec<u8>,
+    issuer_name_hash: Vec<u8>,
+    issuer_key_hash: Vec<u8>,
+    serial: Vec<u8>,
+}
+
+// Same complete CertID lookup policy as ades_requests.rs. A signed recorded
+// response cannot echo a fresh nonce, so nonce is not a recording lookup key.
+fn recorded_ac_cert_id(request: &[u8]) -> Option<RecordedAcCertId> {
+    use der::Decode;
+    use sigis_pki_core::asn1::tlv::Tlv;
+    let root = Tlv::parse_exact(request).ok()?;
+    if !root.is_universal(16) {
+        return None;
+    }
+    let root = root.children().ok()?;
+    let tbs = root.first()?.children().ok()?;
+    let list = tbs
+        .iter()
+        .find(|part| part.is_universal(16))?
+        .children()
+        .ok()?;
+    if list.len() != 1 {
+        return None;
+    }
+    let single = list[0].children().ok()?;
+    let id = single.first()?.children().ok()?;
+    if id.len() != 4 || !id[1].is_universal(4) || !id[2].is_universal(4) || !id[3].is_universal(2) {
+        return None;
+    }
+    let algorithm = id[0].children().ok()?;
+    if !algorithm.first()?.is_universal(6)
+        || algorithm.len() > 2
+        || algorithm
+            .get(1)
+            .is_some_and(|value| !value.is_universal(5) || !value.value.is_empty())
+    {
+        return None;
+    }
+    let serial = der::asn1::UintRef::from_der(id[3].raw).ok()?;
+    Some(RecordedAcCertId {
+        algorithm: algorithm[0].value.to_vec(),
+        issuer_name_hash: id[1].value.to_vec(),
+        issuer_key_hash: id[2].value.to_vec(),
+        serial: serial.as_bytes().to_vec(),
+    })
+}
+
+impl sigis_pki_fetch::HttpTransport for AcRecordedTransport {
+    fn send(
+        &self,
+        request: &sigis_pki_fetch::transport::HttpRequest<'_>,
+    ) -> Result<sigis_pki_fetch::HttpResponse, sigis_pki_fetch::TransportError> {
+        let rest = request
+            .url
+            .split_once("://")
+            .map_or(request.url, |(_, rest)| rest);
+        let path = rest.find('/').map_or("/", |index| &rest[index..]);
+        let actual_body = request.body.unwrap_or_default();
+        let found = self.0.as_array().into_iter().flatten().find(|exchange| {
+            if exchange["method"] != request.method
+                || exchange["path"] != path
+                || exchange["status"] != 200
+            {
+                return false;
+            }
+            let recorded_body = exchange["request_body"]
+                .as_str()
+                .map(b64)
+                .unwrap_or_default();
+            if request.method == "POST" {
+                match (
+                    recorded_ac_cert_id(actual_body),
+                    recorded_ac_cert_id(&recorded_body),
+                ) {
+                    (Some(actual), Some(recorded)) => actual == recorded,
+                    _ => false,
+                }
+            } else {
+                actual_body == recorded_body
+            }
+        });
+        let found = found.ok_or_else(|| {
+            sigis_pki_fetch::TransportError::Network(format!(
+                "no exact recorded AC exchange for {} {path}",
+                request.method
+            ))
+        })?;
+        Ok(sigis_pki_fetch::HttpResponse {
+            status: 200,
+            content_type: found["content_type"].as_str().map(str::to_owned),
+            body: b64(found["response_body"].as_str().unwrap()),
+        })
     }
 }
 
@@ -305,6 +419,10 @@ fn uris_in(cert: &Cert, oid: const_oid::ObjectIdentifier) -> Vec<String> {
 }
 
 impl OcspFetcher for Replay {
+    fn fetch_ac_ocsp(&self, ac_der: &[u8], issuer: &Cert) -> Result<Vec<u8>, FetchError> {
+        self.ac_http.fetch_ac_ocsp(ac_der, issuer)
+    }
+
     fn fetch_ocsp(&self, cert: &Cert, _issuer: &Cert) -> Result<Vec<u8>, FetchError> {
         let ocsp = const_oid::db::rfc5280::ID_AD_OCSP;
         for u in uris_in(cert, ocsp) {
@@ -320,6 +438,10 @@ impl OcspFetcher for Replay {
 }
 
 impl CrlFetcher for Replay {
+    fn fetch_ac_crls(&self, ac_der: &[u8]) -> Result<Vec<Vec<u8>>, FetchError> {
+        self.ac_http.fetch_ac_crls(ac_der)
+    }
+
     fn fetch_crls(&self, cert: &Cert) -> Result<Vec<Vec<u8>>, FetchError> {
         use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName};
         let mut out = Vec::new();

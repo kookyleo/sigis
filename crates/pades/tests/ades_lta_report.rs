@@ -38,8 +38,8 @@ fn lta_report(test: &str) -> String {
             .build()
             .unwrap()
     });
-    // Exact current-time AA HTTP responses are replayed as raw local
-    // material; this is not a claim that the Cert-only transport fetches ACs.
+    // Exact recorded AA HTTP responses are used by the AC fetch adapter and
+    // as local evidence. This is recorded transport, not fresh live HTTP.
     let ac = ac.map(|ctx| call.with_recorded_revinfo(&ctx));
     let result = sigis_pades::ades::lta::lta_validation_with_options(
         &file,
@@ -185,7 +185,10 @@ fn certified_report_requires_authenticated_attribute_revocation_evidence() {
         }
     }
     assert!(changed > 0);
-    let ac_bad = call.with_recorded_revinfo(&ac);
+    // The original fetcher has already cached genuine evidence. Build only a
+    // new recording fetcher from the changed exchanges; retain every caller
+    // validation requirement and avoid testing the unrelated good cache.
+    let ac_bad = call.with_recorded_revinfo(&ac.with_fetchers(call.fetchers()));
     let invalid = sigis_cms::validate_cms_signature_with(
         &sig.contents,
         sigis_cms::SignedContent::Data(&signed),
