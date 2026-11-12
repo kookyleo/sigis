@@ -93,6 +93,6 @@ from the commit and must be preserved during L's eventual main sync/rebase.
 
 
 L curated this source with the certificate-position fix after main6ec3816.
-Current accepted counts remain S824/754/63/7, overall1431/1052/66/313 while
-the integration gate is pending. The older counts above are historical
+Mainb81c254 passed the complete integration gate; accepted counts remain
+S824/754/63/7, overall1431/1052/66/313 (no new upstream functions). The older counts above are historical
 verification context, not a current ledger replacement.

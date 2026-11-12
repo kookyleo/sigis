@@ -44,7 +44,10 @@ The later P increment restores the overspecify function with actual signing
 and refusal assertions. Direct embedder now has low-level/DocMDP/DSS coverage
 but remains pending because caller-buffer identity is still absent. The two
 earlier L completions and CMS corrections were separate accounting changes.
-The 12 inherited V functions remain provisional pending fresh assertion review.
+The 12 inherited V functions remain the accepted baseline. V's proposed45/47
+checkpoint remains unaccepted: its complete package retains one ByteRange
+regression, fresh-input native provenance needs correction, and LTA proof
+policy differences require substantive oracle-backed rejection tests.
 
 Main `6dc97bb` accepts the independently reviewed S primitive subset after a
 second complete serial workspace gate: six name functions, five fetcher/auth
@@ -56,10 +59,11 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main8a1568c found **1,284 Rust tests: 1,276 passed, eight
-ignored, zero failed**, across107 reports. Build, workspace tests, strict
+The latest gate on mainb81c254 found **1,292 Rust tests: 1,284 passed, eight
+ignored, zero failed**, across108 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/reader-csc-p-gate-final/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-shared-followup-gate/`.
+The previous reader/CSC/P source8a1568c also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
 fixed source then passed the complete gate again. Algorithm constraints now expose not_allowed_after;
 structured policy errors preserve banned_since without parsing reason strings.
@@ -88,6 +92,17 @@ new P suites and four previously accepted PDF-diff signing functions moved
 without losing assertions or changing function ownership. Both new and old
 package cycles were removed; the layer gate now also checks dev-dependency
 cycles. No layer-map exemption was added.
+
+Mainb81c254 accepts two independent S fixes with zero new upstream-function
+credit. Algorithm-policy rejection now retains the actual leaf/intermediate
+position and complete original path while preserving typed cutoff metadata.
+Forbidden key usages are checked even when positive KU requirements are
+None/empty; core defaults and EKU semantics remain unchanged. Three path-context
+and five KU regressions passed, along with the complete workspace gate.
+Pinned Python has the same forbidden-only early-return bug: six of26 fresh
+policy cases intentionally become stricter native rejections, while20 controls
+agree. This bounded difference is fail closed; it does not establish universal
+conservatism for other inputs.
 
 ## Integration and verification
 
@@ -421,3 +436,24 @@ Upper-layer production Rust stays within the 12k-line cap. Each Office
 format needs at least 50 positive and 50 negative samples plus external
 POI/LibreOffice differentials before signing is enabled. The EUTL guard
 added here does not claim these broader XML milestones.
+
+
+## Current unaccepted validation checkpoint
+
+V's committed implementation proposes45/47, with two AC-fetch-dependent
+functions explicitly pending. The complete package actually ran88 passes and
+one retained anomalous-coverage failure; its assigned64-test run passed.
+These are different scopes. The purported fresh-native runs dispatched to a
+worker without the fixture-selection environment or fresh files, so they do
+not yet prove native agreement with the regenerated inputs. Fresh Python
+regeneration itself is valid. L supplied a supported Cargo --config env path,
+worker fixture replication and native opened-path/hash receipts for a rerun.
+
+Source review also identified a missing signature-timestamp messageImprint
+policy gate before POE registration, and differing handling of a failed
+document-timestamp chain. These are concrete source review findings requiring
+negative oracle/native tests; no final native trust verdict is claimed from
+source inspection alone. V remains unmerged. The bounded variable ByteRange
+API is approved for S, with V coverage consumers and central caller tests;
+nonstandard ranges must never acquire standard coverage or a trusting bottom
+line. No pending function earns a pass from that approval.

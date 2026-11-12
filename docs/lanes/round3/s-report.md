@@ -1,5 +1,12 @@
 # Round 3 lane S report
 
+Latest lead acceptance: mainb81c254 passed the complete workspace gate.
+S remains824/754/63/7; overall1431/1052/66/313. The historical baseline and
+checkpoint tables below are retained for comparison. Only the bounded
+certificate-position and forbidden-only KU follow-ups were newly integrated;
+their eight native regressions add zero upstream functions. Known-red and
+unfinished CMS/time-slide/coverage/decode/MAC work remains unaccepted.
+
 Session: `sigis-r3-s`; branch: `hanko/r3-s`; baseline: `34482bf`.
 Status: in progress. No new passes are claimed yet.
 
@@ -257,7 +264,7 @@ Cargo.lock are preserved. This is not a ready milestone; L still owns the
 merged lockfile, integration gates and acceptance.
 
 
-## Lead curated follow-up (gate pending)
+## Lead curated follow-up (accepted after complete gate)
 
 Accepted main6ec3816 remains S824/754/63/7 and overall1431/1052/66/313.
 The historical tables above are not the current acceptance ledger. Only the

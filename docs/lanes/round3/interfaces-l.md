@@ -217,3 +217,36 @@ routing: c-config-review/unknown-policy-native-cli-differential.json and
 c-config-fail-open-routing.json under round3-launch artifacts. The quoted-
 boolean object discrepancy is separate; its eight tested final CLI verdicts
 did not demonstrate more native trust. Keep both evidence scopes explicit.
+
+
+## Accepted bounded S follow-up and approved ByteRange interface
+
+Mainb81c254 passed all six gate stages. The algorithm-failure producer now
+retains actual certificate position and original path; explicit forbidden KU
+is enforced independently of positive None/empty KU. Default/core EKU rules
+remain unchanged. Five KU plus three path-context regressions earn no upstream
+credit. Six of26 oracle cases intentionally reject more strictly than Python.
+C can consume this accepted shared fix; its unknown nested policy-key hold
+remains a separate mandatory configuration rejection requirement.
+
+L approves S's next bounded signatures (not yet delivered/accepted):
+
+```rust
+// sigis_pdf::signatures
+pub byte_range: Vec<u64>; // EmbeddedSignature field
+pub fn byte_range_data(bytes: &[u8], br: &[u64]) -> PdfResult<Vec<u8>>;
+```
+
+S owns parser/digestion and exact two-entry/bounds/odd/noninteger/negative/
+overflow/resource tests. V owns coverage/status consumers; P owns signer
+consumers. Do not silently truncate incomplete pairs or permit unbounded
+repeated-range allocation. Nonstandard cardinality must preserve oracle
+UNCLEAR/NONSTANDARD_COVERAGE and false bottom line, not gain standard coverage.
+The complete caller remains centrally integrated to avoid dev cycles; IDs
+stay S-owned and no pass follows from signature approval.
+
+Fresh fixture selection on VM jobs must use explicit Cargo --config env args,
+replicated exact fixture files and native actual opened-path/hash receipts.
+Ambient HANKO_* selection variables are not forwarded by rust-remote. Do not
+change global scheduling, force local, bypass the wrapper or equate parent
+shell exports with native fresh-input proof.

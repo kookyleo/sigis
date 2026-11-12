@@ -138,3 +138,21 @@ unknown nested policy keys are ignored by native CLI (exit0/INTACT:TRUSTED)
 but rejected by fresh Python CLI (exit1). C source remains unmerged and
 accepted0/252; exact evidence/routing are recorded. C must reject unknown keys
 and alias conflicts before trust. No claim that all differences fail closed.
+
+
+## S bounded shared follow-up acceptance
+
+Mainb81c254 passed the complete six-stage workspace gate:1292discovered,
+1284passed,8ignored,0failed,108reports. Certificate-position rejection retains
+leaf/intermediate context/full path/typed cutoff; forbidden-only KU now checks
+explicit bans before the positive None/empty early return. Core defaults/EKU
+remain unchanged. The six stricter Python-vs-Rust cases among26 fresh controls
+are documented; zero new upstream credit, counts1431/1052/66/313 unchanged.
+
+S's old baseline report was treated as historical. No unverified candidate,
+dirty CMS/time-slide source or archived known-red caller was merged. FD/slot
+lifetime audit was already complete; no historical build was killed/restarted.
+V45/47 remains provisional: retained package failure, fresh native provenance
+gap and source-level POE policy findings were routed for tests-first repairs.
+L prepared loopback PFX/AIA fixtures with eight Python smoke groups only in
+artifacts; no new live-function credit or main fixture change yet.
