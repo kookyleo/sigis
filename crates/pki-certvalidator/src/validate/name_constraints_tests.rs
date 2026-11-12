@@ -11,14 +11,22 @@ fn cases(name: &str) -> Vec<serde_json::Value> {
 #[test]
 fn test_dns_tree_contains() {
     for c in cases("test_dns_tree_contains") {
-        assert_eq!(dns_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()), c[2].as_bool().unwrap(), "{c}");
+        assert_eq!(
+            dns_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()),
+            c[2].as_bool().unwrap(),
+            "{c}"
+        );
     }
 }
 
 #[test]
 fn test_host_tree_contains() {
     for c in cases("test_host_tree_contains") {
-        assert_eq!(host_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(), c[2].as_bool().unwrap(), "{c}");
+        assert_eq!(
+            host_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(),
+            c[2].as_bool().unwrap(),
+            "{c}"
+        );
     }
 }
 
@@ -31,14 +39,22 @@ fn test_host_tree_contains_rejects_empty_base() {
 #[test]
 fn test_email_tree_contains() {
     for c in cases("test_email_tree_contains") {
-        assert_eq!(email_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(), c[2].as_bool().unwrap(), "{c}");
+        assert_eq!(
+            email_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(),
+            c[2].as_bool().unwrap(),
+            "{c}"
+        );
     }
 }
 
 #[test]
 fn test_uri_tree_contains() {
     for c in cases("test_uri_tree_contains") {
-        assert_eq!(uri_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(), c[2].as_bool().unwrap(), "{c}");
+        assert_eq!(
+            uri_tree_contains(c[0].as_str().unwrap(), c[1].as_str().unwrap()).unwrap(),
+            c[2].as_bool().unwrap(),
+            "{c}"
+        );
     }
 }
 

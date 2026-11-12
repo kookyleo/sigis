@@ -60,8 +60,8 @@ PKITS cases).
 | `test_ac_validate.py` (27) | `tests/ac_validate.rs` | Ported 27/27 |
 | `test_common_utils.py` (15), `test_fetch_limits.py` (11), `test_fetcher_lifecycle.py` (16) | `hanko-fetch/tests/` | See `hanko-fetch/PORTING.md` |
 | — | `tests/context_api.rs` | Lane A tests for the trust manager, trust anchor validity qualifiers and context revocation information access and extension |
-| `test_name_trees.py` (6) | — | Skipped: they test the containment predicates of pyHanko's internal `name_trees` module, which this port replaces by certval. Equivalent coverage: all 38 NIST PKITS name-constraint cases (4.13) agree, and `tests/policy_proc.rs` covers the pyHanko-specific behaviour (case-insensitive DNS / mail / URI matching, trailing dots, local parts staying case-sensitive, no over-matching, merged permitted and excluded subtrees) |
-| `test_policy_graph.py` (33) | — | Skipped: they test pyHanko's internal `PolicyGraph` class (RFC 9618 figures 4–7, pruning, duplicates, the exponential blow-up guard). certval implements the same RFC 9618 graph and caps its size (`MAX_POLICY_POOL_NODES`, fail closed). Equivalent coverage: NIST PKITS policy cases 4.8–4.12 agree, the user notice and CPS qualifier tests and the policy graph size limit tests pass |
+| `test_name_trees.py` (6) | `src/validate/name_constraints_tests.rs` | Round 3: all six functions pass with all 54 exact upstream cases. The predicates are used by production excluded-name validation; `tests/policy_proc.rs` also checks case normalization and non-overmatching |
+| `test_policy_graph.py` (33) | `src/validate/policy_graph_tests.rs` (partial) | All 33 remain skipped. Eight synthetic final-graph adapter tests exercise output assertions but bypass upstream process/mapping setup. The other 25 retain exact graph-operation gaps; PKITS and policy size-limit regressions do not complete these functions |
 
 `test_crl_fetch_races.py` exists only after the release (on pyHanko `main`) and
 is not part of the baseline.
@@ -117,15 +117,16 @@ and DSS handling, which are later phases.
 - PEM input is parsed leniently, as asn1crypto does (first `CERTIFICATE`
   block, any line length).
 
-## Round 3 S skip audit (Rust verification pending)
+## Round 3 S skip audit (targeted verification passed)
 
 The immutable assigned baseline remains **133 / 92 / 41 / 0**
-(total / passed / skipped / pending). See [ROUND3-S-AUDIT.md](ROUND3-S-AUDIT.md)
+(total / passed / skipped / pending). The verified lane result is
+**133 / 98 / 35 / 0**, pending lead integration acceptance.
+See [ROUND3-S-AUDIT.md](ROUND3-S-AUDIT.md)
 for every inherited skip, exact assertions, parameters and remaining gaps.
 
 Six new production name-predicate tests preserve all 54 upstream cases.
-They are candidates only: shared build-lock waits and tool host failures
-prevented Rust verification, so no upstream pass count is increased.
+All six pass in Rust, and a fresh pinned-AST inventory confirms every case.
 Eight synthetic policy-result adapter tests preserve output assertions and
 expose the zero-length graph guard bug, but bypass upstream graph mutation
 setup. All 33 graph functions therefore remain skipped, eight with partial
@@ -135,5 +136,9 @@ No new provider-dependent early return was added.
 Fresh pinned Python oracle evidence: 54 name test parameter invocations
 and eight user-constrained policy test invocations passed. Oracle calls
 are separate from Rust tests and upstream function counts. Build logs and
-reproducible commands are in the lane artifact handoff. Formatting and
-Rust unit/integration checks are required before acceptance.
+reproducible commands are in the lane artifact handoff. Wrapper formatting
+completed; check passed on vm2064 slot0, and the full library unit suite
+(25 tests) plus `policy_proc` integration suite (13 tests) passed on vm2065
+slot0. All tests ran with zero failures and zero ignored tests. The two
+context-preservation unit tests are regression coverage, not new upstream
+function passes. The lead still owns the complete workspace gate.

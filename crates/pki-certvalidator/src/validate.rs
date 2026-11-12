@@ -78,9 +78,9 @@ fn excluded_by_normalized_names(
     issued: &[(&Cert, &Cert)],
     excluded: &[x509_cert::ext::pkix::constraints::name::GeneralSubtree],
 ) -> Result<Option<usize>, ValidationError> {
+    use name_constraints::{dns_tree_contains, email_tree_contains, uri_tree_contains};
     use x509_cert::ext::pkix::name::GeneralName as G;
     use x509_cert::ext::pkix::SubjectAltName;
-    use name_constraints::{dns_tree_contains, email_tree_contains, uri_tree_contains};
     for (index, (cert, _)) in issued.iter().enumerate() {
         let Ok(Some((_, san))) = cert.extension::<SubjectAltName>() else {
             continue;
@@ -89,9 +89,13 @@ fn excluded_by_normalized_names(
             for st in excluded {
                 let hit = match (&st.base, name) {
                     (G::DnsName(b), G::DnsName(n)) => dns_tree_contains(b.as_str(), n.as_str()),
-                    (G::Rfc822Name(b), G::Rfc822Name(n)) => email_tree_contains(b.as_str(), n.as_str()).map_err(|e| ValidationError::PathValidation(e.into()))?,
+                    (G::Rfc822Name(b), G::Rfc822Name(n)) => {
+                        email_tree_contains(b.as_str(), n.as_str())
+                            .map_err(|e| ValidationError::PathValidation(e.into()))?
+                    }
                     (G::UniformResourceIdentifier(b), G::UniformResourceIdentifier(n)) => {
-                        uri_tree_contains(b.as_str(), n.as_str()).map_err(|e| ValidationError::PathValidation(e.into()))?
+                        uri_tree_contains(b.as_str(), n.as_str())
+                            .map_err(|e| ValidationError::PathValidation(e.into()))?
                     }
                     _ => false,
                 };
@@ -957,7 +961,7 @@ fn validate_path_in_stack(
     }
     if outcome.is_ok() {
         if let Some(excluded) = params.and_then(|p| p.initial_excluded_subtrees.as_ref()) {
-            if let Some(who) = excluded_by_normalized_names(&issued, excluded)? {
+            if let Some(who) = excluded_by_normalized_names(&issued, excluded).map_err(fail)? {
                 return Err(fail(ValidationError::PathValidation(format!(
                     "The path could not be validated because some names of {} are excluded from the namespace of the issuing authority. ",
                     path.describe(who, total)

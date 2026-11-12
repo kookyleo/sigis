@@ -3,6 +3,9 @@
 Baseline: pyhanko-certvalidator 0.33.0, pinned source commit `b48999514cb4`.
 The assigned crate denominator remains 133 unique upstream test functions.
 The baseline is 92 passed, 41 skipped and zero pending.
+After targeted Rust verification, the lane result is **133 total / 98 passed /
+35 skipped / zero pending**, pending lead integration acceptance. Exactly the
+six name-predicate functions move from skipped to passed.
 
 ## Name predicates
 
@@ -99,7 +102,7 @@ node/edge/allocation/complexity assertions.
 
 No deprecated compatibility alias was added merely to manufacture a pass.
 No blanket equivalence claim is retained for any of the 41 baseline skips.
-Six name functions are unverified candidates. All 33 graph functions remain
+Six name functions now pass all 54 upstream cases in Rust. All 33 graph functions remain
 skipped, including eight with partial adapter coverage; two deprecated
 registry functions remain skipped.
 
@@ -108,8 +111,23 @@ registry functions remain skipped.
 No provider-dependent early return is present in the new tests. The six
 name tests always execute all 54 parameter cases and the eight policy
 tests always execute their assertions. Live oracle evidence and final
-build/test logs are recorded in the lane artifact handoff. Until those
-checks finish, the baseline 133 total / 92 passed / 41 skipped / zero
-pending stays unchanged. Only six name functions are candidates for
-promotion after Rust verification. Eight synthetic policy adapter tests
-earn no upstream-function passes.
+build/test logs are recorded in the lane artifact handoff. A fresh pinned-AST
+comparison confirms the fixture exactly preserves all six functions and 54
+cases, including the non-parametrized empty-host error assertion.
+
+All Cargo commands used `tools/cargo-locked.sh` with normal configured
+compiler wrappers, features and profiles. Check passed on vm2064 slot0 in
+0.91s. Formatting completed successfully. The final full library unit suite
+passed 25/25 tests and `policy_proc` passed 13/13 on vm2065 slot0, both with
+zero failures and zero ignored tests. Library tests include the six name
+functions, eight partial graph adapter tests and both context-preservation
+regressions. The graph fixture encodes qualifiers through alloc-backed
+`Vec<PolicyQualifierInfo>` without enabling heapless features; exact DER
+qualifier assertions are retained. Invalid-name errors are mapped to a
+path-bearing `PathFailure` at the production caller.
+
+The verified lane result is 133 total / 98 passed / 35 skipped / zero pending.
+Eight synthetic policy adapter tests earn no upstream-function passes; the
+two context regressions also earn none. Fresh oracle calls remain a separate
+measurement: 54 name invocations and eight graph invocations passed. Lead
+acceptance and the complete workspace gate are outside this targeted result.
