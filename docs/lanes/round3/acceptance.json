@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "03a156cab6095c95236d903dc4e2b0be9f338d4b",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/ac-crl-recursion/gate/gate.json",
+  "accepted_source_commit": "7500fc743fef42a258cafe03cb60699c6b7fa914",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-ac-combined/accepted-gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -651,6 +651,30 @@
       "status": "passed",
       "rust_test": "test_sign_encrypted::test_copy_file_with_mdp_signature_and_backref",
       "reason": "Actual native HTTP TSA/seed resolution or recipient reauthentication/encrypted signing/plaintext-copy operations retain all original output/status assertions with mandatory fresh same-output oracle checks. Coherent producer gate0054aee and combined core-trust-fix workspace gate03a156c pass. No helper/oracle function overcount."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_async_strict_cert_fetchers_happy_path",
+      "status": "passed",
+      "rust_test": "live_pades::test_async_strict_cert_fetchers_happy_path",
+      "reason": "Exact leaf-only/shared eager session/three strict ten-second fetchers; actual signer-leaf AIA forwarding and HTTP; real native B-LTA and exact LtaUpdates, mandatory same-output fresh Python LTA and empty-root refusal. Exact pinned upstream function also executed afresh, no skips. Accepted on source 7500fc7."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_pades_lta_live",
+      "status": "passed",
+      "rust_test": "live_pades::test_pades_lta_live",
+      "reason": "Both original full-chain=True/False executions; fresh live PFX, actual AIA for leaf-only, native B-LTA and exact LtaUpdates; same-output pinned Python LTA and empty-root refusals. Exact pinned original function independently passed both parameters. Accepted on source 7500fc7."
+    },
+    {
+      "id": "pyhanko/test_ades_validation.py::test_pades_lta_live_ac_validation",
+      "status": "passed",
+      "rust_test": "ades_lta::test_pades_lta_live_ac_validation",
+      "reason": "Both original provider inputs satisfy complete native LTA/trust/approved RoleSyntax/error assertions. AC-only production fetchers use complete-CertID recorded transport; independent source/parameter audit and whole gate pass. Recording replay is distinct from S live HTTP proof. Accepted on source 7500fc7."
+    },
+    {
+      "id": "pyhanko/test_ades_validation_report.py::test_pades_with_attributes_report_smoke_test",
+      "status": "passed",
+      "rust_test": "ades_lta_report::test_pades_with_attributes_report_smoke_test",
+      "reason": "Complete nine original report substring assertions after authenticated AC/LTA and certified role validation; forged response cannot produce a certified report. Native fresh-input recordings are replay, not new live HTTP. Independent exact-source audit and whole gate pass. Accepted on source 7500fc7."
     }
   ]
 }

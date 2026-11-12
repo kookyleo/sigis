@@ -1,3 +1,7 @@
+# Lead acceptance update
+
+Accepted assigned counts: **47 total /47 passed /0 skipped /0 pending** on source 7500fc7. The two AC-dependent functions now pass complete original assertions after production AC retrieval binding, exact fresh-input native verification and all six workspace gates. The owner narrative below remains historical provenance; unrelated followups are not imported by this acceptance. See docs/lanes/round3/l-ac-http-and-live-lta.md for recording/live evidence boundaries and remaining compatibility limitations.
+
 # Lead acceptance: archival validation and reports
 
 Source df25c79 passed all six workspace gates: 1462 discovered /

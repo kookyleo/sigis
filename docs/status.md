@@ -41,13 +41,12 @@ The accepted CMS count corrects two historical partial-pass claims to pending:
 `test_overspecify_cms_digest_algo` lacked actual signer/refusal assertions;
 `test_direct_pdfcmsembedder_usage` lacked low-level/buffer/DSS assertions.
 The later P increment restores the overspecify function with actual signing
-and refusal assertions. Direct embedder now has low-level/DocMDP/DSS coverage
-but remains pending because caller-buffer identity is still absent. The two
+and refusal assertions. Direct embedder is now accepted after caller-buffer
+identity, low-level, DocMDP and DSS assertions passed the combined gate. The two
 earlier L completions and CMS corrections were separate accounting changes.
-V now has45 accepted unique functions after its coherent source, proof-policy
-corrections and actual fresh-input workspace gate. Both AC-dependent functions
-remain pending. Earlier provisional12/35 and failed/rerun package checkpoints
-below are historical evidence, superseded by the accepted source df25c79.
+V now has47 accepted unique functions after the coherent AC-routing and
+archival acceptance gate. Earlier provisional12/35 and intermediate45/2
+snapshots below are historical evidence; both AC-dependent functions are accepted.
 
 Main `6dc97bb` accepts the independently reviewed S primitive subset after a
 second complete serial workspace gate: six name functions, five fetcher/auth
@@ -59,10 +58,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main03a156c found **1,535 Rust tests: 1,527 passed, 8
-ignored, zero failed**, across136 reports. Build, workspace tests, strict
+The latest gate on main 7500fc7 found **1,578 Rust tests: 1,570 passed, 8
+ignored, zero failed**, across142 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/ac-crl-recursion/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-ac-combined/accepted-gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -177,12 +176,12 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 287 | 3 | 7 |
-| `sigis-pades` (including `ades`) | 47 | 45 | 0 | 2 |
+| `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,123** | **30** | **15** |
+| **Library lanes A–E** | **1,168** | **1,125** | **30** | **13** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
-| Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,127** | **30** | **274** |
+| Lead: live integration (round-3 L) | 11 | 6 | 0 | 5 |
+| **Overall** | **1,431** | **1,131** | **30** | **270** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -210,18 +209,17 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 | A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`: complete authenticated AC/LTA and embedded material/RoleSyntax caller |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
-| E / AdES | 2 | Authenticated live AC validation and the AC-dependent validation report |
 | Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
-| Lead / live integration | 7 | Seven Certomancer functions, all requiring actual LTA validation; missing-issuer fetching and loopback PFX/AIA routes also remain |
-| **Total** | **274** | |
+| Lead / live integration | 5 | Lazy-session, concurrent signing, two requests backend functions and CLI LTA; exact PFX/AIA prerequisites and two other LTA functions are accepted |
+| **Total** | **270** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
 qualified policies and LTV primitives; B supplies DSS, embedded files,
 encryption and incremental writing. These dependencies now exist, but
-pending callers still need implementation, error mapping and substantive
-upstream assertions. PDF MAC signing and complete AdES-LTA are remaining
-implementation gaps rather than tests to simply unignore.
+remaining callers still need error mapping and substantive upstream
+assertions. PDF MAC and complete AdES-LTA components now exist; the pending
+caller functions require actual integrated assertions before acceptance.
 
 ### Skip accounting and limitations
 
@@ -250,7 +248,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the313 pending
+provider behaviour and remaining validator compatibility; the270 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -358,8 +356,9 @@ resource/type-model differences into trust-verdict proofs. See the PKI audit.
 
 
 The integration removes the known decimal-collision, image-mode and
-schema-content leniency. Retained known trust-verdict divergences are
-intended to reject or grant less trust where the oracle accepts. The final
+schema-content leniency. Known trust-verdict differences require individual
+evidence. The retained combined-PKI context discrepancy remains an unresolved
+compatibility boundary; it cannot be called universally conservative. The final
 gate verifies exercised corpus behaviour; it does not establish safety for
 every possible input. **All differences cannot be labelled fail-closed**:
 semantic decoding and artifact compatibility differences below are not
@@ -418,11 +417,11 @@ parallel with system per-host worktree locks and automatic worker placement.
 
 | Lane | Exclusive file scope | Work and dependencies | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, D fixtures, `docs/lanes/d.md` | Finish D's 12 pending functions; consume B writer/encryption/embedding and A TSA/AC APIs; PDF MAC signing, AC/DSS autofill, metadata and provider gaps | Every assigned function passing or explicitly justified; oracle verifies produced PDF/CMS; unsupported mandatory requirements reject |
-| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, E AdES fixtures, `docs/lanes/e.md` | Finish 35 pending functions; seed values/status, DSS, past/LTA/POE, revinfo/local knowledge and full reports/requests using A/B/C/D interfaces | Complete assigned function accounting; tampered, expired and revoked replays agree with oracle; no fail-open verdict |
-| S — Structural / PKI parity | `crates/pdf/`, `crates/pdf-diff/`, `crates/pki-core/src/{algorithms.rs,asn1/,key_usage.rs}`, `crates/pki-certvalidator/`, `crates/pki-fetch/`, `crates/cms/`, `crates/eutl/`, their fixtures and A/B/C status files | Finish B's five pending integration tests, consume qualified policies/trust-manager APIs, audit runtime skips, numeric/schema bounds and algorithm gaps; close A's three pending CMS functions with P/V | Corpus and fresh adversarial differential verdicts remain fail closed; five PDF and three CMS pending functions become substantive assertions; exceptions explicit |
-| C — CLI / configuration | New lead-assigned CLI crate and its tests/configuration fixtures | Port 252 functions through current APIs; begin config/runtime/fields immediately, complete LTV commands after P/V | Match upstream output, error and exit behaviour; complete function accounting with local transport doubles |
-| L — Lead / integration | Root, `tools/`, facades/service, central fixtures and consolidated status docs | Central Certomancer export and collected-case inventory; seven remaining live integrations; merge lanes, final gates and service switch after parity | Repeatable oracle setup, skip audit, full gate and layer check; service backend switch only after acceptance |
+| P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Seven AC/DSS signing functions, three inherited skips, remaining evidence acquisition/state compatibility | Complete exact assertions, actual output oracle validation and unsupported mandatory requirements reject |
+| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 baseline functions accepted; continue security/parameter compatibility audits and new P/S/CLI consumers | Preserve proof/algorithm/coverage/qualification denials, exact source boundaries and fresh-input provenance |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Six pending callers (five PDF and Adobe AC CMS),27 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | All252 accepted IDs remain pending; review scoped module increments, repair three CMS sanity assertions and retained full-source failures | Real commands/artifacts/exit behavior; exact parameter coverage, mandatory requirements reject and full gate |
+| L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Five live functions, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
 
 P, V, S and C can start concurrently. S starts decode-limit assertions and
 independent parity work while coordinating PDF MAC/PAdES acceptance with
@@ -442,7 +441,7 @@ POI/LibreOffice differentials before signing is enabled. The EUTL guard
 added here does not claim these broader XML milestones.
 
 
-## Current unaccepted validation checkpoint
+## Historical unaccepted validation checkpoints
 
 V's committed implementation proposes45/47, with two AC-fetch-dependent
 functions explicitly pending. The complete package actually ran88 passes and
@@ -721,9 +720,67 @@ The prior reference also has a narrower active-path shortcut; this bounded
 repair is not a universal claim of lexical equivalence or all-input trust parity.
 Evidence: round3-launch/ac-crl-recursion/ and p-integration/.
 
-AC HTTP source45a04d5 is an unmerged candidate under independent review.
-Its strict-DER envelope before-I/O check needs a focused correction; current
-long-serial support explicitly rejects beyond20 encoded bytes. A possible
-issuer-Name DER matcher difference is source-only until a real signed variant
-and native verdict establish it. These limits and report/time metadata gaps
-prevent any universal all-divergences-fail-closed statement.
+At the preceding03a156c checkpoint, AC HTTP source45a04d5 was unmerged,
+and its DER/Name concerns were unresolved. The subsequent accepted AC retrieval
+section below records their actual red/green repairs and full gate. The20-byte
+serial boundary and report/time metadata limitations remain explicit; this
+history must not be read as a current unmerged-HTTP or source-only Name claim.
+
+
+## Accepted AC retrieval and live archival acceptance
+
+Source 7500fc7 passes all six workspace gates: 1578 discovered,
+1570 passed, 8 ignored, zero failed, 142 reports.
+The two earlier gate failures remain recorded: stale V AC replay/cache controls
+and a real CSC batching race. Neither was hidden by a skip or weaker assertion.
+Current counts: V47/47/0/0, L11/6/0/5; overall1431/1131/30/270.
+
+AC retrieval now shares production transport limits, caches and actual-AA
+request identity with PKC retrieval, and routes actual AC DER to its methods.
+Strict metadata envelope checks reject nonminimal headers before I/O. Serial
+INTEGER contents remain capped at20 encoded bytes; arbitrary-length serials
+are not supported. The response matcher uses the signed AC issuer Name DER
+and actual AA key hash. Eight genuinely signed Name variants agree with the
+pinned public validator, including three positive controls. A proposed matcher
+first accepted an oracle rejection; that candidate was corrected before merge.
+Fetched/cached CRLs still require the accepted03 signature guard. Required and
+hard-fail policies reject forged signatures; explicit soft-fail can tolerate a
+separate unavailable provider as the pinned policy does. It is not evidence
+that a forged CRL is authenticated or that all modes reject every bad response.
+
+V's complete remaining two original functions pass after its recorded AC
+adapter gains actual AC request binding. The adapter uses production fetchers
+over frozen responses with full CertID selection; it is not new live HTTP.
+The signature-mutation control creates a new fetcher from changed records,
+so an earlier cached genuine response cannot mask the intended negative input.
+S's real loopback HTTP composition and its repeated-cache rejection controls
+are separate evidence. No helper, recording, parameter or oracle call earns
+an extra immutable function.
+
+The context non_revoked_status_assertions getter returns an immutable borrowed
+view of existing caller state. Six tests and two compile-fail doctests retain
+order/hash/time/clone/security requirements and actual strict revocation
+matching. Successful optional validation does not invent an assertion. The
+accessor changes no default, policy, field or trust verdict and earns no ID.
+
+L completes strict live issuer fetching and both full-chain/leaf-only base
+cases. Their three new PDFs receive real native LTA, exact LtaUpdates and fresh
+same-output Python LTA; empty roots reject. Leaf-only signing requests the
+exact downloaded leaf through a forwarding real certificate fetcher before
+validation, rather than relying only on a shared TSA issuer-URL count. The
+two exact upstream functions independently pass all three original executions.
+CSC automatic batches now stop admitting jobs when full and bind commit to
+their original batch; retained-result/public-commit semantics remain tested.
+The existing three batch/authorization-count parameters remain unchanged.
+
+All divergences cannot be labelled fail-closed. Bounded serial/metadata refusals
+are stricter, but explicit optional-revocation policy, report/time metadata and
+other declared semantic/encoding gaps are not universal trust proofs. A separate
+combined ECC/RSA test context has a retained native/Python validation discrepancy
+under colliding synthetic issuer/serial identities. Using role-specific contexts
+for the exact upstream test does not repair that registry/path-selection gap.
+It remains under independent diagnosis, rather than being relabelled fail-closed.
+Unmerged CLI code remains outside acceptance; three configuration loader functions still
+need their exact CMS intact/valid assertions despite a raw-signature control.
+Detailed red/green logs, oracle outputs, public byte hashes and independent
+reviews are retained under round3-launch/s-ac-combined and round3/l-certomancer-next.
