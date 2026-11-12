@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "eb0e43a516e8f149abb0c613cccc00b3a2351f22",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/ac-fetch-api/gate/gate.json",
+  "accepted_source_commit": "d1e38df4fd8f2fccaaf724774f15f660b4964c5d",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-policy-graph-gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -206,6 +206,204 @@
       "status": "passed",
       "rust_test": "round3_signing_certless::test_signer_info_no_signing_cert",
       "reason": "Exact optional-certificate success/refusal assertions, complete native signing/trust and mandatory fresh oracle where applicable; no exclusions. Central integration suite avoids dev cycles. Accepted after the complete workspace gate on8a1568c."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_initial_graph",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_initial_graph",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_figure4_exact_match_shares_a_single_node",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_figure4_exact_match_shares_a_single_node",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_figure5_unmatched_policies_under_any_policy",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_figure5_unmatched_policies_under_any_policy",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_figure6_any_policy_in_certificate",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_figure6_any_policy_in_certificate",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_any_policy_inhibited",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_any_policy_inhibited",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_figure7_pruning_cascades",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_figure7_pruning_cascades",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_pruning_to_null_graph",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_pruning_to_null_graph",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_duplicate_policy_oid_is_ignored",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_duplicate_policy_oid_is_ignored",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_no_any_policy_parent_to_fall_back_on",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_no_any_policy_parent_to_fall_back_on",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::test_no_exponential_blowup",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_no_exponential_blowup",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_mapped_node_expects_subject_domain_policies",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_mapped_node_expects_subject_domain_policies",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_mapping_under_any_policy",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_mapping_under_any_policy",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_no_mapping_without_any_policy",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_no_mapping_without_any_policy",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_inhibited_mapping_deletes_node",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_inhibited_mapping_deletes_node",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_inhibited_mapping_of_absent_policy",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_inhibited_mapping_of_absent_policy",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_inhibited_mapping_can_null_out_the_graph",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_inhibited_mapping_can_null_out_the_graph",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestPolicyMapping.test_inhibited_mapping_prunes_once",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_policy_mapping::test_inhibited_mapping_prunes_once",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_nodes_outside_the_graph",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_nodes_outside_the_graph",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_duplicate_node_rejected",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_duplicate_node_rejected",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_size_limit_rejects_surplus_nodes",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_size_limit_rejects_surplus_nodes",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_deleted_nodes_free_up_space",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_deleted_nodes_free_up_space",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_delete_unknown_node_is_a_noop",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_delete_unknown_node_is_a_noop",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_delete_node_takes_orphans_with_it",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_delete_node_takes_orphans_with_it",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_prune_is_not_limited_to_deepest_level",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_prune_is_not_limited_to_deepest_level",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestGraphOperations.test_ancestors_and_descendants_of_a_diamond",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_graph_operations::test_ancestors_and_descendants_of_a_diamond",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_null_graph",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_null_graph",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_zero_length_path",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_zero_length_path",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_qualifiers_are_gathered_across_the_path",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_qualifiers_are_gathered_across_the_path",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_identical_qualifiers_are_deduplicated",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_identical_qualifiers_are_deduplicated",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_only_policies_in_the_root_domain_are_reported",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_only_policies_in_the_root_domain_are_reported",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_unacceptable_policies_are_filtered_out",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_unacceptable_policies_are_filtered_out",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_no_acceptable_policies",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_no_acceptable_policies",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
+    },
+    {
+      "id": "pyhanko-certvalidator/test_policy_graph.py::TestUserConstrainedPolicies.test_trailing_any_policy_expands_to_user_initial_policy_set",
+      "status": "passed",
+      "rust_test": "validate::rfc9618_tests::test_user_constrained_policies::test_trailing_any_policy_expands_to_user_initial_policy_set",
+      "reason": "Exact native graph update/mapping/pruning/node limits and policy/qualifier assertions replace partial final-row adapters; production uses the same graph. Independent assertion review, fresh pinned 33-function Python run and full workspace gate on d1e38df passed."
     }
   ]
 }

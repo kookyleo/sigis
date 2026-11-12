@@ -314,3 +314,29 @@ historical compile-failed rerun above. The source-level POE policy/chain
 controls, two AC functions and full merged workspace gate remain separate
 requirements. No V or overall upstream count change. Use verified separate
 Cargo env.KEY.value/env.KEY.force leaf arguments for runtime selectors.
+
+
+## Native graph accepted after full integration
+
+Source d1e38df passed build, tests, strict clippy, strict docs, layer and fmt:
+1359 discovered / 1351 passed / 8 ignored / 0 failed,
+across 109 reports. Only the33 exact immutable S policy-graph IDs change
+skipped -> passed. Production path validation uses the same native RFC9618
+graph; certval remains mandatory. All source assertions were independently
+reviewed, and the lead freshly reran all33 pinned Python tests successfully.
+Eight partial final-row adapters were replaced by real mutation/mapping tests.
+Oracle calls and native helpers earn no additional upstream-function credit.
+
+Accepted certvalidator133/131/2/0; S824/787/30/7; overall1431/1085/33/313.
+The two deprecated registry entry points remain skipped. The six-file curated
+source includes d79ee62 empty-intersection protection and68a1ae7 native graph,
+preserving accepted typed algorithm horizons. Actual transient node limits
+reject a six-node peak even when only five nodes survive. Disjoint caller and
+anchor policy sets retain their empty intersection during path validation.
+Already-materialized public merge empty-set provenance remains a separate API
+gap. Native limits apply after certval, not to whole-validator memory use.
+No universal fail-closed parity claim follows from this increment.
+
+Existing S comparisons cover21 public policy/limit results, five actual DER
+hashes and four qualifier encodings; the lead's separate33-function Python run
+is fresh execution. Logs: round3-launch/s-policy-graph-gate/ artifacts.

@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on maineb0e43a found **1,330 Rust tests: 1,322 passed, eight
-ignored, zero failed**, across109 reports. Build, workspace tests, strict
+The latest gate on main d1e38df found **1,359 Rust tests: 1,351 passed, 8
+ignored, zero failed**, across 109 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/ac-fetch-api/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-policy-graph-gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -171,7 +171,7 @@ integration and the lead gate; their claimed passes are not accepted early.
 | Crate / assigned test owner | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
-| `sigis-pki-certvalidator` | 133 | 98 | 35 | 0 |
+| `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
 | `sigis-cms` | 78 | 74 | 2 | 2 |
 | `sigis-pdf` | 406 | 390 | 11 | 5 |
@@ -179,10 +179,10 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pades-sign` | 297 | 282 | 3 | 12 |
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,048** | **66** | **54** |
+| **Library lanes A–E** | **1,168** | **1,081** | **33** | **54** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
 | Lead: live integration (round-3 L) | 11 | 4 | 0 | 7 |
-| **Overall** | **1,431** | **1,052** | **66** | **313** |
+| **Overall** | **1,431** | **1,085** | **33** | **313** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -225,14 +225,14 @@ implementation gaps rather than tests to simply unignore.
 
 ### Skip accounting and limitations
 
-The 66 skipped functions comprise certvalidator 35, fetchers 13,
+The 33 skipped functions comprise certvalidator two, fetchers 13,
 CMS two, PDF 11, PDF-diff two and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
-- Certvalidator retains 33 policy-graph internal functions and two deprecated
-  registry entries as skipped. Eight synthetic final-graph adapter tests are
-  partial and earn no full-function credit. All six name-predicate functions
-  now exercise their 54 exact pinned cases. Fetchers retain 12 ownership/
+- Certvalidator retains two deprecated registry entries as skipped. All33
+  exact policy-graph functions pass using actual native graph operations;
+  eight former partial adapters were replaced. All six name-predicate functions
+  exercise their54 exact pinned cases. Fetchers retain12 ownership/
   bootstrap gaps and one deprecated TSA alias; four lifecycle functions and
   nonsensical auth rejection are accepted.
 - The two CMS skips concern signer-side weak-digest prevention and
@@ -250,7 +250,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and internal policy-graph parity; the313 pending
+provider behaviour and shared policy-merge semantics; the313 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -543,3 +543,29 @@ not established: the independently reproduced C unknown-policy-key trusting
 verdict remains a mandatory repair in unmerged source. Known accepted bounds
 and forbidden-only KU differences reject more strictly; encoding/diagnostic
 and source-only review findings have separate, narrower evidence.
+
+
+## Accepted native policy graph
+
+Source d1e38df passed build, tests, strict clippy, strict docs, layer and fmt:
+1359 discovered / 1351 passed / 8 ignored / 0 failed,
+across 109 reports. Only the33 exact immutable S policy-graph IDs change
+skipped -> passed. Production path validation uses the same native RFC9618
+graph; certval remains mandatory. All source assertions were independently
+reviewed, and the lead freshly reran all33 pinned Python tests successfully.
+Eight partial final-row adapters were replaced by real mutation/mapping tests.
+Oracle calls and native helpers earn no additional upstream-function credit.
+
+Accepted certvalidator133/131/2/0; S824/787/30/7; overall1431/1085/33/313.
+The two deprecated registry entry points remain skipped. The six-file curated
+source includes d79ee62 empty-intersection protection and68a1ae7 native graph,
+preserving accepted typed algorithm horizons. Actual transient node limits
+reject a six-node peak even when only five nodes survive. Disjoint caller and
+anchor policy sets retain their empty intersection during path validation.
+Already-materialized public merge empty-set provenance remains a separate API
+gap. Native limits apply after certval, not to whole-validator memory use.
+No universal fail-closed parity claim follows from this increment.
+
+Existing S comparisons cover21 public policy/limit results, five actual DER
+hashes and four qualifier encodings; the lead's separate33-function Python run
+is fresh execution. Logs: round3-launch/s-policy-graph-gate/ artifacts.

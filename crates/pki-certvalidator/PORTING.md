@@ -21,14 +21,14 @@ Nothing is wired into the Sigis service yet.
 | `registry.py` (`SimpleCertificateStore`, `CertificateRegistry`, `LayeredCertificateStore`, trust manager service-type filter) | `src/registry.rs`, `src/validate.rs` | Ported (lookups by name, key hash, key identifier, issuer and serial; AKI-based issuer disambiguation also used in path building) |
 | `context.py` | `src/context.rs` | Partly: trust roots and a trust manager, other certificates, CRLs and OCSP responses (readable through `crls()` / `ocsps()`, extensible with `with_revinfo`), fetchers, moment (with `point_in_time_validation`), best signature time, time tolerance, policies, assertions, `retrieve_crls` |
 | `path.py` | `src/path.rs` | Ported: `ValidationPath` (`find_issuing_authority`, `truncate_to_issuer_and_append`, `copy_and_drop_leaf`, `copy_and_append`, `pkix_len`), `QualifiedPolicy` |
-| `policy_graph.py` (`user_constrained_policies`) | `src/validate.rs` (`qualified_policies`) | Ported over certval's final policy graph (edges reconstructed from expected policy sets) |
+| `policy_graph.py` | `src/validate/rfc9618.rs` | Native graph operations and authority/user projection, used by path validation; certval remains mandatory |
 | `_state.py` (`check_path_verif_recursion`) | `src/revinfo/mod.rs` (`Subject::stack`) | Ported |
 | `validate.py` (`validate_path`, `_check_revocation` incl. soft-fail on fetch errors), `__init__.py` (`CertificateValidator`, `find_valid_path`) | `src/validate.rs`, `src/revinfo/mod.rs` | Ported; RFC 5280 processing delegated to `certval`. `PathFailure` carries what pyHanko's exceptions carry (`is_ee_cert`, time horizon, original path) |
 | `revinfo/archival.py` (`_judge_revinfo`) | `src/revinfo/freshness.rs` | Ported; replaceable through the `FreshnessJudge` trait |
 | `revinfo/validate_crl.py` (`verify_crl`) | `src/revinfo/crl.rs` | Ported: candidate CRL issuer search (direct, indirect, `cRLIssuer`), issuer path validation with the recursion guard, IDP scoping, reason coverage across CRLs (`onlySomeReasons`), delta CRLs, `certificateIssuer` entries, fetching more CRLs when the supplied ones do not suffice. CRL issuer AIA fetching is not supported (the fetch trait only fetches certificate issuers) |
 | `revinfo/validate_ocsp.py` | `src/revinfo/ocsp.rs` | Ported: CertID matching, responder lookup (name, key hash, SKI), issuer and delegated responders with full path validation (revocation included unless `ocsp-nocheck`), fetched responses replace supplied ones for certificates with an OCSP URL |
 | `path` building (`registry.py`, `CertificationPathBuilder`) | `src/validate.rs::build_paths` | Ported (name chaining with key identifiers, AIA issuer fetching when no issuer is known) |
-| `policy_graph.py`, `name_trees.py` | — (`certval`) | Replaced by certval (RFC 5280 name constraints, RFC 9618 policy graph), plus the pyHanko-specific parts in `src/validate.rs`: permitted subtrees of anchor and caller intersected, excluded subtrees matched case-insensitively and without trailing dots, the policy graph size limit, and pyHanko's permitted/excluded failure messages |
+| `name_trees.py` | `src/validate/name_constraints.rs`, certval | Exact native excluded-name predicates, with mandatory certval name checks and intersected permitted subtrees |
 | `fetchers/` | `sigis-pki-fetch` | Ported there; used through `sigis_pki_core::fetch` traits |
 | asn1crypto name handling (`Name.human_friendly`, string preparation) | `src/names.rs`, `src/stringprep_tables.rs` | Ported: names failing RFC 4518 preparation make validation fail as in pyHanko |
 | `validate.py` (`async_validate_ac`, `check_ac_holder_match`, `_candidate_ac_issuers`, `validate_aa_usage`, `_check_ac_signature`, `_validate_ac_targeting`, `_check_aa_controls`), `path.py` (`aa_attr_in_scope`), `asn1_types.py` (`AAControls`) | `src/ac.rs` | Ported: RFC 5755 AC parsing (both tagging styles of `baseCertificateID`), holder matching, AA search by name / issuer-serial / AKI, AA usage, AA path with aaControls and AA path length, signature, validity, targeting, revocation of the AC through the CRL/OCSP code (`revinfo::Target`) |
@@ -39,7 +39,19 @@ Nothing is wired into the Sigis service yet.
 | `ltv/errors.py` | `src/ltv/mod.rs` (`LtvError`) | Ported (`InsufficientPOEError`, `TimeSlideFailure`, `PastValidatePrecheckFailure`) |
 | ASN.1 from `asn1crypto` and `pyhanko/sign/ades/*_asn1.py` | `hanko-core/src/asn1/` | ESS `SigningCertificate(V2)`, `SignaturePolicyIdentifier`, `CommitmentTypeIndication` defined here; CMS/X.509/OCSP/TSP from RustCrypto |
 
+## Current assigned acceptance
+
+Round3 source d1e38df is accepted at133 total /131passed /2skipped /0pending.
+The two registry deprecations remain skipped. Exact mappings and proof:
+[native graph report](../../docs/lanes/round3/s-policy-graph.md).
+Already-materialized merge empty-set provenance remains a separate shared API
+gap; native node limits do not pre-bound certval. Universal parity is not claimed.
+
 ## Test mapping
+
+The initial first-lane inventory paragraph below is historical. The current
+assigned denominator is133; common-utils/fetch/lifecycle belong to pki-fetch.
+Consolidated ownership.json plus acceptance.json is authoritative.
 
 Baseline: tag `pyhanko-certvalidator/v0.33.0` (commit `b48999514cb4`). It has
 **175** test functions (counted with `ast`, including methods of test
@@ -61,7 +73,7 @@ PKITS cases).
 | `test_common_utils.py` (15), `test_fetch_limits.py` (11), `test_fetcher_lifecycle.py` (16) | `hanko-fetch/tests/` | See `hanko-fetch/PORTING.md` |
 | — | `tests/context_api.rs` | Lane A tests for the trust manager, trust anchor validity qualifiers and context revocation information access and extension |
 | `test_name_trees.py` (6) | `src/validate/name_constraints_tests.rs` | Round 3: all six functions pass with all 54 exact upstream cases. The predicates are used by production excluded-name validation; `tests/policy_proc.rs` also checks case normalization and non-overmatching |
-| `test_policy_graph.py` (33) | `src/validate/policy_graph_tests.rs` (partial) | All 33 remain skipped. Eight synthetic final-graph adapter tests exercise output assertions but bypass upstream process/mapping setup. The other 25 retain exact graph-operation gaps; PKITS and policy size-limit regressions do not complete these functions |
+| `test_policy_graph.py` (33) | `src/validate/rfc9618_tests.rs` | All33 accepted after the full workspace gate on d1e38df; actual graph operations replace the eight partial adapters |
 
 `test_crl_fetch_races.py` exists only after the release (on pyHanko `main`) and
 is not part of the baseline.
