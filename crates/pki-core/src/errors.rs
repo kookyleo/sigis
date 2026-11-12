@@ -291,14 +291,13 @@ mod tests {
             assert!(error.is_instance_of("PathError"));
             assert!(!error.is_insufficient_revinfo());
             assert!(!error.is_instance_of("InsufficientRevinfoError"));
-            let ValidationError::DisallowedAlgorithm {
-                banned_since: actual,
-                ..
-            } = error.clone()
-            else {
-                panic!("expected algorithm rejection");
-            };
-            assert_eq!(actual, banned_since);
+            assert!(matches!(
+                &error,
+                ValidationError::DisallowedAlgorithm {
+                    banned_since: actual,
+                    ..
+                } if *actual == banned_since
+            ));
             assert_eq!(HankoError::from(error).to_string(), "policy rejection");
         }
     }
