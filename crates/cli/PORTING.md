@@ -1,16 +1,16 @@
 # Independently verified CLI increments
 
-Current projection: plugins. Fixed assignment252; local proposal **252 / 68 passed / 0 skipped / 184 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
+Current projection: crypt. Fixed assignment252; local proposal **252 / 91 passed / 0 skipped / 161 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
 
 The complete implementation and every deferred original assertion are preserved
 at `4d8c8b7a92a949d5ba4f36581916d39f6fbe02a9` / `backup/r3-c-full-before-module-increments` and will be restored
 after all four independently buildable commits. Deferred commands explicitly
 reject. No unavailable command is counted as passed.
 
-Current cumulative native run: 95 passed, zero failed/ignored. Evidence
-`~/.codex/artifacts/sigis/round3/c/increment-plugins-{build,tests,clippy,fmt}.log`
+Current cumulative native run: 121 passed, zero failed/ignored. Evidence
+`~/.codex/artifacts/sigis/round3/c/increment-crypt-{build,tests,clippy,fmt}.log`
 and corresponding scheduler receipts. Tests use the fresh Cargo artifact
-`executable-increment-plugins/pyhanko`, copied/hash-checked on both workers.
+`executable-increment-crypt/pyhanko`, copied/hash-checked on both workers.
 Build, all-target tests, strict all-target clippy and formatting passed through
 the normal wrapper. No compiler/cache/placement override, raw Cargo or job cap.
 
@@ -21,6 +21,29 @@ fail-closed behavior. Root Cargo.lock is generated and excluded from commits.
 
 | Exact upstream ID | Rust test |
 | --- | --- |
+| `pyhanko-cli/test_cli_crypt.py::test_encrypt_file` | `crypt::test_encrypt_file` |
+| `pyhanko-cli/test_cli_crypt.py::test_encrypt_file_with_stdin_pass` | `crypt::test_encrypt_file_with_stdin_pass` |
+| `pyhanko-cli/test_cli_crypt.py::test_encrypt_file_with_recipient_cert` | `crypt::test_encrypt_file_with_recipient_cert` |
+| `pyhanko-cli/test_cli_crypt.py::test_encrypt_not_both_pubkey_and_password` | `crypt::test_encrypt_not_both_pubkey_and_password` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_owner_password` | `crypt::test_decrypt_with_owner_password` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_owner_password_on_stdin` | `crypt::test_decrypt_with_owner_password_on_stdin` |
+| `pyhanko-cli/test_cli_crypt.py::test_force_decrypt_with_user_password` | `crypt::test_force_decrypt_with_user_password` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_user_password_no_force` | `crypt::test_decrypt_with_user_password_no_force` |
+| `pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_unencrypted_file` | `crypt::test_attempt_decrypt_unencrypted_file` |
+| `pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_wrong_sh_type` | `crypt::test_attempt_decrypt_wrong_sh_type` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_wrong_password` | `crypt::test_decrypt_with_wrong_password` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key` | `crypt::test_decrypt_with_private_key` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_wrong_key` | `crypt::test_decrypt_with_wrong_key` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_no_force_change_of_encryption_forbidden` | `crypt::test_decrypt_with_private_key_no_force_change_of_encryption_forbidden` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_force_change_of_encryption_forbidden` | `crypt::test_decrypt_with_private_key_force_change_of_encryption_forbidden` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_and_passfile` | `crypt::test_decrypt_with_private_key_and_passfile` |
+| `pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_private_key_unencrypted_file` | `crypt::test_attempt_decrypt_with_private_key_unencrypted_file` |
+| `pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_private_key_sh_type_mismatch` | `crypt::test_attempt_decrypt_with_private_key_sh_type_mismatch` |
+| `pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_non_matching_key` | `crypt::test_attempt_decrypt_with_non_matching_key` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_no_pass` | `crypt::test_decrypt_with_private_key_no_pass` |
+| `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_empty_pass_on_stdin` | `crypt::test_decrypt_with_private_key_empty_pass_on_stdin` |
+| `pyhanko-cli/test_cli_decode_limits.py::test_decrypt_password` | `crypt::test_decrypt_password` |
+| `pyhanko-cli/test_cli_decode_limits.py::test_decrypt_pubkey` | `crypt::test_decrypt_pubkey` |
 | `pyhanko-cli/test_cli_plugins.py::test_load_plugins_from_config` | `plugins::test_load_plugins_from_config` |
 | `pyhanko-cli/test_cli_plugins.py::test_gracefully_handle_dupe_plugins` | `plugins::test_gracefully_handle_dupe_plugins` |
 | `pyhanko-cli/test_cli_plugins.py::test_plugin_must_be_class` | `plugins::test_plugin_must_be_class` |

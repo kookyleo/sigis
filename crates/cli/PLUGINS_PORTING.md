@@ -23,4 +23,4 @@ Python modules are not imported/executed. Native registered endpoint ABI is an e
 
 Oracle evidence: Historical fresh pinned Python source-only suite:11 cases in config/upstream-plugins-pytest.log. The native11 tests execute the actual registry entry point, independently of that oracle result.
 
-No provider skips. Fresh native evidence: increment-plugins-tests.log; current cumulative projection uses its own preserved Cargo-produced executable, not the full-source binary. Build/tests/clippy/fmt receipts record actual scheduler host/slot.
+No provider skips. Fresh native evidence: increment-crypt-tests.log; current cumulative projection uses its own preserved Cargo-produced executable, not the full-source binary. Build/tests/clippy/fmt receipts record actual scheduler host/slot.

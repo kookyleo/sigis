@@ -1,6 +1,8 @@
-//! pyHanko-compatible configuration and native plugin registration.
+//! pyHanko-compatible configuration, native plugins and PDF cryptography.
 pub mod config;
+pub mod crypt;
 pub mod plugins;
+pub mod runtime;
 
 use clap::{Arg, ArgAction, Command};
 use std::{fs, io::Write, path::Path};
@@ -52,8 +54,18 @@ pub fn run(args: &[String]) -> Output {
     run_with_registry(args, &plugins::PluginRegistry::default())
 }
 
-/// Run native registry, help and identity dispatch; signing engines are unavailable.
+/// Run with explicitly registered native signing plugins.
 pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) -> Output {
+    run_with_runtime(args, registry, &runtime::ValidationRuntime::default())
+}
+
+/// Run cryptography with explicit runtime services and native plugin dispatch.
+/// Signing, validation and stamp engines are unavailable in this increment.
+pub fn run_with_runtime(
+    args: &[String],
+    registry: &plugins::PluginRegistry,
+    runtime: &runtime::ValidationRuntime,
+) -> Output {
     let matches = match command()
         .try_get_matches_from(std::iter::once("pyhanko".to_owned()).chain(args.iter().cloned()))
     {
@@ -104,12 +116,17 @@ pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) ->
         .cloned()
         .collect();
     let result = match name {
+        "encrypt" | "decrypt" => {
+            let mut crypt_args = vec![name.to_owned()];
+            crypt_args.extend(values.iter().cloned());
+            crypt::run_with_runtime(&crypt_args, runtime)
+        }
         "sign" => match values.first().map(String::as_str) {
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry),
             Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: addsig (native registry help and identity validation only)\n".into()),
-            Some(command) => Err(format!("Command '{command}' is not available in this plugin-registry increment.")),
+            Some(command) => Err(format!("Command '{command}' is not available in this cryptography increment.")),
         },
-        _ => Err(format!("Command '{name}' is not available in this plugin-registry increment.")),
+        _ => Err(format!("Command '{name}' is not available in this cryptography increment.")),
     };
     let mut output = match result {
         Ok(stdout) => Output {

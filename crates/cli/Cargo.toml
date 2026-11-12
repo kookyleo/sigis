@@ -20,8 +20,11 @@ regex = { workspace = true }
 serde_json = { workspace = true }
 sigis-pades-sign = { workspace = true }
 sigis-pki-core = { workspace = true }
+sigis-pdf = { workspace = true }
+sigis-pki-fetch = { workspace = true }
+rpassword = "=7.4.0"
+openssl = "=0.10.81"
 
 [dev-dependencies]
-openssl = "=0.10.81"
 sigis-testdata = { workspace = true }
 tempfile = "=3.27.0"
