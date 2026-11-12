@@ -75,6 +75,35 @@ impl ValidationContext {
         &self.revinfo_policy
     }
 
+    /// Explicit caller-supplied non-revocation assertions, in builder order.
+    ///
+    /// This is a borrowed view of configured state, not a status inferred from
+    /// successful validation or a tolerated missing response. Matching still
+    /// requires the exact target DER SHA-256 and an assertion time at least the
+    /// validation time. Trust and signature checks remain separate.
+    ///
+    /// The returned slice cannot be mutated:
+    ///
+    /// ```compile_fail
+    /// use sigis_pki_certvalidator::{NonRevokedStatusAssertion, ValidationContext};
+    /// let context = ValidationContext::builder().build().unwrap();
+    /// let _: &mut [NonRevokedStatusAssertion] = context.non_revoked_status_assertions();
+    /// ```
+    ///
+    /// The borrow cannot outlive its context:
+    ///
+    /// ```compile_fail
+    /// use sigis_pki_certvalidator::ValidationContext;
+    /// let assertions = {
+    ///     let context = ValidationContext::builder().build().unwrap();
+    ///     context.non_revoked_status_assertions()
+    /// };
+    /// assert!(assertions.is_empty());
+    /// ```
+    pub fn non_revoked_status_assertions(&self) -> &[NonRevokedStatusAssertion] {
+        &self.assertions
+    }
+
     /// Configured fetchers (none by default).
     pub fn fetchers(&self) -> &Fetchers {
         &self.fetchers
