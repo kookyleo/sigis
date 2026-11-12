@@ -686,9 +686,15 @@ impl CscSigner {
     /// Commit the current batch by calling `signatures/signHash`
     /// (`commit`). Signers waiting on the batch are woken up.
     pub fn commit(&self) -> Result<()> {
+        self.commit_batch(None)
+    }
+
+    // Automatic commits stay bound to the batch that triggered them. Public
+    // commits select the current batch while holding the same state lock.
+    fn commit_batch(&self, batch_id: Option<u64>) -> Result<()> {
         let deadline = Instant::now() + self.options.sign_timeout;
         let mut st = self.lock();
-        let Some(id) = st.current else {
+        let Some(id) = batch_id.or(st.current) else {
             return Ok(());
         };
         let mut waiting = false;
@@ -822,9 +828,12 @@ impl KeySigner for CscSigner {
         };
         let tbs_hash = base64_digest(data, digest);
         let mut st = self.lock();
-        // a commit is going on: wait for it to finish, then start a new batch
+        // A full automatic batch is sealed even before its committing thread
+        // reacquires the lock. Wait for that batch, then start or join another.
         while let Some(b) = st.current.and_then(|id| st.batches.get(&id)) {
-            if !b.initiated {
+            if !b.initiated
+                && (!self.options.batch_autocommit || b.hashes.len() < self.options.batch_size)
+            {
                 break;
             }
             st = self
@@ -876,7 +885,7 @@ impl KeySigner for CscSigner {
         if self.options.batch_autocommit && ix + 1 == self.options.batch_size {
             drop(st);
             // failures are reported through the batch below
-            let _ = self.commit();
+            let _ = self.commit_batch(Some(id));
             st = self.lock();
         }
         // wait until a commit goes through
@@ -915,3 +924,7 @@ impl KeySigner for CscSigner {
         outcome.0.ok_or_else(|| no_results(outcome.1.as_deref()))
     }
 }
+
+#[cfg(test)]
+#[path = "csc_batch_race_tests.rs"]
+mod batch_race_tests;
