@@ -29,3 +29,24 @@ Scripts must pin the validation time and never contact external hosts.
 The round-3 live integration sidecar binds only `127.0.0.1:0` and serves
 Certomancer over actual loopback HTTP; its parent test owns its lifetime.
 Other verdict scripts remain offline and disable fetching.
+
+
+The accepted live integration suites require the pinned oracle explicitly;
+missing dependencies fail instead of turning into a successful early return.
+`tests/live_csc.rs` additionally needs certomancer-csc-dummy0.4.2 and
+python-pae0.1.0. They may be installed separately without changing the shared
+reference venv:
+
+```sh
+/tmp/pyhanko-oracle/venv/bin/python -m pip install --no-deps \
+  --target /path/to/csc-oracle-deps certomancer-csc-dummy==0.4.2 python-pae==0.1.0
+export HANKO_CSC_ORACLE_DEPS=/path/to/csc-oracle-deps
+HANKO_ORACLE=/tmp/pyhanko-oracle/venv/bin/python tools/cargo-locked.sh test --test live_csc
+```
+
+The acceptance hosts use an isolated artifact directory replicated identically
+on s7/vm2064/vm2065; the helper also supports correctly pinned normal installs.
+Each test owns its ephemeral loopback service child. Real Rust/Python PDF
+outputs are validated in both implementations with the actual generated root
+and fixed time, then checked again with empty roots. The CSC suite preserves
+the original automatic-batch and authorization-count parameters.
