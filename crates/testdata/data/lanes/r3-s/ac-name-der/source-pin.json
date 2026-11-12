@@ -1,0 +1,23 @@
+[
+  {
+    "module": "pyhanko_certvalidator.validate",
+    "installed": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/validate.py",
+    "pinned": "/tmp/pyhanko-oracle/src/cv-0.33.0/pkgs/pyhanko-certvalidator/src/pyhanko_certvalidator/validate.py",
+    "sha256": "ce43e832c4b03dba222acbdbcf3140771ac1470e44e75738089dd5036c176574",
+    "equal": true
+  },
+  {
+    "module": "pyhanko_certvalidator.revinfo.validate_ocsp",
+    "installed": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/revinfo/validate_ocsp.py",
+    "pinned": "/tmp/pyhanko-oracle/src/cv-0.33.0/pkgs/pyhanko-certvalidator/src/pyhanko_certvalidator/revinfo/validate_ocsp.py",
+    "sha256": "daf12bec34ef171dc2a85116751e979446fb452a8f5fcbd42b736056341dd449",
+    "equal": true
+  },
+  {
+    "module": "pyhanko_certvalidator.util",
+    "installed": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/util.py",
+    "pinned": "/tmp/pyhanko-oracle/src/cv-0.33.0/pkgs/pyhanko-certvalidator/src/pyhanko_certvalidator/util.py",
+    "sha256": "15a29e64ee7bf332b2648622d7d37a5a11a5b9d805fd48a54ac6a101e8b74a7c",
+    "equal": true
+  }
+]

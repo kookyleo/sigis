@@ -1,0 +1,36 @@
+{
+  "kind": "independent public DER reload/cryptographic verification after final oracle run; no new public validation calls",
+  "final8outcomes_match_expected": true,
+  "both_AC_signatures_valid": true,
+  "all_other_ac_info_fields_unchanged": {
+    "version": true,
+    "holder": true,
+    "signature": true,
+    "serial_number": true,
+    "att_cert_validity_period": true,
+    "attributes": true,
+    "issuer_unique_id": true,
+    "extensions": true
+  },
+  "ocsp_crypto": {
+    "actual-aa-name-good.ocsp.der": {
+      "signature_verified_with_actual_AA_key": true,
+      "certid_hash": "sha256",
+      "issuer_name_hash": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a"
+    },
+    "alternate-ac-name-good.ocsp.der": {
+      "signature_verified_with_actual_AA_key": true,
+      "certid_hash": "sha256",
+      "issuer_name_hash": "5a37300d5f660f8e56f04f60be9445c267c37267c2c2782f4df9e742f894ce7f"
+    },
+    "actual-aa-name-bad-signature.ocsp.der": {
+      "signature_verified_with_actual_AA_key": false,
+      "certid_hash": "sha256",
+      "issuer_name_hash": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a"
+    }
+  },
+  "all_final_file_hashes_match": true,
+  "source_corrections_after_run": "Only reproducibility script assertions strengthened; final generated data frozen unchanged",
+  "native_execution": false,
+  "upstream_credit": 0
+}

@@ -185,6 +185,14 @@ fn generalized_time(t: &Tlv<'_>) -> Result<Moment, AcError> {
         .map_err(|e| malformed(&e.to_string()))
 }
 
+/// Canonical positive AC serial INTEGER as an unsigned magnitude. Both the AC
+/// parser and x509-cert's serial wrapper can retain a required sign octet;
+/// normalize only after mature DER INTEGER validation, never by truncation.
+pub(crate) fn ac_serial_magnitude(serial_der: &[u8]) -> Option<&[u8]> {
+    let serial = der::asn1::UintRef::from_der(serial_der).ok()?;
+    (serial.as_bytes() != [0]).then_some(serial.as_bytes())
+}
+
 impl AttrCert {
     /// Parse a DER `AttributeCertificate`.
     pub fn from_der(der: &[u8]) -> Result<Self, AcError> {
@@ -284,6 +292,14 @@ impl AttrCert {
     }
 
     pub(crate) fn target(&self) -> Option<Target> {
+        // A baseCertificateID identifies the AA certificate through its issuer;
+        // that issuer is not the AA subject used by AC revocation metadata.
+        let issuer = self.issuer.names.as_deref().and_then(dir_name)?;
+        // Store the unsigned magnitude. OCSP/CRL matching applies the same
+        // canonical positive DER normalization to the mature serial wrappers,
+        // whose Int-backed accessor can retain a required sign-padding octet.
+        let serial_der = sigis_pki_core::asn1::tlv::encode(0x02, &self.serial);
+        let serial = ac_serial_magnitude(&serial_der)?;
         let dps: Vec<DistributionPoint> = self
             .extension(&oids::CE_CRL_DISTRIBUTION_POINTS)
             .and_then(|e| CrlDistributionPoints::from_der(e.extn_value.as_bytes()).ok())
@@ -295,8 +311,8 @@ impl AttrCert {
             .is_some_and(|aia| aia.0.iter().any(|ad| ad.access_method == oids::AD_OCSP));
         Some(Target {
             der: self.der.clone(),
-            serial: self.serial.clone(),
-            issuer: self.issuer_name()?,
+            serial: serial.to_vec(),
+            issuer,
             declares_crl: self.extension(&oids::CE_CRL_DISTRIBUTION_POINTS).is_some(),
             dps,
             is_ca: false,
@@ -891,5 +907,50 @@ pub fn attribute_type_name(oid: &RawOid) -> String {
         "2.5.4.72" => "role".into(),
         "2.5.4.55" => "clearance".into(),
         other => other.into(),
+    }
+}
+
+#[cfg(test)]
+mod fetch_target_tests {
+    use super::*;
+
+    fn fixture() -> AttrCert {
+        let path = sigis_testdata::certvalidator(&[
+            "attribute-certs",
+            "basic-aa",
+            "aa",
+            "alice-role-with-rev.attr.crt",
+        ]);
+        AttrCert::from_der(&std::fs::read(path).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn ac_revocation_target_normalizes_required_positive_sign_padding() {
+        let mut ac = fixture();
+        ac.serial = vec![0, 0x80];
+        assert_eq!(ac.target().unwrap().serial, [0x80]);
+    }
+
+    #[test]
+    fn ac_revocation_target_rejects_nonpositive_or_noncanonical_serial_contents() {
+        for serial in [vec![], vec![0], vec![0x80], vec![0, 1], vec![0, 0, 0x80]] {
+            let mut ac = fixture();
+            ac.serial = serial;
+            assert!(ac.target().is_none());
+        }
+    }
+
+    #[test]
+    fn ac_revocation_target_does_not_substitute_the_aa_certificate_issuer() {
+        let ac_der = std::fs::read(sigis_testdata::certvalidator(&[
+            "attribute-certs",
+            "oneoff",
+            "alice-v2form-only-base-cert-id.attr.crt",
+        ]))
+        .unwrap();
+        let ac = AttrCert::from_der(&ac_der).unwrap();
+        assert!(ac.issuer.names.is_none());
+        assert!(ac.issuer.base_certificate_id.is_some());
+        assert!(ac.target().is_none());
     }
 }

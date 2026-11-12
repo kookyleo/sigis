@@ -7,13 +7,14 @@
 
 use base64::Engine;
 use const_oid::ObjectIdentifier;
-use der::asn1::{Ia5String, OctetString};
+use der::asn1::{AnyRef, BitStringRef, Ia5String, OctetString, UintRef};
 use der::{Decode, Encode};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::ext::pkix::crl::dp::DistributionPoint;
 use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName};
 use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, CrlDistributionPoints};
 use x509_cert::ext::{Extension, Extensions};
+use x509_cert::name::Name;
 use x509_ocsp::{OcspRequest, OcspResponse, OcspResponseStatus, Request, TbsRequest};
 
 use sigis_pki_core::algorithms::DigestAlgorithm;
@@ -280,6 +281,145 @@ pub fn ac_extensions(ac_der: &[u8]) -> Vec<Extension> {
     parse().unwrap_or_default()
 }
 
+/// Retrieval metadata only: this does not authenticate an attribute certificate.
+pub(crate) struct AcFetchInfo {
+    pub(crate) issuer_name: Name,
+    pub(crate) serial: Vec<u8>,
+    extensions: Vec<Extension>,
+}
+
+impl AcFetchInfo {
+    pub(crate) fn ocsp_urls(&self) -> Vec<String> {
+        aia_urls(&self.extensions, oids::AD_OCSP)
+            .into_iter()
+            .filter(|u| http_url(u))
+            .collect()
+    }
+
+    pub(crate) fn crl_dps(&self) -> Vec<DistributionPoint> {
+        let mut dps = http_dps(&self.extensions, &oids::CE_CRL_DISTRIBUTION_POINTS);
+        dps.extend(http_dps(&self.extensions, &oids::CE_FRESHEST_CRL));
+        dps
+    }
+}
+
+fn http_url(url: &str) -> bool {
+    let lower = url.to_ascii_lowercase();
+    lower.starts_with("http://") || lower.starts_with("https://")
+}
+
+/// Strictly extract the fields used for AC retrieval before any I/O/cache lookup.
+/// Unlike the legacy best-effort extension helper, invalid metadata is an error.
+pub(crate) fn ac_fetch_info(ac_der: &[u8]) -> Result<AcFetchInfo, ContentError> {
+    let malformed = |e: &dyn std::fmt::Display| ContentError(format!("Invalid AC input: {e}"));
+    // Core TLV views intentionally accept BER headers. Validate each envelope
+    // traversed below with the mature DER decoder before reading its children.
+    // This remains metadata extraction, not authentication or a full AC parser.
+    AnyRef::from_der(ac_der).map_err(|e| malformed(&e))?;
+    let ac = Tlv::parse_exact(ac_der).map_err(|e| malformed(&e))?;
+    if !ac.is_universal(tag::SEQUENCE) {
+        return Err(malformed(&"expected AttributeCertificate SEQUENCE"));
+    }
+    let outer = ac.children().map_err(|e| malformed(&e))?;
+    if outer.len() != 3 || !outer[0].is_universal(tag::SEQUENCE) {
+        return Err(malformed(
+            &"expected acinfo, signatureAlgorithm and signatureValue",
+        ));
+    }
+    AnyRef::from_der(outer[0].raw).map_err(|e| malformed(&e))?;
+    AlgorithmIdentifierOwned::from_der(outer[1].raw).map_err(|e| malformed(&e))?;
+    BitStringRef::from_der(outer[2].raw).map_err(|e| malformed(&e))?;
+    let fields = outer[0].children().map_err(|e| malformed(&e))?;
+    if !(7..=9).contains(&fields.len()) {
+        return Err(malformed(&"invalid AttributeCertificateInfo fields"));
+    }
+    let version = u8::from_der(fields[0].raw).map_err(|e| malformed(&e))?;
+    if version > 1 {
+        return Err(malformed(&"unsupported attribute certificate version"));
+    }
+    if !fields[1].is_universal(tag::SEQUENCE)
+        || !fields[5].is_universal(tag::SEQUENCE)
+        || !fields[6].is_universal(tag::SEQUENCE)
+    {
+        return Err(malformed(&"invalid holder, validity or attributes tag"));
+    }
+    AlgorithmIdentifierOwned::from_der(fields[3].raw).map_err(|e| malformed(&e))?;
+    let serial = UintRef::from_der(fields[4].raw).map_err(|e| malformed(&e))?;
+    if serial.as_bytes().iter().all(|b| *b == 0) {
+        return Err(malformed(&"AC serial must be positive"));
+    }
+    // The current request and response profiles are bounded. Do not truncate a
+    // long AC serial or claim Raw response support that the resolved crate lacks.
+    x509_cert::serial_number::SerialNumber::<x509_cert::certificate::Rfc5280>::new(
+        serial.as_bytes(),
+    )
+    .map_err(|e| malformed(&e))?;
+
+    let issuer = fields[2];
+    AnyRef::from_der(issuer.raw).map_err(|e| malformed(&e))?;
+    let names = if issuer.is_universal(tag::SEQUENCE) {
+        Vec::<GeneralName>::from_der(issuer.raw).map_err(|e| malformed(&e))?
+    } else if issuer.is_context(0) && issuer.constructed {
+        let parts = issuer.children().map_err(|e| malformed(&e))?;
+        let Some(names) = parts.first().filter(|p| p.is_universal(tag::SEQUENCE)) else {
+            return Err(malformed(
+                &"AC v2 issuerName is required; baseCertificateID is not the AA name",
+            ));
+        };
+        let mut previous = None;
+        for optional in &parts[1..] {
+            if !optional.constructed
+                || !(optional.is_context(0) || optional.is_context(1))
+                || previous.is_some_and(|n| optional.number <= n)
+            {
+                return Err(malformed(&"invalid AC v2 issuer fields"));
+            }
+            previous = Some(optional.number);
+        }
+        Vec::<GeneralName>::from_der(names.raw).map_err(|e| malformed(&e))?
+    } else {
+        return Err(malformed(&"unsupported AC issuer form"));
+    };
+    let issuer_name = names
+        .into_iter()
+        .find_map(|name| match name {
+            GeneralName::DirectoryName(name) => Some(name),
+            _ => None,
+        })
+        .ok_or_else(|| malformed(&"AC issuerName has no directoryName"))?;
+
+    let mut rest = &fields[7..];
+    if let Some(uid) = rest.first().filter(|f| f.is_universal(tag::BIT_STRING)) {
+        BitStringRef::from_der(uid.raw).map_err(|e| malformed(&e))?;
+        rest = &rest[1..];
+    }
+    let extensions = match rest {
+        [] => Vec::new(),
+        [exts] => Extensions::from_der(exts.raw).map_err(|e| malformed(&e))?,
+        _ => return Err(malformed(&"ambiguous AC optional fields")),
+    };
+    let mut seen = std::collections::HashSet::new();
+    for extension in &extensions {
+        if !seen.insert(extension.extn_id) {
+            return Err(malformed(&"duplicate AC extension"));
+        }
+        if extension.extn_id == oids::PE_AUTHORITY_INFO_ACCESS {
+            AuthorityInfoAccessSyntax::from_der(extension.extn_value.as_bytes())
+                .map_err(|e| malformed(&e))?;
+        } else if extension.extn_id == oids::CE_CRL_DISTRIBUTION_POINTS
+            || extension.extn_id == oids::CE_FRESHEST_CRL
+        {
+            CrlDistributionPoints::from_der(extension.extn_value.as_bytes())
+                .map_err(|e| malformed(&e))?;
+        }
+    }
+    Ok(AcFetchInfo {
+        issuer_name,
+        serial: serial.as_bytes().to_vec(),
+        extensions,
+    })
+}
+
 fn find_extension<'a>(exts: &'a [Extension], oid: &ObjectIdentifier) -> Option<&'a Extension> {
     exts.iter().find(|e| e.extn_id == *oid)
 }
@@ -387,6 +527,15 @@ pub fn format_ocsp_request(
     hash: CertIdHash,
     nonce: Option<[u8; 16]>,
 ) -> Result<OcspRequest, der::Error> {
+    format_ocsp_request_for_serial(cert.serial_bytes(), issuer, hash, nonce)
+}
+
+pub(crate) fn format_ocsp_request_for_serial(
+    serial: &[u8],
+    issuer: &Cert,
+    hash: CertIdHash,
+    nonce: Option<[u8; 16]>,
+) -> Result<OcspRequest, der::Error> {
     let d = hash.digest();
     let issuer_name = issuer.subject_der().map_err(|_| der::ErrorKind::Failed)?;
     let key = issuer.public_key();
@@ -397,7 +546,7 @@ pub fn format_ocsp_request(
         },
         issuer_name_hash: OctetString::new(d.digest(&issuer_name))?,
         issuer_key_hash: OctetString::new(d.digest(key.subject_public_key.raw_bytes()))?,
-        serial_number: x509_cert::serial_number::SerialNumber::new(cert.serial_bytes())?,
+        serial_number: x509_cert::serial_number::SerialNumber::new(serial)?,
     };
     let request_extensions = match nonce {
         Some(n) => Some(vec![Extension {
@@ -481,6 +630,50 @@ pub fn process_ocsp_response_data(
         }
     }
     Ok(response)
+}
+
+/// An AC fetch result must contain a complete CertID for this AC and actual AA.
+/// This is a stricter retrieval-stage filter than Python's status/nonce helper;
+/// authenticity, authorization and freshness still belong to the validator.
+pub(crate) fn check_ac_response_id(
+    response: &OcspResponse,
+    serial: &[u8],
+    issuer: &Cert,
+) -> Result<(), ContentError> {
+    let bytes = response
+        .response_bytes
+        .as_ref()
+        .filter(|b| b.response_type == oids::OCSP_BASIC)
+        .ok_or_else(|| ContentError("AC OCSP response has no basic response".into()))?;
+    let basic = x509_ocsp::BasicOcspResponse::from_der(bytes.response.as_bytes())
+        .map_err(|e| ContentError(format!("AC OCSP basic response: {e}")))?;
+    let name = issuer
+        .subject_der()
+        .map_err(|e| ContentError(e.to_string()))?;
+    let key = issuer.public_key();
+    for single in &basic.tbs_response_data.responses {
+        let id = &single.cert_id;
+        let Some(hash) = DigestAlgorithm::from_oid(&id.hash_algorithm.oid) else {
+            continue;
+        };
+        // SerialNumber stores a signed INTEGER; normalize only after mature DER
+        // decoding proves a canonical positive value. Required sign padding is
+        // not part of the target's unsigned magnitude.
+        let encoded = id
+            .serial_number
+            .to_der()
+            .map_err(|e| ContentError(e.to_string()))?;
+        let value = UintRef::from_der(&encoded).map_err(|e| ContentError(e.to_string()))?;
+        if value.as_bytes() == serial
+            && id.issuer_name_hash.as_bytes() == hash.digest(&name)
+            && id.issuer_key_hash.as_bytes() == hash.digest(key.subject_public_key.raw_bytes())
+        {
+            return Ok(());
+        }
+    }
+    Err(ContentError(
+        "AC OCSP response CertID does not match the AC and actual AA".into(),
+    ))
 }
 
 /// Random bytes from the operating system.

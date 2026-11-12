@@ -38,11 +38,20 @@ pub(crate) fn match_cert_id(
     let Some(digest) = DigestAlgorithm::from_oid(&cert_id.hash_algorithm.oid) else {
         return Ok(CertIdMatch::Unrelated);
     };
-    let name_hash = digest.digest(&subject.cert.issuer.to_der()?);
+    // Match the issuer Name encoding carried by the signed certificate/AC,
+    // as the pinned validator does. The key hash still binds the actual AA;
+    // request construction independently uses the actual AA's name and key.
+    let issuer_name = subject.cert.issuer.to_der()?;
+    let name_hash = digest.digest(&issuer_name);
     let key_hash = digest.digest(subject.issuer.public_key().subject_public_key.raw_bytes());
     let name_mismatch = cert_id.issuer_name_hash.as_bytes() != name_hash.as_slice();
     let key_mismatch = cert_id.issuer_key_hash.as_bytes() != key_hash.as_slice();
-    let serial_mismatch = cert_id.serial_number.as_bytes() != subject.cert.serial.as_slice();
+    let serial_mismatch = if subject.cert.is_ac {
+        crate::ac::ac_serial_magnitude(&cert_id.serial_number.to_der()?)
+            != Some(subject.cert.serial.as_slice())
+    } else {
+        cert_id.serial_number.as_bytes() != subject.cert.serial.as_slice()
+    };
     Ok(if (name_mismatch || serial_mismatch) && key_mismatch {
         CertIdMatch::Unrelated
     } else if name_mismatch {
@@ -264,11 +273,15 @@ pub(crate) fn verify_ocsp(
     // responder come from the fetcher (`async_retrieve_ocsps`).
     let fetched;
     let mut responses: Vec<&OcspContainer> = match ctx.fetchers.ocsp.as_ref() {
-        Some(fetcher) if subject.cert.declares_ocsp && subject.cert.x509.is_some() => {
-            let Some(x509) = subject.cert.x509.as_ref() else {
+        Some(fetcher) if subject.cert.declares_ocsp => {
+            let response = if subject.cert.is_ac {
+                fetcher.fetch_ac_ocsp(&subject.cert.der, subject.issuer)
+            } else if let Some(x509) = subject.cert.x509.as_ref() {
+                fetcher.fetch_ocsp(x509, subject.issuer)
+            } else {
                 return Ok(CheckOutcome::NoMatches);
             };
-            match fetcher.fetch_ocsp(x509, subject.issuer) {
+            match response {
                 Ok(der) => {
                     fetched = OcspContainer::load(&der).unwrap_or_default();
                     fetched.iter().collect()
@@ -306,4 +319,70 @@ pub(crate) fn verify_ocsp(
         suspect_stale: failures.suspect_stale(),
         failures: failures.messages,
     })
+}
+
+#[cfg(test)]
+mod ac_serial_tests {
+    use super::*;
+    use crate::ac::AttrCert;
+    use crate::authority::TrustAnchor;
+    use crate::path::ValidationPath;
+    use der::Decode;
+    use std::sync::Arc;
+
+    fn fixture(parts: &[&str]) -> Vec<u8> {
+        let mut path = vec!["attribute-certs", "basic-aa"];
+        path.extend_from_slice(parts);
+        std::fs::read(sigis_testdata::certvalidator(&path)).unwrap()
+    }
+
+    #[test]
+    fn ac_certid_matching_uses_positive_magnitude_after_mature_serial_decode() {
+        let aa = Cert::from_pem_or_der(&fixture(&["interm", "role-aa.crt"])).unwrap();
+        let root = Cert::from_pem_or_der(&fixture(&["root", "root.crt"])).unwrap();
+        let interm = Cert::from_pem_or_der(&fixture(&["root", "interm-role.crt"])).unwrap();
+        let path = ValidationPath::new(TrustAnchor::new(root), vec![interm], Some(aa.clone()));
+        let mut ac = AttrCert::from_der(&fixture(&["aa", "alice-role-with-rev.attr.crt"])).unwrap();
+        ac.serial = vec![0, 0x80];
+        let target = ac.target().unwrap();
+        assert_eq!(target.serial, [0x80]);
+        let subject = Subject {
+            cert: &target,
+            issuer: &aa,
+            path: &path,
+            description: "the attribute certificate".into(),
+            description_definite: "the attribute certificate".into(),
+            is_ee: true,
+            stack: &[],
+        };
+        let mut response = OcspContainer::load(&fixture(&["alice-all-good.ors"]))
+            .unwrap()
+            .remove(0);
+        let serial = x509_cert::serial_number::SerialNumber::new(&[0x80]).unwrap();
+        assert_eq!(serial.to_der().unwrap(), [0x02, 0x02, 0, 0x80]);
+        // x509-cert0.3 stores Int: contrary to its accessor's documentation,
+        // required positive sign padding is present in as_bytes().
+        assert_eq!(serial.as_bytes(), [0, 0x80]);
+        Arc::make_mut(&mut response.basic)
+            .tbs_response_data
+            .responses[0]
+            .cert_id
+            .serial_number = serial;
+        assert!(matches!(
+            match_cert_id(&response, &subject).unwrap(),
+            CertIdMatch::Match
+        ));
+        Arc::make_mut(&mut response.basic)
+            .tbs_response_data
+            .responses[0]
+            .cert_id
+            .serial_number =
+            x509_cert::serial_number::SerialNumber::from_der(&[0x02, 0x01, 0x80]).unwrap();
+        assert!(matches!(
+            match_cert_id(&response, &subject).unwrap(),
+            CertIdMatch::Failure(_)
+        ));
+        // This tests matching only. Mutating signed response fields never
+        // supplies signature-validation or trust evidence.
+    }
 }

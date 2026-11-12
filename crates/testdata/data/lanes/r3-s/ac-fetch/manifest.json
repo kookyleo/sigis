@@ -1,0 +1,76 @@
+{
+  "scope": "Supplemental publicly committed signed AC/OCSP/CRL evidence; zero upstream-function credit",
+  "source_good_response": "pyhanko-certvalidator/attribute-certs/basic-aa/alice-all-good.ors",
+  "source_good_response_sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+  "actual_AA_certificate": "pyhanko-certvalidator/attribute-certs/basic-aa/interm/role-aa.crt",
+  "actual_AA_der_sha256": "4efe0986c6707054321e149c6290852597c5c5cbdf33494ff3c413e030ce0434",
+  "AC": "pyhanko-certvalidator/attribute-certs/basic-aa/aa/alice-role-with-rev.attr.crt",
+  "AC_der_sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+  "generation_script_artifact": "/home/l/.codex/artifacts/sigis/round3/s/ac-fetch/oracle/validate_http.py",
+  "files": [
+    {
+      "file": "unknown-signed.ors",
+      "sha256": "dbe9eb485c20e9693c3729b1ff5e41a45d6492cf56f7f2e572729a990ac72598",
+      "length": 1552,
+      "cert_status": "unknown",
+      "signature_verifies_with_actual_AA": true,
+      "response_serial": 4096,
+      "signed_tbs_sha256": "cb4b5b495d61e95679ca15141fe346bd2a0e6a0bc4ced800ac6879f142169ea2"
+    },
+    {
+      "file": "bad-signature.ors",
+      "sha256": "751cc9b5bc381344e95e3562c561c08b0a743d84addd9a8c62d3acf5126203fa",
+      "length": 1552,
+      "cert_status": "good",
+      "signature_verifies_with_actual_AA": false,
+      "response_serial": 4096,
+      "signed_tbs_sha256": "ef1600a83ba222e4a74aa0c77609bba3db1989d39f76444702bc3337e3268206"
+    },
+    {
+      "file": "alice-role-other-serial.attr.crt",
+      "sha256": "cf5d93a23b15c64c86fe41e1466c158f4b7860b88c4c0e14da68bcf195e1934e",
+      "length": 792,
+      "signature_verifies_with_actual_AA": true,
+      "signed_tbs_sha256": "14dce69388aaaf3cb04e77aa589adedb2a2d68075502de3ba80b422b4000e99a"
+    },
+    {
+      "file": "other-serial-good.ors",
+      "sha256": "e1806125bc6b4fb2425fabca4acc543be5969aee192b9aa445d03a10b1da8f82",
+      "length": 1552,
+      "signature_verifies_with_actual_AA": true,
+      "signed_tbs_sha256": "b244afb668a3e75e366a55dd56a973e7885b4b036d1d24bd5e15e4b045c1765e"
+    },
+    {
+      "file": "wrong-issuer-name-hash.ors",
+      "sha256": "ac2bf9b200638739263b68c19890b56f8849136b8f1f506e771fdea46fe6ca13",
+      "length": 1552,
+      "signature_verifies_with_actual_AA": true,
+      "signed_tbs_sha256": "0700039c50be8006b6728bdcebcb5b45ee33a659301fd25f2bc657142dc17d9f"
+    },
+    {
+      "file": "wrong-issuer-key-hash.ors",
+      "sha256": "0febd78fe5d86f7382d5308c23184e1d0709ee2ce8f43c23fa9db62e56cce262",
+      "length": 1552,
+      "signature_verifies_with_actual_AA": true,
+      "signed_tbs_sha256": "e7276d46c23307dc646e7bdf96626249501556846ad002c230ef8f3406d43756"
+    },
+    {
+      "file": "valid-aa-pkc-only.crl",
+      "sha256": "ba789a31c83f113a7de78a1b9100c1803f02bddf30e9f2d921fdbfe34b71c2c3",
+      "length": 535,
+      "signature_verifies_with_actual_AA": true,
+      "signed_tbs_sha256": "de4a730cee645b32e1526c866439e1a45b66eae2e1e506da0bf638eecdc6fc65"
+    }
+  ],
+  "private_keys_committed": false,
+  "identity_controls": {
+    "AA_serial": 4096,
+    "holder_serial": 4097,
+    "other_AC_serial": 4098,
+    "all_identity_and_scope_controls_signed_with_actual_AA": true
+  },
+  "additional_generation_artifacts": [
+    "/home/l/.codex/artifacts/sigis/round3/s/ac-fetch/oracle/generate_identity_controls.py",
+    "/home/l/.codex/artifacts/sigis/round3/s/ac-fetch/oracle/generate_crl_scope.py"
+  ]
+}

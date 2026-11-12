@@ -6,6 +6,7 @@
 //! reason-partitioned CRLs, and fetching more CRLs when the supplied ones
 //! do not suffice.
 
+use der::Encode;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, IssuingDistributionPoint};
 use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName};
@@ -458,7 +459,14 @@ fn find_cert_in_list(
                 last_issuer = Some(name);
             }
         }
-        if entry.serial_number.as_bytes() != serial {
+        let serial_matches = if subject.cert.is_ac {
+            entry.serial_number.to_der().ok().is_some_and(|serial_der| {
+                crate::ac::ac_serial_magnitude(&serial_der) == Some(serial)
+            })
+        } else {
+            entry.serial_number.as_bytes() == serial
+        };
+        if !serial_matches {
             continue;
         }
         let issuer = last_issuer.as_ref().unwrap_or(crl_authority_name);
@@ -648,11 +656,17 @@ pub(crate) fn verify_crl(
     let Some(outcome) = completeness(checked, total, &mut errs) else {
         return Ok(CheckOutcome::Good);
     };
-    let (Some(fetcher), Some(x509)) = (ctx.fetchers.crl.as_ref(), subject.cert.x509.as_ref())
-    else {
+    let Some(fetcher) = ctx.fetchers.crl.as_ref() else {
         return Ok(outcome);
     };
-    let fetched = match fetcher.fetch_crls(x509) {
+    let fetched = if subject.cert.is_ac {
+        fetcher.fetch_ac_crls(&subject.cert.der)
+    } else if let Some(x509) = subject.cert.x509.as_ref() {
+        fetcher.fetch_crls(x509)
+    } else {
+        return Ok(outcome);
+    };
+    let fetched = match fetched {
         Ok(f) => f,
         Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
     };
@@ -682,4 +696,67 @@ pub(crate) fn verify_crl(
     }
     total += to_process.len();
     Ok(completeness(checked, total, &mut errs).unwrap_or(CheckOutcome::Good))
+}
+
+#[cfg(test)]
+mod ac_serial_tests {
+    use super::*;
+    use crate::ac::AttrCert;
+    use crate::authority::TrustAnchor;
+    use der::{Decode, Encode};
+    use std::sync::Arc;
+    use x509_cert::certificate::Raw;
+
+    fn fixture(parts: &[&str]) -> Vec<u8> {
+        let mut path = vec!["attribute-certs", "basic-aa"];
+        path.extend_from_slice(parts);
+        std::fs::read(sigis_testdata::certvalidator(&path)).unwrap()
+    }
+
+    #[test]
+    fn ac_crl_entries_match_positive_magnitude_without_accepting_negative_serials() {
+        let aa = Cert::from_pem_or_der(&fixture(&["interm", "role-aa.crt"])).unwrap();
+        let root = Cert::from_pem_or_der(&fixture(&["root", "root.crt"])).unwrap();
+        let interm = Cert::from_pem_or_der(&fixture(&["root", "interm-role.crt"])).unwrap();
+        let path = ValidationPath::new(TrustAnchor::new(root), vec![interm], Some(aa.clone()));
+        let mut ac = AttrCert::from_der(&fixture(&["aa", "alice-role-with-rev.attr.crt"])).unwrap();
+        ac.serial = vec![0, 0x80];
+        let target = ac.target().unwrap();
+        assert_eq!(target.serial, [0x80]);
+        let subject = Subject {
+            cert: &target,
+            issuer: &aa,
+            path: &path,
+            description: "the attribute certificate".into(),
+            description_definite: "the attribute certificate".into(),
+            is_ee: true,
+            stack: &[],
+        };
+        let mut crl = CrlContainer::from_der(&fixture(&["role-aa-some-revoked.crl"])).unwrap();
+        let serial = x509_cert::serial_number::SerialNumber::<Raw>::new(&[0x80]).unwrap();
+        assert_eq!(serial.to_der().unwrap(), [0x02, 0x02, 0, 0x80]);
+        assert_eq!(serial.as_bytes(), [0, 0x80]);
+        let entries = Arc::make_mut(&mut crl.crl)
+            .tbs_cert_list
+            .revoked_certificates
+            .as_mut()
+            .unwrap();
+        entries.truncate(1);
+        entries[0].serial_number = serial;
+        assert!(find_cert_in_list(&crl, &subject, aa.subject())
+            .unwrap()
+            .is_some());
+        Arc::make_mut(&mut crl.crl)
+            .tbs_cert_list
+            .revoked_certificates
+            .as_mut()
+            .unwrap()[0]
+            .serial_number =
+            x509_cert::serial_number::SerialNumber::<Raw>::from_der(&[0x02, 0x01, 0x80]).unwrap();
+        assert!(find_cert_in_list(&crl, &subject, aa.subject())
+            .unwrap()
+            .is_none());
+        // Entry lookup only: the deliberately mutated CRL is not passed to
+        // signature validation and makes no trusting verdict.
+    }
 }

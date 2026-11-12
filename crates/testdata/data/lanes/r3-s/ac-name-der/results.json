@@ -1,0 +1,174 @@
+{
+  "kind": "fresh pinned public async_validate_ac experiment; no native execution",
+  "complete": true,
+  "failure": null,
+  "executed_utc": "2026-11-12T22:22:36.945592+00:00",
+  "versions": {
+    "pyhanko": "0.38.1",
+    "certvalidator": "0.33.0"
+  },
+  "validation_time": "2019-12-12T00:00:00+00:00",
+  "context": {
+    "trust_anchor": "actual AA certificate",
+    "allow_fetching": false,
+    "ee_rule": "OCSP_REQUIRED",
+    "intermediate_rule": "OCSP_REQUIRED",
+    "supplied_crls": 0,
+    "fallback_to_crl": false
+  },
+  "changes": [
+    {
+      "oid": "2.5.4.3",
+      "text": "Leaf AA",
+      "old_type": "utf8_string",
+      "new_type": "printable_string"
+    }
+  ],
+  "name_native_equal": true,
+  "name_hashable_equal": true,
+  "name_der_equal": false,
+  "actual_aa_name_sha1": "4eef44dee2a70d1fd80be99bf7533f6e9e901154",
+  "alternate_ac_name_sha1": "d0c29fe1ea85cc8cabc82ae939957065b314d270",
+  "aa_spki_sha256": "64157cbcb32a46eed422063b19f96029de383ed4f0e750aa30e057e357164e72",
+  "both_AC_signatures_verified_with_actual_AA_key": true,
+  "both_good_responses_signatures_verified_with_actual_AA_key": true,
+  "public_validation_calls": 8,
+  "records": [
+    {
+      "case": "base_original_positive",
+      "ac_sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+      "response_sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a",
+      "accepted": true,
+      "aa_path_length": 1,
+      "approved_attributes": [
+        "role"
+      ]
+    },
+    {
+      "case": "base_resigned_actual_name_positive",
+      "ac_sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+      "response_sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a",
+      "accepted": true,
+      "aa_path_length": 1,
+      "approved_attributes": [
+        "role"
+      ]
+    },
+    {
+      "case": "alternate_ac_actual_aa_name",
+      "ac_sha256": "faf6e7861f3ce49eb12f65a54e1f42b9305e099ca41f9cc246e19b90896ab62d",
+      "response_sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "5a37300d5f660f8e56f04f60be9445c267c37267c2c2782f4df9e742f894ce7f",
+      "accepted": false,
+      "error_class": "InsufficientRevinfoError",
+      "message": "The path could not be validated because the mandatory OCSP check(s) for intermediate certificate 2 failed: OCSP response issuer name hash does not match"
+    },
+    {
+      "case": "alternate_ac_matching_alternate_name_positive",
+      "ac_sha256": "faf6e7861f3ce49eb12f65a54e1f42b9305e099ca41f9cc246e19b90896ab62d",
+      "response_sha256": "80c6d9ee2d7e3653139242c80a454d6da37227eb80e1b0d63444f649dc5f2311",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "5a37300d5f660f8e56f04f60be9445c267c37267c2c2782f4df9e742f894ce7f",
+      "accepted": true,
+      "aa_path_length": 1,
+      "approved_attributes": [
+        "role"
+      ]
+    },
+    {
+      "case": "base_ac_alternate_name_response",
+      "ac_sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+      "response_sha256": "80c6d9ee2d7e3653139242c80a454d6da37227eb80e1b0d63444f649dc5f2311",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a",
+      "accepted": false,
+      "error_class": "InsufficientRevinfoError",
+      "message": "The path could not be validated because the mandatory OCSP check(s) for intermediate certificate 2 failed: OCSP response issuer name hash does not match"
+    },
+    {
+      "case": "alternate_ac_missing_response",
+      "ac_sha256": "faf6e7861f3ce49eb12f65a54e1f42b9305e099ca41f9cc246e19b90896ab62d",
+      "response_sha256": null,
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "5a37300d5f660f8e56f04f60be9445c267c37267c2c2782f4df9e742f894ce7f",
+      "accepted": false,
+      "error_class": "InsufficientRevinfoError",
+      "message": "The path could not be validated because the mandatory OCSP check(s) for intermediate certificate 2 failed: an applicable OCSP response could not be found"
+    },
+    {
+      "case": "alternate_ac_wrong_holder",
+      "ac_sha256": "faf6e7861f3ce49eb12f65a54e1f42b9305e099ca41f9cc246e19b90896ab62d",
+      "response_sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "holder_sha256": "da7c38e912d1667c086be550d759c80f771a8a22beb73eacd9679666cd8f1035",
+      "issuer_name_der_sha256": "5a37300d5f660f8e56f04f60be9445c267c37267c2c2782f4df9e742f894ce7f",
+      "accepted": false,
+      "error_class": "InvalidAttrCertificateError",
+      "message": "Could not match AC holder entry against supplied holder certificate; mismatched entries: base_certificate_id"
+    },
+    {
+      "case": "base_actual_name_bad_signature",
+      "ac_sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+      "response_sha256": "4a14ba094e87470db81afa2f565d83ceab04479180741a735d4d27aea8b2d5d9",
+      "holder_sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "issuer_name_der_sha256": "1bb4ee79c15c04dac1ef391326579c761b13755b23f9da2b5d58de087bb1fd4a",
+      "accepted": false,
+      "error_class": "InsufficientRevinfoError",
+      "message": "The path could not be validated because the mandatory OCSP check(s) for intermediate certificate 2 failed: Unable to verify OCSP response signature"
+    }
+  ],
+  "files": [
+    {
+      "file": "aa.der",
+      "sha256": "4efe0986c6707054321e149c6290852597c5c5cbdf33494ff3c413e030ce0434",
+      "length": 1058
+    },
+    {
+      "file": "holder-alice.der",
+      "sha256": "17c0b5d294cb2b283a4bfb5a22015ecee35b457f5483d66e9ef9f7ede18c7842",
+      "length": 884
+    },
+    {
+      "file": "holder-bob.der",
+      "sha256": "da7c38e912d1667c086be550d759c80f771a8a22beb73eacd9679666cd8f1035",
+      "length": 882
+    },
+    {
+      "file": "base-ac.der",
+      "sha256": "516bdd6b70f41891075c3b0c20e377df786ba1a2a560395de05ae77a7db8849f",
+      "length": 792
+    },
+    {
+      "file": "alternate-name-ac.der",
+      "sha256": "faf6e7861f3ce49eb12f65a54e1f42b9305e099ca41f9cc246e19b90896ab62d",
+      "length": 792
+    },
+    {
+      "file": "original-good.ocsp.der",
+      "sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "length": 1552
+    },
+    {
+      "file": "actual-aa-name-good.ocsp.der",
+      "sha256": "3f5cf50ee6509d2f0cd6a7768b5314fdbead244152e2daee4f794663247ac121",
+      "length": 1552
+    },
+    {
+      "file": "alternate-ac-name-good.ocsp.der",
+      "sha256": "80c6d9ee2d7e3653139242c80a454d6da37227eb80e1b0d63444f649dc5f2311",
+      "length": 1552
+    },
+    {
+      "file": "actual-aa-name-bad-signature.ocsp.der",
+      "sha256": "4a14ba094e87470db81afa2f565d83ceab04479180741a735d4d27aea8b2d5d9",
+      "length": 1552
+    }
+  ],
+  "private_key_copied_or_written": false,
+  "native_verdict_claim": false,
+  "upstream_credit": 0
+}
