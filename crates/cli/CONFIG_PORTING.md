@@ -72,4 +72,4 @@ Scope: strict YAML grammar rejects nonfinite/legacy numeric encodings, unsupport
 
 Oracle evidence: 17 fresh live configuration status/settings comparisons in configuration_live_oracle_matrix; no fixture-only credit. Supplemental scalar/config assertions add zero IDs.
 
-No provider skips. Fresh native evidence: increment-crypt-tests.log; current cumulative projection uses its own preserved Cargo-produced executable, not the full-source binary. Build/tests/clippy/fmt receipts record actual scheduler host/slot.
+No provider skips. Fresh native evidence: increment-fields-tests.log; current cumulative projection uses its own preserved Cargo-produced executable, not the full-source binary. Build/tests/clippy/fmt receipts record actual scheduler host/slot.

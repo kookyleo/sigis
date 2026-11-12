@@ -1,16 +1,16 @@
 # Independently verified CLI increments
 
-Current projection: crypt. Fixed assignment252; local proposal **252 / 91 passed / 0 skipped / 161 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
+Current projection: fields. Fixed assignment252; local proposal **252 / 98 passed / 0 skipped / 154 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
 
 The complete implementation and every deferred original assertion are preserved
 at `4d8c8b7a92a949d5ba4f36581916d39f6fbe02a9` / `backup/r3-c-full-before-module-increments` and will be restored
 after all four independently buildable commits. Deferred commands explicitly
 reject. No unavailable command is counted as passed.
 
-Current cumulative native run: 121 passed, zero failed/ignored. Evidence
-`~/.codex/artifacts/sigis/round3/c/increment-crypt-{build,tests,clippy,fmt}.log`
+Current cumulative native run: 128 passed, zero failed/ignored. Evidence
+`~/.codex/artifacts/sigis/round3/c/increment-fields-{build,tests,clippy,fmt}.log`
 and corresponding scheduler receipts. Tests use the fresh Cargo artifact
-`executable-increment-crypt/pyhanko`, copied/hash-checked on both workers.
+`executable-increment-fields/pyhanko`, copied/hash-checked on both workers.
 Build, all-target tests, strict all-target clippy and formatting passed through
 the normal wrapper. No compiler/cache/placement override, raw Cargo or job cap.
 
@@ -44,6 +44,13 @@ fail-closed behavior. Root Cargo.lock is generated and excluded from commits.
 | `pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_empty_pass_on_stdin` | `crypt::test_decrypt_with_private_key_empty_pass_on_stdin` |
 | `pyhanko-cli/test_cli_decode_limits.py::test_decrypt_password` | `crypt::test_decrypt_password` |
 | `pyhanko-cli/test_cli_decode_limits.py::test_decrypt_pubkey` | `crypt::test_decrypt_pubkey` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_list_empty_fields_with_status` | `fields::test_list_empty_fields_with_status` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_list_mixed_fields_with_status` | `fields::test_list_mixed_fields_with_status` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_list_empty_fields_without_status` | `fields::test_list_empty_fields_without_status` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_incremental_update_by_default` | `fields::test_cli_add_field_incremental_update_by_default` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_with_resave` | `fields::test_cli_add_field_with_resave` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_to_last_page` | `fields::test_cli_add_field_to_last_page` |
+| `pyhanko-cli/test_cli_field_mgmt.py::test_cli_field_spec_errors` | `fields::test_cli_field_spec_errors` |
 | `pyhanko-cli/test_cli_plugins.py::test_load_plugins_from_config` | `plugins::test_load_plugins_from_config` |
 | `pyhanko-cli/test_cli_plugins.py::test_gracefully_handle_dupe_plugins` | `plugins::test_gracefully_handle_dupe_plugins` |
 | `pyhanko-cli/test_cli_plugins.py::test_plugin_must_be_class` | `plugins::test_plugin_must_be_class` |
@@ -112,3 +119,5 @@ fail-closed behavior. Root Cargo.lock is generated and excluded from commits.
 | `pyhanko-cli/test_config.py::test_cache_dir_config` | `config::test_cache_dir_config` |
 | `pyhanko-cli/test_config.py::test_fail_to_read_default_config` | `config::test_fail_to_read_default_config` |
 | `pyhanko-cli/test_config.py::test_fail_to_read_nondefault_config` | `config::test_fail_to_read_nondefault_config` |
+
+[Exact pinned parameter decorators and fixture arguments](INCREMENT_PARAMETERS.md).

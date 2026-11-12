@@ -1,6 +1,7 @@
-//! pyHanko-compatible configuration, native plugins and PDF cryptography.
+//! pyHanko-compatible configuration, native plugins, PDF cryptography and fields.
 pub mod config;
 pub mod crypt;
+pub mod fields;
 pub mod plugins;
 pub mod runtime;
 
@@ -122,11 +123,12 @@ pub fn run_with_runtime(
             crypt::run_with_runtime(&crypt_args, runtime)
         }
         "sign" => match values.first().map(String::as_str) {
+            Some("list" | "addfields") => fields::run(&values),
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry),
-            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: addsig (native registry help and identity validation only)\n".into()),
-            Some(command) => Err(format!("Command '{command}' is not available in this cryptography increment.")),
+            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, addsig (native registry help and identity validation only)\n".into()),
+            Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
-        _ => Err(format!("Command '{name}' is not available in this cryptography increment.")),
+        _ => Err(format!("Command '{name}' is not available in this cryptography-and-fields increment.")),
     };
     let mut output = match result {
         Ok(stdout) => Output {
@@ -316,4 +318,27 @@ pub(crate) fn argument_positions(args: &[String]) -> impl Iterator<Item = usize>
         }
         None
     })
+}
+
+/// Resolve live indirect objects before handing input to a legacy editor.
+/// This enforces object-stream limits at the CLI boundary. It does not replace
+/// transfer of the remaining decode budget through downstream reopen APIs.
+pub(crate) fn read_for_update(
+    bytes: &[u8],
+    options: sigis_pdf::ReaderOptions,
+) -> Result<sigis_pdf::PdfFile, sigis_pdf::PdfError> {
+    let file = sigis_pdf::PdfFile::parse_with(bytes, options)?;
+    // Signing authenticates encrypted input in its downstream operation.
+    // That operation still requires the accepted budget-preserving interface.
+    if !file.encrypted() {
+        let refs = (0..file.total_revisions())
+            .flat_map(|revision| file.xrefs().explicit_refs_in_revision(revision))
+            .collect::<std::collections::BTreeSet<_>>();
+        for id in refs {
+            if file.xrefs().get(id).is_some() {
+                file.get_object_at(id, None)?;
+            }
+        }
+    }
+    Ok(file)
 }
