@@ -5,16 +5,18 @@
 
 //! Incremental updates for signing (`IncrementalPdfFileWriter`).
 //!
-//! Lane B owns the general PDF layer (`sigis_pdf::IncrementalWriter`); until
-//! it lands, signing uses this writer, which reads the latest revision with
-//! `lopdf` and appends an update section (classic xref table or xref
-//! stream, following the previous revision) after the original bytes, which
-//! are never modified.
+//! Native `sigis_pdf` readers enforce decoding limits and retain authenticated
+//! security handlers. A compatibility `lopdf::Document` stores parsed objects
+//! for the signing API. Updates append a cross-reference table or stream after
+//! the original bytes, which are never modified.
 
 use std::collections::BTreeMap;
 use std::io::Write as _;
 
 use lopdf::{Dictionary, Object, ObjectId, Stream};
+use sigis_pdf::crypt::{AuthStatus, EnvelopeKeyDecrypter, SecurityHandler};
+use sigis_pdf::decode_limits::{DecodeContext, DecodeLimits, DecodePurpose};
+use sigis_pdf::{PdfFile, ReaderOptions};
 use sigis_pki_core::errors::{HankoError, Result};
 
 /// Width of the `/ByteRange` placeholder, as in pyHanko
@@ -49,11 +51,73 @@ pub struct PlaceholderOffsets {
     pub byte_range_at: usize,
 }
 
+/// Authenticated reader state carried across related signing operations.
+///
+/// Clones share the current reader's decoding budget. Reopening carries its
+/// remaining budget and strictness into a new reader. Authentication is reused
+/// only if the raw encryption settings and permanent document ID still match.
+#[derive(Clone, Debug)]
+pub struct PdfReopenState {
+    reader: PdfFile,
+}
+
+impl PdfReopenState {
+    /// Preserve the policy and authentication of an existing reader.
+    pub fn from_reader(reader: PdfFile) -> Self {
+        Self { reader }
+    }
+
+    /// The reader carrying the decoding policy and authenticated handler.
+    pub fn reader(&self) -> &PdfFile {
+        &self.reader
+    }
+
+    /// Strictness of the carried reader.
+    pub fn strict(&self) -> bool {
+        self.reader.strict()
+    }
+
+    /// Snapshot of the carried decoding limits and remaining budget.
+    pub fn decode_context(&self) -> DecodeContext {
+        self.reader.decode_context()
+    }
+
+    /// Reopen a related revision while preserving the PDF reader state.
+    pub fn reopen(&self, bytes: &[u8]) -> Result<Self> {
+        let reader = if bytes == self.reader.bytes() {
+            self.reader.clone()
+        } else {
+            self.reader.reopen(bytes)?
+        };
+        Ok(Self { reader })
+    }
+}
+
+/// Output bytes together with the state required to continue editing them.
+#[derive(Clone, Debug)]
+pub struct PdfOperationResult {
+    /// The completed PDF operation's output.
+    pub pdf: Vec<u8>,
+    /// Reader state for reopening this output in a related operation.
+    pub state: PdfReopenState,
+}
+
+impl PdfOperationResult {
+    /// Bind continuation state to the completed output without replenishing allowance.
+    pub(crate) fn from_output(pdf: Vec<u8>, state: PdfReopenState) -> Result<Self> {
+        let state = state.reopen(&pdf)?;
+        Ok(Self { pdf, state })
+    }
+}
+
 /// An incremental update of a PDF file.
 #[derive(Debug, Clone)]
 pub struct PdfUpdate {
     base: Vec<u8>,
     doc: lopdf::Document,
+    /// Native syntax errors stay errors when accessed; unrelated incremental
+    /// edits do not force the caller to read every malformed historical object.
+    object_errors: BTreeMap<ObjectId, sigis_pdf::PdfError>,
     objects: BTreeMap<ObjectId, Object>,
     next_id: u32,
     root_id: ObjectId,
@@ -66,26 +130,15 @@ pub struct PdfUpdate {
     placeholders: BTreeMap<ObjectId, usize>,
     fresh: bool,
     strict: bool,
-    crypt: Option<lopdf::EncryptionState>,
+    reader: PdfFile,
+    crypt: Option<SecurityHandler>,
+    auth_code: Option<Object>,
     encrypt_ref: Option<ObjectId>,
+    /// Indirect encryption settings and file identifiers are never encrypted.
+    unencrypted_objects: std::collections::BTreeSet<ObjectId>,
     /// Objects to write into an object stream when the update uses an xref
     /// stream (`add_object(..., obj_stream=...)`).
     objstm_members: std::collections::BTreeSet<ObjectId>,
-}
-
-/// Find the offset after the last `startxref` keyword.
-fn last_startxref(bytes: &[u8]) -> Option<usize> {
-    let tail_start = bytes.len().saturating_sub(2048);
-    let tail = &bytes[tail_start..];
-    let pos = tail.windows(9).rposition(|w| w == b"startxref")?;
-    let rest = &tail[pos + 9..];
-    let digits: String = rest
-        .iter()
-        .skip_while(|b| b.is_ascii_whitespace())
-        .take_while(|b| b.is_ascii_digit())
-        .map(|&b| b as char)
-        .collect();
-    digits.parse().ok()
 }
 
 impl PdfUpdate {
@@ -102,63 +155,154 @@ impl PdfUpdate {
     }
 
     fn open(bytes: &[u8], password: Option<&[u8]>) -> Result<Self> {
-        let raw_encrypted = has_encrypt_entry(bytes);
-        let doc = match password {
-            Some(p) => {
-                let p =
-                    std::str::from_utf8(p).map_err(|_| malformed("password is not valid UTF-8"))?;
-                lopdf::Document::load_mem_with_options(bytes, lopdf::LoadOptions::with_password(p))
+        Self::open_with_limits(bytes, password, DecodeLimits::default(), true)
+    }
+
+    /// Parse with bounded native PDF decoding and explicit reader policy.
+    pub fn open_with_limits(
+        bytes: &[u8],
+        password: Option<&[u8]>,
+        limits: DecodeLimits,
+        strict: bool,
+    ) -> Result<Self> {
+        let reader = PdfFile::parse_with(
+            bytes,
+            ReaderOptions {
+                strict,
+                decode_limits: limits,
+                ..Default::default()
+            },
+        )?;
+        if reader.encrypted() {
+            let password = password.unwrap_or_default();
+            let password = std::str::from_utf8(password)
+                .map_err(|_| malformed("password is not valid UTF-8"))?;
+            if reader.decrypt(password)?.status == AuthStatus::Failed {
+                return Err(HankoError::Signing(
+                    "Failed to authenticate encrypted document or validate its PDF MAC".into(),
+                ));
             }
-            None => lopdf::Document::load_mem(bytes),
         }
-        .map_err(|e| malformed(format!("could not parse PDF: {e}")))?;
-        let crypt = doc.encryption_state.clone();
-        let encrypt_ref = crypt.as_ref().and_then(|c| c.encrypt_object_id());
-        let prev_startxref =
-            last_startxref(bytes).ok_or_else(|| malformed("no startxref found"))?;
-        // An xref stream starts with "N G obj"; a table with "xref".
-        let at_xref = bytes
-            .get(prev_startxref..)
-            .map(|b| {
-                let s: Vec<u8> = b
-                    .iter()
-                    .skip_while(|c| c.is_ascii_whitespace())
-                    .take(4)
-                    .copied()
-                    .collect();
-                s
-            })
-            .unwrap_or_default();
-        let stream_xrefs = at_xref.first().is_some_and(u8::is_ascii_digit);
-        let trailer = &doc.trailer;
-        let hybrid = trailer.get(b"XRefStm").is_ok() || has_hybrid_trailer(bytes);
-        let encrypted = raw_encrypted || trailer.get(b"Encrypt").is_ok() || crypt.is_some();
+        Self::from_reader(reader)
+    }
+
+    /// Open with the recipient credentials of a public-key encrypted PDF.
+    pub fn with_pubkey(bytes: &[u8], decrypter: &dyn EnvelopeKeyDecrypter) -> Result<Self> {
+        let reader = PdfFile::parse_with(bytes, ReaderOptions::default())?;
+        if reader.decrypt_pubkey(decrypter)?.status == AuthStatus::Failed {
+            return Err(HankoError::Signing(
+                "Failed to authenticate public-key encrypted document or validate its PDF MAC"
+                    .into(),
+            ));
+        }
+        Self::from_reader(reader)
+    }
+
+    /// Reopen a related revision with preserved limits and authentication.
+    pub fn open_with_state(bytes: &[u8], state: PdfReopenState) -> Result<Self> {
+        Self::from_reader(state.reopen(bytes)?.reader)
+    }
+
+    fn from_reader(reader: PdfFile) -> Result<Self> {
+        let bytes = reader.bytes();
+        let trailer = reader.trailer_view();
+        let encrypted = reader.encrypted();
+        let crypt = reader.security_handler()?;
+        if encrypted
+            && !crypt
+                .as_ref()
+                .is_some_and(SecurityHandler::is_authenticated)
+        {
+            return Err(HankoError::Signing(
+                "Cannot update this document without authenticated encryption credentials".into(),
+            ));
+        }
+        if let Some(handler) = &crypt {
+            let mac_required = handler
+                .standard_permissions()
+                .is_some_and(|permissions| permissions.mac_required());
+            if trailer.has(b"AuthCode") || handler.pdf_mac_enabled() || mac_required {
+                // Reopening reuses keys, not a MAC verdict for these bytes.
+                // Authenticate every operation's actual input before editing.
+                sigis_pdf::crypt::pdfmac::validate_pdf_mac(
+                    &reader,
+                    sigis_pdf::crypt::pdfmac::ALLOWED_MD_ALGS,
+                )
+                .map_err(|error| match error {
+                    sigis_pdf::crypt::pdfmac::MacValidationFailure::Invalid(reason) => {
+                        HankoError::Signing(format!("Failed to validate input PDF MAC: {reason}"))
+                    }
+                    sigis_pdf::crypt::pdfmac::MacValidationFailure::Error(error) => error.into(),
+                })?;
+            }
+        }
+        let encrypt_ref = trailer.get(b"Encrypt").and_then(Object::as_reference).ok();
+        let prev_startxref = usize::try_from(reader.last_startxref())
+            .map_err(|_| malformed("negative startxref offset"))?;
+        let stream_xrefs = reader.has_xref_stream();
+        let hybrid = reader.xrefs().hybrid_xrefs_present();
         let root_id = trailer
             .get(b"Root")
             .and_then(Object::as_reference)
             .map_err(|_| malformed("trailer without /Root reference"))?;
         let info_id = trailer.get(b"Info").and_then(Object::as_reference).ok();
-        let id1 = trailer
-            .get(b"ID")
-            .and_then(Object::as_array)
-            .ok()
-            .and_then(|a| a.first())
-            .and_then(|o| o.as_str().ok())
-            .map(<[u8]>::to_vec);
-        let id1 = match id1 {
-            Some(v) => v,
-            None => random_bytes(16)?,
+        let id1 = if trailer.has(b"ID") {
+            reader.document_id()?.0
+        } else {
+            random_bytes(16)?
         };
+        let unencrypted_objects = raw_trailer_references(&reader, &trailer)?;
         let size = trailer
             .get(b"Size")
             .and_then(Object::as_i64)
             .ok()
-            .and_then(|s| u32::try_from(s).ok())
+            .and_then(|size| u32::try_from(size).ok())
             .unwrap_or(0);
-        let next_id = size.max(doc.max_id + 1);
+        let mut doc = lopdf::Document::with_version(format!(
+            "{}.{}",
+            reader.header_version().0,
+            reader.header_version().1
+        ));
+        doc.trailer = trailer;
+        let mut refs = std::collections::BTreeSet::new();
+        for revision in 0..reader.total_revisions() {
+            refs.extend(reader.xrefs().explicit_refs_in_revision(revision));
+        }
+        // The compatibility Document stores native parsed objects, never
+        // invoking lopdf's eager, unbounded object-stream decoder. Ordinary
+        // stream data stays encoded; native object streams obey the reader's
+        // shared purpose limits and document decoding budget.
+        let mut object_errors = BTreeMap::new();
+        for id in refs {
+            if reader.xrefs().get(id).is_some() {
+                let object = if unencrypted_objects.contains(&id) {
+                    reader.get_object_raw(id, None)
+                } else {
+                    reader.get_object_at(id, None)
+                };
+                doc.max_id = doc.max_id.max(id.0);
+                match object {
+                    Ok(object) => {
+                        doc.objects.insert(id, object);
+                    }
+                    Err(
+                        error @ (sigis_pdf::PdfError::Read(_) | sigis_pdf::PdfError::StrictRead(_)),
+                    ) if !encrypted => {
+                        object_errors.insert(id, error);
+                    }
+                    // Encrypted objects can report authentication failures as
+                    // Read errors too, so all their errors remain eager. Budget
+                    // and stream-decoding failures are never deferred either.
+                    Err(error) => return Err(error.into()),
+                }
+            }
+        }
+        let next_id = size.max(doc.max_id.saturating_add(1));
         Ok(Self {
             base: bytes.to_vec(),
             doc,
+            object_errors,
+            reader: reader.clone(),
             objects: BTreeMap::new(),
             next_id,
             root_id,
@@ -170,11 +314,37 @@ impl PdfUpdate {
             encrypted,
             placeholders: BTreeMap::new(),
             fresh: false,
-            strict: true,
+            strict: reader.strict(),
             crypt,
             encrypt_ref,
+            unencrypted_objects,
+            auth_code: None,
             objstm_members: std::collections::BTreeSet::new(),
         })
+    }
+
+    /// State required to reopen the output without resetting reader policy.
+    pub fn state(&self) -> PdfReopenState {
+        PdfReopenState::from_reader(self.reader.clone())
+    }
+
+    /// Authenticated security handler for encryption and PDF MAC generation.
+    pub fn security_handler(&self) -> Option<&SecurityHandler> {
+        if self.fresh {
+            None
+        } else {
+            self.crypt.as_ref()
+        }
+    }
+
+    /// Decode a stream through the native reader's shared bounded context.
+    pub fn read_stream_data(&self, stream: &Stream, purpose: DecodePurpose) -> Result<Vec<u8>> {
+        Ok(self.reader.read_stream_data(stream, purpose, None)?)
+    }
+
+    /// Register a direct trailer AuthCode dictionary before signing.
+    pub fn set_auth_code(&mut self, auth: Object) {
+        self.auth_code = Some(auth);
     }
 
     /// [`PdfUpdate::new`] or [`PdfUpdate::with_password`].
@@ -187,10 +357,16 @@ impl PdfUpdate {
     /// single-revision file with a classic cross-reference table.
     pub fn fresh(bytes: &[u8]) -> Result<Self> {
         let mut u = Self::new(bytes)?;
-        u.fresh = true;
-        u.stream_xrefs = false;
-        u.hybrid = false;
+        u.make_fresh();
         Ok(u)
+    }
+
+    /// Convert an authenticated update into a single-revision plaintext copy.
+    pub fn make_fresh(&mut self) {
+        self.fresh = true;
+        self.stream_xrefs = false;
+        self.hybrid = false;
+        self.auth_code = None;
     }
 
     /// Lenient mode (pyHanko's `strict=False`): dangling references read
@@ -258,6 +434,9 @@ impl PdfUpdate {
     pub fn get(&self, id: ObjectId) -> Result<&Object> {
         if let Some(o) = self.objects.get(&id) {
             return Ok(o);
+        }
+        if let Some(error) = self.object_errors.get(&id) {
+            return Err(error.clone().into());
         }
         self.doc
             .get_object(id)
@@ -492,10 +671,37 @@ impl PdfUpdate {
     /// Serialize the original file followed by the update. Returns the
     /// output and the placeholder offsets of registered signature objects.
     pub fn write(&self) -> Result<(Vec<u8>, BTreeMap<ObjectId, PlaceholderOffsets>)> {
+        if self.fresh {
+            if let Some((_, error)) = self
+                .object_errors
+                .iter()
+                .find(|(id, _)| !self.objects.contains_key(id))
+            {
+                return Err(error.clone().into());
+            }
+        }
+
         let crypt = if self.fresh {
             None
         } else {
             self.crypt.as_ref()
+        };
+        let encryptor = crypt.map(SecurityHandler::encryptor);
+        if crypt.is_some_and(SecurityHandler::pdf_mac_enabled)
+            && !self.placeholders.is_empty()
+            && self.auth_code.is_none()
+        {
+            return Err(HankoError::Signing(
+                "A MAC-enabled signature requires an attached AuthCode trailer entry".into(),
+            ));
+        }
+        let standalone_mac = if self.auth_code.is_none() && self.placeholders.is_empty() {
+            match encryptor.as_ref() {
+                Some(encryptor) => encryptor.standalone_mac_placeholder()?,
+                None => None,
+            }
+        } else {
+            None
         };
         if self.encrypted && !self.fresh && (crypt.is_none() || self.encrypt_ref.is_none()) {
             return Err(HankoError::Signing(
@@ -533,6 +739,28 @@ impl PdfUpdate {
         for (id, obj) in &self.objects {
             all.insert(*id, obj);
         }
+        // Explicit /Crypt data remains encoded in native parsed streams.
+        // A plaintext rewrite must decode it under the original reader policy
+        // and remove its source-specific filter configuration.
+        let mut plaintext_streams = BTreeMap::new();
+        if self.fresh {
+            for (id, object) in &all {
+                if let Object::Stream(stream) = object {
+                    if sigis_pdf::stream::has_crypt_filter(&stream.dict, &|object| {
+                        sigis_pdf::PdfHandlerExt::resolve(&self.reader, object)
+                    })? {
+                        let data = self.read_stream_data(stream, DecodePurpose::Generic)?;
+                        let mut dict = stream.dict.clone();
+                        dict.remove(b"Filter");
+                        dict.remove(b"DecodeParms");
+                        plaintext_streams.insert(*id, Object::Stream(Stream::new(dict, data)));
+                    }
+                }
+            }
+        }
+        for (id, object) in &plaintext_streams {
+            all.insert(*id, object);
+        }
         let mut positions: BTreeMap<ObjectId, usize> = BTreeMap::new();
         let mut offsets = BTreeMap::new();
         // objects packed into an object stream: id -> index in the stream
@@ -559,8 +787,7 @@ impl PdfUpdate {
                 for (ix, id) in members.iter().enumerate() {
                     let _ = write!(header, "{} {} ", id.0, body.len());
                     if let Some(obj) = self.objects.get(id) {
-                        lopdf::Writer::write_object(&mut body, obj)
-                            .map_err(|e| HankoError::Signing(format!("serialize object: {e}")))?;
+                        sigis_pdf::writer::write_object_encrypted(&mut body, obj, None)?;
                     }
                     body.push(b'\n');
                     in_objstm.insert(*id, u16::try_from(ix).unwrap_or(u16::MAX));
@@ -582,8 +809,7 @@ impl PdfUpdate {
                     .map_err(|e| HankoError::Signing(format!("compress object stream: {e}")))?;
                 positions.insert(objstm_id, out.len());
                 let _ = writeln!(out, "{} {} obj", objstm_id.0, objstm_id.1);
-                lopdf::Writer::write_object(&mut out, &Object::Stream(stream))
-                    .map_err(|e| HankoError::Signing(format!("serialize object stream: {e}")))?;
+                sigis_pdf::writer::write_object_encrypted(&mut out, &Object::Stream(stream), None)?;
                 out.extend_from_slice(b"\nendobj\n");
                 Some(objstm_id)
             }
@@ -600,23 +826,15 @@ impl PdfUpdate {
             if in_objstm.contains_key(&id) {
                 continue;
             }
-            let encrypted_copy;
-            let obj: &Object = match crypt {
-                Some(state) if Some(id) != self.encrypt_ref => {
-                    let mut o = (*obj).clone();
-                    lopdf::encryption::encrypt_object(state, id, &mut o)
-                        .map_err(|e| HankoError::Signing(format!("encrypt object: {e}")))?;
-                    encrypted_copy = o;
-                    &encrypted_copy
-                }
-                _ => obj,
-            };
             positions.insert(id, out.len());
             let _ = writeln!(out, "{} {} obj", id.0, id.1);
             let start = out.len();
             let mut body = Vec::new();
-            lopdf::Writer::write_object(&mut body, obj)
-                .map_err(|e| HankoError::Signing(format!("serialize object: {e}")))?;
+            let encryption = encryptor
+                .as_deref()
+                .filter(|_| !self.unencrypted_objects.contains(&id))
+                .map(|encryptor| (encryptor, id));
+            sigis_pdf::writer::write_object_encrypted(&mut body, obj, encryption)?;
             if let Some(reserved) = reserved {
                 let (patched, c_off, b_off) = patch_placeholders(&body, reserved);
                 if let Some(c) = c_off {
@@ -643,6 +861,9 @@ impl PdfUpdate {
             }
         }
         let mut trailer = Dictionary::new();
+        if let Some(auth_code) = self.auth_code.as_ref().or(standalone_mac.as_ref()) {
+            trailer.set("AuthCode", auth_code.clone());
+        }
         trailer.set("Root", Object::Reference(self.root_id));
         if let Some(info) = self.info_id {
             trailer.set("Info", Object::Reference(info));
@@ -721,8 +942,7 @@ impl PdfUpdate {
                 .compress()
                 .map_err(|e| HankoError::Signing(format!("compress xref stream: {e}")))?;
             let _ = writeln!(out, "{xref_id} 0 obj");
-            lopdf::Writer::write_object(&mut out, &Object::Stream(stream))
-                .map_err(|e| HankoError::Signing(format!("serialize xref stream: {e}")))?;
+            sigis_pdf::writer::write_object_encrypted(&mut out, &Object::Stream(stream), None)?;
             out.extend_from_slice(b"\nendobj\n");
         } else {
             xref_location = out.len();
@@ -751,35 +971,80 @@ impl PdfUpdate {
             }
             trailer.set("Size", Object::Integer(i64::from(self.next_id)));
             out.extend_from_slice(b"trailer\n");
-            lopdf::Writer::write_object(&mut out, &Object::Dictionary(trailer))
-                .map_err(|e| HankoError::Signing(format!("serialize trailer: {e}")))?;
+            sigis_pdf::writer::write_object_encrypted(
+                &mut out,
+                &Object::Dictionary(trailer),
+                None,
+            )?;
         }
         let _ = write!(out, "\nstartxref\n{xref_location}\n%%EOF\n");
+        if standalone_mac.is_some() {
+            if let Some(encryptor) = encryptor.as_ref() {
+                encryptor.fill_standalone_mac(&mut out)?;
+            }
+        }
         Ok((out, offsets))
     }
 }
 
-/// `true` if the file declares encryption in a trailer or xref stream.
-fn has_encrypt_entry(bytes: &[u8]) -> bool {
-    let tail = &bytes[bytes.len().saturating_sub(64 * 1024)..];
-    find(tail, b"/Encrypt").is_some()
-}
-
-/// `true` if any classic trailer of the file points to an xref stream
-/// (`/XRefStm`), i.e. the file uses hybrid cross-references.
-fn has_hybrid_trailer(bytes: &[u8]) -> bool {
-    let mut from = 0;
-    while let Some(p) = find(&bytes[from..], b"trailer") {
-        let start = from + p + 7;
-        let end = (start + 4096).min(bytes.len());
-        let window = &bytes[start..end];
-        let stop = find(window, b"startxref").unwrap_or(window.len());
-        if find(&window[..stop], b"/XRefStm").is_some() {
-            return true;
+/// Traverse encryption settings and file identifiers without treating their
+/// indirect strings as encrypted document content. The native security handler
+/// also resolves the encryption graph raw when authenticating the document.
+fn raw_trailer_references(
+    reader: &PdfFile,
+    trailer: &Dictionary,
+) -> Result<std::collections::BTreeSet<ObjectId>> {
+    fn visit(
+        reader: &PdfFile,
+        object: &Object,
+        references: &mut std::collections::BTreeSet<ObjectId>,
+        depth: usize,
+        remaining: &mut usize,
+    ) -> Result<()> {
+        if depth > 64 || *remaining == 0 {
+            return Err(malformed(
+                "Encryption settings or file identifier graph exceeds limits",
+            ));
         }
-        from = start;
+        *remaining -= 1;
+        match object {
+            Object::Reference(id) if references.insert(*id) => {
+                visit(
+                    reader,
+                    &reader.get_object_raw(*id, None)?,
+                    references,
+                    depth + 1,
+                    remaining,
+                )?;
+            }
+            Object::Array(values) => {
+                for value in values {
+                    visit(reader, value, references, depth + 1, remaining)?;
+                }
+            }
+            Object::Dictionary(dictionary) => {
+                for (_, value) in dictionary {
+                    visit(reader, value, references, depth + 1, remaining)?;
+                }
+            }
+            Object::Stream(_) => {
+                return Err(malformed(
+                    "Stream in encryption settings or file identifier graph",
+                ));
+            }
+            _ => {}
+        }
+        Ok(())
     }
-    false
+
+    let mut references = std::collections::BTreeSet::new();
+    let mut remaining = 4096;
+    for key in [b"Encrypt".as_slice(), b"ID".as_slice()] {
+        if let Ok(object) = trailer.get(key) {
+            visit(reader, object, &mut references, 0, &mut remaining)?;
+        }
+    }
+    Ok(references)
 }
 
 /// The entries of a chunk with their object numbers.
@@ -863,7 +1128,25 @@ pub fn fill_byte_range(out: &mut [u8], offsets: &PlaceholderOffsets) -> Result<[
 /// Write `content` hex-encoded into the reserved `/Contents` region
 /// (`PreparedByteRangeDigest.fill_reserved_region`).
 pub fn fill_contents(out: &mut [u8], offsets: &PlaceholderOffsets, content: &[u8]) -> Result<()> {
-    let reserved = offsets.contents_end - offsets.contents_start - 2;
+    let reserved = offsets
+        .contents_end
+        .checked_sub(offsets.contents_start)
+        .and_then(|length| length.checked_sub(2))
+        .ok_or_else(|| malformed("invalid signature reserved region"))?;
+    let region = out
+        .get_mut(offsets.contents_start..offsets.contents_end)
+        .ok_or_else(|| malformed("signature reserved region out of bounds"))?;
+    if region.first() != Some(&b'<') || region.last() != Some(&b'>') {
+        return Err(malformed("invalid signature reserved region delimiters"));
+    }
+    let required = content.len().checked_mul(2).ok_or_else(|| {
+        HankoError::Signing("CMS payload size overflows the reserved region".into())
+    })?;
+    if required > reserved {
+        return Err(HankoError::Signing(format!(
+            "Final ByteRange payload larger than expected: allocated {reserved} bytes, but contents required {required} bytes."
+        )));
+    }
     let hex: Vec<u8> = content
         .iter()
         .flat_map(|b| {
@@ -871,13 +1154,7 @@ pub fn fill_contents(out: &mut [u8], offsets: &PlaceholderOffsets, content: &[u8
             [H[usize::from(b >> 4)], H[usize::from(b & 15)]]
         })
         .collect();
-    if hex.len() > reserved {
-        return Err(HankoError::Signing(format!(
-            "Final ByteRange payload larger than expected: allocated {reserved} bytes, but contents required {} bytes.",
-            hex.len()
-        )));
-    }
-    out[offsets.contents_start + 1..offsets.contents_start + 1 + hex.len()].copy_from_slice(&hex);
+    region[1..1 + hex.len()].copy_from_slice(&hex);
     Ok(())
 }
 

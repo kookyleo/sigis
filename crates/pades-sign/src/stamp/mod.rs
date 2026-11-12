@@ -14,6 +14,7 @@ use std::path::Path;
 
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 use qrcode::types::EcLevel;
+use sigis_pdf::decode_limits::DecodeLimits;
 use sigis_pki_core::errors::Result;
 use sigis_pki_core::time::Moment;
 
@@ -26,7 +27,7 @@ use crate::layout::{
     layout_error, AxisAlignment, BoxConstraints, InnerScaling, Margins, Positioning,
     SimpleBoxLayoutRule,
 };
-use crate::pdf::writer::PdfUpdate;
+use crate::pdf::writer::{PdfOperationResult, PdfReopenState, PdfUpdate};
 use crate::qr::{make_qr, render_qr_stream, FancyQrImage};
 use crate::text::{TextBox, TextBoxStyle, DEFAULT_BOX_LAYOUT};
 
@@ -801,21 +802,80 @@ pub fn apply_signature_appearance(
     cw.prepare_write()
 }
 
-fn stamp_file(
-    input: &Path,
-    output: &Path,
+fn stamp_update(
+    mut update: PdfUpdate,
     mut stamp: Stamp,
     dest_page: i64,
     x: f64,
     y: f64,
+) -> Result<PdfOperationResult> {
+    let pdf = {
+        let mut writer = ContentWriter::new(&mut update);
+        stamp.apply(&mut writer, dest_page, x, y, CoordinateSystem::PageDefault)?;
+        writer.write()?
+    };
+    PdfOperationResult::from_output(pdf, update.state())
+}
+
+fn stamp_file(
+    input: &Path,
+    output: &Path,
+    stamp: Stamp,
+    dest_page: i64,
+    x: f64,
+    y: f64,
+    decode_limits: DecodeLimits,
 ) -> Result<()> {
     let data = std::fs::read(input)?;
-    let mut update = PdfUpdate::new(&data)?;
-    let mut w = ContentWriter::new(&mut update);
-    stamp.apply(&mut w, dest_page, x, y, CoordinateSystem::PageDefault)?;
-    let out = w.write()?;
-    std::fs::write(output, out)?;
+    let update = PdfUpdate::open_with_limits(&data, None, decode_limits, true)?;
+    let result = stamp_update(update, stamp, dest_page, x, y)?;
+    std::fs::write(output, result.pdf)?;
     Ok(())
+}
+
+/// Stamp an in-memory PDF using the supplied reader's limits, remaining
+/// allowance, strictness and authenticated encryption state. The returned
+/// state reads the completed output revision.
+pub fn text_stamp_pdf_with_state(
+    pdf: &[u8],
+    style: &TextStampStyle,
+    dest_page: i64,
+    x: f64,
+    y: f64,
+    text_params: Option<BTreeMap<String, String>>,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
+    let update = PdfUpdate::open_with_state(pdf, state)?;
+    stamp_update(
+        update,
+        Stamp::text(style.clone(), None, text_params),
+        dest_page,
+        x,
+        y,
+    )
+}
+
+/// Add a QR stamp to an in-memory PDF, preserving the supplied reader policy
+/// and authentication. The returned state reads the completed output revision.
+#[allow(clippy::too_many_arguments)]
+pub fn qr_stamp_pdf_with_state(
+    pdf: &[u8],
+    style: &QrStampStyle,
+    dest_page: i64,
+    x: f64,
+    y: f64,
+    url: &str,
+    text_params: Option<BTreeMap<String, String>>,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
+    let update = PdfUpdate::open_with_state(pdf, state)?;
+    stamp_update(
+        update,
+        Stamp::qr(style.clone(), url, None, text_params),
+        dest_page,
+        x,
+        y,
+    )
 }
 
 /// Add a text stamp to a file (`text_stamp_file`).
@@ -828,8 +888,40 @@ pub fn text_stamp_file(
     y: f64,
     text_params: Option<BTreeMap<String, String>>,
 ) -> Result<()> {
+    text_stamp_file_with_limits(
+        input,
+        output,
+        style,
+        dest_page,
+        x,
+        y,
+        text_params,
+        DecodeLimits::for_untrusted_input(),
+    )
+}
+
+/// Add a text stamp with an explicit policy for decoding the input PDF.
+#[allow(clippy::too_many_arguments)]
+pub fn text_stamp_file_with_limits(
+    input: impl AsRef<Path>,
+    output: impl AsRef<Path>,
+    style: &TextStampStyle,
+    dest_page: i64,
+    x: f64,
+    y: f64,
+    text_params: Option<BTreeMap<String, String>>,
+    decode_limits: DecodeLimits,
+) -> Result<()> {
     let stamp = Stamp::text(style.clone(), None, text_params);
-    stamp_file(input.as_ref(), output.as_ref(), stamp, dest_page, x, y)
+    stamp_file(
+        input.as_ref(),
+        output.as_ref(),
+        stamp,
+        dest_page,
+        x,
+        y,
+        decode_limits,
+    )
 }
 
 /// Add a QR stamp to a file (`qr_stamp_file`).
@@ -844,8 +936,42 @@ pub fn qr_stamp_file(
     url: &str,
     text_params: Option<BTreeMap<String, String>>,
 ) -> Result<()> {
+    qr_stamp_file_with_limits(
+        input,
+        output,
+        style,
+        dest_page,
+        x,
+        y,
+        url,
+        text_params,
+        DecodeLimits::for_untrusted_input(),
+    )
+}
+
+/// Add a QR stamp with an explicit policy for decoding the input PDF.
+#[allow(clippy::too_many_arguments)]
+pub fn qr_stamp_file_with_limits(
+    input: impl AsRef<Path>,
+    output: impl AsRef<Path>,
+    style: &QrStampStyle,
+    dest_page: i64,
+    x: f64,
+    y: f64,
+    url: &str,
+    text_params: Option<BTreeMap<String, String>>,
+    decode_limits: DecodeLimits,
+) -> Result<()> {
     let stamp = Stamp::qr(style.clone(), url, None, text_params);
-    stamp_file(input.as_ref(), output.as_ref(), stamp, dest_page, x, y)
+    stamp_file(
+        input.as_ref(),
+        output.as_ref(),
+        stamp,
+        dest_page,
+        x,
+        y,
+        decode_limits,
+    )
 }
 
 /// The serialized form of a text string in content streams (re-exported

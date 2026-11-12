@@ -368,9 +368,9 @@ impl ImportedPdfPage {
 impl PdfContent for ImportedPdfPage {
     fn render(&mut self, w: &mut ContentWriter<'_>) -> Result<Vec<u8>> {
         let data = std::fs::read(&self.file_name)?;
-        let src = lopdf::Document::load_mem(&data)
-            .map_err(|e| malformed(format!("could not parse PDF: {e}")))?;
-        let xobj = import::import_page_as_xobject(w.update(), &src, self.page_ix, true)?;
+        let source = sigis_pdf::PdfFile::parse(&data)?;
+        let xobj =
+            import::import_page_as_xobject_from_reader(w.update(), &source, self.page_ix, true)?;
         let resource_name = format!("Import{}", ops::uuid4(false));
         self.resources.set(
             ResourceType::XObject,

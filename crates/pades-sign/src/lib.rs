@@ -17,6 +17,7 @@
 pub mod attributes;
 pub mod cms;
 pub mod csc;
+pub mod http_tsa;
 pub mod keys;
 pub mod ltv;
 pub mod pdf;
@@ -96,6 +97,8 @@ pub struct PdfSignatureMetadata {
     pub use_pades_lta: bool,
     /// Context used to collect validation information.
     pub validation_context: Option<Arc<ValidationContext>>,
+    /// Context for certified signer attributes and their authority paths.
+    pub ac_validation_context: Option<Arc<ValidationContext>>,
     /// DocMDP level for approval signatures that lock fields
     /// (`docmdp_permissions`).
     pub docmdp_permissions: MdpPerm,
@@ -133,6 +136,7 @@ impl PdfSignatureMetadata {
             embed_validation_info: false,
             use_pades_lta: false,
             validation_context: None,
+            ac_validation_context: None,
             docmdp_permissions: MdpPerm::FillForms,
             app_build_props: None,
             prop_auth_time: None,
@@ -176,6 +180,8 @@ pub struct PdfSigner {
     pub signing_time: Option<sigis_pki_core::time::Moment>,
     /// Ignore seed value dictionaries (testing).
     pub ignore_sv: bool,
+    /// Shared activity lease without document-specific MAC key material.
+    pub(crate) mac_sessions: crate::pdf::mac::PdfMacSessions,
 }
 
 impl PdfSigner {
@@ -202,6 +208,7 @@ impl PdfSigner {
             cms_options: CmsSignerOptions::default(),
             signing_time: None,
             ignore_sv: false,
+            mac_sessions: Default::default(),
         }
     }
 
@@ -266,20 +273,37 @@ pub fn add_validation_info(
     ctx: &ValidationContext,
     timestamper: Option<&dyn TimeStamper>,
 ) -> Result<Vec<u8>> {
+    let state = crate::pdf::writer::PdfUpdate::new(pdf)?.state();
+    Ok(add_validation_info_with_state(pdf, ctx, timestamper, state)?.pdf)
+}
+
+/// Add DSS evidence and renew archival timestamps with one continuing reader state.
+pub fn add_validation_info_with_state(
+    pdf: &[u8],
+    ctx: &ValidationContext,
+    timestamper: Option<&dyn TimeStamper>,
+    state: crate::pdf::writer::PdfReopenState,
+) -> Result<crate::pdf::writer::PdfOperationResult> {
     use crate::pdf::embedded::embedded_signatures;
-    use crate::pdf::writer::PdfUpdate;
-    let update = PdfUpdate::new(pdf)?;
+    use crate::pdf::writer::{PdfOperationResult, PdfUpdate};
+    let update = PdfUpdate::open_with_state(pdf, state)?;
     let sigs = embedded_signatures(&update)?;
-    let mut out = pdf.to_vec();
-    for s in sigs.iter().filter(|s| !s.is_doc_timestamp) {
-        out = crate::pdf::timestamp::add_validation_info_for(&out, s, ctx, true, true, false)?;
+    let mut out = PdfOperationResult {
+        pdf: pdf.to_vec(),
+        state: update.state(),
+    };
+    for sig in sigs.iter().filter(|s| !s.is_doc_timestamp) {
+        out = crate::pdf::timestamp::add_validation_info_for_with_state(
+            &out.pdf, sig, ctx, true, true, false, out.state,
+        )?;
     }
     match timestamper {
-        Some(ts) => crate::pdf::timestamp::update_archival_chain_with(
-            &out,
+        Some(ts) => crate::pdf::timestamp::update_archival_chain_with_state(
+            &out.pdf,
             ts,
             ctx,
             DigestAlgorithm::Sha256,
+            out.state,
         ),
         None => Ok(out),
     }

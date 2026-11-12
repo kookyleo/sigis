@@ -3310,6 +3310,7 @@ dependencies = [
  "sigis-pdf",
  "sigis-pki-certvalidator",
  "sigis-pki-core",
+ "sigis-pki-fetch",
  "sigis-testdata",
  "signature 3.0.0",
  "spki 0.8.1",

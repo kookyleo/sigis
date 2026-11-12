@@ -8,6 +8,7 @@
 //! The PDF signing workflow.
 
 use lopdf::{Dictionary, Object, ObjectId, StringFormat};
+use sigis_pdf::decode_limits::DecodeLimits;
 use sigis_pdf::MdpPerm;
 use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::errors::{HankoError, Result};
@@ -22,7 +23,8 @@ use crate::pdf::fields::{
 use crate::pdf::seed::{SeedLockDocument, SigSeedSubFilter, SigSeedValFlags, SigSeedValueSpec};
 use crate::pdf::util::{name, number, pdf_date, text_string};
 use crate::pdf::writer::{
-    byte_range_placeholder, contents_placeholder, fill_byte_range, fill_contents, PdfUpdate,
+    byte_range_placeholder, contents_placeholder, fill_byte_range, fill_contents,
+    PdfOperationResult, PdfReopenState, PdfUpdate,
 };
 use crate::signer::{implied_digest, select_suitable_signing_md, subject_display_name};
 use crate::{PdfSignatureMetadata, PdfSigner, SubFilter};
@@ -151,6 +153,12 @@ pub struct SignOptions {
     pub fresh_document: bool,
     /// Password of an encrypted document (user or owner).
     pub password: Option<Vec<u8>>,
+    /// Limits used when opening an input without an existing reader state.
+    pub decode_limits: DecodeLimits,
+    /// Existing budget, authentication and strictness, authoritative if set.
+    pub reopen_state: Option<PdfReopenState>,
+    /// Recipient credential for a public-key encrypted input.
+    pub pubkey_credential: Option<std::sync::Arc<dyn sigis_pdf::crypt::EnvelopeKeyDecrypter>>,
 }
 
 impl Default for SignOptions {
@@ -161,6 +169,9 @@ impl Default for SignOptions {
             strict: true,
             fresh_document: false,
             password: None,
+            decode_limits: DecodeLimits::default(),
+            reopen_state: None,
+            pubkey_credential: None,
         }
     }
 }
@@ -392,20 +403,127 @@ pub struct PreparedDocument {
     pub byte_range: [usize; 4],
     /// Digest algorithm used.
     pub md_algorithm: DigestAlgorithm,
+    /// Reader state inherited by all post-signing reopens.
+    pub reopen_state: PdfReopenState,
+    /// The document-specific MAC provider, retained until embedding completes.
+    pub mac_session: Option<crate::pdf::mac::PdfMacSigningSession>,
 }
 
 impl PreparedDocument {
     /// Fill the reserved region with `cms` (`fill_with_cms`) and return the
     /// final file.
     pub fn fill_with_cms(mut self, cms: &[u8]) -> Result<Vec<u8>> {
+        let cms = match &self.mac_session {
+            Some(session) => session.attach_to_cms(&self.document_digest, cms, false)?,
+            None => cms.to_vec(),
+        };
         let offsets = crate::pdf::writer::PlaceholderOffsets {
             contents_start: self.reserved_region_start,
             contents_end: self.reserved_region_end,
             byte_range_at: 0,
         };
-        fill_contents(&mut self.output, &offsets, cms)?;
+        fill_contents(&mut self.output, &offsets, &cms)?;
         Ok(self.output)
     }
+}
+
+/// A prepared signature retaining an exclusive borrow of the caller's buffer.
+///
+/// Completion returns the same `Vec` object. Its allocation may grow or move.
+/// Continuation state keeps the selected reader policy and authentication.
+#[derive(Debug)]
+pub struct PreparedInPlaceDocument<'a> {
+    output: &'a mut Vec<u8>,
+    /// Digest of the prepared byte range.
+    pub document_digest: Vec<u8>,
+    /// Opening `<` of the reserved `/Contents` value.
+    pub reserved_region_start: usize,
+    /// Offset immediately after the closing `>`.
+    pub reserved_region_end: usize,
+    /// Prepared signature byte range.
+    pub byte_range: [usize; 4],
+    /// Algorithm used to digest the prepared bytes.
+    pub md_algorithm: DigestAlgorithm,
+    /// Reader state inherited by completion and subsequent operations.
+    pub reopen_state: PdfReopenState,
+    /// Optional document-specific MAC provider and exclusive session lease.
+    pub mac_session: Option<crate::pdf::mac::PdfMacSigningSession>,
+}
+
+impl<'a> PreparedInPlaceDocument<'a> {
+    /// Inspect the prepared bytes without releasing the caller-buffer borrow.
+    pub fn output(&self) -> &[u8] {
+        self.output
+    }
+
+    /// Complete the signature in the same borrowed caller buffer.
+    pub fn fill_with_cms(self, cms: &[u8]) -> Result<&'a mut Vec<u8>> {
+        Ok(self.fill_with_cms_with_state(cms)?.0)
+    }
+
+    /// Complete signing and return the inherited state for the completed bytes.
+    ///
+    /// MAC preparation, region checks and bounded reopening finish before any
+    /// caller byte changes. Errors retain the prepared buffer; decoding work
+    /// still follows the reader's budget and snapshot semantics.
+    pub fn fill_with_cms_with_state(self, cms: &[u8]) -> Result<(&'a mut Vec<u8>, PdfReopenState)> {
+        let cms = match &self.mac_session {
+            Some(session) => session.attach_to_cms(&self.document_digest, cms, false)?,
+            None => cms.to_vec(),
+        };
+        let mut completed = self.output.clone();
+        fill_contents(
+            &mut completed,
+            &crate::pdf::writer::PlaceholderOffsets {
+                contents_start: self.reserved_region_start,
+                contents_end: self.reserved_region_end,
+                byte_range_at: 0,
+            },
+            &cms,
+        )?;
+        let result = PdfOperationResult::from_output(completed, self.reopen_state)?;
+        *self.output = result.pdf;
+        Ok((self.output, result.state))
+    }
+}
+
+/// Prepare a signature while borrowing the original caller-owned buffer.
+///
+/// The buffer must contain the writer's base input. Serialization and digest
+/// preparation finish before its bytes change. The returned value retains the
+/// exclusive borrow until completion, which returns the same `Vec` object.
+pub fn write_and_digest_in_place<'a>(
+    output: &'a mut Vec<u8>,
+    update: &mut PdfUpdate,
+    sig_id: ObjectId,
+    bytes_reserved: usize,
+    md: DigestAlgorithm,
+) -> Result<PreparedInPlaceDocument<'a>> {
+    if output.as_slice() != update.base() {
+        return Err(signing_error(
+            "The in-place buffer must contain the writer's original input",
+        ));
+    }
+    // Placeholder offsets may be stored in other indirect objects, but the
+    // supplied signature reference must still denote an existing dictionary.
+    let signature = update.get_dict(sig_id)?;
+    if !signature.has(b"Contents") || !signature.has(b"ByteRange") {
+        return Err(signing_error(
+            "The signature object lacks Contents or ByteRange",
+        ));
+    }
+    let prepared = write_and_digest(update, sig_id, bytes_reserved, md)?;
+    *output = prepared.output;
+    Ok(PreparedInPlaceDocument {
+        output,
+        document_digest: prepared.document_digest,
+        reserved_region_start: prepared.reserved_region_start,
+        reserved_region_end: prepared.reserved_region_end,
+        byte_range: prepared.byte_range,
+        md_algorithm: prepared.md_algorithm,
+        reopen_state: prepared.reopen_state,
+        mac_session: prepared.mac_session,
+    })
 }
 
 /// Insert a signature object into `update`, write the file, fill the byte
@@ -436,6 +554,8 @@ pub fn write_and_digest(
         reserved_region_end: off.contents_end,
         byte_range: range,
         md_algorithm: md,
+        reopen_state: update.state(),
+        mac_session: None,
     })
 }
 
@@ -648,6 +768,8 @@ pub struct PdfTbsDocument {
     pub signed_attr_settings: CmsSignedAttributes,
     /// Attribute profile for the CMS object.
     pub attr_profile: AttrProfile,
+    /// Effective timestamp client, including a seed-value URL fallback.
+    pub timestamper: Option<std::sync::Arc<dyn TimeStamper>>,
 }
 
 impl PdfTbsDocument {
@@ -659,26 +781,71 @@ impl PdfTbsDocument {
         psi: Option<&PostSignInstructions>,
         validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
     ) -> Result<Vec<u8>> {
+        Ok(Self::finish_signing_with_state(prepared, cms, psi, validation_context)?.pdf)
+    }
+
+    /// Complete signing while returning the remaining authenticated reader state.
+    pub fn finish_signing_with_state(
+        prepared: PreparedDocument,
+        cms: &[u8],
+        psi: Option<&PostSignInstructions>,
+        validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
+    ) -> Result<PdfOperationResult> {
+        let state = prepared.reopen_state.clone();
+        // Preserve the lease through all post-signing steps as well as CMS embedding.
+        let _mac_lease = prepared.mac_session.clone();
         let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
-        let mut sig_contents = cms.to_vec();
+        let mut sig_contents = match &prepared.mac_session {
+            Some(session) => session.attach_to_cms(&prepared.document_digest, cms, false)?,
+            None => cms.to_vec(),
+        };
+        // fill_with_cms also supports direct external callers. Clear the session
+        // here because this path has already attached the actual MAC once.
+        let mut prepared = prepared;
+        prepared.mac_session = None;
+        let signed = prepared.fill_with_cms(&sig_contents)?;
         sig_contents.resize(reserved / 2, 0);
-        let signed = prepared.fill_with_cms(cms)?;
         match psi {
-            Some(psi) => post_signature_processing(signed, &sig_contents, psi, validation_context),
-            None => Ok(signed),
+            Some(psi) => post_signature_processing_with_state(
+                signed,
+                &sig_contents,
+                psi,
+                validation_context,
+                state,
+            ),
+            None => PdfOperationResult::from_output(signed, state),
         }
     }
 }
 
-/// DSS update and document timestamp after signing
-/// (`PdfPostSignatureDocument.post_signature_processing`).
+/// DSS update and document timestamp after signing.
+/// Existing callers use defaults; interrupted signing uses the prepared state.
 pub fn post_signature_processing(
     signed: Vec<u8>,
     sig_contents: &[u8],
     psi: &PostSignInstructions,
     validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
 ) -> Result<Vec<u8>> {
-    use crate::pdf::dss::{add_dss_with_password, DssContent};
+    let update = PdfUpdate::open_with(&signed, psi.file_password.as_deref())?;
+    Ok(post_signature_processing_with_state(
+        signed,
+        sig_contents,
+        psi,
+        validation_context,
+        update.state(),
+    )?
+    .pdf)
+}
+
+/// Post-signing processing with an existing decoding budget and authentication.
+pub fn post_signature_processing_with_state(
+    signed: Vec<u8>,
+    sig_contents: &[u8],
+    psi: &PostSignInstructions,
+    validation_context: Option<&sigis_pki_certvalidator::ValidationContext>,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
+    use crate::pdf::dss::{add_dss_with_state, DssContent};
     let info = &psi.validation_info;
     let dss_settings = psi.dss_settings;
     let vri = dss_settings.include_vri.then_some(sig_contents);
@@ -687,10 +854,10 @@ pub fn post_signature_processing(
         SigDssPlacement::TogetherWithNextTs => psi.timestamper.is_none(),
         SigDssPlacement::TogetherWithSignature => false,
     };
-    let mut out = signed;
+    let mut out = PdfOperationResult { pdf: signed, state };
     if separate {
-        out = add_dss_with_password(
-            &out,
+        out = add_dss_with_state(
+            &out.pdf,
             &DssContent {
                 sig_contents: vri,
                 paths: info.paths.clone(),
@@ -700,7 +867,7 @@ pub fn post_signature_processing(
                 ..Default::default()
             },
             !dss_settings.skip_if_unneeded,
-            psi.file_password.as_deref(),
+            out.state,
         )?;
     }
     if let Some(ts) = &psi.timestamper {
@@ -710,18 +877,18 @@ pub fn post_signature_processing(
         opts.dss_settings = dss_settings.settings_for_ts();
         opts.tight_size_estimates = psi.tight_size_estimates;
         opts.embed_roots = psi.embed_roots;
-        opts.password = psi.file_password.clone();
+        opts.reopen_state = Some(out.state);
         if dss_settings.placement == SigDssPlacement::TogetherWithNextTs {
             opts.dss_with_ts = Some((vri.map(<[u8]>::to_vec), info.clone()));
         }
-        out = crate::pdf::timestamp::timestamp_pdf_with(
-            &out,
+        out = crate::pdf::timestamp::timestamp_pdf_with_state(
+            &out.pdf,
             ts.as_ref(),
             psi.timestamp_field_name.clone(),
             &opts,
         )?;
     }
-    Ok(out)
+    PdfOperationResult::from_output(out.pdf, out.state)
 }
 
 /// Session state of one signing operation (`PdfSigningSession`).
@@ -734,6 +901,8 @@ struct Session<'a> {
     system_time: Moment,
     validation_info: Option<crate::ltv::ValidationInfo>,
     adobe_revinfo: Option<crate::attributes::RevocationInfoArchival>,
+    mac_session: Option<crate::pdf::mac::PdfMacSigningSession>,
+    timestamper: Option<std::sync::Arc<dyn TimeStamper>>,
 }
 
 impl Session<'_> {
@@ -812,6 +981,15 @@ impl PdfSigner {
 
     /// Sign `pdf` with explicit options (`PdfSigner.sign_pdf`).
     pub fn sign_pdf_with(&self, pdf: &[u8], opts: &SignOptions) -> Result<Vec<u8>> {
+        Ok(self.sign_pdf_with_state(pdf, opts)?.pdf)
+    }
+
+    /// Sign while retaining limits, remaining decode budget and authentication.
+    pub fn sign_pdf_with_state(
+        &self,
+        pdf: &[u8],
+        opts: &SignOptions,
+    ) -> Result<PdfOperationResult> {
         let tbs = self.digest_doc_for_signing(pdf, opts)?;
         let cms = CmsSigner {
             signer: self.signer.as_ref(),
@@ -822,11 +1000,11 @@ impl PdfSigner {
             tbs.md_algorithm,
             &tbs.signed_attr_settings,
             tbs.attr_profile,
-            self.timestamper.as_deref(),
+            tbs.timestamper.as_deref(),
             false,
             None,
         )?;
-        PdfTbsDocument::finish_signing(
+        PdfTbsDocument::finish_signing_with_state(
             tbs.prepared,
             &cms,
             tbs.post_sign_instructions.as_ref(),
@@ -837,12 +1015,40 @@ impl PdfSigner {
     /// Prepare the document up to the computation of the byte range digest
     /// (`async_digest_doc_for_signing`).
     pub fn digest_doc_for_signing(&self, pdf: &[u8], opts: &SignOptions) -> Result<PdfTbsDocument> {
-        let mut update = if opts.fresh_document {
-            PdfUpdate::fresh(pdf)?
-        } else {
-            PdfUpdate::open_with(pdf, opts.password.as_deref())?
+        let mut update = match &opts.reopen_state {
+            Some(state) => PdfUpdate::open_with_state(pdf, state.clone())?,
+            None if opts.pubkey_credential.is_some() => {
+                let reader = sigis_pdf::PdfFile::parse_with(
+                    pdf,
+                    sigis_pdf::ReaderOptions {
+                        strict: opts.strict,
+                        decode_limits: opts.decode_limits.clone(),
+                        ..Default::default()
+                    },
+                )?;
+                let credential = opts
+                    .pubkey_credential
+                    .as_ref()
+                    .ok_or_else(|| signing_error("Missing public-key credential"))?;
+                if reader.decrypt_pubkey(credential.as_ref())?.status
+                    == sigis_pdf::crypt::AuthStatus::Failed
+                {
+                    return Err(signing_error(
+                        "Failed to authenticate public-key encrypted document or validate its PDF MAC",
+                    ));
+                }
+                PdfUpdate::open_with_state(pdf, PdfReopenState::from_reader(reader))?
+            }
+            None => PdfUpdate::open_with_limits(
+                pdf,
+                opts.password.as_deref(),
+                opts.decode_limits.clone(),
+                opts.strict,
+            )?,
         };
-        update.set_strict(opts.strict);
+        if opts.fresh_document {
+            update.make_fresh();
+        }
         let (prepared, session) = self.prepare(&mut update, opts)?;
         let meta = self.meta();
         let post_sign_instructions = if session.use_pades() && meta.embed_validation_info {
@@ -853,7 +1059,7 @@ impl PdfSigner {
                 validation_info: info,
                 timestamp_md_algorithm: session.md,
                 timestamper: if meta.use_pades_lta {
-                    self.timestamper.clone()
+                    session.timestamper.clone()
                 } else {
                     None
                 },
@@ -873,6 +1079,7 @@ impl PdfSigner {
             use_pades: session.use_pades(),
             prepared,
             post_sign_instructions,
+            timestamper: session.timestamper.clone(),
         })
     }
 
@@ -891,6 +1098,7 @@ impl PdfSigner {
         update: &PdfUpdate,
         md: DigestAlgorithm,
         use_pades: bool,
+        timestamper: Option<&dyn TimeStamper>,
     ) -> Result<(
         Option<crate::ltv::ValidationInfo>,
         Option<crate::attributes::RevocationInfoArchival>,
@@ -907,10 +1115,13 @@ impl PdfSigner {
                 "A validation context must be provided if validation/revocation info is to be embedded into the signature.",
             ));
         }
-        let Some(ctx) = meta.validation_context.as_deref() else {
-            return Ok((None, None));
-        };
         let mut info = ValidationInfo::default();
+        let Some(ctx) = meta.validation_context.as_deref() else {
+            self.presign_ac_validation(&mut info)?;
+            let collected =
+                !info.paths.is_empty() || !info.ocsps.is_empty() || !info.crls.is_empty();
+            return Ok((collected.then_some(info), None));
+        };
         let cert = self.signer.signing_cert().ok_or_else(|| {
             signing_error("A signing certificate must be provided for pre-signing validation")
         })?;
@@ -942,15 +1153,46 @@ impl PdfSigner {
                 })?;
             }
         }
-        if let Some(ts) = &self.timestamper {
-            crate::pdf::timestamp::tsa_validation_info(ts.as_ref(), md, ctx, &mut info)?;
+        if let Some(ts) = timestamper {
+            crate::pdf::timestamp::tsa_validation_info(ts, md, ctx, &mut info)?;
         }
+        self.presign_ac_validation(&mut info)?;
         let adobe = if meta.embed_validation_info && !use_pades {
             crate::attributes::RevocationInfoArchival::from_der_lists(&info.ocsps, &info.crls)?
         } else {
             None
         };
         Ok((Some(info), adobe))
+    }
+
+    fn presign_ac_validation(&self, info: &mut crate::ltv::ValidationInfo) -> Result<()> {
+        let meta = self.meta();
+        if let Some(ac_ctx) = &meta.ac_validation_context {
+            let mut attribute_certs = self.cms_options.attribute_certs.clone();
+            if let Some(attrs) = meta
+                .cades_signed_attr_spec
+                .as_ref()
+                .and_then(|spec| spec.signer_attributes.as_ref())
+            {
+                attribute_certs.extend(attrs.certified_attrs.iter().cloned());
+            }
+            if attribute_certs.is_empty() {
+                return Ok(());
+            }
+            let cert = self.signer.signing_cert().ok_or_else(|| {
+                signing_error(
+                    "A signing certificate must be provided for attribute-certificate validation",
+                )
+            })?;
+            crate::ltv::validate_and_collect_attribute_certs(
+                ac_ctx,
+                cert,
+                self.signer.cert_chain(),
+                &attribute_certs,
+                info,
+            )?;
+        }
+        Ok(())
     }
 
     /// Steps up to the computation of the document digest.
@@ -960,7 +1202,7 @@ impl PdfSigner {
         opts: &SignOptions,
     ) -> Result<(PreparedDocument, Session<'_>)> {
         let meta = self.meta();
-        if update.is_hybrid() && opts.strict {
+        if update.is_hybrid() && update.is_strict() {
             return Err(signing_error(
                 "Attempting to sign document with hybrid cross-reference sections while hybrid xrefs are disabled",
             ));
@@ -998,6 +1240,13 @@ impl PdfSigner {
             return Err(signing_error("Author signature forbids all changes"));
         }
         let md = self.select_md(sv_spec.as_ref())?;
+        let mac_session = match update.security_handler() {
+            Some(handler) => self.mac_sessions.begin(handler, md.name())?,
+            None => None,
+        };
+        if mac_session.is_some() {
+            register_extension(update, "ISO_", 32004, true, "2.0", Some(":2024"), None)?;
+        }
         // subfilter
         let subfilter = match meta.subfilter {
             Some(s) => s.into(),
@@ -1054,7 +1303,9 @@ impl PdfSigner {
                 ensure_iso32002_ext(update)?;
             }
         }
-        if sv_spec.as_ref().is_some_and(|s| s.timestamp_required) && self.timestamper.is_none() {
+        let timestamper =
+            crate::http_tsa::resolve_timestamper(self.timestamper.clone(), sv_spec.as_ref());
+        if sv_spec.as_ref().is_some_and(|s| s.timestamp_required) && timestamper.is_none() {
             return Err(HankoError::Unsupported(
                 "the seed value dictionary requires a timestamp, but no timestamper is configured"
                     .into(),
@@ -1064,7 +1315,8 @@ impl PdfSigner {
             subfilter,
             SigSeedSubFilter::Pades | SigSeedSubFilter::PbadPades
         );
-        let (validation_info, adobe_revinfo) = self.presign_validation(update, md, use_pades)?;
+        let (validation_info, adobe_revinfo) =
+            self.presign_validation(update, md, use_pades, timestamper.as_deref())?;
         let session = Session {
             signer: self,
             field_id,
@@ -1074,6 +1326,8 @@ impl PdfSigner {
             system_time: self.signing_time.unwrap_or_else(Moment::now),
             validation_info,
             adobe_revinfo,
+            mac_session,
+            timestamper,
         };
         if session.use_pades() {
             if let Some(info) = &session.validation_info {
@@ -1115,6 +1369,12 @@ impl PdfSigner {
         };
         let mut sig_dict = spec.to_dict(false);
         let sig_id = update.add(Object::Null);
+        if session.mac_session.is_some() {
+            let mut auth = Dictionary::new();
+            auth.set("MACLocation", name("AttachedToSig"));
+            auth.set("SigObjRef", Object::Reference(sig_id));
+            update.set_auth_code(Object::Dictionary(auth));
+        }
         mdp.apply(update, &mut sig_dict, sig_id)?;
         update.update(sig_id, Object::Dictionary(sig_dict));
         // appearance
@@ -1123,7 +1383,8 @@ impl PdfSigner {
             .get_dict_mut(field_id)?
             .set("V", Object::Reference(sig_id));
         update.update_info(&pdf_date(session.system_time), PRODUCER)?;
-        let prepared = write_and_digest(update, sig_id, bytes_reserved, md)?;
+        let mut prepared = write_and_digest(update, sig_id, bytes_reserved, md)?;
+        prepared.mac_session = session.mac_session.clone();
         let _ = session.signer;
         Ok((prepared, session))
     }
@@ -1407,7 +1668,11 @@ impl PdfSigner {
                 return Err(signing_error(format!(
                     "Reason \"{}\" is not a valid reason for signing, please choose one of the following: {}.",
                     meta.reason.clone().unwrap_or_else(|| "None".into()),
-                    reasons.iter().map(|r| format!("\"{r}\"")).collect::<Vec<_>>().join(", ")
+                    reasons
+                        .iter()
+                        .map(|r| format!("\"{r}\""))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 )));
             }
         }
@@ -1418,7 +1683,9 @@ impl PdfSigner {
     /// `estimate_signature_container_size`.
     fn estimate_signature_container_size(&self, session: &Session<'_>) -> Result<usize> {
         if self.signer.signing_cert().is_none() {
-            return Err(signing_error("Automatic signature size estimation is unavailable without a signing certificate; specify bytes_reserved explicitly"));
+            return Err(signing_error(
+                "Automatic signature size estimation is unavailable without a signing certificate; specify bytes_reserved explicitly",
+            ));
         }
         let test_md = session.md.digest(b"");
         let cms = CmsSigner {
@@ -1430,10 +1697,14 @@ impl PdfSigner {
             session.md,
             &self.signed_attr_settings(session),
             profile_for(session.subfilter),
-            self.timestamper.as_deref(),
+            session.timestamper.as_deref(),
             true,
             None,
         )?;
+        let cms = match &session.mac_session {
+            Some(mac) => mac.attach_to_cms(&test_md, &cms, true)?,
+            None => cms,
+        };
         let test_len = cms.len() * 2;
         Ok(if self.meta().tight_size_estimates {
             test_len

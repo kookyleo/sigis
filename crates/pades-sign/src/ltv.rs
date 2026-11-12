@@ -71,9 +71,13 @@ fn issued_by(cert: &Cert, issuer: &Cert) -> bool {
     .is_ok()
 }
 
-/// Build a path from `cert` to a trust anchor of `ctx`, using `pool` and
-/// the context's other certificates. Returns the path leaf first.
+/// Build a path from `cert` to a trust anchor of `ctx`, using local candidates
+/// first and fetching missing issuers if necessary. Returns the path leaf first.
 pub fn build_path(ctx: &ValidationContext, cert: &Cert, pool: &[Cert]) -> Option<Vec<Cert>> {
+    build_local_path(ctx, cert, pool).or_else(|| fetch_missing_issuer_path(ctx, cert, pool))
+}
+
+fn build_local_path(ctx: &ValidationContext, cert: &Cert, pool: &[Cert]) -> Option<Vec<Cert>> {
     let anchors: Vec<Cert> = ctx
         .trust_anchors()
         .iter()
@@ -96,6 +100,70 @@ pub fn build_path(ctx: &ValidationContext, cert: &Cert, pool: &[Cert]) -> Option
             .find(|c| !path.contains(c) && issued_by(&cur, c))?
             .clone();
         path.push(next);
+    }
+    None
+}
+
+/// Fetch only after local path construction fails. Candidate issuers must
+/// actually verify the child's signature; fetched certificates never become
+/// trust anchors. Full certificate policy validation remains a separate step.
+fn fetch_missing_issuer_path(
+    ctx: &ValidationContext,
+    cert: &Cert,
+    pool: &[Cert],
+) -> Option<Vec<Cert>> {
+    const MAX_DEPTH: usize = 16;
+    const MAX_NODES: usize = 128;
+    const MAX_FETCHED_CERTIFICATES: usize = 256;
+
+    let fetcher = ctx.fetchers().cert.as_ref()?;
+    let anchors: Vec<Cert> = ctx
+        .trust_anchors()
+        .iter()
+        .map(|anchor| anchor.cert().clone())
+        .collect();
+    let mut candidates = pool.to_vec();
+    candidates.extend(ctx.other_certs().iter().cloned());
+    let mut scheduled = vec![cert.clone()];
+    let mut pending = std::collections::VecDeque::from([vec![cert.clone()]]);
+    let mut fetched_count = 0;
+    while let Some(path) = pending.pop_front() {
+        let current = path.last()?;
+        if anchors.contains(current) {
+            return Some(path);
+        }
+        if path.len() >= MAX_DEPTH {
+            continue;
+        }
+        if let Some(anchor) = anchors.iter().find(|anchor| issued_by(current, anchor)) {
+            let mut completed = path;
+            completed.push(anchor.clone());
+            return Some(completed);
+        }
+        if fetched_count < MAX_FETCHED_CERTIFICATES {
+            if let Ok(issuers) = fetcher.fetch_issuers(current) {
+                for issuer in issuers
+                    .into_iter()
+                    .take(MAX_FETCHED_CERTIFICATES - fetched_count)
+                {
+                    fetched_count += 1;
+                    if !candidates.contains(&issuer) {
+                        candidates.push(issuer);
+                    }
+                }
+            }
+        }
+        for issuer in &candidates {
+            if scheduled.len() >= MAX_NODES {
+                break;
+            }
+            if !scheduled.contains(issuer) && issued_by(current, issuer) {
+                scheduled.push(issuer.clone());
+                let mut next = path.clone();
+                next.push(issuer.clone());
+                pending.push_back(next);
+            }
+        }
     }
     None
 }
@@ -143,8 +211,8 @@ pub fn extended_context(
     certs: &[Cert],
     info: &ValidationInfo,
 ) -> Result<ValidationContext> {
-    // Extend a clone so algorithm policy, freshness requirements, trust
-    // managers, assertions and AC target restrictions survive presigning.
+    // Clone the caller's complete policy: rebuilding with a builder loses
+    // algorithm/freshness policies, trust managers, AC targets and assertions.
     Ok(ctx.with_revinfo(
         certs,
         info.crls.iter().map(Vec::as_slice),
@@ -166,13 +234,103 @@ pub fn validate_and_collect(
             "Unable to build a validation path for the certificate".into(),
         ))
     })?;
-    fetch_revinfo(ctx, &path, info);
-    let ext = extended_context(ctx, pool, info)?;
-    CertificateValidator::new(&ext, cert.clone()).validate()?;
-    if !info.paths.contains(&path) {
-        info.paths.push(path.clone());
+    let mut staged = info.clone();
+    fetch_revinfo(ctx, &path, &mut staged);
+    // Fetched issuers are candidate intermediates in the cloned context, not
+    // anchors. Preserve all caller policies and let the native validator decide.
+    let mut candidates = pool.to_vec();
+    candidates.extend(path.iter().cloned());
+    let ext = extended_context(ctx, &candidates, &staged)?;
+    let validated = CertificateValidator::new(&ext, cert.clone()).validate()?;
+    let path: Vec<Cert> = validated.certs().into_iter().rev().cloned().collect();
+    if !staged.paths.contains(&path) {
+        staged.paths.push(path.clone());
     }
+    *info = staged;
     Ok(path)
+}
+
+/// Validate the attribute certificates embedded in a CMS certificate set
+/// or in `signer-attributes-v2`, collecting their AA paths and revocation
+/// information for the DSS (`_perform_presign_ac_validation`).
+///
+/// `holder` is the signing certificate and must match every AC. The
+/// context supplies the AA trust policy independently of the signer's PKI.
+/// Results and collected information are committed only if every AC
+/// validates, so a rejected AC cannot contribute trusted DSS material.
+///
+/// The current fetcher traits accept X.509 certificates only. AA path
+/// revocation information is fetched normally; AC-specific responses must
+/// already be supplied in `ctx`. Missing mandatory AC revocation evidence
+/// is rejected by the lower validator rather than treated as valid.
+pub fn validate_and_collect_attribute_certs(
+    ctx: &ValidationContext,
+    holder: &Cert,
+    pool: &[Cert],
+    attribute_certs: &[Vec<u8>],
+    info: &mut ValidationInfo,
+) -> Result<Vec<sigis_pki_certvalidator::ac::AcValidationResult>> {
+    use sigis_pki_certvalidator::ac::{validate_ac, AttrCert};
+
+    if attribute_certs.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut staged = info.clone();
+    for response in ctx.ocsps() {
+        if !staged.ocsps.iter().any(|existing| existing == response) {
+            staged.ocsps.push(response.to_vec());
+        }
+    }
+    for crl in ctx.crls() {
+        if !staged.crls.iter().any(|existing| existing == crl) {
+            staged.crls.push(crl.to_vec());
+        }
+    }
+    let ctx = ctx.with_other_certs(pool);
+    let mut candidates = pool.to_vec();
+    let mut results = Vec::new();
+    for der in attribute_certs {
+        let ac = AttrCert::from_der(der).map_err(|error| {
+            HankoError::Signing(format!(
+                "An attribute certificate could not be validated: {error}"
+            ))
+        })?;
+        // Fetch evidence for candidate AA paths before asking validate_ac
+        // to enforce the holder, AA usage/controls, signature and AC policy.
+        // Selection and trust decisions remain with the lower validator.
+        if let Some(issuer_name) = ac.issuer_name() {
+            for issuer in ctx
+                .other_certs()
+                .iter()
+                .filter(|cert| cert.subject() == &issuer_name)
+            {
+                if let Some(path) = build_path(&ctx, issuer, &candidates) {
+                    fetch_revinfo(&ctx, &path, &mut staged);
+                    // Keep fetched AA intermediates available to native AC
+                    // validation. Fetching them twice can exhaust the caller's
+                    // shared request budget, and does not grant them trust.
+                    for cert in path {
+                        if !candidates.contains(&cert) {
+                            candidates.push(cert);
+                        }
+                    }
+                }
+            }
+        }
+        let extended = extended_context(&ctx, &candidates, &staged)?;
+        let result = validate_ac(&extended, der, Some(holder)).map_err(|error| {
+            HankoError::Signing(format!(
+                "An attribute certificate could not be validated: {error}"
+            ))
+        })?;
+        let path: Vec<Cert> = result.aa_path.certs().into_iter().rev().cloned().collect();
+        if !staged.paths.contains(&path) {
+            staged.paths.push(path);
+        }
+        results.push(result);
+    }
+    *info = staged;
+    Ok(results)
 }
 
 /// Certificates embedded in a DER `OCSPResponse` (`enumerate_ocsp_certs`).

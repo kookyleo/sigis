@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 sigis-pki-core = { workspace = true }
+sigis-pki-fetch = { workspace = true }
 sigis-pki-certvalidator = { workspace = true }
 sigis-pdf = { workspace = true }
 spki = { workspace = true }

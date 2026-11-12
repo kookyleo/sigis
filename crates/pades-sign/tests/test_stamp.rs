@@ -18,10 +18,12 @@ use sigis_pades_sign::layout::{
 };
 use sigis_pades_sign::pdf::writer::PdfUpdate;
 use sigis_pades_sign::stamp::{
-    qr_stamp_file, stamp_art_content, text_stamp_file, CoordinateSystem, QrPosition, QrStampStyle,
-    Stamp, StampStyle, StaticStampStyle, TextStampStyle, STAMP_ART_DATA,
+    qr_stamp_file, qr_stamp_file_with_limits, stamp_art_content, text_stamp_file,
+    text_stamp_file_with_limits, CoordinateSystem, QrPosition, QrStampStyle, Stamp, StampStyle,
+    StaticStampStyle, TextStampStyle, STAMP_ART_DATA,
 };
 use sigis_pades_sign::text::TextBoxStyle;
+use sigis_pdf::decode_limits::DecodeLimits;
 use support::layout::{compare_output, empty_page, with_writer};
 use support::*;
 
@@ -132,16 +134,16 @@ fn test_simple_qr_noto_stamp() {
 
 #[test]
 fn test_stamp_file_decode_limits() {
-    // pyHanko passes DecodeLimits.for_trusted_input(); the port's reader
-    // (lopdf) applies no decode limits.
     let infile = out_path("test-in.pdf");
-    if oracle("oversized_objstm.py", &[path_str(&infile)]).is_none() {
-        return;
-    }
+    oracle("oversized_objstm.py", &[path_str(&infile)])
+        .expect("the pinned oracle must generate the exact oversized object-stream input");
     let style = QrStampStyle::with_text("Hi");
     for qr in [false, true] {
         let outfile = out_path("test-out.pdf");
-        if qr {
+        // The default API keeps the policy for untrusted input. Both caller
+        // paths must reject before writing any output, rather than silently
+        // falling back to an unbounded parser.
+        let error = if qr {
             qr_stamp_file(
                 &infile,
                 &outfile,
@@ -152,9 +154,40 @@ fn test_stamp_file_decode_limits() {
                 "https://example.com",
                 None,
             )
+        } else {
+            text_stamp_file(&infile, &outfile, &style.text, 0, 70.0, 50.0, None)
+        }
+        .unwrap_err();
+        assert!(
+            error.to_string().to_lowercase().contains("limit"),
+            "{error}"
+        );
+        assert_eq!(std::fs::metadata(&outfile).unwrap().len(), 0);
+        if qr {
+            qr_stamp_file_with_limits(
+                &infile,
+                &outfile,
+                &style,
+                0,
+                70.0,
+                50.0,
+                "https://example.com",
+                None,
+                DecodeLimits::for_trusted_input(),
+            )
             .unwrap();
         } else {
-            text_stamp_file(&infile, &outfile, &style.text, 0, 70.0, 50.0, None).unwrap();
+            text_stamp_file_with_limits(
+                &infile,
+                &outfile,
+                &style.text,
+                0,
+                70.0,
+                50.0,
+                None,
+                DecodeLimits::for_trusted_input(),
+            )
+            .unwrap();
         }
         assert!(
             std::fs::metadata(&outfile).unwrap().len() > std::fs::metadata(&infile).unwrap().len()

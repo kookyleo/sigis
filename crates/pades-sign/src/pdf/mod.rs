@@ -4,6 +4,7 @@ pub mod attachment;
 pub mod dss;
 pub mod embedded;
 pub mod fields;
+pub mod mac;
 pub mod seed;
 pub mod signer;
 pub mod timestamp;

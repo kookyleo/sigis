@@ -12,7 +12,8 @@ use sigis_pki_core::errors::Result;
 
 use crate::ltv::ocsp_certs;
 use crate::pdf::util::name;
-use crate::pdf::writer::PdfUpdate;
+use crate::pdf::writer::{PdfOperationResult, PdfReopenState, PdfUpdate};
+use sigis_pdf::decode_limits::DecodePurpose;
 
 /// The VRI key of a signature (`sig_content_identifier`): upper-case hex
 /// SHA-1 of `contents`.
@@ -55,9 +56,13 @@ fn read_streams(update: &PdfUpdate, d: &Dictionary, key: &[u8]) -> Result<Vec<(V
     if let Some(Object::Array(a)) = update.dict_get(d, key)? {
         for r in a {
             if let Object::Stream(s) = update.resolve(r)? {
-                let data = s
-                    .decompressed_content()
-                    .unwrap_or_else(|_| s.content.clone());
+                let purpose = match key {
+                    b"Certs" => DecodePurpose::Certificate,
+                    b"OCSPs" => DecodePurpose::OcspResponse,
+                    b"CRLs" => DecodePurpose::Crl,
+                    _ => DecodePurpose::Generic,
+                };
+                let data = update.read_stream_data(s, purpose)?;
                 out.push((data, r.clone()));
             }
         }
@@ -226,7 +231,58 @@ pub fn add_dss_with_password(
     force_write: bool,
     password: Option<&[u8]>,
 ) -> Result<Vec<u8>> {
-    let mut update = PdfUpdate::open_with(pdf, password)?;
+    let update = PdfUpdate::open_with(pdf, password)?;
+    Ok(add_dss_in_update(pdf, content, force_write, update)?.pdf)
+}
+
+/// Update the DSS using the inherited limits, remaining budget and credentials.
+pub fn add_dss_with_state(
+    pdf: &[u8],
+    content: &DssContent<'_>,
+    force_write: bool,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
+    let update = PdfUpdate::open_with_state(pdf, state)?;
+    add_dss_in_update(pdf, content, force_write, update)
+}
+
+/// Append DSS evidence to the same caller-owned buffer using default limits.
+///
+/// Errors leave its bytes unchanged. Use [`add_dss_in_place_with_state`] for
+/// authenticated or caller-selected decoding policy and continuation allowance.
+pub fn add_dss_in_place<'a>(
+    output: &'a mut Vec<u8>,
+    content: &DssContent<'_>,
+    force_write: bool,
+) -> Result<&'a mut Vec<u8>> {
+    let update = PdfUpdate::new(output)?;
+    let result = add_dss_in_update(output, content, force_write, update)?;
+    *output = result.pdf;
+    Ok(output)
+}
+
+/// Append DSS evidence, retaining the caller's buffer and reader state.
+///
+/// The authenticated, bounded update and output reopening finish before
+/// committing any caller bytes. The returned reference is the same `Vec`
+/// object, independently of allocation changes during growth.
+pub fn add_dss_in_place_with_state<'a>(
+    output: &'a mut Vec<u8>,
+    content: &DssContent<'_>,
+    force_write: bool,
+    state: PdfReopenState,
+) -> Result<(&'a mut Vec<u8>, PdfReopenState)> {
+    let result = add_dss_with_state(output, content, force_write, state)?;
+    *output = result.pdf;
+    Ok((output, result.state))
+}
+
+fn add_dss_in_update(
+    pdf: &[u8],
+    content: &DssContent<'_>,
+    force_write: bool,
+    mut update: PdfUpdate,
+) -> Result<PdfOperationResult> {
     let modified = supply_dss_in_writer(&mut update, content)?;
     if modified || force_write {
         // pyHanko refreshes the document metadata on every write
@@ -234,8 +290,8 @@ pub fn add_dss_with_password(
             &crate::pdf::util::pdf_date(sigis_pki_core::time::Moment::now()),
             crate::pdf::signer::PRODUCER,
         )?;
-        Ok(update.write()?.0)
+        PdfOperationResult::from_output(update.write()?.0, update.state())
     } else {
-        Ok(pdf.to_vec())
+        PdfOperationResult::from_output(pdf.to_vec(), update.state())
     }
 }

@@ -1,0 +1,63 @@
+{
+  "pyhanko": "0.38.1",
+  "pyhanko_commit": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+  "certvalidator": "0.33.0",
+  "source": {
+    "repository_path": "pkgs/pyhanko/tests/test_pades.py",
+    "sha256": "286358234dda7b42f59da61b8b845deac383a1f7fb08ee7cdf202f263c409d69"
+  },
+  "helper_source": {
+    "repository_path": "internal/common-test-utils/src/pyhanko_testing_commons/test_utils/signing_commons.py",
+    "sha256": "3b24730daa1454bb78138f2c9330fb71ee255fbfdfee4eb258f6b416e126b7e3",
+    "function": "live_ac_vcs",
+    "first_line": 196,
+    "last_line": 217,
+    "extracted_sha256": "7bc9435c93823172fb0f02f0f7de5753debedac55822c6cad620fbd13314e4b0"
+  },
+  "selection": "LTA: function body after the first signing with-block; others: first assignment to r through function end. Preserve every selected statement, comment and nested assertion; only dedent/indent into a parameter-free async wrapper.",
+  "cases": {
+    "test_pades_live_ac_presign_validation": {
+      "first_line": 1462,
+      "last_line": 1499,
+      "assertions": 9,
+      "source_tail_sha256": "fc03940aee30984c0dce9991a0131abc05d3bb751f0ba9d502f4ceafc71018a5"
+    },
+    "test_pades_lta_live_ac_presign_validation": {
+      "first_line": 1563,
+      "last_line": 1591,
+      "assertions": 4,
+      "source_tail_sha256": "5aebbaf2d36559c4c8ac8545e0f57a5ee18163d27e6110c0645b870e6f1342c1"
+    },
+    "test_cades_signer_attrs_autofill_dss": {
+      "first_line": 1629,
+      "last_line": 1632,
+      "assertions": 1,
+      "source_tail_sha256": "4ca33537aa21b48694d9d29ab4a7d9c19bc4b66c4293fd50a87e6031a8ad097f"
+    },
+    "test_cades_signer_attrs_validate_acs": {
+      "first_line": 1678,
+      "last_line": 1713,
+      "assertions": 15,
+      "source_tail_sha256": "97e8e1505bde3a2fe89766a1a5beb4ec287b208f0026fee2e6e3576d5f4a51e1"
+    },
+    "test_cades_signer_attrs_validate_acs_no_claimed": {
+      "first_line": 1809,
+      "last_line": 1834,
+      "assertions": 11,
+      "source_tail_sha256": "8b8f538e085ea0c2f51b0b7beb70033c8e26cc85fe68dee298b2fa36a16d8524"
+    },
+    "test_cades_signer_attrs_validate_acs_wrong_vc": {
+      "first_line": 1880,
+      "last_line": 1902,
+      "assertions": 10,
+      "source_tail_sha256": "399fd9c18be3388192d6b7931fa2bb8a683f0c0ac351210da8415e4f3557e39f"
+    },
+    "test_cades_signer_attrs_validate_acs_missing_vc": {
+      "first_line": 1948,
+      "last_line": 1970,
+      "assertions": 9,
+      "source_tail_sha256": "c809bdde02d79494b46852c0f2a2c76b4a3a5e276db7a3b8fe5a060f7b0edcf1"
+    }
+  },
+  "generated_sha256": "bc4cf6726e9a467631a790138c887e07bdac728c6b3ce7d0f25a4063b91bc960"
+}

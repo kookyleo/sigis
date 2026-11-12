@@ -8,6 +8,7 @@
 use std::sync::Arc;
 
 use lopdf::Object;
+use sigis_pdf::decode_limits::DecodeLimits;
 use sigis_pki_certvalidator::ValidationContext;
 use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::cert::Cert;
@@ -16,13 +17,13 @@ use sigis_pki_core::sign::TimeStamper;
 
 use crate::cms::dummy_digest;
 use crate::ltv::{validate_and_collect, ValidationInfo};
-use crate::pdf::dss::{add_dss, supply_dss_in_writer, DssContent};
+use crate::pdf::dss::{supply_dss_in_writer, DssContent};
 use crate::pdf::embedded::{embedded_signatures, EmbeddedSig};
 use crate::pdf::fields::{self, InvisSigSettings, NewFieldSettings};
 use crate::pdf::seed::SigSeedSubFilter;
 use crate::pdf::signer::{ensure_esic_ext, write_and_digest, SignatureObjectSpec};
 use crate::pdf::util::text_string;
-use crate::pdf::writer::PdfUpdate;
+use crate::pdf::writer::{PdfOperationResult, PdfReopenState, PdfUpdate};
 use crate::timestamps::token_certs;
 
 /// DSS settings for document timestamps (`TimestampDSSContentSettings`).
@@ -147,6 +148,12 @@ pub struct TimestampOptions<'a> {
     pub dss_with_ts: Option<(Option<Vec<u8>>, ValidationInfo)>,
     /// Password of an encrypted document (`file_credential`).
     pub password: Option<Vec<u8>>,
+    /// Limits for a newly opened input.
+    pub decode_limits: DecodeLimits,
+    /// Strict parsing for an input without an inherited reader state.
+    pub strict: bool,
+    /// Existing limits, budget, authentication and strictness; authoritative if set.
+    pub reopen_state: Option<PdfReopenState>,
 }
 
 impl<'a> TimestampOptions<'a> {
@@ -162,6 +169,9 @@ impl<'a> TimestampOptions<'a> {
             embed_roots: true,
             dss_with_ts: None,
             password: None,
+            decode_limits: DecodeLimits::default(),
+            strict: true,
+            reopen_state: None,
         }
     }
 }
@@ -179,6 +189,15 @@ impl PdfTimeStamper {
 
     /// Append a document timestamp to `pdf` (`timestamp_pdf`).
     pub fn timestamp_pdf(&self, pdf: &[u8], opts: &TimestampOptions<'_>) -> Result<Vec<u8>> {
+        Ok(self.timestamp_pdf_with_state(pdf, opts)?.pdf)
+    }
+
+    /// Append a timestamp without discarding its authenticated reader state.
+    pub fn timestamp_pdf_with_state(
+        &self,
+        pdf: &[u8],
+        opts: &TimestampOptions<'_>,
+    ) -> Result<PdfOperationResult> {
         timestamp_pdf_full(
             pdf,
             self.timestamper.as_ref(),
@@ -200,6 +219,17 @@ impl PdfTimeStamper {
     ) -> Result<Vec<u8>> {
         update_archival_chain_with(pdf, self.timestamper.as_ref(), ctx, default_md)
     }
+
+    /// Renew an archival chain using the caller's remaining document budget.
+    pub fn update_archival_timestamp_chain_with_state(
+        &self,
+        pdf: &[u8],
+        ctx: &ValidationContext,
+        default_md: DigestAlgorithm,
+        state: PdfReopenState,
+    ) -> Result<PdfOperationResult> {
+        update_archival_chain_with_state(pdf, self.timestamper.as_ref(), ctx, default_md, state)
+    }
 }
 
 /// [`PdfTimeStamper::timestamp_pdf`] with a borrowed timestamper and
@@ -210,6 +240,16 @@ pub fn timestamp_pdf_with(
     field_name: Option<String>,
     opts: &TimestampOptions<'_>,
 ) -> Result<Vec<u8>> {
+    Ok(timestamp_pdf_with_state(pdf, ts, field_name, opts)?.pdf)
+}
+
+/// Timestamp an input with explicit state propagation.
+pub fn timestamp_pdf_with_state(
+    pdf: &[u8],
+    ts: &dyn TimeStamper,
+    field_name: Option<String>,
+    opts: &TimestampOptions<'_>,
+) -> Result<PdfOperationResult> {
     timestamp_pdf_full(
         pdf,
         ts,
@@ -229,10 +269,33 @@ pub fn update_archival_chain_with(
     default_md: DigestAlgorithm,
 ) -> Result<Vec<u8>> {
     let update = PdfUpdate::new(pdf)?;
+    Ok(update_archival_chain_from_update(pdf, ts, ctx, default_md, update)?.pdf)
+}
+
+/// Borrowed TSA archival update preserving the inherited reader state.
+pub fn update_archival_chain_with_state(
+    pdf: &[u8],
+    ts: &dyn TimeStamper,
+    ctx: &ValidationContext,
+    default_md: DigestAlgorithm,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
+    let update = PdfUpdate::open_with_state(pdf, state)?;
+    update_archival_chain_from_update(pdf, ts, ctx, default_md, update)
+}
+
+fn update_archival_chain_from_update(
+    pdf: &[u8],
+    ts: &dyn TimeStamper,
+    ctx: &ValidationContext,
+    default_md: DigestAlgorithm,
+    update: PdfUpdate,
+) -> Result<PdfOperationResult> {
     let sigs = embedded_signatures(&update)?;
     let last_ts = sigs.iter().rev().find(|s| s.is_doc_timestamp).cloned();
     let mut opts = TimestampOptions {
         validation_context: Some(ctx),
+        reopen_state: Some(update.state()),
         ..TimestampOptions::new(default_md)
     };
     if let Some(ts_sig) = last_ts {
@@ -241,7 +304,7 @@ pub fn update_archival_chain_with(
         collect_signature_info(ts_sig.cms(), ctx, false, &mut info)?;
         opts.dss_with_ts = Some((Some(ts_sig.contents.clone()), info));
     }
-    timestamp_pdf_with(pdf, ts, None, &opts)
+    timestamp_pdf_with_state(pdf, ts, None, &opts)
 }
 
 fn timestamp_pdf_full(
@@ -251,9 +314,22 @@ fn timestamp_pdf_full(
     invis: InvisSigSettings,
     readable_field_name: &str,
     opts: &TimestampOptions<'_>,
-) -> Result<Vec<u8>> {
+) -> Result<PdfOperationResult> {
     {
-        let mut update = PdfUpdate::open_with(pdf, opts.password.as_deref())?;
+        let mut update = match &opts.reopen_state {
+            Some(state) => PdfUpdate::open_with_state(pdf, state.clone())?,
+            None => PdfUpdate::open_with_limits(
+                pdf,
+                opts.password.as_deref(),
+                opts.decode_limits.clone(),
+                opts.strict,
+            )?,
+        };
+        let mac_registry = crate::pdf::mac::PdfMacSessions::default();
+        let mac_session = match update.security_handler() {
+            Some(handler) => mac_registry.begin(handler, opts.md_algorithm.name())?,
+            None => None,
+        };
         ensure_esic_ext(&mut update)?;
         let md = opts.md_algorithm;
         let mut vinfo = opts.validation_info.clone().unwrap_or_default();
@@ -290,7 +366,13 @@ fn timestamp_pdf_full(
         let bytes_reserved = match opts.bytes_reserved {
             Some(b) => b,
             None => {
-                let test_len = ts.timestamp(&dummy_digest(md), md)?.len() * 2;
+                let test_digest = dummy_digest(md);
+                let test_token = ts.timestamp(&test_digest, md)?;
+                let test_token = match &mac_session {
+                    Some(mac) => mac.attach_to_cms(&test_digest, &test_token, true)?,
+                    None => test_token,
+                };
+                let test_len = test_token.len() * 2;
                 if opts.tight_size_estimates {
                     test_len
                 } else {
@@ -323,6 +405,21 @@ fn timestamp_pdf_full(
             ..Default::default()
         };
         let sig_id = update.add(Object::Dictionary(spec.to_dict(true)));
+        if mac_session.is_some() {
+            crate::pdf::signer::register_extension(
+                &mut update,
+                "ISO_",
+                32004,
+                true,
+                "2.0",
+                Some(":2024"),
+                None,
+            )?;
+            let mut auth = lopdf::Dictionary::new();
+            auth.set("MACLocation", crate::pdf::util::name("AttachedToSig"));
+            auth.set("SigObjRef", Object::Reference(sig_id));
+            update.set_auth_code(Object::Dictionary(auth));
+        }
         update
             .get_dict_mut(field_id)?
             .set("V", Object::Reference(sig_id));
@@ -332,6 +429,11 @@ fn timestamp_pdf_full(
         )?;
         let prepared = write_and_digest(&mut update, sig_id, bytes_reserved, md)?;
         let token = ts.timestamp(&prepared.document_digest, md)?;
+        let token = match &mac_session {
+            Some(mac) => mac.attach_to_cms(&prepared.document_digest, &token, false)?,
+            None => token,
+        };
+        let state = prepared.reopen_state.clone();
         let reserved = prepared.reserved_region_end - prepared.reserved_region_start - 2;
         let mut sig_contents = token.clone();
         sig_contents.resize(reserved / 2, 0);
@@ -341,7 +443,7 @@ fn timestamp_pdf_full(
                 .dss_settings
                 .include_vri
                 .then_some(sig_contents.as_slice());
-            return crate::pdf::dss::add_dss_with_password(
+            return crate::pdf::dss::add_dss_with_state(
                 &out,
                 &DssContent {
                     sig_contents: vri,
@@ -352,10 +454,10 @@ fn timestamp_pdf_full(
                     ..Default::default()
                 },
                 !opts.dss_settings.skip_if_unneeded,
-                opts.password.as_deref(),
+                state,
             );
         }
-        Ok(out)
+        PdfOperationResult::from_output(out, state)
     }
 }
 
@@ -378,6 +480,29 @@ pub fn add_validation_info_for(
     add_vri_entry: bool,
     force_write: bool,
 ) -> Result<Vec<u8>> {
+    let state = PdfUpdate::new(pdf)?.state();
+    Ok(add_validation_info_for_with_state(
+        pdf,
+        sig,
+        ctx,
+        include_timestamps,
+        add_vri_entry,
+        force_write,
+        state,
+    )?
+    .pdf)
+}
+
+/// Collect and embed signature evidence using the inherited reader state.
+pub fn add_validation_info_for_with_state(
+    pdf: &[u8],
+    sig: &EmbeddedSig,
+    ctx: &ValidationContext,
+    include_timestamps: bool,
+    add_vri_entry: bool,
+    force_write: bool,
+    state: PdfReopenState,
+) -> Result<PdfOperationResult> {
     let mut info = ValidationInfo::default();
     collect_signature_info(sig.cms(), ctx, include_timestamps, &mut info)?;
     let hex: Vec<u8> = sig
@@ -385,7 +510,7 @@ pub fn add_validation_info_for(
         .iter()
         .flat_map(|b| format!("{b:02x}").into_bytes())
         .collect();
-    add_dss(
+    crate::pdf::dss::add_dss_with_state(
         pdf,
         &DssContent {
             sig_contents: add_vri_entry.then_some(hex.as_slice()),
@@ -396,6 +521,7 @@ pub fn add_validation_info_for(
             ..Default::default()
         },
         force_write,
+        state,
     )
 }
 
