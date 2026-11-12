@@ -1,17 +1,17 @@
 # Independently verified CLI increments
 
-Current projection: config. Fixed assignment252; local proposal **252 / 57 passed / 0 skipped / 195 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
+Current projection: plugins. Fixed assignment252; local proposal **252 / 68 passed / 0 skipped / 184 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
 
 The complete implementation and every deferred original assertion are preserved
 at `4d8c8b7a92a949d5ba4f36581916d39f6fbe02a9` / `backup/r3-c-full-before-module-increments` and will be restored
 after all four independently buildable commits. Deferred commands explicitly
 reject. No unavailable command is counted as passed.
 
-Current cumulative native run: 84 passed, zero failed/ignored. Evidence
-`~/.codex/artifacts/sigis/round3/c/increment-config-{build,tests,clippy,fmt}.log`
+Current cumulative native run: 95 passed, zero failed/ignored. Evidence
+`~/.codex/artifacts/sigis/round3/c/increment-plugins-{build,tests,clippy,fmt}.log`
 and corresponding scheduler receipts. Tests use the fresh Cargo artifact
-`executable-increment-config/pyhanko`, copied/hash-checked on both workers.
-Check, all-target tests, strict all-target clippy and formatting passed through
+`executable-increment-plugins/pyhanko`, copied/hash-checked on both workers.
+Build, all-target tests, strict all-target clippy and formatting passed through
 the normal wrapper. No compiler/cache/placement override, raw Cargo or job cap.
 
 Module documents list exact parameter coverage and separate oracle calls.
@@ -21,6 +21,17 @@ fail-closed behavior. Root Cargo.lock is generated and excluded from commits.
 
 | Exact upstream ID | Rust test |
 | --- | --- |
+| `pyhanko-cli/test_cli_plugins.py::test_load_plugins_from_config` | `plugins::test_load_plugins_from_config` |
+| `pyhanko-cli/test_cli_plugins.py::test_gracefully_handle_dupe_plugins` | `plugins::test_gracefully_handle_dupe_plugins` |
+| `pyhanko-cli/test_cli_plugins.py::test_plugin_must_be_class` | `plugins::test_plugin_must_be_class` |
+| `pyhanko-cli/test_cli_plugins.py::test_disable_non_default_plugins` | `plugins::test_disable_non_default_plugins` |
+| `pyhanko-cli/test_cli_plugins.py::test_show_unavailable_plugins` | `plugins::test_show_unavailable_plugins` |
+| `pyhanko-cli/test_cli_plugins.py::test_trigger_unavailable_plugin` | `plugins::test_trigger_unavailable_plugin` |
+| `pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_too_few_parameters` | `plugins::test_identity_setup_with_too_few_parameters` |
+| `pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_unknown_parameters` | `plugins::test_identity_setup_with_unknown_parameters` |
+| `pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_unknown_plugin` | `plugins::test_identity_setup_with_unknown_plugin` |
+| `pyhanko-cli/test_cli_plugins.py::test_unknown_identity` | `plugins::test_unknown_identity` |
+| `pyhanko-cli/test_cli_plugins.py::test_identity_without_config` | `plugins::test_identity_without_config` |
 | `pyhanko-cli/test_config.py::test_read_vc_kwargs` | `config::test_read_vc_kwargs` |
 | `pyhanko-cli/test_config.py::test_os_trust_fallback_warning` | `config::test_os_trust_fallback_warning` |
 | `pyhanko-cli/test_config.py::test_no_os_trust_fallback_warning_with_trust_replace` | `config::test_no_os_trust_fallback_warning_with_trust_replace` |
