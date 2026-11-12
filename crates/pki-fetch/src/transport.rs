@@ -5,6 +5,7 @@
 //! run without a network (in-memory fakes, or a server on 127.0.0.1).
 
 use std::io::Read;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// Default `User-Agent` (`DEFAULT_USER_AGENT`).
@@ -52,6 +53,71 @@ pub struct HttpRequest<'a> {
 pub trait HttpTransport: Send + Sync + std::fmt::Debug {
     /// Perform `request`.
     fn send(&self, request: &HttpRequest<'_>) -> Result<HttpResponse, TransportError>;
+}
+
+type TransportFactory = dyn Fn() -> Result<Arc<dyn HttpTransport>, TransportError> + Send + Sync;
+
+/// A lazily created HTTP session that can be released between operations.
+///
+/// Closing releases this adapter's session. Requests already in flight retain
+/// their session until they finish. The next request creates a fresh session.
+pub struct LazyTransport {
+    factory: Box<TransportFactory>,
+    session: Mutex<Option<Arc<dyn HttpTransport>>>,
+}
+
+impl std::fmt::Debug for LazyTransport {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LazyTransport").finish_non_exhaustive()
+    }
+}
+
+impl LazyTransport {
+    /// Defer creation of a reqwest session until the first request.
+    pub fn new(timeout: Duration, max_response_bytes: usize) -> Self {
+        Self::with_factory(move || {
+            Ok(Arc::new(ReqwestTransport::new(timeout, max_response_bytes)?))
+        })
+    }
+
+    /// Lazily create a session using a custom transport factory.
+    pub fn with_factory(
+        factory: impl Fn() -> Result<Arc<dyn HttpTransport>, TransportError> + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            factory: Box::new(factory),
+            session: Mutex::new(None),
+        }
+    }
+
+    /// Release the current session, if any. Repeated calls are harmless.
+    pub fn close(&self) -> Result<(), TransportError> {
+        let old = self
+            .session
+            .lock()
+            .map_err(|_| TransportError::Network("HTTP session lock poisoned".into()))?
+            .take();
+        drop(old);
+        Ok(())
+    }
+}
+
+impl HttpTransport for LazyTransport {
+    fn send(&self, request: &HttpRequest<'_>) -> Result<HttpResponse, TransportError> {
+        let session = {
+            let mut slot = self
+                .session
+                .lock()
+                .map_err(|_| TransportError::Network("HTTP session lock poisoned".into()))?;
+            if slot.is_none() {
+                *slot = Some((self.factory)()?);
+            }
+            slot.as_ref()
+                .cloned()
+                .ok_or_else(|| TransportError::Network("HTTP session unavailable".into()))?
+        };
+        session.send(request)
+    }
 }
 
 /// Blocking HTTP transport on `reqwest`, with a per-request timeout and a

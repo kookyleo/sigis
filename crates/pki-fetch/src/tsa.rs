@@ -239,6 +239,14 @@ impl HttpTimeStamper {
     }
 
     /// HTTP basic authentication (`auth=(user, password)`).
+    ///
+    /// Nonsensical credential objects are rejected by the type system
+    /// (`test_auth_coercion_rejects_nonsense` upstream).
+    ///
+    /// ```compile_fail,E0308
+    /// use sigis_pki_fetch::HttpTimeStamper;
+    /// HttpTimeStamper::new("https://example.invalid").with_basic_auth(&(), "pass");
+    /// ```
     pub fn with_basic_auth(mut self, user: &str, password: &str) -> Self {
         self.auth = Some((user.to_owned(), password.to_owned()));
         self

@@ -33,10 +33,10 @@ Notes:
   fails and counts requests. Logging assertions (warning once, then debug)
   are ported as state checks (`FetchBudget::exhaustion_reported`); the port
   does not log.
-- `test_fetcher_lifecycle.py` (16) is skipped: it tests ownership and
-  explicit closing of asyncio HTTP sessions (`aclose`, `OwnedFetcherBackend`,
-  `LazySession`). Rust fetchers are plain owned values; resources are
-  released by `Drop`, and there is no close protocol to port.
+- The round-3 lifecycle audit is below. Rust `Drop` covers some resource
+  ownership assertions, but it does not supply the missing context/bootstrap
+  ownership-transfer protocol. These are feature gaps, not harmless language
+  differences.
 - `test_tsa_fetcher.py` skips `test_deprecated_aiohttp_timestamper_forwards`
   (a deprecated Python alias) and `test_auth_coercion_rejects_nonsense`
   (passing a non-credential object is a type error in Rust).
@@ -47,3 +47,50 @@ Notes:
   validation halves are replayed from recorded pyHanko calls.
 - `tests/fetchers.rs` adds success-path tests (certificate, CRL, caching,
   content type, HTTP status, size limit) that upstream lacks.
+
+## Round 3 lifecycle and inherited-skip audit
+
+`tests/test_fetcher_lifecycle.rs` ports four upstream function assertions
+before the corresponding lazy-session implementation. `LazyTransport` now
+defers HTTP session creation, releases its idle session through `close`, and
+creates another session for a later request. Requests in flight retain their
+session until completion; this native resource lifetime differs from closing
+an aiohttp session while a request is running. The upstream tests exercise
+idle sessions only.
+
+Validation is pending; the accepted baseline remains **56 / 38 / 18 / 0**.
+After the new tests and compile-fail doctest pass, the candidate count is
+**56 / 43 / 13 / 0**. No recording or test-wrapper count earns a function pass.
+
+The first 16 IDs below have prefix
+`pyhanko-certvalidator/test_fetcher_lifecycle.py::`. The last two have prefix
+`pyhanko/test_tsa_fetcher.py::`.
+
+| Function | Exact Rust assertion or remaining feature gap |
+| --- | --- |
+| `test_context_provisions_and_owns_a_backend` | Gap: no context option provisions a default HTTP backend or closes it between operations. |
+| `test_context_leaves_a_supplied_backend_alone` | Gap: contexts accept `Fetchers`, not a borrowed backend object; no separate backend ownership branch exists. |
+| `test_context_leaves_supplied_fetchers_alone` | Same-named Rust test: drop the context, assert external fetcher transport has not dropped, then drop the caller's final handle and assert exactly one drop. |
+| `test_context_adopts_an_owned_backend` | Gap: no owned-backend marker or context close protocol. |
+| `test_no_backend_without_fetching` | Same-named Rust test: the default context has no OCSP, CRL or certificate fetcher and its fetcher set is empty. |
+| `test_no_backend_when_fetchers_are_unreachable` | Gap: no injected revinfo-manager/registry bootstrap branch whose unused backend creation can be tested. |
+| `test_unreachable_fetchers_still_adopt_an_owned_backend` | Gap: no explicit adopted backend independent of reachable fetchers. |
+| `test_bootstrap_owns_the_default_backend` | Gap: no validation-data-handler bootstrap API provisions an owned default backend. |
+| `test_bootstrap_owns_the_default_backend_explicitly` | Gap: no explicit default-backend sentinel or handler bootstrap ownership field. |
+| `test_bootstrap_without_fetching_owns_nothing` | Gap: no handler bootstrap API or handler fetching-allowed state. |
+| `test_bootstrap_leaves_a_supplied_backend_alone` | Gap: no borrowed-backend handler bootstrap branch. |
+| `test_bootstrap_leaves_supplied_fetchers_alone` | Gap: no supplied-fetcher handler bootstrap branch. |
+| `test_policy_hands_ownership_to_the_context` | Gap: no policy-to-context handler ownership transfer. |
+| `test_policy_without_handlers_hands_over_nothing` | Gap: no policy builder accepting optional validation-data handlers. |
+| `test_lazy_session_is_reusable_after_closing` | Same-named Rust test: defer factory, reuse the first session, close/drop it exactly once, create a distinct second session, close it, and allow repeated close. |
+| `test_lazy_session_close_without_a_session` | Same-named Rust test: close succeeds without calling the transport factory. |
+| `test_deprecated_aiohttp_timestamper_forwards` | Gap: no deprecated constructor alias/session forwarding API; existing request-error coverage does not establish alias/deprecation behaviour. |
+| `test_auth_coercion_rejects_nonsense` | `HttpTimeStamper::with_basic_auth` compile-fail doctest rejects a non-string object with a Rust type error. This replaces Python's runtime `TypeError`; the error text is intentionally different. |
+
+The upstream lifecycle functions are not parametrized. The lazy-session
+tests explicitly cover repeated close and reuse; ownership tests observe
+actual destructor counts. No provider/tool availability branch skips these
+new assertions. Existing fetch tests have no runtime provider exclusions;
+their CMS validation halves use committed fixture replay, not fresh oracle
+generation. Oracle calls and live results are reported separately in the
+lane artifact handoff.

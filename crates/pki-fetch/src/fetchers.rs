@@ -23,7 +23,7 @@ use crate::common::{
     ACCEPTABLE_STRICT_CERT_CONTENT_TYPES,
 };
 use crate::transport::{
-    HttpRequest, HttpResponse, HttpTransport, ReqwestTransport, TransportError, DEFAULT_USER_AGENT,
+    HttpRequest, HttpResponse, HttpTransport, LazyTransport, TransportError, DEFAULT_USER_AGENT,
 };
 
 /// Which fetch failed, for error messages and kinds.
@@ -93,26 +93,13 @@ impl Default for HttpFetchers {
     }
 }
 
-/// A transport that always fails, used when the HTTP client cannot be built.
-#[derive(Debug)]
-struct BrokenTransport(String);
-
-impl HttpTransport for BrokenTransport {
-    fn send(&self, _request: &HttpRequest<'_>) -> Result<HttpResponse, TransportError> {
-        Err(TransportError::Network(self.0.clone()))
-    }
-}
-
 impl HttpFetchers {
     /// Fetchers over HTTP (reqwest) with the given settings.
     pub fn new(settings: FetcherSettings) -> Self {
-        let transport: Arc<dyn HttpTransport> = match ReqwestTransport::new(
+        let transport: Arc<dyn HttpTransport> = Arc::new(LazyTransport::new(
             settings.limits.timeout,
             settings.limits.max_response_bytes,
-        ) {
-            Ok(t) => Arc::new(t),
-            Err(e) => Arc::new(BrokenTransport(e.to_string())),
-        };
+        ));
         Self::with_transport(transport, settings)
     }
 
