@@ -3149,6 +3149,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "sigis-cli"
+version = "0.0.1"
+
+[[package]]
 name = "sigis-cms"
 version = "0.0.1"
 dependencies = [

@@ -38,6 +38,8 @@ members = [
     "crates/xsig",
     # L5 service API
     "crates/sign",
+    # L6 CLI application (round-3 lane C)
+    "crates/cli",
     # test support (dev-dependency only)
     "crates/testdata",
 ]

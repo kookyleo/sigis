@@ -14,7 +14,7 @@ after changing dependencies.
 | L3 Containers | `ooxml` → `sigis-ooxml` (new), `odf` → `sigis-odf` (new) | Office document signatures |
 | L4 Facades | `hanko` → `sigis-hanko` (pyHanko port: PDF + CMS), `xsig` → `sigis-xsig` (new, XML) | Re-exports only; parallel, no dependency between them |
 | L5 Service API | `sign` → `sigis-sign` (new) | Unified sign / verify / report API, feature-gated (`pdf` → `sigis-hanko`, `xml` → `sigis-xsig`) |
-| L6 Application | the root package `sigis` | The HTTP service |
+| L6 Application | root `sigis`; `cli` → `sigis-cli` | HTTP service and pyHanko-compatible CLI (round-3 lane C) |
 | Test support | `testdata` → `sigis-testdata` | Fixtures; dev-dependency only |
 
 Packages are prefixed `sigis-` because several short names (`cms`, `pdf`)

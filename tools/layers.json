@@ -20,7 +20,8 @@
     "sigis-hanko": 4,
     "sigis-xsig": 4,
     "sigis-sign": 5,
-    "sigis": 6
+    "sigis": 6,
+    "sigis-cli": 6
   },
   "same_layer_allowed": [
     ["sigis-pki-certvalidator", "sigis-pki-core"],

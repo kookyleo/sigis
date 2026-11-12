@@ -1,0 +1,12 @@
+[package]
+name = "sigis-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Rust command-line interface compatible with pyHanko"
+
+[[bin]]
+name = "pyhanko"
+path = "src/main.rs"

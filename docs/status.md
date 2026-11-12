@@ -6,6 +6,19 @@ Updated: 2026-11-12. Baseline: **pyHanko 0.38.1** (`v0.38.1`,
 
 Lane D is integrated. The complete port remains unfinished.
 
+## Round 3 execution
+
+The five remaining lanes are assigned in [round3/README.md](lanes/round3/README.md).
+The exact immutable baseline is [ownership.json](lanes/round3/ownership.json),
+with all 1,431 function IDs, owners and statuses. P/V/S/C use dedicated
+`hanko/r3-*` branches and `sigis-r3-*` Codex sessions; `sigis-cx` owns L on
+main. All Cargo commands use `tools/cargo-locked.sh`: one shared flock,
+the canonical target, two compilation jobs and one documentation job.
+The launch adds the L6 `sigis-cli` application shell; it earns no new passes.
+Lane reports remain provisional until the lead accepts their commits,
+runs the full workspace gate and updates this document. The D gate and
+worktree evidence below describe the preceding accepted snapshot.
+
 ## Integration and verification
 
 Lane D source is `hanko/d-sign`, original head `56af66c`. The integration
@@ -33,7 +46,7 @@ SoftHSM signing matrix.
 | Documentation with `-D warnings` | Passed, `--workspace --no-deps`, final main run `-j 1` |
 | Formatting and dependency-layer check | Passed, `cargo fmt --all -- --check` and `cargo test --test layering` |
 | Final integration commit and main fast-forward | `b23462f`, fast-forward from `1610639`; documentation committed afterward |
-| All lane worktree heads and cleanliness | Five `hanko/*` lanes and `lead/d-sign-merge` synchronized to final main; clean |
+| Worktrees at D acceptance | Five old `hanko/*` lanes and `lead/d-sign-merge` synchronized to `34482bf`; clean |
 | Actual oracle, SoftHSM and rendering-tool availability | pyHanko 0.38.1, certvalidator 0.33.0, Pillow 13.0.0, SoftHSM 2.6.1, `pdftoppm` and ImageMagick available |
 
 Cargo uses the shared target selected by `rust-target-env`; only one
@@ -76,7 +89,8 @@ introductory summaries in some `PORTING.md` files.
 | `sigis-pades` (including `ades`) | 47 | 12 | 0 | 35 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
 | **Library lanes A–E** | **1,168** | **1,021** | **93** | **54** |
-| Lead: CLI/configuration and live integration | 263 | 0 | 0 | 263 |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
+| Lead: live integration (round-3 L) | 11 | 0 | 0 | 11 |
 | **Overall** | **1,431** | **1,021** | **93** | **317** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
