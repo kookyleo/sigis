@@ -468,7 +468,7 @@ pub fn handle_path_failure(f: PathFailure) -> CertUsageResult {
                 None,
                 *time_cutoff,
             ),
-            ValidationError::DisallowedAlgorithm(_) => (
+            ValidationError::DisallowedAlgorithm { .. } => (
                 AdesSubIndic::Indeterminate(AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE),
                 f.path,
                 None,
@@ -649,9 +649,10 @@ pub fn cms_basic_validation(
         ades_status = Some(AdesSubIndic::Indeterminate(
             AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE,
         ));
-        trust_problem = Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm(
+        trust_problem = Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm {
             msg,
-        )));
+            banned_since: None,
+        }));
     }
     let (intact, valid) = validate_sig_integrity(si, cert, &sd.econtent_type, &raw_digest)?;
 

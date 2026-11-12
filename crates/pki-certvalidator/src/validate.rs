@@ -1019,11 +1019,14 @@ fn validate_path_in_stack(
             Some(&issuer_key),
         );
         if !allowed.allowed {
-            return Err(fail(ValidationError::DisallowedAlgorithm(format!(
-                "The path could not be validated because the signature of {} uses a disallowed algorithm: {}",
-                path.describe(index, total),
-                allowed.failure_reason.unwrap_or_default()
-            ))));
+            return Err(fail(ValidationError::DisallowedAlgorithm {
+                msg: format!(
+                    "The path could not be validated because the signature of {} uses a disallowed algorithm: {}",
+                    path.describe(index, total),
+                    allowed.failure_reason.unwrap_or_default()
+                ),
+                banned_since: allowed.not_allowed_after,
+            }));
         }
     }
 

@@ -150,9 +150,10 @@ fn apply_algo_policy(
     if let Some(r) = c.failure_reason {
         msg.push_str(&format!(" Reason: {r}"));
     }
-    Err(LtvError::Validation(ValidationError::DisallowedAlgorithm(
+    Err(LtvError::Validation(ValidationError::DisallowedAlgorithm {
         msg,
-    )))
+        banned_since: c.not_allowed_after,
+    }))
 }
 
 fn human(cert: &Cert) -> String {

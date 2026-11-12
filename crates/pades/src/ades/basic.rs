@@ -25,7 +25,7 @@ use sigis_pki_core::time::Moment;
 pub fn subindication_for_validation_error(err: &ValidationError, is_ee_cert: bool) -> AdesSubIndic {
     match err {
         ValidationError::StaleRevinfo { .. } => AdesIndeterminate::TRY_LATER.into(),
-        ValidationError::DisallowedAlgorithm(_) => {
+        ValidationError::DisallowedAlgorithm { .. } => {
             AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE.into()
         }
         ValidationError::Revoked { .. } => {
@@ -282,7 +282,13 @@ mod tests {
             "TRY_LATER"
         );
         assert_eq!(
-            s(ValidationError::DisallowedAlgorithm("x".into()), true),
+            s(
+                ValidationError::DisallowedAlgorithm {
+                    msg: "x".into(),
+                    banned_since: None,
+                },
+                true
+            ),
             "CRYPTO_CONSTRAINTS_FAILURE"
         );
         assert_eq!(

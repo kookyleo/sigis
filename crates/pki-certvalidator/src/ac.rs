@@ -735,10 +735,13 @@ pub fn validate_ac(
         Some(&aa_cert.public_key()),
     );
     if !allowed.allowed {
-        return Err(ValidationError::DisallowedAlgorithm(format!(
-            "The attribute certificate could not be validated because the signature uses the disallowed signature algorithm {}. ",
-            ac.signature_algorithm.oid
-        ))
+        return Err(ValidationError::DisallowedAlgorithm {
+            msg: format!(
+                "The attribute certificate could not be validated because the signature uses the disallowed signature algorithm {}. ",
+                ac.signature_algorithm.oid
+            ),
+            banned_since: allowed.not_allowed_after,
+        }
         .into());
     }
     match validate_signature(

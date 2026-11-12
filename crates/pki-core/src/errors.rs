@@ -89,8 +89,13 @@ pub enum ValidationError {
         time_cutoff: Option<Moment>,
     },
     /// An algorithm was used that the algorithm usage policy forbids.
-    #[error("{0}")]
-    DisallowedAlgorithm(String),
+    #[error("{msg}")]
+    DisallowedAlgorithm {
+        /// Description.
+        msg: String,
+        /// Policy cutoff for a timed denial; `None` denotes a permanent ban.
+        banned_since: Option<Moment>,
+    },
     /// Proof of existence is insufficient for past validation
     /// (`InsufficientPOEError`, a `PathValidationError` subclass).
     #[error("{0}")]
@@ -125,7 +130,7 @@ impl ValidationError {
             Self::Revoked { .. } => "RevokedError",
             Self::InsufficientRevinfo(_) => "InsufficientRevinfoError",
             Self::StaleRevinfo { .. } => "StaleRevinfoError",
-            Self::DisallowedAlgorithm(_) => "DisallowedAlgorithmError",
+            Self::DisallowedAlgorithm { .. } => "DisallowedAlgorithmError",
             Self::InsufficientPoe(_) => "InsufficientPOEError",
             Self::Malformed(_) => "ValueError",
         }
@@ -264,4 +269,52 @@ pub type Result<T, E = HankoError> = core::result::Result<T, E>;
 /// Return [`HankoError::NotImplemented`]; used by interface stubs.
 pub fn not_implemented<T>(what: &'static str) -> Result<T> {
     Err(HankoError::NotImplemented(what))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn disallowed_algorithm_preserves_typed_cutoff_and_error_identity() {
+        let cutoff = Moment::from_unix_secs(1_767_225_599);
+        for banned_since in [None, Some(cutoff)] {
+            let error = ValidationError::DisallowedAlgorithm {
+                msg: "policy rejection".into(),
+                banned_since,
+            };
+            assert_eq!(error.to_string(), "policy rejection");
+            assert_eq!(error.class_name(), "DisallowedAlgorithmError");
+            assert!(error.is_path_validation_error());
+            assert!(error.is_instance_of("DisallowedAlgorithmError"));
+            assert!(error.is_instance_of("PathValidationError"));
+            assert!(error.is_instance_of("PathError"));
+            assert!(!error.is_insufficient_revinfo());
+            assert!(!error.is_instance_of("InsufficientRevinfoError"));
+            let ValidationError::DisallowedAlgorithm {
+                banned_since: actual,
+                ..
+            } = error.clone()
+            else {
+                panic!("expected algorithm rejection");
+            };
+            assert_eq!(actual, banned_since);
+            assert_eq!(HankoError::from(error).to_string(), "policy rejection");
+        }
+    }
+
+    #[test]
+    fn disallowed_algorithm_does_not_infer_cutoff_from_message() {
+        let error = ValidationError::DisallowedAlgorithm {
+            msg: "Banned after 2025-12-31T23:59:59Z".into(),
+            banned_since: None,
+        };
+        assert!(matches!(
+            error,
+            ValidationError::DisallowedAlgorithm {
+                banned_since: None,
+                ..
+            }
+        ));
+    }
 }

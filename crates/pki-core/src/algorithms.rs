@@ -753,6 +753,11 @@ pub struct AlgorithmUsageConstraint {
     pub allowed: bool,
     /// Why the algorithm may not be used.
     pub failure_reason: Option<String>,
+    /// Policy cutoff for a timed denial, if known.
+    ///
+    /// This is metadata, not permission to use a denied algorithm. The policy
+    /// determines `allowed` at the requested moment; reasons are not parsed.
+    pub not_allowed_after: Option<Moment>,
 }
 
 impl AlgorithmUsageConstraint {
@@ -761,6 +766,7 @@ impl AlgorithmUsageConstraint {
         Self {
             allowed: true,
             failure_reason: None,
+            not_allowed_after: None,
         }
     }
 
@@ -769,6 +775,7 @@ impl AlgorithmUsageConstraint {
         Self {
             allowed: false,
             failure_reason: Some(reason.into()),
+            not_allowed_after: None,
         }
     }
 }
@@ -928,6 +935,41 @@ pub fn parse_algorithm_identifier(der: &[u8]) -> Result<AlgorithmIdentifierOwned
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn usage_constraint_constructors_have_no_cutoff() {
+        let allowed = AlgorithmUsageConstraint::allowed();
+        assert!(allowed.allowed);
+        assert_eq!(allowed.failure_reason, None);
+        assert_eq!(allowed.not_allowed_after, None);
+
+        let denied = AlgorithmUsageConstraint::denied("policy rejection");
+        assert!(!denied.allowed);
+        assert_eq!(denied.failure_reason.as_deref(), Some("policy rejection"));
+        assert_eq!(denied.not_allowed_after, None);
+    }
+
+    #[test]
+    fn usage_constraint_does_not_infer_cutoffs_from_reasons() {
+        for reason in ["", "Banned after 2025-12-31T23:59:59Z", "2025-12-31"] {
+            let denied = AlgorithmUsageConstraint::denied(reason);
+            assert!(!denied.allowed);
+            assert_eq!(denied.failure_reason.as_deref(), Some(reason));
+            assert_eq!(denied.not_allowed_after, None);
+        }
+    }
+
+    #[test]
+    fn usage_constraint_cutoff_preserves_denial() {
+        let cutoff = Moment::from_unix_secs(1_767_225_599);
+        let denied = AlgorithmUsageConstraint {
+            not_allowed_after: Some(cutoff),
+            ..AlgorithmUsageConstraint::denied("policy rejection")
+        };
+        assert!(!denied.allowed);
+        assert_eq!(denied.not_allowed_after, Some(cutoff));
+        assert_eq!(denied.failure_reason.as_deref(), Some("policy rejection"));
+    }
 
     #[test]
     fn digest_oids_round_trip() {
