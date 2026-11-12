@@ -57,9 +57,13 @@ impl LiveCsc {
         assert_eq!(ready["csc_version"], "0.4.2");
         assert_eq!(ready["pae_version"], "0.1.0");
         let root = ready["root_der"].as_str().unwrap();
-        service.root_der = root
-            .as_bytes()
-            .chunks_exact(2)
+        let (pairs, remainder) = root.as_bytes().as_chunks::<2>();
+        assert!(
+            remainder.is_empty(),
+            "CSC root certificate hex has odd length"
+        );
+        service.root_der = pairs
+            .iter()
             .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
             .collect();
         service
