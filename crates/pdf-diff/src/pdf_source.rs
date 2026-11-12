@@ -62,8 +62,60 @@ impl PdfRevisions for PdfFile {
     }
 }
 
-/// Adapter from [`PdfFile`] to [`RevisionSource`].
-pub type PdfFileSource<'f> = DerivedSource<'f, PdfFile>;
+/// Production adapter with independent, precision-checked parsing caches.
+///
+/// General PDF reading permits lossy f32 conversion for compatibility.
+/// Modification analysis must reject that loss before comparing objects.
+#[derive(Debug)]
+pub struct PdfFileSource<'f> {
+    file: PdfFile,
+    _original: &'f PdfFile,
+}
+
+impl<'f> PdfFileSource<'f> {
+    /// Reopen `file` for fail-closed decimal comparisons, retaining its
+    /// decryption state, reading mode and decoding limits.
+    pub fn new(file: &'f PdfFile) -> Result<Self> {
+        Ok(Self {
+            file: file.for_modification_analysis()?,
+            _original: file,
+        })
+    }
+}
+
+impl RevisionSource for PdfFileSource<'_> {
+    fn revision_count(&self) -> Result<usize> {
+        Ok(self.file.total_revisions())
+    }
+
+    fn section(&self, revision: usize) -> Result<XrefSectionInfo> {
+        self.file.xref_section(revision)
+    }
+
+    fn object(&self, id: ObjectId, revision: usize) -> Result<Option<Object>> {
+        self.file.object_in_revision(id, revision)
+    }
+
+    fn trailer(&self, revision: usize) -> Result<Dictionary> {
+        self.file.effective_trailer_in_revision(revision)
+    }
+
+    fn last_change(&self, id: ObjectId) -> Result<Option<usize>> {
+        self.file.last_change(id)
+    }
+
+    fn introducing_revision(&self, id: ObjectId) -> Result<Option<usize>> {
+        self.file.introducing_revision(id)
+    }
+
+    fn resolves_in(&self, id: ObjectId, revision: usize) -> Result<bool> {
+        self.file.resolves_in(id, revision)
+    }
+
+    fn strict(&self) -> bool {
+        self.file.strict()
+    }
+}
 
 /// A [`RevisionSource`] derived from [`PdfRevisions`] primitives.
 #[derive(Debug)]

@@ -124,7 +124,9 @@ Adapted tests:
 
 ## Known divergences
 
-All fail closed (the port never accepts what pyHanko rejects):
+Trust-verdict differences exercised by the recorded corpus fail closed.
+Encoding/decoding and serialization differences below are compatibility
+differences; they do not establish a universal fail-closed guarantee:
 
 - PNG predictor "Sub" (filter type 1) follows the PNG/ISO 32000 definition;
   pyHanko adds the previous *encoded* byte, which decodes multi-byte rows
@@ -136,13 +138,17 @@ All fail closed (the port never accepts what pyHanko rejects):
   re-encodes text strings (PDFDocEncoding, else UTF-16BE) on output.
 - Integers beyond 64 bits, object numbers beyond 32 bits and generations
   beyond 16 bits are rejected (pyHanko has arbitrary-precision integers).
-- Decimal literals must equal the shortest decimal rendering of their
-  `f32` representation after removing redundant sign and zero formatting.
+- Modification analysis reopens the input with `lossless_reals`, in an
+  independent parsing view. Its decimal literals must equal the shortest
+  decimal rendering of their `f32` representation after removing redundant
+  sign and zero formatting.
   Higher-precision decimals that would round to another value, overflow or
   underflow are rejected, even in lenient mode. This preserves common
   decimals such as `0.1` and `595.28`, and prevents distinct decimal values
   from collapsing during difference analysis. This is a stricter rejection
-  than pyHanko's arbitrary-precision `Decimal` parser.
+  than pyHanko's arbitrary-precision `Decimal` parser. General reading and
+  encryption retain the original f32 conversion for compatibility; rounded
+  caches are never reused for modification review.
 - Nesting of arrays/dictionaries is limited to 256 levels and reference
   chains to 64 (pyHanko: Python recursion limit).
 - Text vs. byte strings are classified by their bytes (`pdf_string`), not

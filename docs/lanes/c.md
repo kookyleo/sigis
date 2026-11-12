@@ -133,7 +133,7 @@ remain skipped in this suite. The four tests are implemented in
 `tests/support/signing.rs`; signing and validation dependencies are dev-only.
 
 The previously accepted f32 decimal-collision exception is superseded:
-`sigis-pdf` now rejects decimal literals that would lose their source value
+`PdfFileSource` now uses an independent checked reader that rejects decimal literals that would lose their source value
 when represented by the shortest f32 decimal; mixed integer/real comparisons
 also avoid f64 rounding. The restriction is conservative (fail closed).
 Custom `RevisionSource` implementations must preserve this input invariant.

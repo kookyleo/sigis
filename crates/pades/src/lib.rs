@@ -229,10 +229,19 @@ pub fn signature_coverage(
     signature: &EmbeddedSignature,
 ) -> Result<SignatureCoverageLevel> {
     let xrefs = xref_meta(file)?;
+    // EmbeddedSignature.contents is DER-trimmed for CMS parsing and VRI
+    // hashing. Coverage must include the complete reserved /Contents slot.
+    let raw = file.get_object_raw(signature.sig_object, Some(signature.signed_revision))?;
+    let Object::Dictionary(raw) = raw else {
+        return Err(HankoError::Malformed(
+            "Signature value must be a dictionary".into(),
+        ));
+    };
+    let contents = sigis_pdf::signatures::extract_contents(&raw)?;
     Ok(evaluate_signature_coverage(
         file.bytes(),
         &signature.byte_range,
-        signature.contents.len(),
+        contents.len(),
         signature.signed_revision,
         &xrefs,
     ))

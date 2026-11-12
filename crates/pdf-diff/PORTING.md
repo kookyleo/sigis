@@ -53,7 +53,7 @@ reader regression is active and passes; there are no pending functions.
 ## Known divergences
 
 All divergences are stricter than pyHanko (fail closed) for PDF inputs
-parsed by `sigis-pdf`.
+reviewed through the production `PdfFileSource` adapter.
 
 1. **Reverse cross-reference cache in encrypted files.** pyHanko does not
    enter nested direct containers of encrypted objects (they are
@@ -78,8 +78,8 @@ parsed by `sigis-pdf`.
    UTF-8, XML-1.0-illegal characters, `--` in comments and non-predefined
    entity references in text and attributes; streams whose filters `lopdf`
    cannot decode are rejected.
-7. **Reals** (fail closed): `lopdf` stores reals as `f32`, so the PDF
-   reader rejects decimal literals whose value differs from the shortest
+7. **Reals** (fail closed): `lopdf` stores reals as `f32`, so modification
+   analysis uses an independent precision-checked reader that rejects decimal literals whose value differs from the shortest
    decimal rendering of that float (see `pdf/PORTING.md`). This prevents
    source decimals with distinct values from comparing equal. Common
    decimals remain supported; higher precision is rejected rather than
@@ -89,7 +89,7 @@ parsed by `sigis-pdf`.
    Custom `RevisionSource` implementations constructing `Object::Real`
    directly are responsible for the same decimal-value convention; the
    original source precision cannot be recovered from an `f32`.
-8. **`PdfFileSource`** (until request C1): the cross-reference stream,
+8. **`DerivedSource`** (legacy generic adapter): the cross-reference stream,
    object streams and freed references of a revision are derived from the
    objects it writes; hybrid-reference streams are not cleared (pyHanko only
    accepts hybrid files in lenient mode); the mode is strict. Deriving freed
@@ -99,6 +99,11 @@ parsed by `sigis-pdf`.
    reports a suspicious modification or (for later updates) accepts. On all
    other inputs the derivation agrees with pyHanko's exact model.
 
-No verdict differences otherwise: all 165 recorded reviews, all 982 sweep
+The production `PdfFileSource` now uses lane B's exact cross-reference
+accessors and an independent precision-checked reader. `DerivedSource`
+remains available for custom models and tests. Normal reading/encryption
+may round floats; those rounded caches are not used by the production adapter.
+
+Recorded model verdicts otherwise: all 165 recorded reviews, all 982 sweep
 reviews and all 1,308 mutation verdicts agree with pyHanko, including the
 kind of rejection.

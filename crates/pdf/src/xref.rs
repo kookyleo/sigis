@@ -799,6 +799,7 @@ impl TrailerDictionary {
 pub(crate) struct XRefBuilder<'a> {
     data: &'a [u8],
     strict: bool,
+    pub(crate) lossless_reals: bool,
     last_startxref: i64,
     sections: Vec<XRefSection>,
     pub(crate) trailer: TrailerDictionary,
@@ -827,6 +828,7 @@ impl<'a> XRefBuilder<'a> {
         Self {
             data,
             strict,
+            lossless_reals: false,
             last_startxref,
             sections: Vec::new(),
             trailer: TrailerDictionary::default(),
@@ -848,6 +850,7 @@ impl<'a> XRefBuilder<'a> {
         );
         let ctx = ParseContext {
             strict: self.strict,
+            lossless_reals: self.lossless_reals,
             length_resolver: None,
         };
         let obj = generic::read_dictionary(stream, &ctx, generic::ContentOpReading::No)
@@ -916,6 +919,7 @@ impl<'a> XRefBuilder<'a> {
         let xref_end = stream.tell();
         let pctx = ParseContext {
             strict: self.strict,
+            lossless_reals: self.lossless_reals,
             length_resolver: None,
         };
         let new_trailer =

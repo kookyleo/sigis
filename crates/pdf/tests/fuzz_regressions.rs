@@ -12,8 +12,20 @@ fn data(name: &str) -> Vec<u8> {
 #[test]
 fn large_real_precision_loss_is_rejected() {
     let d = data("parse_object-large-real");
-    let ctx = ParseContext::default();
+    let ctx = ParseContext {
+        lossless_reals: true,
+        ..Default::default()
+    };
     assert!(read_object(&mut Cursor::new(&d), &ctx).is_err());
+}
+
+#[test]
+fn large_real_reparses_without_precision_checks() {
+    let d = data("parse_object-large-real");
+    let ctx = ParseContext::default();
+    let o = read_object(&mut Cursor::new(&d), &ctx).unwrap();
+    let bytes = object_to_bytes(&o);
+    assert_eq!(read_object(&mut Cursor::new(&bytes), &ctx).unwrap(), o);
 }
 
 #[test]

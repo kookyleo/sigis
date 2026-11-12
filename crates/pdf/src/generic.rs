@@ -63,6 +63,9 @@ pub type LengthResolver<'a> = &'a dyn Fn(ObjectId) -> PdfResult<Object>;
 pub struct ParseContext<'a> {
     /// Strict mode of the handler.
     pub strict: bool,
+    /// Reject real literals whose decimal value would be lost in f32
+    /// storage (default `false`; enabled for modification analysis).
+    pub lossless_reals: bool,
     /// Resolver for indirect stream lengths, if any.
     pub length_resolver: Option<LengthResolver<'a>>,
 }
@@ -71,6 +74,7 @@ impl Default for ParseContext<'_> {
     fn default() -> Self {
         Self {
             strict: true,
+            lossless_reals: false,
             length_resolver: None,
         }
     }
@@ -80,6 +84,7 @@ impl std::fmt::Debug for ParseContext<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ParseContext")
             .field("strict", &self.strict)
+            .field("lossless_reals", &self.lossless_reals)
             .finish_non_exhaustive()
     }
 }
@@ -215,14 +220,16 @@ pub fn read_item(
             read_null(stream)?;
             Object::Null
         }
-        _ if tok.is_some_and(|t| b"+-.".contains(&t)) => read_number(stream)?,
+        _ if tok.is_some_and(|t| b"+-.".contains(&t)) => {
+            read_number_with_precision(stream, ctx.lossless_reals)?
+        }
         _ if tok.is_some_and(|t| t.is_ascii_digit()) => {
             if in_content_stream.active() {
-                read_number(stream)?
+                read_number_with_precision(stream, ctx.lossless_reals)?
             } else if matches_indirect_pattern(stream.peek(20)) {
                 Object::Reference(read_indirect_reference(stream)?)
             } else {
-                read_number(stream)?
+                read_number_with_precision(stream, ctx.lossless_reals)?
             }
         }
         _ => {
@@ -361,10 +368,9 @@ fn decimal_components(raw: &str) -> (bool, &str, &str) {
 }
 
 /// Python `Decimal(str)` restricted to the characters a PDF number token can
-/// contain, with a fail-closed precision check for lopdf's f32 storage.
-/// Only the decimal value of the float's shortest rendering is accepted;
-/// otherwise distinct PDF decimals could become equal during diff analysis.
-fn parse_py_decimal(raw: &str) -> Option<f32> {
+/// contain, optionally checking that lopdf's f32 storage preserves the
+/// decimal value under its shortest rendering.
+fn parse_py_decimal(raw: &str, lossless_reals: bool) -> Option<f32> {
     let digits = raw.trim_start_matches(['+', '-']);
     if raw.len() - digits.len() > 1 {
         return None;
@@ -385,7 +391,7 @@ fn parse_py_decimal(raw: &str) -> Option<f32> {
         if frac_part.is_empty() { "0" } else { frac_part }
     );
     let value = normalized.parse::<f32>().ok().filter(|v| v.is_finite())?;
-    if decimal_components(raw) != decimal_components(&value.to_string()) {
+    if lossless_reals && decimal_components(raw) != decimal_components(&value.to_string()) {
         return None;
     }
     Some(value)
@@ -393,6 +399,15 @@ fn parse_py_decimal(raw: &str) -> Option<f32> {
 
 /// Read a number (`NumberObject.read_from_stream`).
 pub fn read_number(stream: &mut Cursor<'_>) -> PdfResult<Object> {
+    read_number_with_precision(stream, false)
+}
+
+/// Read a number with an explicit precision policy. A lossless view rejects
+/// decimal literals that would collapse into another decimal's f32 value.
+pub(crate) fn read_number_with_precision(
+    stream: &mut Cursor<'_>,
+    lossless_reals: bool,
+) -> PdfResult<Object> {
     // NumberPattern = [^+-.0-9]; note that '+-.' is a range (includes ',')
     let num = read_until_byte_class(
         stream,
@@ -401,7 +416,7 @@ pub fn read_number(stream: &mut Cursor<'_>) -> PdfResult<Object> {
     )?;
     let text = String::from_utf8_lossy(&num);
     if num.contains(&b'.') {
-        parse_py_decimal(&text)
+        parse_py_decimal(&text, lossless_reals)
             .map(Object::Real)
             .ok_or_else(|| PdfError::value(format!("Invalid decimal literal: {text:?}")))
     } else {

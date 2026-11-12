@@ -12,6 +12,7 @@ fuzz_target!(|data: &[u8]| {
         let ctx = ParseContext {
             strict,
             length_resolver: None,
+            ..Default::default()
         };
         let mut c = Cursor::new(data);
         if let Ok(o) = read_object(&mut c, &ctx) {

@@ -66,6 +66,7 @@ fn default_mechanism(algo: &str) -> Pkcs11Mechanism {
         "rsa" => Pkcs11Mechanism::ShaRsaPkcs(DigestAlgorithm::Sha256),
         "ecdsa" => Pkcs11Mechanism::EcdsaSha(DigestAlgorithm::Sha256),
         "ed25519" => Pkcs11Mechanism::Eddsa,
+        "ed448" => Pkcs11Mechanism::EddsaEd448,
         other => panic!("no default mechanism for {other}"),
     }
 }

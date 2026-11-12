@@ -106,7 +106,7 @@ pub fn reject_non_signature_fields() {
                     },
                 )
                 .unwrap_err();
-            assert!(error.to_string().contains("not a /Sig field"), "{error}");
+            assert!(error.to_string().contains("not a Sig field"), "{error}");
         }
     }
 }

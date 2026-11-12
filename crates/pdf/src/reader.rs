@@ -22,6 +22,9 @@ use crate::xref::{read_object_header, TrailerDictionary, XRefBuilder, XRefCache,
 pub struct ReaderOptions {
     /// Strict mode (default `true`).
     pub strict: bool,
+    /// Reject decimal literals whose values are lost in f32 storage
+    /// (default `false`). Required when comparing historical object values.
+    pub lossless_reals: bool,
     /// Decoding limits (default: for untrusted input).
     pub decode_limits: DecodeLimits,
 }
@@ -30,6 +33,7 @@ impl Default for ReaderOptions {
     fn default() -> Self {
         Self {
             strict: true,
+            lossless_reals: false,
             decode_limits: DecodeLimits::default(),
         }
     }
@@ -193,6 +197,7 @@ pub trait Decryptor: Send + Sync + std::fmt::Debug {
 pub(crate) struct ReaderInner {
     pub(crate) bytes: Arc<[u8]>,
     pub(crate) strict: bool,
+    lossless_reals: bool,
     pub(crate) header_version: (u32, u32),
     pub(crate) xrefs: XRefCache,
     pub(crate) trailer: TrailerDictionary,
@@ -281,12 +286,14 @@ impl PdfFile {
         c.seek_end(-1)?;
         let last_startxref = process_data_at_eof(&mut c)?;
         let mut builder = XRefBuilder::new(&bytes, options.strict, last_startxref);
+        builder.lossless_reals = options.lossless_reals;
         let sections = builder.read_xrefs(&mut ctx)?;
         let trailer = std::mem::take(&mut builder.trailer);
         let has_xref_stream = builder.has_xref_stream;
         let inner = ReaderInner {
             bytes: bytes.clone(),
             strict: options.strict,
+            lossless_reals: options.lossless_reals,
             header_version,
             xrefs: XRefCache::new(sections),
             trailer,
@@ -303,6 +310,39 @@ impl PdfFile {
         Ok(Self {
             inner: Arc::new(inner),
         })
+    }
+
+    /// Reopen the same bytes with decimal precision checks for modification
+    /// analysis. Strictness, decoding limits and the authenticated decryptor
+    /// are preserved; rounded object and historical caches are not reused.
+    /// The new view's remaining decoding budget cannot exceed this view's.
+    /// Decimal checks apply lazily when objects are read, and eagerly while
+    /// reading trailers and cross-reference stream dictionaries.
+    pub fn for_modification_analysis(&self) -> PdfResult<Self> {
+        if self.inner.lossless_reals {
+            return Ok(self.clone());
+        }
+        let original_context = self.decode_context();
+        let checked = Self::from_arc(
+            self.bytes_arc(),
+            ReaderOptions {
+                strict: self.inner.strict,
+                lossless_reals: true,
+                decode_limits: original_context.limits.clone(),
+            },
+        )?;
+        if let (Some(original), Some(current)) = (
+            original_context.remaining_budget(),
+            checked.decode_context().remaining_budget(),
+        ) {
+            if original < current {
+                lock(&checked.inner.decode_ctx).record_output(
+                    usize::try_from(current.saturating_sub(original)).unwrap_or(usize::MAX),
+                );
+            }
+        }
+        checked.set_decryptor(self.decryptor());
+        Ok(checked)
     }
 
     /// The file bytes.
@@ -468,7 +508,14 @@ impl PdfFile {
             }
         };
         let in_objstm = matches!(marker, Some(XRefLocation::ObjStream(_)));
-        if never_decrypt || in_objstm || !self.encrypted() {
+        // The encryption dictionary itself is never encrypted. In
+        // particular, historical graph traversal must not try to decrypt
+        // its /O, /U or key material as ordinary document strings.
+        let is_encryption_dict = matches!(
+            self.inner.trailer.raw_get(b"Encrypt", revision),
+            Some(Object::Reference(encrypt_id)) if encrypt_id == id
+        );
+        if never_decrypt || is_encryption_dict || in_objstm || !self.encrypted() {
             return Ok(raw);
         }
         let dec = match self.decryptor() {
@@ -514,6 +561,7 @@ impl PdfFile {
                 let resolver = |rid: ObjectId| self.get_object_at(rid, None);
                 let ctx = ParseContext {
                     strict: self.inner.strict,
+                    lossless_reals: self.inner.lossless_reals,
                     length_resolver: Some(&resolver),
                 };
                 let obj = generic::read_object(&mut c, &ctx)?;
@@ -593,14 +641,17 @@ impl PdfFile {
         for i in 0..n {
             let header = (|| -> PdfResult<(Object, Object)> {
                 read_non_whitespace(&mut sd, true, false)?;
-                let objnum = generic::read_number(&mut sd)?;
+                let objnum =
+                    generic::read_number_with_precision(&mut sd, self.inner.lossless_reals)?;
                 read_non_whitespace(&mut sd, true, false)?;
-                let offset = generic::read_number(&mut sd)?;
+                let offset =
+                    generic::read_number_with_precision(&mut sd, self.inner.lossless_reals)?;
                 read_non_whitespace(&mut sd, true, false)?;
                 Ok((objnum, offset))
             })();
             let (objnum, offset) = match header {
                 Ok(h) => h,
+                Err(e @ PdfError::Value(_)) if self.inner.lossless_reals => return Err(e),
                 Err(PdfError::Value(_)) => {
                     if strict {
                         return Err(PdfError::strict("Object stream header possibly corrupted"));
@@ -628,6 +679,7 @@ impl PdfFile {
             let resolver = |rid: ObjectId| self.get_object_at(rid, None);
             let ctx = ParseContext {
                 strict,
+                lossless_reals: self.inner.lossless_reals,
                 length_resolver: Some(&resolver),
             };
             let obj = match generic::read_object(&mut sd, &ctx) {
@@ -1438,5 +1490,44 @@ impl PdfHandler for HistoricalResolver {
                 )
             })
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn historical_encryption_dictionary_stays_raw_in_precision_views() {
+        let bytes = sigis_testdata::read(&["lanes", "c", "pdf", "1e86eae60e9a19897b642d96.pdf"]);
+        for strict in [true, false] {
+            let reader = PdfFile::parse_with(
+                &bytes,
+                ReaderOptions {
+                    strict,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            reader.decrypt("secret").unwrap();
+            let checked = reader.for_modification_analysis().unwrap();
+            for file in [&reader, &checked] {
+                let encrypt_id = match file.inner.trailer.raw_get(b"Encrypt", None) {
+                    Some(Object::Reference(id)) => id,
+                    other => panic!("expected encryption dictionary reference, got {other:?}"),
+                };
+                let raw = file.get_object_raw(encrypt_id, None).unwrap();
+                assert_eq!(file.get_object_at(encrypt_id, None).unwrap(), raw);
+                for revision in 0..file.total_revisions() {
+                    assert_eq!(file.get_object_at(encrypt_id, Some(revision)).unwrap(), raw);
+                    assert_eq!(
+                        file.historical_resolver(revision)
+                            .get_object(encrypt_id)
+                            .unwrap(),
+                        raw
+                    );
+                }
+            }
+        }
     }
 }

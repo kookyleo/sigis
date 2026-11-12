@@ -290,9 +290,11 @@ impl AxisAlignment {
             "bottom" => Self::AlignMin,
             "mid" => Self::AlignMid,
             "top" => Self::AlignMax,
-            _ => return Err(crate::stamp::config::config_error(format!(
+            _ => {
+                return Err(crate::stamp::config::config_error(format!(
                 "'{s}' is not a valid vertical alignment; valid values are 'bottom', 'mid', 'top'."
-            ))),
+            )))
+            }
         })
     }
 

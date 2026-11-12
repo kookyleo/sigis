@@ -71,6 +71,7 @@ fn open(data: &[u8], limits: Option<DecodeLimits>) -> PdfFile {
         ReaderOptions {
             strict: true,
             decode_limits: limits.unwrap_or_default(),
+            ..Default::default()
         },
     )
     .unwrap()

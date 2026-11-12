@@ -179,9 +179,46 @@ fn sweep_matches_live_oracle() {
     assert!(diffs.is_empty(), "sweep.json is stale: {diffs:?}");
 }
 
-/// The production path: `PdfFileSource` derives the cross-reference details
-/// from `PdfFile`'s four revision primitives (see request C1). Run the
-/// sweep through that derivation on pyHanko's model of each file: it must
+/// Exercise the actual PDF parser and the production precision-checked
+/// adapter, in addition to the oracle's recorded object model.
+#[test]
+fn sweep_pdf_file_source_never_more_lenient() {
+    use sigis_pdf::{PdfFile, ReaderOptions};
+    use sigis_pdf_diff::DiffPolicy;
+
+    let tally = replay_sweep(&sweep(), |recorded, strict, base| {
+        let bytes =
+            std::fs::read(lane_dir().join("pdf").join(format!("{}.pdf", recorded.sha))).unwrap();
+        let file = PdfFile::parse_with(
+            &bytes,
+            ReaderOptions {
+                strict,
+                ..Default::default()
+            },
+        )?;
+        if file.encrypted() {
+            file.decrypt("secret")?;
+        }
+        StandardDiffPolicy.review_file(&file, base, None, None)
+    });
+    let unexpected: Vec<_> = tally
+        .problems
+        .iter()
+        .filter(|problem| {
+            problem.starts_with("FAIL-OPEN") || !problem.contains("Invalid decimal literal")
+        })
+        .collect();
+    assert!(
+        unexpected.is_empty(),
+        "production differences: {unexpected:#?}"
+    );
+    eprintln!("production PDF source: {} agree, {} stricter precision rejections, {} rejection-kind differences",
+        tally.agree, tally.problems.len(), tally.class_mismatch.len());
+}
+
+/// Exercise the generic `DerivedSource` adapter over revision primitives
+/// supplied by pyHanko's recorded object model (see request C1). This
+/// supplements the actual-PDF production-source sweep above and must
 /// never accept what pyHanko rejects.
 #[test]
 fn sweep_derived_source_never_more_lenient() {

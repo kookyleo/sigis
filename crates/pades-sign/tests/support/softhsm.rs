@@ -1,6 +1,6 @@
 //! A SoftHSM2 token set-up for the PKCS#11 tests, following pyHanko's
 //! `pkcs11-setup-certomancer.sh`: one token per algorithm (`testrsa`,
-//! `testecdsa`, `tested25519`, user PIN `1234`), each holding `signer1`'s
+//! `testecdsa`, `tested25519`, `tested448`, user PIN `1234`), each holding `signer1`'s
 //! key and certificate plus the `root` and `interm` certificates, with label
 //! and id equal to the Certomancer certificate label (Certomancer's
 //! `Alchemist`).
@@ -65,11 +65,7 @@ pub const ALL_ALGOS: &[(&str, &str, Option<&str>)] = &[
         "testing-ca-dsa",
         Some("cryptoki 0.12 cannot invoke CKM_DSA* mechanisms (no MechanismType for them)"),
     ),
-    (
-        "ed448",
-        "testing-ca-ed448",
-        Some("hanko-core has no SHAKE256 digest (Ed448 CMS signing unsupported)"),
-    ),
+    ("ed448", "testing-ca-ed448", None),
     (
         "mldsa",
         "testing-ca-mldsa",
@@ -276,8 +272,25 @@ fn import_key(
                 .create_object(&ec(oids::SECP521R1, k.to_bytes().to_vec()))
                 .map_err(|e| e.to_string())?;
         }
-        PrivateKey::Ed448(_) => {
-            return Err("Ed448 keys are not imported into SoftHSM 2.6".into());
+        PrivateKey::Ed448(k) => {
+            // SoftHSM 2.6.1 accepts either Edwards curve encoding and the
+            // 57-byte RFC 8032 seed, just as for Ed25519 below.
+            let by_oid = oids::ED448.to_der().unwrap();
+            let by_name = der::asn1::PrintableStringRef::new("edwards448")
+                .unwrap()
+                .to_der()
+                .unwrap();
+            let mut last = String::new();
+            for params in [by_oid, by_name] {
+                let mut t = key_base(label, KeyType::EC_EDWARDS);
+                t.push(Attribute::EcParams(params));
+                t.push(Attribute::Value(k.to_bytes().to_vec()));
+                match session.create_object(&t) {
+                    Ok(_) => return Ok(()),
+                    Err(e) => last = e.to_string(),
+                }
+            }
+            return Err(last);
         }
         PrivateKey::MlDsa44(_) | PrivateKey::MlDsa65(_) | PrivateKey::MlDsa87(_) => {
             return Err("SoftHSM 2.6 does not support ML-DSA keys".into());

@@ -294,3 +294,18 @@ still needs to consume it; there was no existing ignored E test to enable.
 
 Function counts remain 297 total / 271 ported-pass / 13 skipped / 13 pending.
 Final validation and completion lanes are recorded in `docs/status.md`.
+
+## Lead acceptance corrections (2026-11-12)
+
+The four cross-lane C signing tests now execute substantive signing,
+Rust trust/coverage checks and live oracle validation (92 passing functions,
+two retained skips). Integration fixes read the full reserved `/Contents`
+for coverage instead of its DER-trimmed CMS bytes, and keep historical
+`/Encrypt` dictionaries raw during reverse-reference traversal.
+
+The old PKCS#11 Ed448 exclusion is obsolete: SHAKE256 and Ed448 signing
+are present, and local SoftHSM 2.6.1 accepts the 57-byte Edwards seed and
+pure EdDSA mechanism. Ed448 is enabled in the existing algorithm matrix;
+the live PKCS#11 suite passes (34 tests, two ignored). Remaining runtime
+parameter exclusions are DSA/ML-DSA and unsupported combined ECDSA
+mechanisms, as recorded in `docs/status.md`.

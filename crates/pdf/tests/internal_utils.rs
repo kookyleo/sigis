@@ -34,7 +34,7 @@ fn ctx() -> ParseContext<'static> {
 fn lenient_ctx() -> ParseContext<'static> {
     ParseContext {
         strict: false,
-        length_resolver: None,
+        ..Default::default()
     }
 }
 
