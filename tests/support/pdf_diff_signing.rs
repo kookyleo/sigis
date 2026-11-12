@@ -59,8 +59,8 @@ fn validate(bytes: &[u8], field: &str) {
     let pdf = dir.path().join("signed.pdf");
     std::fs::write(&pdf, bytes).unwrap();
     let root = sigis_testdata::path(&["lanes", "d", "pki", "testing-ca", "root.crt"]);
-    let script = sigis_testdata::manifest_dir().join("../pades-sign/oracle/validate_pdf.py");
-    if let Some(verdicts) = sigis_testdata::oracle::run_json(
+    let script = sigis_testdata::manifest_dir().join("crates/pades-sign/oracle/validate_pdf.py");
+    let verdicts = sigis_testdata::oracle::run_json(
         &script,
         &[
             "--pdf",
@@ -70,9 +70,9 @@ fn validate(bytes: &[u8], field: &str) {
             "--time",
             TIME,
         ],
-    ) {
-        assert_eq!(verdicts[0]["bottom_line"], true, "{verdicts}");
-    }
+    )
+    .expect("the pinned live oracle is required for cross-layer acceptance");
+    assert_eq!(verdicts[0]["bottom_line"], true, "{verdicts}");
 }
 
 pub fn create_deep_fields(multiple: bool) {

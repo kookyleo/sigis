@@ -13,8 +13,6 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-#[path = "support/signing.rs"]
-mod signing;
 mod support;
 
 use support::{check_function, Divergence, Replay};
@@ -663,26 +661,6 @@ fn test_anomalous_coverage() {}
 #[test]
 #[ignore = "skipped: signature coverage is decided by pdf_embedded (lane E) before any difference analysis"]
 fn test_tamper_sig_obj() {}
-
-#[test]
-fn test_create_deep_sig_field() {
-    signing::create_deep_fields(false);
-}
-
-#[test]
-fn test_create_multi_deep_sig_field() {
-    signing::create_deep_fields(true);
-}
-
-#[test]
-fn test_deep_non_sig_field() {
-    signing::reject_non_signature_fields();
-}
-
-#[test]
-fn test_simple_sign_with_separate_annot() {
-    signing::separate_annotation();
-}
 
 /// pyHanko's reader rejects xref sections that list an object twice. That
 /// is a `sigis-pdf` (lane B) check; this test runs once `PdfFile::parse`

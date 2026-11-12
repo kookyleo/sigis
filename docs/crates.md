@@ -41,6 +41,10 @@ is the module `sigis_pades::ades`); `SignatureValidationError` moved from
 4. Every workspace package has a layer in `tools/layers.json`.
 5. Dev-dependencies are exempt from 1–2 (a test may use a higher layer, e.g.
    signing tests validating with `sigis-pades`), as long as no cycle arises.
+6. The complete workspace package graph, including dev-dependencies, must be
+   acyclic. Cross-layer signer/validator callers that would create a cycle
+   belong to root integration tests; function ownership/counts stay with the
+   original upstream suite.
 
 The rule is checked by the root package's test `tests/layering.rs`
 (`cargo test --test layering`), part of the workspace gate. It reads

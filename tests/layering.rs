@@ -72,6 +72,7 @@ fn workspace_respects_layers() {
         .map(|p| p["name"].as_str().expect("name").to_owned())
         .collect();
     let mut violations = Vec::new();
+    let mut all_dependencies: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for package in meta["packages"].as_array().expect("packages") {
         let name = package["name"].as_str().expect("name");
         let Some(&layer) = layers.get(name) else {
@@ -82,6 +83,9 @@ fn workspace_respects_layers() {
         };
         for dep in package["dependencies"].as_array().expect("dependencies") {
             let dep_name = dep["name"].as_str().expect("dependency name");
+            if workspace.contains(dep_name) {
+                all_dependencies.entry(name.to_owned()).or_default().insert(dep_name.to_owned());
+            }
             if !workspace.contains(dep_name) || dep["kind"].as_str() == Some("dev") {
                 continue;
             }
@@ -109,9 +113,46 @@ fn workspace_respects_layers() {
             }
         }
     }
+    let mut complete = BTreeSet::new();
+    for name in &workspace {
+        if let Some(cycle) = dependency_cycle(name, &all_dependencies, &mut Vec::new(), &mut complete) {
+            violations.push(format!("workspace dependency cycle (including dev): {}", cycle.join(" -> ")));
+            break;
+        }
+    }
     assert!(
         violations.is_empty(),
         "layering violations (docs/crates.md):\n{}",
         violations.join("\n")
     );
+}
+
+
+// Dev-dependencies may point upward, but cross-layer integration must not
+// introduce package cycles. Put such callers in the root integration tests.
+fn dependency_cycle(
+    name: &str,
+    graph: &BTreeMap<String, BTreeSet<String>>,
+    active: &mut Vec<String>,
+    complete: &mut BTreeSet<String>,
+) -> Option<Vec<String>> {
+    if let Some(start) = active.iter().position(|entry| entry == name) {
+        let mut cycle = active[start..].to_vec();
+        cycle.push(name.to_owned());
+        return Some(cycle);
+    }
+    if complete.contains(name) {
+        return None;
+    }
+    active.push(name.to_owned());
+    if let Some(dependencies) = graph.get(name) {
+        for dependency in dependencies {
+            if let Some(cycle) = dependency_cycle(dependency, graph, active, complete) {
+                return Some(cycle);
+            }
+        }
+    }
+    active.pop();
+    complete.insert(name.to_owned());
+    None
 }

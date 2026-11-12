@@ -116,6 +116,17 @@ uuid = { version = "1", features = ["v4"] }
 zeroize = "1"
 
 [dev-dependencies]
+sigis-pdf-diff.workspace = true
+der.workspace = true
+spki.workspace = true
+const-oid.workspace = true
+cms.workspace = true
+x509-cert.workspace = true
+lopdf.workspace = true
+sigis-pades-sign.workspace = true
+sigis-pades.workspace = true
+sigis-pdf.workspace = true
+reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 sigis-cms.workspace = true
 sigis-pki-core.workspace = true
 sigis-pki-certvalidator.workspace = true

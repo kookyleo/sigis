@@ -4,6 +4,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+#[path = "support/signing_integration.rs"]
 mod support;
 
 use std::sync::Arc;

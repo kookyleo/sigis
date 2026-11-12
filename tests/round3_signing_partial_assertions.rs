@@ -4,6 +4,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+#[path = "support/signing_integration.rs"]
 mod support;
 
 use std::sync::Arc;
@@ -208,8 +209,8 @@ fn test_direct_pdfcmsembedder_usage() {
     )
     .unwrap();
     let output = prepared.fill_with_cms(&cms).unwrap();
-    // Rust returns owned bytes; preserving the entire original prefix is the
-    // equivalent invariant of the upstream in-place stream identity check.
+    // Rust returns owned bytes. This proves incremental prefix preservation;
+    // the upstream caller-buffer identity assertion remains unported.
     assert!(output.starts_with(&input));
     assert_trusted(&output, false);
     let signature = &support::pdfcheck::embedded_signatures(&output)[0];
