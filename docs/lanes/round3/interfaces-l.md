@@ -292,3 +292,25 @@ truncate or invent four values for a nonstandard input. V owns this consumer;
 source088e78d and its new contract regression also need a complete actual
 package rerun against the accepted S range interface. No V pass is accepted
 from the compile-failed attempt.
+
+
+## Accepted AC fetch defaults and verified V report compatibility
+
+Sourceeb0e43a passed build/test/strict clippy/strict docs/layer/fmt, with
+1330discovered/1322passed/8ignored/0failed/109reports. The raw-DER methods
+OcspFetcher::fetch_ac_ocsp(&self, ac_der: &[u8], issuer: &Cert) and
+CrlFetcher::fetch_ac_crls(&self, ac_der: &[u8]) default to NotFound; they never
+silently dispatch AC input to legacy PKC methods. Two new compatibility
+helpers earn zero upstream credit. S owns pki-fetch common/fetchers and
+certvalidator revinfo OCSP/CRL routing per the AC handoff; core fetch traits
+remain L-owned. Retrieval still requires strict identity, shared limits,
+separate AC cache keys and authenticated/authorized/fresh revocation evidence.
+
+The independent V rerun on610806a (including088e78d, accepted S ranges and
+20ea444 report adaptation) passed101 native tests,0failed/ignored,15reports.
+174 native read/hash receipts cover87 distinct frozen inputs; files exist on
+both workers, with no final executing host claimed. This supersedes the
+historical compile-failed rerun above. The source-level POE policy/chain
+controls, two AC functions and full merged workspace gate remain separate
+requirements. No V or overall upstream count change. Use verified separate
+Cargo env.KEY.value/env.KEY.force leaf arguments for runtime selectors.

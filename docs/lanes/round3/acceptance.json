@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "cef64d308482d0cd2db917a7476f65184da80bba",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-byterange-gate/gate.json",
+  "accepted_source_commit": "eb0e43a516e8f149abb0c613cccc00b3a2351f22",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/ac-fetch-api/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",

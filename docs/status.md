@@ -45,9 +45,9 @@ and refusal assertions. Direct embedder now has low-level/DocMDP/DSS coverage
 but remains pending because caller-buffer identity is still absent. The two
 earlier L completions and CMS corrections were separate accounting changes.
 The 12 inherited V functions remain the accepted baseline. V's proposed45/47
-checkpoint remains unaccepted: its complete package retains one ByteRange
-regression, fresh-input native provenance needs correction, and LTA proof
-policy differences require substantive oracle-backed rejection tests.
+checkpoint remains unaccepted. The independent corrected-input rerun now
+passes101 native tests after the range/report and policy-classification fixes;
+LTA proof-policy controls and coherent workspace integration remain required.
 
 Main `6dc97bb` accepts the independently reviewed S primitive subset after a
 second complete serial workspace gate: six name functions, five fetcher/auth
@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on maincef64d3 found **1,328 Rust tests: 1,320 passed, eight
+The latest gate on maineb0e43a found **1,330 Rust tests: 1,322 passed, eight
 ignored, zero failed**, across109 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-byterange-gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/ac-fetch-api/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -514,3 +514,32 @@ post-fix package run. V was asked to preserve the actual range in its report
 consumer. Main V12/35 acceptance remains unchanged, and the timestamp-POE
 policy/control-flow review holds remain distinct. Detailed native source and
 hashes are in round3-launch/v-candidate-review/.
+
+
+## AC fetch extension and corrected validation evidence
+
+Sourceeb0e43a adds backward-compatible raw-DER attribute-certificate OCSP/CRL
+fetch trait methods. Defaults explicitly reject NotFound without delegating
+an AC request to a certificate-only implementation. Two tests first failed
+for missing methods, then verified default rejection and unchanged legacy
+trait-object dispatch; the full workspace gate passed. This is an interface
+extension, not completed HTTP retrieval or authenticated AC validation, and
+adds zero upstream-function credit. S owns strict HTTP metadata/request/cache
+and validator routing; P/V own their exact caller acceptance tests.
+
+The isolated V candidate610806a now passes101/101 native tests, zero failures
+or ignores, over verified fresh/seed/PDF-MAC inputs. Actual native receipts
+check174 reads against87 distinct frozen file hashes; inputs were staged on
+both workers, but the final executing host was not captured. This supersedes
+the earlier99/2 result and report compile failure. Explicit Cargo runtime env
+leaf arguments select these inputs; ambient-only exports were insufficient
+on dispatched jobs. This is candidate-package evidence, not a main workspace
+acceptance or33 additional accepted functions. V's timestamp-imprint/POE-chain
+controls and two AC functions remain acceptance work. Artifacts are under
+round3-launch/v-candidate-review/.
+
+The accepted ledger remains1431/1052/66/313. Universal fail-closed parity is
+not established: the independently reproduced C unknown-policy-key trusting
+verdict remains a mandatory repair in unmerged source. Known accepted bounds
+and forbidden-only KU differences reject more strictly; encoding/diagnostic
+and source-only review findings have separate, narrower evidence.
