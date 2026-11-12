@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on mainc4158bd found **1,321 Rust tests: 1,313 passed, eight
+The latest gate on maincef64d3 found **1,328 Rust tests: 1,320 passed, eight
 ignored, zero failed**, across109 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-algorithm-consumers-gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-byterange-gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -486,3 +486,31 @@ typed policy error; this is exception-shape divergence, not exact AC error
 parity. The bare LTV time-slide error interface retains an older path-context
 limitation. CMS fresh Python signing and native harvest-fixture semantic
 probes are separate inputs, not a same-fresh-bytes differential claim.
+
+
+## Accepted bounded ByteRange and independent validation rerun
+
+Maincef64d3 passed the complete workspace gate for S's Vec/slice ByteRange
+interface and seven structural regressions. Complete even pairs are retained;
+negative/noninteger/odd entries, overflow and out-of-file ranges reject. Total
+output is capped by input length before fallible allocation, preventing repeated
+range amplification. Python accepts some inputs rejected by these explicit
+resource/bounds restrictions; universal helper parity is not claimed. Existing
+coverage returns UNCLEAR for nonstandard cardinality and bottom line stays
+false. The two S-owned complete validator functions remain skipped pending
+their full consumer assertions; zero new upstream-function credit.
+
+L independently reran V's rebased candidate on an isolated review branch with
+verified frozen fresh inputs. Cargo command-line inline tables were rejected;
+the corrected separate env.KEY.value/env.KEY.force arguments were verified
+by an expected nonexistent-input failure, then173 native read/hash receipts
+for87 unique files. The package ran99passed/2failed/0ignored. Besides the
+known ByteRange case, the in_cert hash-ban case returned NO_POE instead of
+CRYPTO_CONSTRAINTS_FAILURE_NO_POE. Both reject, but the original assertion
+was retained. V subsequently supplied088e78d for that cause/horizon mapping.
+The rerun with that fix plus accepted S ranges reached an ETSI report compile
+error (fixed-array report attribute versus Vec); it is not a successful
+post-fix package run. V was asked to preserve the actual range in its report
+consumer. Main V12/35 acceptance remains unchanged, and the timestamp-POE
+policy/control-flow review holds remain distinct. Detailed native source and
+hashes are in round3-launch/v-candidate-review/.

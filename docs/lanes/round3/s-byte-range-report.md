@@ -100,3 +100,10 @@ L integration note: only this source/test/report delta is selected over
 accepted main9c4436c. Ancestor known-red caller suites are not imported.
 Complete S anomaly/tamper assertions stay pending; root gate and next
 validator candidate run remain required.
+
+
+Lead acceptance: sourcecef64d3 passed the complete build/test/clippy/strict-
+doc/layer-cycle/fmt gate:1328native tests,1320passed/8ignored/0failed. No
+upstream-function status was changed; full anomaly/tamper consumers remain
+pending. Main accepts this structural API independently of unmerged V report
+and LTA implementation.

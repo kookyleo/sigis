@@ -183,3 +183,20 @@ C is preparing policy-schema/CMSsanity fixes but has no accepted CLI pass.
 Both workers now have exact CLI source + isolated platformdirs/pkcs11 extras;
 sharedvenvunchanged. AmbientHANKO/PYTHONPATHmustuseexplicitCargo--configenv
 forVM testselection, with actual nativepath/hashreceipts, not parentexports.
+
+
+## Bounded range acceptance and verified V candidate inputs
+
+Sourcecef64d3 passed all6gates:1328discovered/1320passed/8ignored/0failed,
+109reports; seven structural helpers0upstreamcredit. Main coverage already
+accepts slices and refuses standard coverage for cardinality!=4. Exact bounds,
+order, empty/even pairs and capped repeated-range allocation are documented
+in s-byte-range-report.md; both S validator functions remain unaccepted.
+
+Isolated V review3348da0 on V0d95fd6 verified90frozen source files on both
+workers, negative missing-path selection and173nativehashreceipts/87unique
+opened files. Actualpackage99pass/2fail; class mismatch and range parser were
+reported without weakening assertions. After V088e78d and Scef64d3, the review
+candidate failed at report ByteRange type compilation; V owns compatibility
+repair. No V integration/count change. All inputs remain preserved in the
+v-candidate-review artifact directory; main worktree stays clean.

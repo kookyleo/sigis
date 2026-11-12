@@ -1,6 +1,6 @@
 # Round 3 lane S report
 
-Latest lead acceptance: mainc4158bd passed the complete workspace gate.
+Latest lead acceptance: maincef64d3 passed the complete workspace gate.
 S remains824/754/63/7; overall1431/1052/66/313. The historical baseline and
 checkpoint tables below are retained for comparison. The bounded certificate-position, forbidden-only KU and typed algorithm
 consumer follow-ups are integrated; their native regressions add zero
@@ -347,7 +347,7 @@ unchanged after its complete workspace gate passed on mainc4158bd. No old caller
 regression or historical local pass proposal is imported.
 
 
-## Bounded variable ByteRange increment (lead gate pending)
+## Bounded variable ByteRange increment (accepted)
 
 L selected20e0bc7 source/tests after independent review. Vec/slice parsing
 preserves complete pairs; checked bounds, arithmetic and capped fallible
@@ -356,5 +356,6 @@ native regressions passed in S, with the complete PDF435pass/2oldignore,
 coverage3 and root signer4 regressions. Fresh36-call oracle evidence and
 exact fixture input/output hashes are in s-byte-range-report.md. No complete
 S anomaly/tamper function pass is claimed from extraction alone. Current
-accepted S824/754/63/7 and overall1431/1052/66/313 stay unchanged until
-the lead gate; native helper credit remains zero upstream functions.
+accepted S824/754/63/7 and overall1431/1052/66/313 stay unchanged after
+the full gate on maincef64d3; native helper credit remains zero upstream
+functions.

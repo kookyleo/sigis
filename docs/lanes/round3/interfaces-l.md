@@ -229,7 +229,8 @@ credit. Six of26 oracle cases intentionally reject more strictly than Python.
 C can consume this accepted shared fix; its unknown nested policy-key hold
 remains a separate mandatory configuration rejection requirement.
 
-L approves S's next bounded signatures (not yet delivered/accepted):
+The bounded S signatures below are delivered and accepted on maincef64d3
+after the complete workspace gate:
 
 ```rust
 // sigis_pdf::signatures
@@ -266,3 +267,28 @@ query; its other prior gates remain.28 native helpers and oracle exception-
 shape limitations are documented in s-algorithm-horizons.md. V/C can consume
 these accepted shared changes, but V's timestamp-POE guards, fresh-native
 provenance and ByteRange failure remain separate acceptance holds.
+
+
+## Runtime-input syntax and report compatibility follow-up
+
+Actual Cargo rejected inline-table CLI values (`--config env.KEY={...}`).
+Use separate verified leaf arguments, for example:
+
+```sh
+tools/cargo-locked.sh test -p sigis-pades --test ades_validation \
+  --config 'env.HANKO_ADES_RECORDING_DIR.value="/path/to/fresh"' \
+  --config 'env.HANKO_ADES_RECORDING_DIR.force=true' -- --nocapture
+```
+
+The nonexistent-path negative and native snapshot/hash receipts established
+effective input selection; see v-candidate-review/. This supersedes the earlier
+unverified inline-table suggestion. It changes functional runtime inputs,
+not targets/compiler flags/profiles/features or scheduler placement.
+
+V's unmerged report constructor still assigns Vec to a fixed-array attribute.
+Adapt the report field/renderer/tests to preserve every actual pair, or prove
+and explicitly reject an upstream-required standard-only format. Never pad,
+truncate or invent four values for a nonstandard input. V owns this consumer;
+source088e78d and its new contract regression also need a complete actual
+package rerun against the accepted S range interface. No V pass is accepted
+from the compile-failed attempt.
