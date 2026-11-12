@@ -4,9 +4,10 @@
 - For round 3, follow `docs/lanes/round3/README.md`, the assigned brief and
   `ownership.json`. Respect exclusive file ownership and route shared API changes to L.
 - Every Cargo invocation goes through `tools/cargo-locked.sh`; it injects
-  `rust-target-env` and holds the common repository lock for the entire command.
-  Do not run raw or remote Cargo, use another target, change speed-related Rust
-  flags/profiles/features, or clean the shared target. The wrapper controls jobs.
+  `rust-target-env` and delegates placement/concurrency to system rust-slots.
+  Automatic VM dispatch is allowed; no repository-wide lock or job cap.
+  Do not run raw or manual remote Cargo, use another target, change speed-related
+  Rust flags/profiles/features, or clean the shared target. Preserve sccache.
 - Port exact upstream tests before implementation. Compare against pyHanko 0.38.1
   in `/tmp/pyhanko-oracle/venv`; trust decisions must fail closed.
 - Count unique upstream functions, not parameter wrappers or oracle calls.

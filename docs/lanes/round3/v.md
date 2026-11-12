@@ -53,26 +53,28 @@ Report semantic/encoding compatibility differences separately; do not
 claim all differences universally fail closed.
 
 **Every Cargo invocation uses `tools/cargo-locked.sh`, including metadata,
-formatting and the gate.** It holds `$(git rev-parse --git-common-dir)/round3-cargo.lock`
-with `flock` across all lanes and L, then evaluates `/usr/local/bin/rust-target-env`
-in the caller's worktree. All lanes share its canonical `/build/sigis/target`;
-never set another target, `RUST_TARGET_OWNER`, or `--target-dir`. The wrapper
-uses two build jobs and one doc job, selects the existing local slot queue,
-and consistently bypasses the broken sccache probe with empty `RUSTC_WRAPPER`.
-It keeps the workspace compiler wrapper and Rust flags. Do not change
-`RUSTFLAGS`, `CARGO_INCREMENTAL`, profiles or feature combinations for speed.
-Do not run raw Cargo, remote Cargo, `cargo clean`, or a background build.
-Do not hold this lock while editing or waiting for another lane. Start with:
+formatting and the gate.** It evaluates `/usr/local/bin/rust-target-env` in
+its caller's worktree and delegates concurrency, per-host worktree locking
+and placement to the system `rust-slots` Cargo wrapper. Check/test/clippy
+may run on vm2064/vm2065 through automatic `rust-remote` dispatch. Do not
+invoke remote Cargo directly or force local placement. The repository adds
+no global flock or job limit. Keep canonical target selection: never set
+another target, `RUST_TARGET_OWNER`, or `--target-dir`. System worker target
+selection is owned by `rust-remote`; do not override it. Preserve configured
+sccache, workspace compiler flags, profiles and features. Do not run raw
+Cargo, clean the shared target, or start an unmanaged background build.
+See [cargo-scheduling.md](cargo-scheduling.md) for the cache probe repair.
+Start with:
 
 ```sh
 tools/cargo-locked.sh check -p PACKAGE
 HANKO_ORACLE=/tmp/pyhanko-oracle/venv/bin/python tools/cargo-locked.sh test -p PACKAGE --test SUITE
 ```
 
-The wrapper supplies job flags; do not add `-j`. Restrict checks/tests to
-changed packages and affected callers. L owns the full workspace gate on
-each integration. Cargo metadata spawned internally by the layer test is
-already covered by the parent lock and must not re-enter the wrapper.
+Let rust-slots supply concurrency; do not add job flags for speed. Restrict
+checks/tests to changed packages and affected callers. L owns the full
+workspace gate on each integration. Internal Cargo metadata children are
+non-compiling scheduler pass-throughs; no repository lock is needed.
 
 Root `Cargo.toml`, `Cargo.lock`, `tools/`, facades, `docs/status.md`, the
 ownership manifest and other lanes' briefs are L-owned. Crate-local

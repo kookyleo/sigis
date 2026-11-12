@@ -22,15 +22,15 @@ passes. No cross-lane file edits or count double-booking. Reports are
 status/manifests/lockfile. Root's existing live integration tests remain L-owned.
 
 All Cargo commands from all five lanes must use `tools/cargo-locked.sh`.
-Its shared `.git/round3-cargo.lock` is outside tracked files and independent
-of worktree paths. The lock covers the entire command, including tests and
-document generation; ordinary Cargo build locks alone do not cover runtime
-tests. The wrapper selects `/build/sigis/target` through `rust-target-env`,
-keeps the system local slot queue, caps compilation at two jobs (docs one),
-and bypasses the proven broken sccache compiler probe consistently. Never
-create per-lane targets on the nearly full root disk or change profiles,
-features or Rust flags for speed. L uses this same wrapper for every merge
-gate. Internal metadata children inherit the parent lock; no recursive lock.
+It injects `rust-target-env`, then delegates concurrency and placement to
+system rust-slots, including its per-host worktree locks. There is no
+repository-wide flock, forced local placement or repository job cap.
+Check/test/clippy can use vm2064/vm2065 through automatic rust-remote.
+Keep canonical targets and existing flags/profiles/features. Do not kill
+old slot jobs; new invocations use the corrected wrapper. Configured
+sccache is retained; [cargo-scheduling.md](cargo-scheduling.md) explains
+the nested workspace-wrapper probe repair and validation evidence.
+L runs merge gates sequentially; independent lane jobs use system slots.
 
 Each lane ports exact upstream tests before implementation, uses the
 shared pinned oracle venv, requires fail-closed trust decisions and reports
