@@ -420,7 +420,6 @@ fn failure(
 pub(super) fn process_path(
     path: &crate::path::ValidationPath,
     params: Option<&crate::policy::PkixValidationParams>,
-    empty_intersection: bool,
 ) -> Result<Vec<QualifiedPolicy>, Box<super::PathFailure>> {
     use sigis_pki_core::errors::ValidationError;
     use x509_cert::ext::pkix::{
@@ -449,13 +448,9 @@ pub(super) fn process_path(
     } else {
         initial_counter
     };
-    let acceptable: BTreeSet<_> = if empty_intersection {
-        BTreeSet::new()
-    } else if params.user_initial_policy_set.is_empty() {
-        BTreeSet::from([ANY])
-    } else {
-        params.user_initial_policy_set.iter().copied().collect()
-    };
+    let acceptable = params
+        .effective_user_initial_policy_set()
+        .unwrap_or_else(|| BTreeSet::from([ANY]));
 
     for (index, (cert, _)) in issued.iter().enumerate() {
         let depth = index + 1;
@@ -535,10 +530,19 @@ pub(super) fn process_path(
             }
         }
     }
+    if total == 0 {
+        // The zero-issued path still performs final wrap-up: its initial
+        // optional explicit-policy counter is one and becomes zero.
+        explicit = explicit.saturating_sub(1);
+    }
     let policies = user_constrained(alive.then_some(&graph), total, &acceptable);
     if policies.is_empty() && explicit == 0 {
         let index = total.saturating_sub(1);
-        let description = path.describe(index, total);
+        let description = if total == 0 {
+            "the trust anchor".to_owned()
+        } else {
+            path.describe(index, total)
+        };
         return Err(failure(path, index, total, ValidationError::PathValidation(format!(
             "The path could not be validated because there is no valid set of policies for {description}."
         ))));

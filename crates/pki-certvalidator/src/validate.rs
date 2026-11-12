@@ -19,9 +19,8 @@ mod rfc9618_tests;
 
 use certval::{
     validate_path_rfc5280, CertFile, CertVector, CertificationPath, CertificationPathResults,
-    CertificationPathSettings, ExtensionProcessing, ObjectIdentifierSet, PDVCertificate,
-    PDVTrustAnchorChoice, PathValidationStatus, PkiEnvironment, TaSource, TimeOfInterest,
-    EXTS_OF_INTEREST,
+    CertificationPathSettings, ExtensionProcessing, PDVCertificate, PDVTrustAnchorChoice,
+    PathValidationStatus, PkiEnvironment, TaSource, TimeOfInterest, EXTS_OF_INTEREST,
 };
 use x509_cert::ext::pkix::{AuthorityKeyIdentifier, SubjectKeyIdentifier};
 
@@ -57,8 +56,7 @@ fn settings(
         cps.set_initial_explicit_policy_indicator(p.initial_explicit_policy);
         cps.set_initial_policy_mapping_inhibit_indicator(p.initial_policy_mapping_inhibit);
         cps.set_initial_inhibit_any_policy_indicator(p.initial_any_policy_inhibit);
-        if !p.user_initial_policy_set.is_empty() {
-            let set: ObjectIdentifierSet = p.user_initial_policy_set.iter().copied().collect();
+        if let Some(set) = p.effective_user_initial_policy_set() {
             cps.set_initial_policy_set_from_oid_set(set);
         }
         if let Some(subtrees) = &p.initial_permitted_subtrees {
@@ -652,15 +650,36 @@ fn validate_path_in_stack(
         f.time_horizon = Some(until);
         return Err(f);
     }
+    // The anchor's qualifiers combine with the caller's parameters.
+    // Permitted subtrees must be intersected: certval gets one list, and
+    // every further list is checked by another certval run below.
+    let anchor_params = anchor.qualifiers().standard_parameters.as_ref();
+    let mut permitted_sets: Vec<Vec<x509_cert::ext::pkix::constraints::name::GeneralSubtree>> =
+        params
+            .and_then(|p| p.initial_permitted_subtrees.clone())
+            .into_iter()
+            .chain(anchor_params.and_then(|a| a.initial_permitted_subtrees.clone()))
+            .collect();
+    let mut combined = match (params, anchor_params) {
+        (Some(p), Some(a)) => Some(p.combine_with_anchor(a)),
+        (Some(p), None) => Some(p.clone()),
+        (None, Some(a)) => Some(a.clone()),
+        (None, None) => None,
+    };
+    if let Some(c) = combined.as_mut() {
+        c.initial_permitted_subtrees = permitted_sets.first().cloned();
+    }
+    let extra_permitted = if permitted_sets.len() > 1 {
+        permitted_sets.split_off(1)
+    } else {
+        Vec::new()
+    };
+    let params = combined.as_ref();
     let issued = path.issued_certs();
     if issued.is_empty() {
-        // Only the trust anchor itself: every policy is acceptable.
-        let any = const_oid::db::rfc5280::ANY_POLICY;
-        return Ok(vec![crate::path::QualifiedPolicy {
-            user_domain_policy_id: any,
-            issuer_domain_policy_id: any,
-            qualifiers: Vec::new(),
-        }]);
+        // Direct anchor trust still applies the caller/anchor policy projection
+        // and final explicit-policy wrap-up, without validating it as an EE.
+        return rfc9618::process_path(path, params);
     }
     let total = issued.len();
     for (index, (cert, _)) in issued.iter().enumerate() {
@@ -684,47 +703,6 @@ fn validate_path_in_stack(
                 "time of interest out of range".into(),
             ))
         })?;
-    // The anchor's qualifiers combine with the caller's parameters.
-    // Permitted subtrees must be intersected: certval gets one list, and
-    // every further list is checked by another certval run below.
-    let anchor_params = anchor.qualifiers().standard_parameters.as_ref();
-    // Empty Vec is the public wildcard convention. Preserve the distinction
-    // when two non-wildcard inputs have an empty intersection: serializing
-    // that intersection back through Vec must never relax either input.
-    let empty_policy_intersection = match (params, anchor_params) {
-        (Some(caller), Some(anchor)) => {
-            let a = &caller.user_initial_policy_set;
-            let b = &anchor.user_initial_policy_set;
-            let any = const_oid::db::rfc5280::ANY_POLICY;
-            !a.is_empty()
-                && !b.is_empty()
-                && !a.contains(&any)
-                && !b.contains(&any)
-                && !a.iter().any(|oid| b.contains(oid))
-        }
-        _ => false,
-    };
-    let mut permitted_sets: Vec<Vec<x509_cert::ext::pkix::constraints::name::GeneralSubtree>> =
-        params
-            .and_then(|p| p.initial_permitted_subtrees.clone())
-            .into_iter()
-            .chain(anchor_params.and_then(|a| a.initial_permitted_subtrees.clone()))
-            .collect();
-    let mut combined = match (params, anchor_params) {
-        (Some(p), Some(a)) => Some(p.combine_with_anchor(a)),
-        (Some(p), None) => Some(p.clone()),
-        (None, Some(a)) => Some(a.clone()),
-        (None, None) => None,
-    };
-    if let Some(c) = combined.as_mut() {
-        c.initial_permitted_subtrees = permitted_sets.first().cloned();
-    }
-    let extra_permitted = if permitted_sets.len() > 1 {
-        permitted_sets.split_off(1)
-    } else {
-        Vec::new()
-    };
-    let params = combined.as_ref();
     if let Some(max) = anchor.qualifiers().max_path_length {
         let intermediates = issued
             .iter()
@@ -825,13 +803,25 @@ fn validate_path_in_stack(
                 )
             })));
         }
+        Err(certval::Error::PathValidation(PathValidationStatus::NullPolicySet))
+            if params.is_some_and(|p| {
+                p.effective_user_initial_policy_set()
+                    .is_some_and(|set| set.is_empty())
+            }) =>
+        {
+            // Preserve the exact policy failure position if the native replay
+            // confirms it. A native success can never override certval denial.
+            return Err(rfc9618::process_path(path, params)
+                .err()
+                .unwrap_or_else(|| fail(map_status(PathValidationStatus::NullPolicySet))));
+        }
         Err(certval::Error::PathValidation(status)) => return Err(fail(map_status(status))),
         Err(e) => return Err(fail(cv_err("The path could not be validated", e))),
     }
 
     // Native edges and transient node limits cannot be recovered from final
     // certval rows. Its complete validation above remains mandatory.
-    let qualified = rfc9618::process_path(path, params, empty_policy_intersection)?;
+    let qualified = rfc9618::process_path(path, params)?;
 
     // Algorithm usage policy on every certificate signature in the path.
     for (index, (cert, issuer)) in issued.iter().enumerate() {

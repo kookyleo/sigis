@@ -4,6 +4,7 @@
 //! information trust (freshness) policies and PKIX parameters.
 
 use core::time::Duration;
+use std::collections::BTreeSet;
 
 use const_oid::ObjectIdentifier;
 use x509_cert::ext::pkix::constraints::name::GeneralSubtree;
@@ -207,8 +208,15 @@ pub struct NonRevokedStatusAssertion {
 /// (`PKIXValidationParams`).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PkixValidationParams {
-    /// `user-initial-policy-set`; empty means `anyPolicy`.
+    /// Legacy `user-initial-policy-set` input; empty or anyPolicy is wildcard.
+    /// This input is intersected with `user_initial_policy_constraint`.
     pub user_initial_policy_set: Vec<ObjectIdentifier>,
+    /// Additional allowed-policy constraint. `None` means wildcard, while
+    /// `Some(empty)` explicitly permits no policies. A set containing
+    /// anyPolicy is wildcard. Merge results retain their effective restriction
+    /// here, so mutating the legacy vector cannot silently erase it.
+    /// Use `replace_user_initial_policy_set` to deliberately replace both inputs.
+    pub user_initial_policy_constraint: Option<BTreeSet<ObjectIdentifier>>,
     /// `initial-policy-mapping-inhibit`.
     pub initial_policy_mapping_inhibit: bool,
     /// `initial-explicit-policy`.
@@ -233,25 +241,47 @@ pub fn stricter_limit(a: Option<usize>, b: Option<usize>) -> Option<usize> {
 }
 
 impl PkixValidationParams {
+    /// Effective policy constraint: `None` is wildcard, `Some(empty)` permits
+    /// no policy. Both public inputs apply conjunctively, including after merge.
+    pub fn effective_user_initial_policy_set(&self) -> Option<BTreeSet<ObjectIdentifier>> {
+        let legacy = if self.user_initial_policy_set.is_empty() {
+            None
+        } else {
+            Some(self.user_initial_policy_set.iter().copied().collect())
+        };
+        intersect_policy_constraints(legacy, self.user_initial_policy_constraint.clone())
+    }
+
+    /// Deliberately replace both policy inputs, discarding earlier merged
+    /// restrictions. `None` means wildcard; `Some(empty)` explicitly permits none.
+    /// Ordinary legacy-vector mutation does not discard the extra constraint.
+    pub fn replace_user_initial_policy_set(
+        &mut self,
+        policies: Option<BTreeSet<ObjectIdentifier>>,
+    ) {
+        let policies = normalize_policy_constraint(policies);
+        self.user_initial_policy_set = policies
+            .as_ref()
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_default();
+        self.user_initial_policy_constraint = policies;
+    }
+
     /// `merge`: combine two parameter sets as pyhanko-certvalidator does
     /// (policy sets intersected unless one is `anyPolicy`, flags combined
     /// with "and", the stricter policy graph limit; subtrees are not kept).
     pub fn merge(&self, other: &Self) -> Self {
-        let any = const_oid::db::rfc5280::ANY_POLICY;
-        let is_any = |p: &Vec<ObjectIdentifier>| p.is_empty() || p.contains(&any);
-        let user_initial_policy_set = if is_any(&self.user_initial_policy_set) {
-            other.user_initial_policy_set.clone()
-        } else if is_any(&other.user_initial_policy_set) {
-            self.user_initial_policy_set.clone()
-        } else {
-            self.user_initial_policy_set
-                .iter()
-                .filter(|p| other.user_initial_policy_set.contains(p))
-                .copied()
-                .collect()
-        };
+        let user_initial_policy_constraint = intersect_policy_constraints(
+            self.effective_user_initial_policy_set(),
+            other.effective_user_initial_policy_set(),
+        );
+        let user_initial_policy_set = user_initial_policy_constraint
+            .as_ref()
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_default();
         Self {
             user_initial_policy_set,
+            user_initial_policy_constraint,
             initial_any_policy_inhibit: self.initial_any_policy_inhibit
                 && other.initial_any_policy_inhibit,
             initial_explicit_policy: self.initial_explicit_policy && other.initial_explicit_policy,
@@ -272,19 +302,14 @@ impl PkixValidationParams {
     /// intersected (here: both lists apply), excluded subtrees united,
     /// the stricter policy graph limit.
     pub fn combine_with_anchor(&self, anchor: &Self) -> Self {
-        let any = const_oid::db::rfc5280::ANY_POLICY;
-        let is_any = |p: &Vec<ObjectIdentifier>| p.is_empty() || p.contains(&any);
-        let user_initial_policy_set = if is_any(&self.user_initial_policy_set) {
-            anchor.user_initial_policy_set.clone()
-        } else if is_any(&anchor.user_initial_policy_set) {
-            self.user_initial_policy_set.clone()
-        } else {
-            self.user_initial_policy_set
-                .iter()
-                .filter(|p| anchor.user_initial_policy_set.contains(p))
-                .copied()
-                .collect()
-        };
+        let user_initial_policy_constraint = intersect_policy_constraints(
+            self.effective_user_initial_policy_set(),
+            anchor.effective_user_initial_policy_set(),
+        );
+        let user_initial_policy_set = user_initial_policy_constraint
+            .as_ref()
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_default();
         let concat = |a: &Option<Vec<GeneralSubtree>>, b: &Option<Vec<GeneralSubtree>>| match (a, b)
         {
             (None, None) => None,
@@ -298,6 +323,7 @@ impl PkixValidationParams {
         };
         Self {
             user_initial_policy_set,
+            user_initial_policy_constraint,
             initial_any_policy_inhibit: self.initial_any_policy_inhibit
                 || anchor.initial_any_policy_inhibit,
             initial_explicit_policy: self.initial_explicit_policy || anchor.initial_explicit_policy,
@@ -316,6 +342,25 @@ impl PkixValidationParams {
                 anchor.max_policy_graph_nodes,
             ),
         }
+    }
+}
+
+fn normalize_policy_constraint(
+    policies: Option<BTreeSet<ObjectIdentifier>>,
+) -> Option<BTreeSet<ObjectIdentifier>> {
+    policies.filter(|set| !set.contains(&const_oid::db::rfc5280::ANY_POLICY))
+}
+
+fn intersect_policy_constraints(
+    left: Option<BTreeSet<ObjectIdentifier>>,
+    right: Option<BTreeSet<ObjectIdentifier>>,
+) -> Option<BTreeSet<ObjectIdentifier>> {
+    match (
+        normalize_policy_constraint(left),
+        normalize_policy_constraint(right),
+    ) {
+        (None, other) | (other, None) => other,
+        (Some(left), Some(right)) => Some(left.intersection(&right).copied().collect()),
     }
 }
 
