@@ -301,3 +301,19 @@ Reproduce the oracle via the fixed interpreter on
 ~/.codex/artifacts/sigis/round3/s/algorithm-failure-context-oracle.py.
 No recorded verdict was consumed.
 
+
+
+## Independent forbidden-only KU repair
+
+L's C-requested `KeyUsageConstraints` repair is verified independently:
+forbidden usages are checked before the None/empty positive KU early return.
+Five meaningful native regressions were added first (two failed before repair),
+then all 27 core tests, four original CMS KU/EKU functions, strict core Clippy
+and formatting passed. All compiling invocations used vm2065 slot0. Fresh live
+oracle: 26 calls, 20 agreeing controls and six intentional stricter Rust
+rejections; pinned Python has the same early-return bug. Default None versus
+explicit empty semantics remain intact. This adds zero upstream function credit.
+See [the independent ready report](s-key-usage-forbidden.md) for exact mappings,
+parameters, commands, exclusions and evidence. No known-red CMS source changes,
+L reader/MAC/context/core-schema files, wrapper or lockfile are included.
+

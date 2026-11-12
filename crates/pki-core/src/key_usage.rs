@@ -223,7 +223,8 @@ pub struct KeyUsageConstraints {
     /// All or some (see `match_all_key_usages`) of these key usages must be
     /// present. `None` or empty: any key usage is acceptable.
     pub key_usage: Option<BTreeSet<String>>,
-    /// These key usages must not be present (ISO 32000 seed values).
+    /// These key usages must not be present (ISO 32000 seed values), even
+    /// when `key_usage` is `None` or empty.
     pub key_usage_forbidden: Option<BTreeSet<String>>,
     /// Acceptable extended key usages. `None`: all are acceptable. An empty
     /// set bans all extended key usages.
@@ -324,10 +325,6 @@ impl KeyUsageConstraints {
         &self,
         asserted: &BTreeSet<String>,
     ) -> Result<(), InvalidCertificateError> {
-        let key_usage = match &self.key_usage {
-            Some(ku) if !ku.is_empty() => ku,
-            _ => return Ok(()),
-        };
         let empty = BTreeSet::new();
         let forbidden = self.key_usage_forbidden.as_ref().unwrap_or(&empty);
         let banned: BTreeSet<String> = asserted.intersection(forbidden).cloned().collect();
@@ -337,6 +334,10 @@ impl KeyUsageConstraints {
                 rephrase(banned.iter())
             )));
         }
+        let key_usage = match &self.key_usage {
+            Some(ku) if !ku.is_empty() => ku,
+            _ => return Ok(()),
+        };
         let need_all = self.match_all_key_usages;
         if !match_usages(key_usage, asserted, need_all) {
             return Err(InvalidCertificateError(format!(
@@ -403,5 +404,151 @@ mod tests {
             "adobe_authentic_documents_trust"
         );
         assert_eq!(key_purpose_name("2.999"), "2.999");
+    }
+
+    fn usages(items: &[&str]) -> BTreeSet<String> {
+        items.iter().map(|item| (*item).to_owned()).collect()
+    }
+
+    fn signer_certificate() -> Cert {
+        Cert::from_pem_or_der(include_bytes!(
+            "../../testdata/data/pyhanko-certvalidator/testing-ca-ed25519/signer.cert.pem"
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn forbidden_key_usages_reject_without_positive_requirements() {
+        let cert = signer_certificate();
+        assert_eq!(
+            cert_key_usages(&cert),
+            Some(usages(&["digital_signature", "non_repudiation"]))
+        );
+        for key_usage in [None, Some(BTreeSet::new())] {
+            for match_all_key_usages in [false, true] {
+                let constraints = KeyUsageConstraints {
+                    key_usage: key_usage.clone(),
+                    key_usage_forbidden: Some(usages(&["non_repudiation"])),
+                    match_all_key_usages,
+                    ..KeyUsageConstraints::default()
+                };
+                assert_eq!(
+                    constraints.validate(&cert).unwrap_err().0,
+                    "The active key usage policy explicitly bans certificates used for non repudiation."
+                );
+                let permitted = KeyUsageConstraints {
+                    key_usage_forbidden: Some(usages(&["key_cert_sign"])),
+                    ..constraints
+                };
+                permitted.validate(&cert).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn forbidden_key_usages_include_extra_assertions() {
+        let cert = signer_certificate();
+        for key_usage in [None, Some(BTreeSet::new())] {
+            let constraints = KeyUsageConstraints {
+                key_usage,
+                key_usage_forbidden: Some(usages(&["key_agreement"])),
+                ..KeyUsageConstraints::default()
+            };
+            constraints.validate(&cert).unwrap();
+            let extra = usages(&["key_agreement"]);
+            let expected =
+                "The active key usage policy explicitly bans certificates used for key agreement.";
+            assert_eq!(
+                constraints
+                    .validate_with_extra(&cert, &extra, &BTreeSet::new())
+                    .unwrap_err()
+                    .0,
+                expected
+            );
+            assert_eq!(
+                constraints
+                    .validate_key_usage_extension(None, &extra)
+                    .unwrap_err()
+                    .0,
+                expected
+            );
+            constraints
+                .validate_key_usage_extension(None, &BTreeSet::new())
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn forbidden_key_usages_precede_positive_requirements() {
+        let constraints =
+            KeyUsageConstraints::with_key_usage(["key_cert_sign"], ["non_repudiation"]);
+        assert_eq!(
+            constraints.validate(&signer_certificate()).unwrap_err().0,
+            "The active key usage policy explicitly bans certificates used for non repudiation."
+        );
+        assert!(constraints
+            .validate_asserted_key_usage(&usages(&["digital_signature"]))
+            .unwrap_err()
+            .0
+            .contains("requires at least one of the key usage extensions key cert sign"));
+    }
+
+    #[test]
+    fn unrestricted_key_usages_preserve_none_and_empty() {
+        let default = KeyUsageConstraints::default();
+        assert_eq!(default.key_usage, None);
+        assert_eq!(default.key_usage_forbidden, None);
+        assert_eq!(default.extd_key_usage, None);
+        let explicit_empty = KeyUsageConstraints::with_key_usage([], []);
+        assert_eq!(explicit_empty.key_usage, Some(BTreeSet::new()));
+        assert_eq!(explicit_empty.key_usage_forbidden, None);
+        for constraints in [default, explicit_empty] {
+            constraints.validate(&signer_certificate()).unwrap();
+            constraints
+                .validate_key_usage_extension(None, &BTreeSet::new())
+                .unwrap();
+            let empty_forbidden = KeyUsageConstraints {
+                key_usage_forbidden: Some(BTreeSet::new()),
+                ..constraints
+            };
+            empty_forbidden.validate(&signer_certificate()).unwrap();
+        }
+    }
+
+    #[test]
+    fn extended_key_usages_preserve_none_and_empty() {
+        for explicit_extd_key_usage_required in [false, true] {
+            let unrestricted = KeyUsageConstraints {
+                explicit_extd_key_usage_required,
+                ..KeyUsageConstraints::default()
+            };
+            let empty = KeyUsageConstraints {
+                extd_key_usage: Some(BTreeSet::new()),
+                ..unrestricted.clone()
+            };
+            let client_auth = usages(&["client_auth"]);
+            unrestricted
+                .validate_asserted_extended_key_usage(&client_auth)
+                .unwrap();
+            assert_eq!(
+                empty
+                    .validate_asserted_extended_key_usage(&client_auth)
+                    .unwrap_err()
+                    .0,
+                "The extended key usages for which this certificate is valid do not match the active key usage policy. There are no acceptable extended key usages."
+            );
+            // Absence and anyExtendedKeyUsage retain the explicitness policy.
+            for asserted in [BTreeSet::new(), usages(&["any_extended_key_usage"])] {
+                unrestricted
+                    .validate_asserted_extended_key_usage(&asserted)
+                    .unwrap();
+                assert_eq!(
+                    empty
+                        .validate_asserted_extended_key_usage(&asserted)
+                        .is_err(),
+                    explicit_extd_key_usage_required
+                );
+            }
+        }
     }
 }
