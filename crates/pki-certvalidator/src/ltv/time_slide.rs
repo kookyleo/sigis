@@ -128,7 +128,7 @@ fn collect_ocsps<'a>(
     Ok(out)
 }
 
-/// `_apply_algo_policy`: a banned algorithm without time constraint fails.
+/// `_apply_algo_policy`: timed bans rewind; a ban without a time constraint fails.
 fn apply_algo_policy(
     ctx: &ValidationContext,
     algorithm: &spki::AlgorithmIdentifierOwned,
@@ -143,6 +143,9 @@ fn apply_algo_policy(
     if c.allowed {
         return Ok(control_time);
     }
+    if let Some(cutoff) = c.not_allowed_after {
+        return Ok(control_time.min(cutoff));
+    }
     let mut msg = format!(
         "Algorithm {} is banned outright without time constraints.",
         algorithm.oid
@@ -152,7 +155,7 @@ fn apply_algo_policy(
     }
     Err(LtvError::Validation(ValidationError::DisallowedAlgorithm {
         msg,
-        banned_since: c.not_allowed_after,
+        banned_since: None,
     }))
 }
 
@@ -404,3 +407,7 @@ fn slide(
     }
     Ok(control_time)
 }
+
+#[cfg(test)]
+#[path = "time_slide_algorithm_horizon_tests.rs"]
+mod algorithm_horizon_tests;

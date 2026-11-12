@@ -18,6 +18,7 @@ use sigis_pki_core::time::Moment;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 const AT: &str = "2021-08-19T12:20:44Z";
+const BEST_AT: &str = "2021-08-18T11:22:33Z";
 const REASON: &str = "Permanent policy refusal; reference date 2001-02-03T04:05:06Z";
 
 #[derive(Debug)]
@@ -45,7 +46,7 @@ impl AlgorithmUsagePolicy for IssuerDenial {
             .as_ref()
             .is_some_and(|key| issuer == Some(key))
         {
-            assert_eq!(at, Some(moment(AT)));
+            assert_eq!(at, Some(moment(BEST_AT)));
             AlgorithmUsageConstraint::denied(REASON)
         } else {
             AlgorithmUsageConstraint::allowed()
@@ -58,7 +59,7 @@ fn context(deny_issuer: Option<&str>, include_ocsp: bool) -> ValidationContext {
         .trust_root(load_cert(&["multitasking-ocsp", "root.cert.pem"]))
         .other_cert(load_cert(&["multitasking-ocsp", "interm.cert.pem"]))
         .moment(moment(AT))
-        .best_signature_time(moment("2021-08-18T11:22:33Z"))
+        .best_signature_time(moment(BEST_AT))
         .revocation_mode("require")
         .algorithm_policy(Arc::new(IssuerDenial {
             denied_issuer: deny_issuer.map(|name| {

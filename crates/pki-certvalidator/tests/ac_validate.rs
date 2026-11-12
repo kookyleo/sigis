@@ -512,3 +512,182 @@ fn test_ac_unrevoked_full_path_validation_ocsp() {
     );
     validate_ac(&ctx, &with_rev(), None).expect("valid");
 }
+
+// Supplemental algorithm-horizon regressions using real validation evidence.
+// These do not add unique upstream-function credit.
+mod algorithm_horizon {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    use super::{aa, ac_path, cert, role_others, root, with_rev, ALL_GOOD};
+    use crate::common::moment;
+    use const_oid::ObjectIdentifier;
+    use sigis_pki_certvalidator::ac::{validate_ac, AcError};
+    use sigis_pki_certvalidator::ValidationContext;
+    use sigis_pki_core::algorithms::{AlgorithmUsageConstraint, AlgorithmUsagePolicy};
+    use sigis_pki_core::errors::ValidationError;
+    use sigis_pki_core::time::Moment;
+    use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
+
+    #[derive(Debug)]
+    struct AcIssuerPolicy {
+        aa_key: SubjectPublicKeyInfoOwned,
+        constraint: AlgorithmUsageConstraint,
+        expected_best_time: Moment,
+        calls: Arc<AtomicUsize>,
+    }
+
+    impl AlgorithmUsagePolicy for AcIssuerPolicy {
+        fn digest_algorithm_allowed(
+            &self,
+            _: &ObjectIdentifier,
+            _: Option<Moment>,
+        ) -> AlgorithmUsageConstraint {
+            AlgorithmUsageConstraint::allowed()
+        }
+
+        fn signature_algorithm_allowed(
+            &self,
+            _: &AlgorithmIdentifierOwned,
+            at: Option<Moment>,
+            issuer_key: Option<&SubjectPublicKeyInfoOwned>,
+        ) -> AlgorithmUsageConstraint {
+            // The AC is signed by the role AA. The AA certificate and its
+            // intermediate are signed by different keys and still undergo
+            // their ordinary path and required revocation checks.
+            if issuer_key != Some(&self.aa_key) {
+                return AlgorithmUsageConstraint::allowed();
+            }
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            assert_eq!(at, Some(self.expected_best_time));
+            if self.constraint.allowed {
+                return self.constraint.clone();
+            }
+            if let (Some(at), Some(cutoff)) = (at, self.constraint.not_allowed_after) {
+                // The pinned upstream timed policy allows equality.
+                if at <= cutoff {
+                    return AlgorithmUsageConstraint::allowed();
+                }
+            }
+            self.constraint.clone()
+        }
+    }
+
+    fn context(
+        constraint: AlgorithmUsageConstraint,
+        best_time: Moment,
+        crl_count: usize,
+    ) -> (ValidationContext, Arc<AtomicUsize>) {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let mut builder = ValidationContext::builder()
+            .trust_root(root())
+            .moment(moment("2019-12-12T00:00:00Z"))
+            .best_signature_time(best_time)
+            .revocation_mode("require")
+            .algorithm_policy(Arc::new(AcIssuerPolicy {
+                aa_key: cert(&["interm", "role-aa.crt"]).public_key(),
+                constraint,
+                expected_best_time: best_time,
+                calls: calls.clone(),
+            }));
+        for other in role_others() {
+            builder = builder.other_cert(other);
+        }
+        for crl in &ALL_GOOD[..crl_count] {
+            builder = builder.crl(aa(crl));
+        }
+        (builder.build().expect("context"), calls)
+    }
+
+    fn timed_constraint(cutoff: Moment) -> AlgorithmUsageConstraint {
+        AlgorithmUsageConstraint {
+            allowed: false,
+            failure_reason: Some("The attribute signature policy has expired".into()),
+            not_allowed_after: Some(cutoff),
+        }
+    }
+
+    fn assert_algorithm_error(error: &AcError, cutoff: Option<Moment>) {
+        assert_eq!(error.class_name(), "DisallowedAlgorithmError");
+        assert!(error.is_instance_of("PathValidationError"));
+        let AcError::Validation(ValidationError::DisallowedAlgorithm { msg, banned_since }) = error
+        else {
+            panic!("expected typed AC algorithm error: {error:?}");
+        };
+        assert_eq!(*banned_since, cutoff);
+        assert!(msg.contains("attribute certificate"), "{msg}");
+        assert!(msg.contains("disallowed signature algorithm"), "{msg}");
+    }
+
+    #[test]
+    fn attribute_algorithm_denial_preserves_exact_cutoff_at_best_signature_time() {
+        let cutoff = moment("2019-12-11T12:34:56Z");
+        let best_time = moment("2019-12-11T12:34:57Z");
+        let (control, _) = context(AlgorithmUsageConstraint::allowed(), best_time, 3);
+        let valid = validate_ac(&control, &with_rev(), None).expect("valid control");
+        assert_eq!(valid.aa_path, ac_path());
+        assert!(valid.approved_attributes.contains_key("role"));
+        assert!(!valid.approved_attributes.contains_key("group"));
+
+        let (denied, calls) = context(timed_constraint(cutoff), best_time, 3);
+        assert_ne!(denied.moment(), denied.best_signature_time());
+        let error = validate_ac(&denied, &with_rev(), None).expect_err("timed AC denial");
+        assert_algorithm_error(&error, Some(cutoff));
+        assert!(calls.load(Ordering::SeqCst) > 0);
+    }
+
+    #[test]
+    fn attribute_policy_uses_best_signature_time_before_and_at_cutoff() {
+        let cutoff = moment("2019-12-11T12:34:56Z");
+        for best_time in [moment("2019-12-11T12:34:55Z"), cutoff] {
+            let (ctx, calls) = context(timed_constraint(cutoff), best_time, 3);
+            assert!(ctx.moment() > cutoff);
+            let result = validate_ac(&ctx, &with_rev(), None)
+                .expect("best signature time is no later than cutoff");
+            assert_eq!(result.aa_path, ac_path());
+            assert!(result.approved_attributes.contains_key("role"));
+            assert!(!result.approved_attributes.contains_key("group"));
+            assert!(calls.load(Ordering::SeqCst) > 0);
+        }
+    }
+
+    #[test]
+    fn permanent_attribute_denial_does_not_infer_cutoff_from_reason() {
+        let reason = "Permanently banned; reference date 2001-02-03T04:05:06Z";
+        for best_time in [
+            moment("2019-12-10T01:02:03Z"),
+            moment("2019-12-11T12:34:57Z"),
+        ] {
+            let (control, _) = context(AlgorithmUsageConstraint::allowed(), best_time, 3);
+            validate_ac(&control, &with_rev(), None).expect("valid control");
+            let (denied, calls) = context(AlgorithmUsageConstraint::denied(reason), best_time, 3);
+            let error = validate_ac(&denied, &with_rev(), None).expect_err("permanent denial");
+            assert_algorithm_error(&error, None);
+            assert!(calls.load(Ordering::SeqCst) > 0);
+        }
+    }
+
+    #[test]
+    fn allowed_attribute_constraint_with_cutoff_still_requires_ac_revocation() {
+        let constraint = AlgorithmUsageConstraint {
+            allowed: true,
+            failure_reason: Some("Informational date 2001-02-03T04:05:06Z".into()),
+            not_allowed_after: Some(moment("2001-02-03T04:05:06Z")),
+        };
+        let best_time = moment("2019-12-11T12:34:57Z");
+        let (control, calls) = context(constraint.clone(), best_time, 3);
+        validate_ac(&control, &with_rev(), None).expect("allowed flag is authoritative");
+        assert!(calls.load(Ordering::SeqCst) > 0);
+
+        // Keep both AA path CRLs but remove the AC issuer's CRL. The AA path
+        // remains verifiable; the AC's own required revocation check fails.
+        let (missing, calls) = context(constraint, best_time, 2);
+        let error = validate_ac(&missing, &with_rev(), None)
+            .expect_err("algorithm metadata is no substitute for AC revocation evidence");
+        assert!(
+            error.is_instance_of("InsufficientRevinfoError"),
+            "{error:?}"
+        );
+        assert!(calls.load(Ordering::SeqCst) > 0);
+    }
+}

@@ -469,7 +469,7 @@ pub struct PathFailure {
     pub is_ee_cert: bool,
     /// The failure happened while validating revocation information signers.
     pub is_side_validation: bool,
-    /// Expiry or revocation time, if relevant.
+    /// Expiry, revocation or algorithm cutoff time, if relevant.
     pub time_horizon: Option<sigis_pki_core::time::Moment>,
     /// The certificate itself is unsuitable (`InvalidCertificateError`), for
     /// example self-signed but not trusted.
@@ -1015,19 +1015,21 @@ fn validate_path_in_stack(
         let issuer_key = issuer.public_key();
         let allowed = ctx.algorithm_policy.signature_algorithm_allowed(
             cert.decoded().signature_algorithm(),
-            Some(ctx.timing.validation_time),
+            Some(ctx.best_signature_time()),
             Some(&issuer_key),
         );
         if !allowed.allowed {
+            let banned_since = allowed.not_allowed_after;
             let mut failure = fail(ValidationError::DisallowedAlgorithm {
                 msg: format!(
                     "The path could not be validated because the signature of {} uses a disallowed algorithm: {}",
                     path.describe(index, total),
                     allowed.failure_reason.unwrap_or_default()
                 ),
-                banned_since: allowed.not_allowed_after,
+                banned_since,
             });
             failure.is_ee_cert = index + 1 == total && path.leaf().is_some();
+            failure.time_horizon = banned_since;
             return Err(failure);
         }
     }

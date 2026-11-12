@@ -57,3 +57,15 @@ Pending:
   (`hanko-certvalidator::names`).
 - Error messages for malformed claimed attributes differ in the parser
   detail after "Failed to parse ... of type '...': " (asn1crypto internals).
+
+
+## Round 3 typed algorithm horizon consumers
+
+S's tests-first consumer implementation and complete native/oracle accounting
+are documented in [s-algorithm-horizons.md](../../docs/lanes/round3/s-algorithm-horizons.md).
+Typed cutoff propagation, best-signature-time policy checks and exact time-slide
+minimum semantics preserve permanent rejection and mandatory POE/revocation.
+The OCSP_NOCHECK responder policy omission is covered by a substantive new
+regression. These native helpers add zero unique upstream-function credit; the
+current accepted ledger (main045decd, CMS78/74/2/2) remains authoritative
+until the complete lead integration gate passes.

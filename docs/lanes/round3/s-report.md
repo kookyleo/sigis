@@ -324,3 +324,23 @@ See [the independent ready report](s-key-usage-forbidden.md) for exact mappings,
 parameters, commands, exclusions and evidence. No known-red CMS source changes,
 L reader/MAC/context/core-schema files, wrapper or lockfile are included.
 
+
+
+## Verified typed-horizon consumer increment
+
+All 27 prepared native regressions were applied before implementation; their
+compile/runtime failures are recorded. Typed CMS errors/status horizons, exact
+min(control_time, cutoff) time sliding, contextual path horizons and failing
+path/leaf preservation are implemented. Fresh public oracle work corrected an
+initial mistaken validation-time assertion to pinned best_signature_time and
+exposed the OCSP_NOCHECK mandatory-policy omission. Its additional tests-first
+regression now also passes: 28 new native helper tests, zero upstream credit.
+The final certificate package run passes 156 tests with no failures/ignored.
+Exact mappings, parameters, commands, oracle calls, AC TypeError difference and
+verification receipts: [typed horizon report](s-algorithm-horizons.md).
+
+
+L selected only this source delta and its28 helper regressions after
+main045decd. Accepted S824/754/63/7 and overall1431/1052/66/313 remain
+unchanged while its complete workspace gate is pending. No old caller
+regression or historical local pass proposal is imported.

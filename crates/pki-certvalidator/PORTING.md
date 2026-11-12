@@ -172,3 +172,13 @@ remains separate, pending safe S synchronization with the L shared API.
 Logs, exact commands and live reference outputs are in the S artifact
 algorithm-failure-context-* files. The L-owned wrapper/context/core files
 and the existing lockfile change remain untouched by this increment.
+
+## Round 3 typed algorithm horizon consumers
+
+S's tests-first consumer implementation and complete native/oracle accounting
+are documented in [s-algorithm-horizons.md](../../docs/lanes/round3/s-algorithm-horizons.md).
+Typed cutoff propagation, best-signature-time policy checks and exact time-slide
+minimum semantics preserve permanent rejection and mandatory POE/revocation.
+The OCSP_NOCHECK responder policy omission is covered by a substantive new
+regression. These native helpers add zero unique upstream-function credit; the
+accepted main62a72a2 ledger remains authoritative until L integration.

@@ -478,3 +478,319 @@ fn test_context_retrieve_all_crls() {
     want.sort();
     assert_eq!(got, want);
 }
+
+// Supplemental algorithm-horizon regressions using real validation evidence.
+// These do not add unique upstream-function credit.
+mod algorithm_horizon {
+    use std::sync::{Arc, Mutex};
+
+    use crate::common::{load_cert, moment, read};
+    use const_oid::ObjectIdentifier;
+    use sigis_pki_certvalidator::{
+        build_paths, validate_path, validate_path_detailed, ValidationContext, ValidationPath,
+    };
+    use sigis_pki_core::algorithms::{AlgorithmUsageConstraint, AlgorithmUsagePolicy};
+    use sigis_pki_core::errors::ValidationError;
+    use sigis_pki_core::time::Moment;
+    use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
+
+    #[derive(Debug)]
+    struct IssuerConstraintPolicy {
+        issuer_key: SubjectPublicKeyInfoOwned,
+        constraint: AlgorithmUsageConstraint,
+        expected_time: Moment,
+    }
+
+    impl AlgorithmUsagePolicy for IssuerConstraintPolicy {
+        fn digest_algorithm_allowed(
+            &self,
+            _: &ObjectIdentifier,
+            _: Option<Moment>,
+        ) -> AlgorithmUsageConstraint {
+            AlgorithmUsageConstraint::allowed()
+        }
+
+        fn signature_algorithm_allowed(
+            &self,
+            _: &AlgorithmIdentifierOwned,
+            at: Option<Moment>,
+            issuer_key: Option<&SubjectPublicKeyInfoOwned>,
+        ) -> AlgorithmUsageConstraint {
+            if issuer_key == Some(&self.issuer_key) {
+                if self.constraint.allowed {
+                    // OCSP_NOCHECK responder provenance uses validation
+                    // time; the main certificate still uses best time.
+                    assert!(
+                        at == Some(self.expected_time)
+                            || at == Some(moment("2021-08-19T12:20:44Z")),
+                        "unexpected main/responder policy time: {at:?}"
+                    );
+                } else {
+                    // Main-path denials must retain the exact best-time hook.
+                    assert_eq!(at, Some(self.expected_time));
+                }
+                self.constraint.clone()
+            } else {
+                AlgorithmUsageConstraint::allowed()
+            }
+        }
+    }
+
+    fn context(
+        issuer: &str,
+        constraint: AlgorithmUsageConstraint,
+        include_ocsp: bool,
+    ) -> ValidationContext {
+        let mut builder = ValidationContext::builder()
+            .trust_root(load_cert(&["multitasking-ocsp", "root.cert.pem"]))
+            .other_cert(load_cert(&["multitasking-ocsp", "interm.cert.pem"]))
+            .moment(moment("2021-08-19T12:20:44Z"))
+            // Pinned certvalidator uses best signature time for algorithm
+            // checks, independently of the certificate-validity moment.
+            .best_signature_time(moment("2021-08-18T11:22:33Z"))
+            .revocation_mode("require")
+            .algorithm_policy(Arc::new(IssuerConstraintPolicy {
+                issuer_key: load_cert(&["multitasking-ocsp", &format!("{issuer}.cert.pem")])
+                    .public_key(),
+                constraint,
+                expected_time: moment("2021-08-18T11:22:33Z"),
+            }));
+        if include_ocsp {
+            builder = builder
+                .ocsp_response(read(&["multitasking-ocsp", "ocsp-resp-interm.der"]))
+                .ocsp_response(read(&["multitasking-ocsp", "ocsp-resp-alice.der"]));
+        }
+        builder.build().expect("context")
+    }
+
+    fn path(ctx: &ValidationContext) -> ValidationPath {
+        let leaf = load_cert(&["multitasking-ocsp", "alice.cert.pem"]);
+        let paths = build_paths(ctx, &leaf).expect("real certificate path");
+        assert_eq!(paths.len(), 1);
+        let path = paths.into_iter().next().expect("one path");
+        assert_eq!(path.len(), 3);
+        assert_eq!(path.leaf(), Some(&leaf));
+        assert_eq!(
+            path.trust_anchor().cert(),
+            &load_cert(&["multitasking-ocsp", "root.cert.pem"])
+        );
+        assert_eq!(
+            path.intermediates(),
+            &[load_cert(&["multitasking-ocsp", "interm.cert.pem"])]
+        );
+        path
+    }
+
+    fn assert_failure(
+        ctx: &ValidationContext,
+        path: &ValidationPath,
+        cutoff: Option<Moment>,
+        is_ee_cert: bool,
+        certificate_description: &str,
+        reason: &str,
+    ) {
+        let failure = validate_path_detailed(ctx, path, None)
+            .expect_err("policy must reject the certificate signature");
+        assert_eq!(failure.path.as_ref(), Some(path));
+        assert_eq!(failure.time_horizon, cutoff);
+        assert_eq!(failure.is_ee_cert, is_ee_cert);
+        assert!(!failure.is_side_validation);
+        assert_eq!(failure.error.class_name(), "DisallowedAlgorithmError");
+        assert!(failure.error.is_instance_of("PathValidationError"));
+        let ValidationError::DisallowedAlgorithm { msg, banned_since } = &failure.error else {
+            panic!("expected typed algorithm failure: {:?}", failure.error);
+        };
+        assert_eq!(*banned_since, cutoff);
+        assert!(msg.contains(certificate_description), "{msg}");
+        assert!(msg.contains(reason), "{msg}");
+
+        // The convenience API strips PathFailure; the core error must carry
+        // the cutoff itself so that callers cannot lose it at this boundary.
+        let error = validate_path(ctx, path, None).expect_err("same policy rejection");
+        assert_eq!(error, failure.error);
+        assert_eq!(failure.path.as_ref(), Some(path));
+    }
+
+    #[test]
+    fn certificate_algorithm_cutoff_survives_detailed_and_stripped_path_apis() {
+        let cutoff = moment("2021-08-19T12:20:43Z");
+        for (issuer, description, is_ee_cert) in [
+            ("root", "intermediate certificate 1", false),
+            ("interm", "the end-entity certificate", true),
+        ] {
+            // A successful control exercises the complete path, signature
+            // verification and required OCSP checks with these same fixtures.
+            let control = context(issuer, AlgorithmUsageConstraint::allowed(), true);
+            let original_path = path(&control);
+            validate_path(&control, &original_path, None).expect("valid control");
+
+            let reason = "The issuer signature policy has expired";
+            let denied = context(
+                issuer,
+                AlgorithmUsageConstraint {
+                    allowed: false,
+                    failure_reason: Some(reason.into()),
+                    not_allowed_after: Some(cutoff),
+                },
+                true,
+            );
+            assert_eq!(path(&denied), original_path);
+            assert_failure(
+                &denied,
+                &original_path,
+                Some(cutoff),
+                is_ee_cert,
+                description,
+                reason,
+            );
+        }
+    }
+
+    #[test]
+    fn permanent_certificate_denial_does_not_infer_cutoff_from_reason() {
+        let reason = "Permanently banned; reference date 2001-02-03T04:05:06Z";
+        for (issuer, description, is_ee_cert) in [
+            ("root", "intermediate certificate 1", false),
+            ("interm", "the end-entity certificate", true),
+        ] {
+            let control = context(issuer, AlgorithmUsageConstraint::allowed(), true);
+            let original_path = path(&control);
+            validate_path(&control, &original_path, None).expect("valid control");
+
+            let denied = context(issuer, AlgorithmUsageConstraint::denied(reason), true);
+            assert_failure(
+                &denied,
+                &original_path,
+                None,
+                is_ee_cert,
+                description,
+                reason,
+            );
+        }
+    }
+
+    #[test]
+    fn allowed_certificate_constraint_with_cutoff_still_requires_revocation() {
+        let constraint = AlgorithmUsageConstraint {
+            allowed: true,
+            failure_reason: Some("Informational date 2001-02-03T04:05:06Z".into()),
+            not_allowed_after: Some(moment("2001-02-03T04:05:06Z")),
+        };
+        let control = context("interm", constraint.clone(), true);
+        let original_path = path(&control);
+        validate_path(&control, &original_path, None).expect("allowed flag is authoritative");
+
+        let missing = context("interm", constraint, false);
+        let failure = validate_path_detailed(&missing, &original_path, None)
+            .expect_err("required OCSP cannot be replaced by algorithm metadata");
+        assert!(failure.error.is_insufficient_revinfo(), "{failure:?}");
+        assert_eq!(failure.path.as_ref(), Some(&original_path));
+    }
+
+    #[derive(Debug)]
+    struct TimedResponderPolicy {
+        issuer_key: SubjectPublicKeyInfoOwned,
+        cutoff: Moment,
+        calls: Arc<Mutex<Vec<Moment>>>,
+    }
+
+    impl AlgorithmUsagePolicy for TimedResponderPolicy {
+        fn digest_algorithm_allowed(
+            &self,
+            _: &ObjectIdentifier,
+            _: Option<Moment>,
+        ) -> AlgorithmUsageConstraint {
+            AlgorithmUsageConstraint::allowed()
+        }
+
+        fn signature_algorithm_allowed(
+            &self,
+            _: &AlgorithmIdentifierOwned,
+            at: Option<Moment>,
+            issuer_key: Option<&SubjectPublicKeyInfoOwned>,
+        ) -> AlgorithmUsageConstraint {
+            if issuer_key != Some(&self.issuer_key) {
+                return AlgorithmUsageConstraint::allowed();
+            }
+            let at = at.expect("certificate policy must receive its actual time");
+            self.calls.lock().unwrap().push(at);
+            if at <= self.cutoff {
+                AlgorithmUsageConstraint::allowed()
+            } else {
+                AlgorithmUsageConstraint {
+                    allowed: false,
+                    failure_reason: Some("Signature policy has expired".into()),
+                    not_allowed_after: Some(self.cutoff),
+                }
+            }
+        }
+    }
+
+    fn timed_responder_context(
+        issuer: &str,
+        cutoff: Moment,
+    ) -> (ValidationContext, Arc<Mutex<Vec<Moment>>>) {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let ctx = ValidationContext::builder()
+            .trust_root(load_cert(&["multitasking-ocsp", "root.cert.pem"]))
+            .other_cert(load_cert(&["multitasking-ocsp", "interm.cert.pem"]))
+            .moment(moment("2021-08-19T12:20:44Z"))
+            .best_signature_time(moment("2021-08-18T11:22:33Z"))
+            .revocation_mode("require")
+            .ocsp_response(read(&["multitasking-ocsp", "ocsp-resp-interm.der"]))
+            .ocsp_response(read(&["multitasking-ocsp", "ocsp-resp-alice.der"]))
+            .algorithm_policy(Arc::new(TimedResponderPolicy {
+                issuer_key: load_cert(&["multitasking-ocsp", &format!("{issuer}.cert.pem")])
+                    .public_key(),
+                cutoff,
+                calls: calls.clone(),
+            }))
+            .build()
+            .expect("context");
+        (ctx, calls)
+    }
+
+    #[test]
+    fn nocheck_ocsp_responder_retains_mandatory_algorithm_policy_at_validation_time() {
+        let best = moment("2021-08-18T11:22:33Z");
+        let validation = moment("2021-08-19T12:20:44Z");
+        let cutoff = moment("2021-08-19T12:20:43Z");
+        assert!(best < cutoff && cutoff < validation);
+        for (issuer, description) in [
+            ("root", "intermediate certificate 1"),
+            ("interm", "the end-entity certificate"),
+        ] {
+            // The main path is allowed at best time. OCSP_NOCHECK only
+            // exempts responder revocation, not its algorithm policy at
+            // validation time. The original subscriber path must reject.
+            let (denied, calls) = timed_responder_context(issuer, cutoff);
+            let original_path = path(&denied);
+            let failure = validate_path_detailed(&denied, &original_path, None)
+                .expect_err("required OCSP responder algorithm policy must reject");
+            assert_eq!(failure.error.class_name(), "InsufficientRevinfoError");
+            assert!(failure.error.is_insufficient_revinfo(), "{failure:?}");
+            assert_eq!(failure.path.as_ref(), Some(&original_path));
+            assert!(!failure.is_side_validation);
+            assert!(
+                failure.error.to_string().contains(description),
+                "{failure:?}"
+            );
+            assert!(
+                failure.error.to_string().contains(
+                    "Unable to verify OCSP response since response signing certificate could not be validated"
+                ),
+                "{failure:?}"
+            );
+            assert_eq!(*calls.lock().unwrap(), vec![best, validation]);
+
+            // These genuine time-dependent policies allow both signatures
+            // at equality and later cutoffs; real required OCSP still runs.
+            for permitted_cutoff in [validation, moment("2021-08-19T12:20:45Z")] {
+                let (control, calls) = timed_responder_context(issuer, permitted_cutoff);
+                let original_path = path(&control);
+                validate_path(&control, &original_path, None).expect("valid complete control");
+                assert_eq!(*calls.lock().unwrap(), vec![best, validation]);
+            }
+        }
+    }
+}

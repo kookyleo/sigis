@@ -404,7 +404,7 @@ fn enforce_algorithm_usage(
     cert: &Cert,
     policy: &dyn CmsAlgorithmUsagePolicy,
     time_indic: Option<Moment>,
-) -> Result<(), String> {
+) -> Result<(), ValidationError> {
     let sig_alg = &si.signature_algorithm;
     let allowed = policy.signature_algorithm_allowed(sig_alg, time_indic, Some(&cert.public_key()));
     if !allowed.allowed {
@@ -415,7 +415,10 @@ fn enforce_algorithm_usage(
         if let Some(r) = allowed.failure_reason {
             msg.push_str(&format!(" Reason: {r}."));
         }
-        return Err(msg);
+        return Err(ValidationError::DisallowedAlgorithm {
+            msg,
+            banned_since: allowed.not_allowed_after,
+        });
     }
     let allowed = policy.digest_algorithm_allowed(&si.digest_algorithm.oid, time_indic);
     if !allowed.allowed {
@@ -426,11 +429,17 @@ fn enforce_algorithm_usage(
         if let Some(r) = allowed.failure_reason {
             msg.push_str(&format!(" Reason: {r}."));
         }
-        return Err(msg);
+        return Err(ValidationError::DisallowedAlgorithm {
+            msg,
+            banned_since: allowed.not_allowed_after,
+        });
     }
     let combo = policy.digest_combination_allowed(sig_alg, &si.digest_algorithm, None);
     if !combo.allowed {
-        return Err(combo.failure_reason.unwrap_or_default());
+        return Err(ValidationError::DisallowedAlgorithm {
+            msg: combo.failure_reason.unwrap_or_default(),
+            banned_since: combo.not_allowed_after,
+        });
     }
     Ok(())
 }
@@ -468,10 +477,14 @@ pub fn handle_path_failure(f: PathFailure) -> CertUsageResult {
                 None,
                 *time_cutoff,
             ),
-            ValidationError::DisallowedAlgorithm { .. } => (
-                AdesSubIndic::Indeterminate(AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE),
+            ValidationError::DisallowedAlgorithm { banned_since, .. } => (
+                AdesSubIndic::Indeterminate(if banned_since.is_some() {
+                    AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE
+                } else {
+                    AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
+                }),
                 f.path,
-                None,
+                *banned_since,
             ),
             ValidationError::Revoked {
                 revocation_time,
@@ -645,14 +658,19 @@ pub fn cms_basic_validation(
     let mut ades_status = None;
     let mut trust_problem = None;
     let mut error_time_horizon = None;
-    if let Err(msg) = enforce_algorithm_usage(si, cert, policy.as_ref(), time_indic) {
-        ades_status = Some(AdesSubIndic::Indeterminate(
-            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE,
-        ));
-        trust_problem = Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm {
-            msg,
-            banned_since: None,
+    if let Err(error) = enforce_algorithm_usage(si, cert, policy.as_ref(), time_indic) {
+        // Preserve the typed cutoff; policy rejection does not establish POE.
+        let banned_since = match &error {
+            ValidationError::DisallowedAlgorithm { banned_since, .. } => *banned_since,
+            _ => None,
+        };
+        ades_status = Some(AdesSubIndic::Indeterminate(if banned_since.is_some() {
+            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE
+        } else {
+            AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
         }));
+        error_time_horizon = banned_since;
+        trust_problem = Some(TrustProblem::Path(error));
     }
     let (intact, valid) = validate_sig_integrity(si, cert, &sd.econtent_type, &raw_digest)?;
 
@@ -899,4 +917,399 @@ pub fn validate_timestamp_token_with(
     let sd = SignedData::from_content_info_der(token)?;
     let expected = expected_imprint.to_vec();
     validate_tst_signed_data(&sd, ctx, &move |_| Ok(expected.clone()), algorithm_policy)
+}
+
+// Supplemental typed-algorithm regressions, not additional upstream ports.
+// Tests were added before the consumer implementation.
+#[cfg(test)]
+mod algorithm_horizon_tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    use base64::Engine;
+    use sigis_pki_core::algorithms::{AlgorithmUsageConstraint, AlgorithmUsagePolicy};
+    use spki::SubjectPublicKeyInfoOwned;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum Stage {
+        Signature,
+        Digest,
+        Combination,
+    }
+
+    const STAGES: [Stage; 3] = [Stage::Signature, Stage::Digest, Stage::Combination];
+
+    #[derive(Debug)]
+    struct RecordingPolicy {
+        constraints: [AlgorithmUsageConstraint; 3],
+        calls: Mutex<Vec<(Stage, Option<Moment>)>>,
+    }
+
+    impl RecordingPolicy {
+        fn new(denied: &[Stage], cutoff: Option<Moment>) -> Self {
+            Self {
+                constraints: STAGES.map(|stage| AlgorithmUsageConstraint {
+                    allowed: !denied.contains(&stage),
+                    failure_reason: denied.contains(&stage).then(|| format!("{stage:?} denied")),
+                    not_allowed_after: cutoff,
+                }),
+                calls: Mutex::new(Vec::new()),
+            }
+        }
+
+        fn check(&self, stage: Stage, moment: Option<Moment>) -> AlgorithmUsageConstraint {
+            self.calls.lock().unwrap().push((stage, moment));
+            self.constraints[STAGES.iter().position(|s| *s == stage).unwrap()].clone()
+        }
+
+        fn assert_calls(&self, stages: &[Stage], time: Moment) {
+            let expected: Vec<_> = stages
+                .iter()
+                .map(|stage| (*stage, (*stage != Stage::Combination).then_some(time)))
+                .collect();
+            assert_eq!(*self.calls.lock().unwrap(), expected);
+        }
+    }
+
+    impl AlgorithmUsagePolicy for RecordingPolicy {
+        fn signature_algorithm_allowed(
+            &self,
+            _algorithm: &AlgorithmIdentifierOwned,
+            moment: Option<Moment>,
+            public_key: Option<&SubjectPublicKeyInfoOwned>,
+        ) -> AlgorithmUsageConstraint {
+            assert!(public_key.is_some());
+            self.check(Stage::Signature, moment)
+        }
+
+        fn digest_algorithm_allowed(
+            &self,
+            _algorithm: &ObjectIdentifier,
+            moment: Option<Moment>,
+        ) -> AlgorithmUsageConstraint {
+            self.check(Stage::Digest, moment)
+        }
+    }
+
+    impl CmsAlgorithmUsagePolicy for RecordingPolicy {
+        fn digest_combination_allowed(
+            &self,
+            _signature_algorithm: &AlgorithmIdentifierOwned,
+            _message_digest_algorithm: &AlgorithmIdentifierOwned,
+            moment: Option<Moment>,
+        ) -> AlgorithmUsageConstraint {
+            self.check(Stage::Combination, moment)
+        }
+    }
+
+    // Read actual CMS bytes and PDF byte-range digest from the committed
+    // upstream forbidden-signature fixture. No recorded verdict is consumed.
+    fn fixture() -> (SignedData, Vec<u8>, ValidationContext) {
+        let bytes = std::fs::read(sigis_testdata::path(&[
+            "lanes",
+            "a",
+            "harvest",
+            "test_cms.json",
+        ]))
+        .unwrap();
+        let harvest: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        let call = harvest["calls"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|call| {
+                call["test"] == "test_forbidden_signature_algorithm"
+                    && call["fn"] == "async_validate_pdf_signature"
+            })
+            .unwrap();
+        let input = &call["inputs"];
+        let decode = |value: &serde_json::Value| {
+            base64::engine::general_purpose::STANDARD
+                .decode(value.as_str().unwrap())
+                .unwrap()
+        };
+        let sd = SignedData::from_der(&decode(&input["signed_data"])).unwrap();
+        let hex = input["document_digest"].as_str().unwrap();
+        let digest = (0..hex.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).unwrap())
+            .collect();
+        let vc = &input["vc"];
+        let mut context = ValidationContext::builder()
+            .moment(Moment::parse_rfc3339(vc["moment"].as_str().unwrap()).unwrap())
+            .best_signature_time(
+                Moment::parse_rfc3339(vc["best_signature_time"].as_str().unwrap()).unwrap(),
+            )
+            .revocation_mode("none");
+        for root in vc["trust_roots"].as_array().unwrap() {
+            let encoded = &harvest["certs"][root.as_str().unwrap()];
+            context = context.trust_root(Cert::from_der(&decode(encoded)).unwrap());
+        }
+        (sd, digest, context.build().unwrap())
+    }
+
+    fn expected_message(stage: Stage, reason: &str) -> String {
+        match stage {
+            Stage::Signature => format!(
+                "The algorithm sha256_rsa is not allowed by the current usage policy. Reason: {reason}."
+            ),
+            Stage::Digest => format!(
+                "The algorithm sha256 is not allowed by the current usage policy. Reason: {reason}."
+            ),
+            Stage::Combination => reason.to_owned(),
+        }
+    }
+
+    #[test]
+    fn cms_constraint_constructor_defaults_do_not_infer_cutoffs() {
+        assert_eq!(AlgorithmUsageConstraint::allowed().not_allowed_after, None);
+        for reason in ["Denied", "Banned since 2019-12-31T23:59:59Z"] {
+            let denied = AlgorithmUsageConstraint::denied(reason);
+            assert!(!denied.allowed);
+            assert_eq!(denied.failure_reason.as_deref(), Some(reason));
+            assert_eq!(denied.not_allowed_after, None);
+        }
+    }
+
+    #[test]
+    fn cms_enforcement_preserves_typed_exact_cutoffs_and_short_circuits() {
+        let (sd, _, ctx) = fixture();
+        let si = extract_signer_info(&sd).unwrap();
+        let certs = extract_certs_for_validation(&sd).unwrap();
+        // Equality is intentional: do not round, subtract a second, or infer
+        // policy permission from the cutoff. The policy's allowed bit governs.
+        let cutoff = ctx.best_signature_time();
+        for (i, stage) in STAGES.iter().copied().enumerate() {
+            let policy = RecordingPolicy::new(&STAGES[i..], Some(cutoff));
+            let error =
+                enforce_algorithm_usage(si, &certs.signer_cert, &policy, Some(cutoff)).unwrap_err();
+            assert_eq!(
+                error,
+                ValidationError::DisallowedAlgorithm {
+                    msg: expected_message(stage, &format!("{stage:?} denied")),
+                    banned_since: Some(cutoff),
+                }
+            );
+            policy.assert_calls(&STAGES[..=i], cutoff);
+        }
+    }
+
+    #[test]
+    fn cms_status_preserves_timed_and_permanent_denials_at_every_stage() {
+        let (sd, digest, ctx) = fixture();
+        for stage in STAGES {
+            for cutoff in [Some(ctx.best_signature_time()), None] {
+                let policy = Arc::new(RecordingPolicy::new(&[stage], cutoff));
+                let status = cms_basic_validation(
+                    &sd,
+                    Some(&digest),
+                    Some(&ctx),
+                    &KeyUsageConstraints::default(),
+                    Some(policy.clone()),
+                    None,
+                    None,
+                )
+                .unwrap();
+                assert!(status.intact);
+                assert!(status.valid);
+                assert!(!status.trusted());
+                assert!(!status.bottom_line());
+                assert!(status.validation_path.is_none());
+                assert_eq!(status.error_time_horizon, cutoff);
+                assert_eq!(
+                    status.trust_problem_indic,
+                    Some(AdesSubIndic::Indeterminate(if cutoff.is_some() {
+                        AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE
+                    } else {
+                        AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
+                    }))
+                );
+                assert_eq!(
+                    status.trust_problem,
+                    Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm {
+                        msg: expected_message(stage, &format!("{stage:?} denied")),
+                        banned_since: cutoff,
+                    }))
+                );
+                let i = STAGES.iter().position(|s| *s == stage).unwrap();
+                policy.assert_calls(&STAGES[..=i], ctx.best_signature_time());
+            }
+        }
+    }
+
+    #[test]
+    fn cms_allowed_constraints_ignore_incidental_cutoffs() {
+        let (sd, digest, ctx) = fixture();
+        for cutoff in [None, Some(Moment::from_unix_secs(1))] {
+            let policy = Arc::new(RecordingPolicy::new(&[], cutoff));
+            let status = cms_basic_validation(
+                &sd,
+                Some(&digest),
+                Some(&ctx),
+                &KeyUsageConstraints::default(),
+                Some(policy.clone()),
+                None,
+                None,
+            )
+            .unwrap();
+            assert!(status.intact);
+            assert!(status.valid);
+            assert!(status.trusted());
+            assert!(status.bottom_line());
+            assert!(status.validation_path.is_some());
+            assert!(status.trust_problem.is_none());
+            assert!(status.trust_problem_indic.is_none());
+            assert!(status.error_time_horizon.is_none());
+            policy.assert_calls(&STAGES, ctx.best_signature_time());
+
+            let untrusted_ctx = ValidationContext::builder()
+                .moment(ctx.moment())
+                .best_signature_time(ctx.best_signature_time())
+                .revocation_mode("none")
+                .build()
+                .unwrap();
+            let untrusted_policy = Arc::new(RecordingPolicy::new(&[], cutoff));
+            let untrusted_status = cms_basic_validation(
+                &sd,
+                Some(&digest),
+                Some(&untrusted_ctx),
+                &KeyUsageConstraints::default(),
+                Some(untrusted_policy.clone()),
+                None,
+                None,
+            )
+            .unwrap();
+            assert!(untrusted_status.intact && untrusted_status.valid);
+            assert!(!untrusted_status.trusted());
+            assert!(!untrusted_status.bottom_line());
+            assert!(untrusted_status.validation_path.is_none());
+            assert!(untrusted_status.trust_problem.is_some());
+            assert!(untrusted_status.trust_problem_indic.is_some());
+            assert!(untrusted_status.error_time_horizon.is_none());
+            untrusted_policy.assert_calls(&STAGES, ctx.best_signature_time());
+        }
+    }
+
+    #[test]
+    fn cms_date_like_reasons_do_not_create_cutoffs() {
+        let (sd, digest, ctx) = fixture();
+        let reason = "Banned since 2019-12-31T23:59:59Z";
+        for (i, stage) in STAGES.iter().copied().enumerate() {
+            let mut policy = RecordingPolicy::new(&[stage], None);
+            policy.constraints[i].failure_reason = Some(reason.to_owned());
+            let status = cms_basic_validation(
+                &sd,
+                Some(&digest),
+                Some(&ctx),
+                &KeyUsageConstraints::default(),
+                Some(Arc::new(policy)),
+                None,
+                None,
+            )
+            .unwrap();
+            assert!(status.intact && status.valid);
+            assert!(!status.trusted());
+            assert_eq!(status.error_time_horizon, None);
+            assert_eq!(
+                status.trust_problem_indic,
+                Some(AdesSubIndic::Indeterminate(
+                    AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE,
+                ))
+            );
+            assert_eq!(
+                status.trust_problem,
+                Some(TrustProblem::Path(ValidationError::DisallowedAlgorithm {
+                    msg: expected_message(stage, reason),
+                    banned_since: None,
+                }))
+            );
+        }
+    }
+
+    #[test]
+    fn cms_path_mapping_preserves_original_path_typed_error_and_cutoff() {
+        let (sd, digest, ctx) = fixture();
+        let baseline = cms_basic_validation(
+            &sd,
+            Some(&digest),
+            Some(&ctx),
+            &KeyUsageConstraints::default(),
+            Some(Arc::new(RecordingPolicy::new(&[], None))),
+            None,
+            None,
+        )
+        .unwrap();
+        assert!(baseline.trusted());
+        let path = baseline.validation_path.unwrap();
+        for cutoff in [Some(ctx.best_signature_time()), None] {
+            let error = ValidationError::DisallowedAlgorithm {
+                msg: "Certificate signature denied".to_owned(),
+                banned_since: cutoff,
+            };
+            let mapped = handle_path_failure(PathFailure {
+                error: error.clone(),
+                path: Some(path.clone()),
+                is_ee_cert: true,
+                is_side_validation: false,
+                // Typed banned_since is authoritative even if legacy contextual
+                // metadata is missing or contains an unrelated horizon.
+                time_horizon: Some(Moment::from_unix_secs(1)),
+                invalid_certificate: false,
+            });
+            assert!(mapped.path.is_none());
+            assert_eq!(mapped.error_path, Some(path.clone()));
+            assert_eq!(mapped.trust_problem, Some(TrustProblem::Path(error)));
+            assert_eq!(mapped.error_time_horizon, cutoff);
+            assert_eq!(
+                mapped.error_subindic,
+                Some(AdesSubIndic::Indeterminate(if cutoff.is_some() {
+                    AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE
+                } else {
+                    AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE
+                }))
+            );
+            assert!(mapped.revo_details.is_none());
+        }
+    }
+
+    #[test]
+    fn cms_cutoff_never_overrides_failed_integrity() {
+        let (sd, mut digest, ctx) = fixture();
+        digest[0] ^= 1;
+        let cutoff = ctx.best_signature_time();
+        for denied in [true, false] {
+            let denied_stages: &[Stage] = if denied { &[Stage::Digest] } else { &[] };
+            let status = cms_basic_validation(
+                &sd,
+                Some(&digest),
+                Some(&ctx),
+                &KeyUsageConstraints::default(),
+                Some(Arc::new(RecordingPolicy::new(denied_stages, Some(cutoff)))),
+                None,
+                None,
+            )
+            .unwrap();
+            assert!(!status.intact);
+            assert!(status.valid);
+            assert!(!status.trusted());
+            assert!(!status.bottom_line());
+            if denied {
+                assert!(status.validation_path.is_none());
+                assert_eq!(status.error_time_horizon, Some(cutoff));
+                assert_eq!(
+                    status.trust_problem_indic,
+                    Some(AdesSubIndic::Indeterminate(
+                        AdesIndeterminate::CRYPTO_CONSTRAINTS_FAILURE_NO_POE,
+                    ))
+                );
+            } else {
+                // An otherwise valid certificate path cannot repair the
+                // mismatching content digest, even with incidental metadata.
+                assert!(status.validation_path.is_some());
+                assert!(status.trust_problem.is_none());
+                assert!(status.trust_problem_indic.is_none());
+                assert!(status.error_time_horizon.is_none());
+            }
+        }
+    }
 }

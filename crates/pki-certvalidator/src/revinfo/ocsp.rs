@@ -148,7 +148,17 @@ fn check_authorization(
 fn responder_chain_ok(ctx: &ValidationContext, responder: &Cert, subject: &Subject<'_>) -> bool {
     if responder.has_extension(&oids::OCSP_NOCHECK) {
         // Signature and validity were checked against the issuer above.
-        return true;
+        // NOCHECK exempts revocation, not the signature algorithm policy.
+        // Pinned certvalidator's simplified responder context uses the
+        // validation moment, independently of the subscriber's best time.
+        return ctx
+            .algorithm_policy
+            .signature_algorithm_allowed(
+                responder.decoded().signature_algorithm(),
+                Some(ctx.timing.validation_time),
+                Some(&subject.issuer.public_key()),
+            )
+            .allowed;
     }
     // "Recursion detected in OCSP responder authorisation check".
     if subject.stack.contains(responder) {
