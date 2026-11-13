@@ -21,17 +21,45 @@ impl Server {
         let line = rx.recv_timeout(Duration::from_secs(30)).unwrap().unwrap();
         assert!(!line.is_empty(), "{}", fs::read_to_string(directory.join("server.stderr")).unwrap());
         let ready: Value = serde_json::from_str(&line).unwrap();
-        assert_eq!(ready["clock"], "current UTC"); assert_eq!(ready["architecture"], "rsa");
-        assert_eq!(ready["pyhanko"], "0.38.1"); assert_eq!(ready["certvalidator"], "0.33.0");
-        Self { child, ready }
+        let server=Self {child,ready};
+        assert_eq!(server.ready["clock"], "current UTC"); assert_eq!(server.ready["architecture"], "rsa");
+        assert_eq!(server.ready["pyhanko"], "0.38.1"); assert_eq!(server.ready["certvalidator"], "0.33.0");
+        server
     }
 }
 impl Drop for Server { fn drop(&mut self) { if matches!(self.child.try_wait(), Ok(None)) { let _ = self.child.kill(); } let _ = self.child.wait(); } }
 fn file_record(path: &Path) -> Value { let path=path.canonicalize().unwrap(); let bytes=fs::read(&path).unwrap(); let sha=openssl::sha::sha256(&bytes).iter().map(|b|format!("{b:02x}")).collect::<String>(); json!({"path":path,"length":bytes.len(),"sha256":sha}) }
 fn events(directory: &Path) -> Vec<Value> { fs::read_to_string(directory.join("imprint-events.jsonl")).unwrap().lines().map(|line| serde_json::from_str(line).unwrap()).collect() }
-fn copy_tree(source: &Path, target: &Path) { fs::create_dir_all(target).unwrap(); for entry in fs::read_dir(source).unwrap() { let entry = entry.unwrap(); let path = entry.path(); let dst = target.join(entry.file_name()); if path.is_dir() { copy_tree(&path, &dst); } else { fs::copy(path, dst).unwrap(); } } }
+fn copy_tree(source: &Path, target: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(target)?;
+    for entry in fs::read_dir(source)? {
+        let entry=entry?; let path=entry.path(); let dst=target.join(entry.file_name());
+        if path.is_dir() { copy_tree(&path,&dst)?; } else { fs::copy(path,dst)?; }
+    }
+    Ok(())
+}
+// Construct before server/oracle/CMS checks; Drop preserves evidence on every
+// assertion/error unwind, including helper preconditions. No other process used.
+struct Evidence { directory: tempfile::TempDir, retained: PathBuf }
+impl Evidence {
+    fn new(mode:&str) -> Self {
+        let directory=tempfile::tempdir().unwrap();
+        let base=std::env::var_os("SIGIS_TIMESTAMP_IMPRINT_RECORD_DIR").map(PathBuf::from)
+            .unwrap_or_else(||std::env::temp_dir().join("sigis-timestamp-imprint-guard"));
+        let retained=base.join(format!("{}-{mode}-{}",std::process::id(),directory.path().file_name().unwrap().to_string_lossy()));
+        eprintln!("TIMESTAMP_IMPRINT_EVIDENCE {}",json!({"retained":retained,"mode":mode}));
+        Self {directory,retained}
+    }
+    fn path(&self) -> &Path {self.directory.path()}
+    fn capture(&self) {copy_tree(self.path(),&self.retained).expect("Retain actual timestamp imprint evidence");}
+}
+impl Drop for Evidence {
+    fn drop(&mut self) {
+        if let Err(error)=copy_tree(self.path(),&self.retained) {eprintln!("Timestamp imprint evidence capture failed: {error}");}
+    }
+}
 fn check(mode: &str) {
-    let directory = tempfile::tempdir().unwrap(); let server_dir = directory.path().join("server");
+    let directory = Evidence::new(mode); let server_dir = directory.path().join("server");
     let server = Server::start(mode, &server_dir);
     let root = PathBuf::from(server.ready["exported_root"]["path"].as_str().unwrap());
     let configuration = json!({"validation-contexts":{"test":{"trust":root,"trust-replace":true}}});
@@ -60,9 +88,14 @@ fn check(mode: &str) {
         .arg("--preimage-hex").arg(&preimage_hex).arg("--expect-intact").arg(if wrong { "false" } else { "true" })
         .arg("--record").arg(&oracle_path).output().unwrap();
     fs::write(directory.path().join("oracle.stdout"), &oracle.stdout).unwrap(); fs::write(directory.path().join("oracle.stderr"), &oracle.stderr).unwrap();
+    directory.capture();
     assert!(oracle.status.success(), "{}{}", String::from_utf8_lossy(&oracle.stdout), String::from_utf8_lossy(&oracle.stderr));
     let verdict: Value = serde_json::from_slice(&fs::read(&oracle_path).unwrap()).unwrap();
-    assert_eq!(verdict["intact"], !wrong); assert_eq!(verdict["valid"], true); assert_eq!(verdict["trusted"], true);
+    assert_eq!(verdict["raw_preimage"]["intact"], !wrong);
+    assert_eq!(verdict["raw_preimage"]["bottom_line"], !wrong);
+    for field in ["intact","valid","trusted","bottom_line"] {assert_eq!(verdict["signature_component"][field],true,"{verdict}");}
+    assert_eq!(verdict["signature_component"]["algorithm_binding_checked"],false);
+    if !wrong {assert_eq!(verdict["raw_preimage"]["valid"],true);assert_eq!(verdict["raw_preimage"]["trusted"],true);}
     let before_count = events(&server_dir).len(); assert_eq!(before_count, 1);
     let input = directory.path().join("input.pdf"); let output = directory.path().join("out.pdf");
     fs::copy(sigis_testdata::pyhanko(&["pdf", "minimal.pdf"]), &input).unwrap(); let original_input = fs::read(&input).unwrap(); fs::write(&output, SENTINEL).unwrap();
@@ -73,9 +106,7 @@ fn check(mode: &str) {
     fs::write(directory.path().join("native-receipt.json"), serde_json::to_vec_pretty(&receipt).unwrap()).unwrap();
     // Preserve the actual RED outputs before the assertion can unwind a TempDir.
     // Set the path with Cargo --config env.SIGIS_TIMESTAMP_IMPRINT_RECORD_DIR.*.
-    let record_base = std::env::var_os("SIGIS_TIMESTAMP_IMPRINT_RECORD_DIR").map(PathBuf::from)
-        .unwrap_or_else(|| std::env::temp_dir().join("sigis-timestamp-imprint-guard"));
-    let retained = record_base.join(format!("{}-{mode}", std::process::id())); copy_tree(directory.path(), &retained);
+    directory.capture(); let retained=directory.retained.clone();
     eprintln!("TIMESTAMP_IMPRINT_GUARD {}", json!({"retained":retained,"receipt":receipt}));
     assert_eq!(config.raw_config, config_before); assert_eq!(fs::read(&input).unwrap(), original_input);
     if wrong {
