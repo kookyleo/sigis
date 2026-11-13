@@ -142,7 +142,7 @@ fn intermediate_boundaries_are_tolerated_without_hiding_the_failing_position() {
         (
             true,
             "GoodCACert.crt",
-            "Validpre2000UTCnotBeforeDateTest3EE.crt",
+            "ValidGeneralizedTimenotBeforeDateTest4EE.crt",
         ),
         (
             false,
