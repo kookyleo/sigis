@@ -543,19 +543,85 @@ fn key_cfg(kind: &str, extra: &str) -> CliConfig {
     ))
 }
 fn sanity(s: sigis_pades_sign::SimpleSigner) {
-    use sigis_pki_core::{algorithms::DigestAlgorithm, sign::KeySigner};
-    let msg = b"Hello world!";
-    let sig = s.sign_raw(msg, DigestAlgorithm::Sha256).unwrap();
-    let cert = openssl::x509::X509::from_pem(
-        std::fs::read(ca("interm/signer1.cert.pem"))
-            .unwrap()
-            .as_slice(),
+    use sigis_pades_sign::cms::{AttrProfile, CmsSigner, CmsSignerOptions};
+    use sigis_pki_core::{algorithms::DigestAlgorithm, asn1::oids, sign::KeySigner};
+
+    // Match upstream async_sign's precomputed SHA-256 digest boundary.
+    let digest = DigestAlgorithm::Sha256.digest(b"Hello world!");
+    let cms = CmsSigner {
+        signer: &s,
+        options: &CmsSignerOptions::default(),
+    }
+    .sign(
+        &digest,
+        DigestAlgorithm::Sha256,
+        &sigis_pades_sign::CmsSignedAttributes::default(),
+        AttrProfile::GenericCms,
+        None,
+        false,
+        None,
     )
     .unwrap();
-    let key = cert.public_key().unwrap();
-    let mut v = openssl::sign::Verifier::new(openssl::hash::MessageDigest::sha256(), &key).unwrap();
-    v.update(msg).unwrap();
-    assert!(v.verify(&sig).unwrap());
+    let signed_data = sigis_cms::SignedData::from_der(&cms).unwrap();
+    let signer_info = sigis_cms::signed_data::extract_signer_info(&signed_data).unwrap();
+    assert_eq!(signer_info.digest(), Some(DigestAlgorithm::Sha256));
+    assert!(signed_data.econtent_type.is(&oids::CT_DATA));
+    let (intact, valid) = sigis_cms::validate::validate_sig_integrity(
+        signer_info,
+        s.signing_cert(),
+        &oids::CT_DATA.into(),
+        &digest,
+    )
+    .unwrap();
+    assert!(intact && valid);
+    let mut wrong_digest = digest.clone();
+    wrong_digest[0] ^= 1;
+    let (wrong_intact, _) = sigis_cms::validate::validate_sig_integrity(
+        signer_info,
+        s.signing_cert(),
+        &oids::CT_DATA.into(),
+        &wrong_digest,
+    )
+    .unwrap();
+    assert!(!wrong_intact);
+
+    // Optional immutable public outputs for an independent pinned CMS oracle.
+    if let Some(directory) = std::env::var_os("SIGIS_CONFIG_CMS_RECORD_DIR") {
+        use std::io::Write;
+        let directory = std::path::PathBuf::from(directory);
+        std::fs::create_dir_all(&directory).unwrap();
+        let name = std::thread::current().name().unwrap().to_owned();
+        let hex = |bytes: &[u8]| {
+            DigestAlgorithm::Sha256
+                .digest(bytes)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        };
+        for (suffix, bytes) in [
+            ("cms.der", cms.as_slice()),
+            ("cert.der", s.signing_cert().der()),
+        ] {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(directory.join(format!("{name}.{suffix}")))
+                .unwrap()
+                .write_all(bytes)
+                .unwrap();
+        }
+        eprintln!(
+            "CONFIG_CMS_OUTPUT {}",
+            serde_json::json!({
+                "case": name, "cms_sha256": hex(&cms),
+                "cert_sha256": hex(s.signing_cert().der()),
+                "native_intact": intact, "native_valid": valid,
+                "wrong_digest_intact": wrong_intact,
+                "host": std::fs::read_to_string("/etc/hostname").unwrap().trim(),
+                "slot": std::env::var("RUST_SLOTS_HELD").ok(),
+            })
+        );
+    }
 }
 #[test]
 fn test_read_pkcs12_config() {
