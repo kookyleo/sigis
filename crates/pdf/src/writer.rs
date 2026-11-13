@@ -7,11 +7,13 @@
 //!
 //! Objects are values: to modify an object, fetch it with
 //! [`PdfHandler::get_object`], change it, and store it back with
-//! [`PdfWriter::update_object`] (pyHanko's `mark_update` /
-//! `update_container`).
+//! [`PdfWriter::update_object`]. For provenance-aware updates, capture a
+//! [`ContainedObject`], edit its snapshot, and commit the complete container
+//! through [`PdfWriter::update_container`].
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 
 use lopdf::{Dictionary, Object, ObjectId, Stream};
 
@@ -114,6 +116,188 @@ pub fn write_object_encrypted(
 pub fn is_signature_dictionary(d: &Dictionary) -> bool {
     d.has(b"ByteRange")
         || matches!(d.get(b"Type"), Ok(Object::Name(n)) if n == b"Sig" || n == b"DocTimeStamp")
+}
+
+/// A trailer container backed by the actual previous reader and a snapshot of
+/// its pending trailer (`TrailerReference`). It has no numbered object ID.
+#[derive(Clone, Debug)]
+pub struct TrailerReference {
+    source: Arc<PdfFile>,
+    trailer: Arc<crate::xref::TrailerDictionary>,
+}
+
+impl TrailerReference {
+    /// The reader supplying this trailer, retaining its authentication and
+    /// decoding state. This does not create or reopen a reader.
+    pub fn source(&self) -> &PdfFile {
+        &self.source
+    }
+
+    /// The captured trailer, including pending entries at capture time.
+    pub fn get_object(&self) -> &crate::xref::TrailerDictionary {
+        &self.trailer
+    }
+}
+
+/// The enclosing container of a captured object, rather than its referent.
+#[derive(Clone, Copy, Debug)]
+pub enum ContainerReference<'a> {
+    /// A raw value embedded in the trailer.
+    Trailer(&'a TrailerReference),
+    /// A value embedded in a numbered object from the specified reader.
+    Indirect {
+        /// The outer object's ID, not a raw reference token's target.
+        object_id: ObjectId,
+        /// The actual reader used to obtain the complete container.
+        source: &'a PdfFile,
+    },
+}
+
+#[derive(Clone, Debug)]
+enum ContainerOrigin {
+    New,
+    Trailer(TrailerReference),
+    Indirect {
+        object_id: ObjectId,
+        source: Arc<PdfFile>,
+    },
+}
+
+#[derive(Clone, Debug)]
+enum ObjectPath {
+    Key(Vec<u8>),
+    Index(usize),
+}
+
+/// An object view retaining the complete container required for an incremental
+/// update. Child views preserve the outer container, including for raw reference
+/// tokens. Numbered snapshots are committed by [`PdfWriter::update_container`].
+///
+/// This is a value API: views share immutable backing until a modification
+/// creates an independent copy. Editing one view does not mutate another view,
+/// the reader or writer. Raw trailer views are read-only; edit the actual trailer
+/// using [`PdfWriter::set_custom_trailer_entry`] instead.
+#[derive(Clone, Debug)]
+pub struct ContainedObject {
+    root: Arc<Object>,
+    path: Vec<ObjectPath>,
+    origin: ContainerOrigin,
+}
+
+impl ContainedObject {
+    /// A new value without provenance. Like a newly added PDF object, this does
+    /// not require an additional container update.
+    pub fn new(value: Object) -> Self {
+        Self {
+            root: Arc::new(value),
+            path: Vec::new(),
+            origin: ContainerOrigin::New,
+        }
+    }
+
+    /// Capture a complete numbered object through the actual reader. Its
+    /// strictness, authentication, generation checks and errors are preserved.
+    /// This is a raw lookup: reference tokens are not implicitly followed.
+    pub fn from_reader(source: &PdfFile, object_id: ObjectId) -> PdfResult<Self> {
+        let value = source.get_object(object_id)?;
+        Ok(Self {
+            root: Arc::new(value),
+            path: Vec::new(),
+            origin: ContainerOrigin::Indirect {
+                object_id,
+                source: Arc::new(source.clone()),
+            },
+        })
+    }
+
+    /// The captured value at the selected key/index path.
+    pub fn value(&self) -> PdfResult<&Object> {
+        let mut value = self.root.as_ref();
+        for part in &self.path {
+            value = match (part, value) {
+                (ObjectPath::Key(key), Object::Dictionary(dict)) => dict
+                    .get(key)
+                    .map_err(|error| PdfError::value(error.to_string()))?,
+                (ObjectPath::Key(key), Object::Stream(stream)) => stream
+                    .dict
+                    .get(key)
+                    .map_err(|error| PdfError::value(error.to_string()))?,
+                (ObjectPath::Index(index), Object::Array(array)) => array
+                    .get(*index)
+                    .ok_or_else(|| PdfError::value("Container array index out of range"))?,
+                _ => return Err(PdfError::value("Invalid container path")),
+            };
+        }
+        Ok(value)
+    }
+
+    /// The container of this value (`container_ref`), if any.
+    pub fn container_ref(&self) -> Option<ContainerReference<'_>> {
+        match &self.origin {
+            ContainerOrigin::New => None,
+            ContainerOrigin::Trailer(trailer) => Some(ContainerReference::Trailer(trailer)),
+            ContainerOrigin::Indirect { object_id, source } => Some(ContainerReference::Indirect {
+                object_id: *object_id,
+                source,
+            }),
+        }
+    }
+
+    /// A raw dictionary/stream-dictionary child with the same outer container.
+    pub fn raw_get(&self, key: &[u8]) -> PdfResult<Self> {
+        let dict = match self.value()? {
+            Object::Dictionary(dict) => dict,
+            Object::Stream(stream) => &stream.dict,
+            _ => return Err(PdfError::value("Expected a dictionary or stream")),
+        };
+        dict.get(key)
+            .map_err(|error| PdfError::value(error.to_string()))?;
+        let mut child = self.clone();
+        child.path.push(ObjectPath::Key(key.to_vec()));
+        Ok(child)
+    }
+
+    /// A raw array child with the same outer container.
+    pub fn raw_item(&self, index: usize) -> PdfResult<Self> {
+        let Object::Array(array) = self.value()? else {
+            return Err(PdfError::value("Expected an array"));
+        };
+        if index >= array.len() {
+            return Err(PdfError::value("Container array index out of range"));
+        }
+        let mut child = self.clone();
+        child.path.push(ObjectPath::Index(index));
+        Ok(child)
+    }
+
+    /// Replace the selected value in an independent complete snapshot. Commit
+    /// numbered changes through [`PdfWriter::update_container`]; no live reader
+    /// aliases are mutated. Trailer snapshots cannot be edited this way.
+    pub fn replace_value(&mut self, replacement: Object) -> PdfResult<()> {
+        if matches!(self.origin, ContainerOrigin::Trailer(_)) {
+            return Err(PdfError::value(
+                "Trailer snapshots are read-only; use set_custom_trailer_entry",
+            ));
+        }
+        let mut value = Arc::make_mut(&mut self.root);
+        for part in &self.path {
+            value = match (part, value) {
+                (ObjectPath::Key(key), Object::Dictionary(dict)) => dict
+                    .get_mut(key)
+                    .map_err(|error| PdfError::value(error.to_string()))?,
+                (ObjectPath::Key(key), Object::Stream(stream)) => stream
+                    .dict
+                    .get_mut(key)
+                    .map_err(|error| PdfError::value(error.to_string()))?,
+                (ObjectPath::Index(index), Object::Array(array)) => array
+                    .get_mut(*index)
+                    .ok_or_else(|| PdfError::value("Container array index out of range"))?,
+                _ => return Err(PdfError::value("Invalid container path")),
+            };
+        }
+        *value = replacement;
+        Ok(())
+    }
 }
 
 fn write_dictionary_encrypted(
@@ -413,6 +597,23 @@ impl PdfWriter {
     pub fn mark_update(&mut self, id: ObjectId) -> PdfResult<()> {
         let obj = self.get_object(id)?;
         self.update_object(id, obj);
+        Ok(())
+    }
+
+    /// Queue the complete captured container (`update_container`). New values
+    /// and trailer tokens require no numbered update; a fresh writer also has
+    /// nothing to mark. Numbered snapshots retain their actual source, including
+    /// foreign-reader values, and are written under the container's ID, never
+    /// under a reference token's target. No ownership rejection is added here.
+    pub fn update_container(&mut self, object: &ContainedObject) -> PdfResult<()> {
+        if let Some(error) = &self.init_error {
+            return Err(error.clone());
+        }
+        if matches!(self.base, Base::Incremental { .. }) {
+            if let ContainerOrigin::Indirect { object_id, .. } = object.origin {
+                self.update_object(object_id, object.root.as_ref().clone());
+            }
+        }
         Ok(())
     }
 
@@ -1649,6 +1850,29 @@ impl IncrementalWriter {
             // constructed only with an incremental base
             Base::Fresh { .. } => unreachable_base(),
         }
+    }
+
+    /// Read a raw trailer value with its actual trailer container. In
+    /// particular, the `/Root` reference token is contained in the trailer,
+    /// not in the catalog it refers to. The captured trailer is read-only.
+    pub fn raw_trailer_object(&self, key: &[u8]) -> PdfResult<ContainedObject> {
+        if let Some(error) = &self.0.init_error {
+            return Err(error.clone());
+        }
+        let Base::Incremental { prev, trailer } = &self.0.base else {
+            return Err(PdfError::write("Writer has no incremental trailer"));
+        };
+        let value = trailer.raw_get(key, None).ok_or_else(|| {
+            PdfError::value(format!("KeyError: /{}", String::from_utf8_lossy(key)))
+        })?;
+        Ok(ContainedObject {
+            root: Arc::new(value),
+            path: Vec::new(),
+            origin: ContainerOrigin::Trailer(TrailerReference {
+                source: Arc::new(prev.clone()),
+                trailer: Arc::new(trailer.clone()),
+            }),
+        })
     }
 
     /// Add or replace an object in the update.
