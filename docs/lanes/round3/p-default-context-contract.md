@@ -23,7 +23,7 @@ let _ = sigis_pades::validate_pdf_signature(file, signature, ctx, None);
 An explicit None is excluded at the actual context argument. The ordinary-fence
 baseline measured E0308 (mismatched types: Option versus the required reference):
 
-```rust
+```compile_fail,E0308
 use sigis_pdf::{EmbeddedSignature, PdfFile};
 use sigis_pki_certvalidator::ValidationContext;
 # fn absent_context(file: &PdfFile, signature: &EmbeddedSignature) {
@@ -40,7 +40,7 @@ Omitting the context while supplying the intended optional diff-policy argument
 is an invalid existing four-argument API call. The ordinary-fence baseline
 measured E0061 (four arguments required, three supplied):
 
-```rust
+```compile_fail,E0061
 use sigis_pdf::{EmbeddedSignature, PdfFile};
 # fn omitted_context(file: &PdfFile, signature: &EmbeddedSignature) {
 let _ = sigis_pades::validate_pdf_signature(file, signature, None);
