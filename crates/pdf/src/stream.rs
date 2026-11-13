@@ -3,6 +3,41 @@
 
 //! Stream filter chains (`StreamObject._filters`, `read_data`,
 //! `encoded_data`, `apply_filter`).
+//!
+//! # Materialized data and missing-data states
+//!
+//! The pinned `test_stream_pathological_encode_decode` creates one Python
+//! `StreamObject` with both buffers absent and requires these two refusals:
+//!
+//! ```python
+//! stm = generic.StreamObject(dict_data={})
+//! with pytest.raises(misc.PdfStreamError, match="No data"):
+//!     stm.data
+//! with pytest.raises(misc.PdfStreamError, match="No data"):
+//!     stm.encoded_data
+//! ```
+//!
+//! Rust excludes that explicit absent-buffer state at construction: both the
+//! encoded [`Stream`] and decoded [`DecodedStream`] require `Vec<u8>`. This is
+//! a language-phase adaptation, not parity with either runtime accessor error.
+//! The encoded-data constructor cannot accept `None`:
+//!
+//! ```compile_fail,E0308
+//! use sigis_pdf::lopdf::{Dictionary, Stream};
+//! Stream::new(Dictionary::new(), None::<Vec<u8>>);
+//! ```
+//!
+//! The decoded-data constructor has the same materialized-data requirement:
+//!
+//! ```compile_fail,E0308
+//! use sigis_pdf::{lopdf::Dictionary, stream::DecodedStream};
+//! DecodedStream::new(Dictionary::new(), None::<Vec<u8>>);
+//! ```
+//!
+//! An empty vector is valid data, not a missing buffer. The alternate
+//! [`Stream::with_position`] constructor also materializes an empty vector;
+//! its position is not a missing-data sentinel. These type requirements do not
+//! change document decoding, authentication, cache identity or decode budgets.
 
 use lopdf::{Dictionary, Object, Stream};
 
