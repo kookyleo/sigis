@@ -178,8 +178,7 @@ fn factory_rejects_conflicting_effective_aliases_before_material_io() {
             let raw = config.raw_config.clone();
             let error =
                 validation::context_from_config(Some(&config), selected_name(named), &runtime())
-                    .err()
-                    .expect("Conflicting effective requirements must reject");
+                    .expect_err("Conflicting effective requirements must reject");
             assert_schema_error(&error, CONFLICT);
             assert_eq!(config.raw_config, raw);
         }
@@ -198,8 +197,7 @@ fn factory_rejects_underscore_only_effective_aliases_like_parse() {
             let raw = config.raw_config.clone();
             let error =
                 validation::context_from_config(Some(&config), selected_name(named), &runtime())
-                    .err()
-                    .expect("Effective input must retain the accepted parser's alias rules");
+                    .expect_err("Effective input must retain the accepted parser's alias rules");
             assert_schema_error(&error, UNSUPPORTED);
             assert_eq!(config.raw_config, raw);
         }
