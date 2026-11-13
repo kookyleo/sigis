@@ -45,7 +45,7 @@ members = [
 ]
 # The vendored crate is a patched dependency, not a workspace member: its own
 # tests need fixtures that are not shipped.
-exclude = ["vendor/underskrift", "vendor/const-oid"]
+exclude = ["vendor/underskrift", "vendor/const-oid", "vendor/cryptoki"]
 
 [workspace.package]
 version = "0.0.1"
@@ -144,3 +144,7 @@ underskrift = { path = "vendor/underskrift" }
 # 8.19.4), e.g. pyHanko's test policy OID 2.999.31337.0. Upstream issue and
 # patch: vendor/const-oid.UPSTREAM.md. Remove once upstream releases a fix.
 const-oid = { path = "vendor/const-oid" }
+
+# cryptoki 0.12.1: standard DSA mechanism identifiers/conversion only.
+# See vendor/cryptoki.UPSTREAM.md; no new cryptographic implementation.
+cryptoki = { path = "vendor/cryptoki" }
