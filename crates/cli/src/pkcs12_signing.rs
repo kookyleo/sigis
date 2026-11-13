@@ -8,6 +8,7 @@ use crate::{
 use sigis_pades_sign::{
     pdf::writer::PdfReopenState, PdfSignatureMetadata, PdfSigner, SignOptions, SimpleSigner,
 };
+use sigis_pdf::{lopdf, rw_common::PdfHandlerExt};
 use sigis_pki_core::{key_usage::cert_key_usages, sign::KeySigner};
 use std::{collections::BTreeSet, io::BufRead, sync::Arc};
 
@@ -29,7 +30,7 @@ pub fn require_timestamp(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn option_scope(opts: &Options) -> Result<(), String> {
+fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
     let allowed_values = [
         "field",
         "p12-setup",
@@ -58,7 +59,7 @@ fn option_scope(opts: &Options) -> Result<(), String> {
     }
     if opts
         .get("field")
-        .is_some_and(|field| field.is_empty() || field.contains('/'))
+        .is_some_and(|field| field.is_empty() || (!visible && field.contains('/')))
     {
         return Err(extended("A visible or empty field specification"));
     }
@@ -111,7 +112,10 @@ fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
 
 /// The full owner delegates this supported subset and preserves its other paths.
 pub(crate) fn accepts_options(opts: &Options, config: Option<&CliConfig>) -> bool {
-    if option_scope(opts).is_err() {
+    accepts_options_for_field(opts, config, false)
+}
+fn accepts_options_for_field(opts: &Options, config: Option<&CliConfig>, visible: bool) -> bool {
+    if option_scope(opts, visible).is_err() {
         return false;
     }
     // Invalid known-scope configuration must reach this adapter's refusal,
@@ -255,6 +259,21 @@ pub fn run_with_runtime(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
+    run_with_field_policy(args, config, runtime, false)
+}
+pub(crate) fn run_with_visible_field(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+) -> Result<String, String> {
+    run_with_field_policy(args, config, runtime, true)
+}
+fn run_with_field_policy(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+    visible: bool,
+) -> Result<String, String> {
     require_timestamp(args)?;
     let at = crate::argument_positions(args)
         .find(|&i| {
@@ -270,11 +289,32 @@ pub fn run_with_runtime(
     let mut combined = args[..at].to_vec();
     combined.extend_from_slice(&args[at + 1..]);
     let opts = options(&combined)?;
-    if !accepts_options(&opts, config) {
+    let accepted = if visible {
+        accepts_options_for_field(&opts, config, true)
+    } else {
+        accepts_options(&opts, config)
+    };
+    if !accepted {
         return Err(extended("Signing options or selected setup"));
     }
-    option_scope(&opts)?;
+    option_scope(&opts, visible)?;
     config_scope(config)?;
+    let field_spec = if visible {
+        let spec = crate::fields::parse_field_spec(
+            opts.get("field")
+                .ok_or("A visible field specification is required.")?,
+        )?;
+        if spec.sig_field_name.is_empty()
+            || spec
+                .bbox
+                .is_none_or(|(x1, y1, x2, y2)| x2 <= x1 || y2 <= y1)
+        {
+            return Err("A named nonempty visible signature field is required.".into());
+        }
+        Some(spec)
+    } else {
+        None
+    };
     if opts.paths.len() < 2 || opts.paths.len() > 3 {
         return Err("Input and output file arguments are required.".into());
     }
@@ -307,6 +347,64 @@ pub fn run_with_runtime(
     if reader.encrypted() {
         return Err(extended("Encrypted PDF input"));
     }
+    if let Some(spec) = &field_spec {
+        let fields = sigis_pdf::signatures::enumerate_sig_fields(
+            &reader,
+            Some(false),
+            Some(&spec.sig_field_name),
+        )
+        .map_err(|error| error.to_string())?;
+        for field in fields {
+            let object = reader
+                .get_object_at(field.field_ref, None)
+                .map_err(|error| error.to_string())?;
+            let field_dictionary = object.as_dict().map_err(|error| error.to_string())?;
+            let annotation = if let Ok(kids) = field_dictionary.get(b"Kids") {
+                let kids = reader.resolve(kids).map_err(|error| error.to_string())?;
+                let children = kids.as_array().map_err(|error| error.to_string())?;
+                if children.len() != 1 || !matches!(children[0], lopdf::Object::Reference(_)) {
+                    return Err("A signature field must have exactly one child annotation, or be combined with its annotation.".into());
+                }
+                reader
+                    .resolve(&children[0])
+                    .map_err(|error| error.to_string())?
+            } else {
+                object
+            };
+            let rect = annotation
+                .as_dict()
+                .ok()
+                .and_then(|dict| dict.get(b"Rect").ok())
+                .map(|rect| reader.resolve(rect))
+                .transpose()
+                .map_err(|error| error.to_string())?;
+            let numeric = rect
+                .as_ref()
+                .and_then(|rect| rect.as_array().ok())
+                .filter(|values| values.len() == 4)
+                .and_then(|values| {
+                    values
+                        .iter()
+                        .map(|value| {
+                            let value = reader.resolve(value).ok()?;
+                            match value {
+                                lopdf::Object::Integer(value) => Some(value as f64),
+                                lopdf::Object::Real(value) => Some(value as f64),
+                                _ => None,
+                            }
+                        })
+                        .collect::<Option<Vec<_>>>()
+                });
+            let visible = numeric
+                .is_some_and(|r| r.iter().all(|v| v.is_finite()) && r[0] != r[2] && r[1] != r[3]);
+            if !visible {
+                return Err(format!(
+                    "The field '{}' in the PDF is not a visible one.",
+                    spec.sig_field_name
+                ));
+            }
+        }
+    }
     let settings = SignOptions {
         // Pinned CLI addsig selects an existing field when --field is absent.
         existing_fields_only: opts.get("field").is_none(),
@@ -314,7 +412,12 @@ pub fn run_with_runtime(
         reopen_state: Some(PdfReopenState::from_reader(reader)),
         ..Default::default()
     };
-    let mut metadata = PdfSignatureMetadata::pyhanko_defaults(opts.get("field").unwrap_or(""));
+    let field_name = field_spec
+        .as_ref()
+        .map(|spec| spec.sig_field_name.as_str())
+        .or_else(|| opts.get("field"))
+        .unwrap_or("");
+    let mut metadata = PdfSignatureMetadata::pyhanko_defaults(field_name);
     metadata.signer_key_usage = policy
         .key_usage
         .clone()
@@ -331,6 +434,15 @@ pub fn run_with_runtime(
         metadata.validation_context = Some(Arc::new(context));
     }
     let mut pdf_signer = PdfSigner::new(metadata, Arc::new(signer));
+    if let Some(spec) = field_spec {
+        let mut complete = crate::usage::key_usage_constraints(&policy);
+        if complete.key_usage.is_none() {
+            complete.key_usage = Some(BTreeSet::from(["non_repudiation".into()]));
+        }
+        pdf_signer = pdf_signer
+            .with_signer_key_usage_policy(complete)
+            .with_field_spec(spec);
+    }
     pdf_signer.signing_time = Some(runtime.now);
     pdf_signer.stamp_style = Some(CliConfig::parse("")?.stamp_style(None)?);
     pdf_signer.timestamper = opts.get("timestamp-url").map(|url| {

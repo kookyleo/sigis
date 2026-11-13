@@ -3,6 +3,7 @@ pub mod config;
 pub mod crypt;
 pub mod detached_signing;
 pub mod fields;
+pub mod identity_signing;
 pub mod pemder_signing;
 pub mod pkcs12_signing;
 pub mod plugins;
@@ -233,41 +234,15 @@ fn run_signing(
     let Some(i) = provider else {
         return Err("A signing provider command is required; signing engines are not available in this increment.".into());
     };
-    let mut rewritten = args[..i].to_vec();
     if args[i] == "identity" {
-        let name = args.get(i + 1).ok_or("An identity name is required.")?;
-        let identity = registry
-            .resolve_identity(config, name)
-            .map_err(|e| e.message)?;
-        rewritten.push(identity.plugin.handler.command().to_owned());
-        for (key, value) in identity.parameters {
-            let key = key.replace('_', "-");
-            match value {
-                serde_json::Value::Bool(true) => rewritten.push(format!("--{key}")),
-                serde_json::Value::Bool(false) | serde_json::Value::Null => {}
-                serde_json::Value::String(v) => rewritten.extend([format!("--{key}"), v]),
-                serde_json::Value::Array(values) => {
-                    for value in values {
-                        rewritten.extend([
-                            format!("--{key}"),
-                            value
-                                .as_str()
-                                .ok_or("Identity list parameters require strings.")?
-                                .to_owned(),
-                        ]);
-                    }
-                }
-                _ => return Err(format!("Unsupported identity parameter '{key}'.")),
-            }
-        }
-        rewritten.extend_from_slice(&args[i + 2..]);
-    } else {
-        let plugin = registry.resolve(&args[i]).map_err(|e| e.message)?;
-        rewritten.push(plugin.handler.command().to_owned());
-        rewritten.extend_from_slice(&args[i + 1..]);
+        return identity_signing::run_with_runtime(args, config, registry, runtime);
     }
-    // Keep identity and extension-provider execution unavailable. Only a
-    // directly selected built-in may enter the reviewed ordinary adapter.
+    let plugin = registry.resolve(&args[i]).map_err(|e| e.message)?;
+    let mut rewritten = args[..i].to_vec();
+    rewritten.push(plugin.handler.command().to_owned());
+    rewritten.extend_from_slice(&args[i + 1..]);
+    // Identity execution returned above; extension providers remain unavailable.
+    // Only a directly selected built-in may enter these reviewed adapters.
     if args[i] == "pemder"
         && rewritten[i] == "pemder"
         && argument_positions(&rewritten)
@@ -277,6 +252,17 @@ fn run_signing(
     }
     pkcs12_signing::require_timestamp(&rewritten)?;
     if args[i] == "pkcs12" && rewritten[i] == "pkcs12" {
+        if argument_positions(&rewritten).any(|position| {
+            rewritten[position]
+                .strip_prefix("--field=")
+                .is_some_and(|value| value.contains('/'))
+                || (rewritten[position] == "--field"
+                    && rewritten
+                        .get(position + 1)
+                        .is_some_and(|value| value.contains('/')))
+        }) {
+            return pkcs12_signing::run_with_visible_field(&rewritten, config, runtime);
+        }
         return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);
     }
     if args[i] == "pemder" && rewritten[i] == "pemder" {

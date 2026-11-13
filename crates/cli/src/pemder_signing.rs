@@ -56,7 +56,7 @@ fn option_scope(opts: &Options) -> Result<(), String> {
     }
     Ok(())
 }
-fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
+fn config_scope(config: Option<&CliConfig>, identity: bool) -> Result<(), String> {
     let Some(config) = config else { return Ok(()) };
     let allowed = [
         "pemder-setups",
@@ -78,7 +78,7 @@ fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
                 "Conflicting aliases in PEM/DER configuration: {normalized}."
             ));
         }
-        if !allowed.contains(&normalized.as_str()) {
+        if !allowed.contains(&normalized.as_str()) && !(identity && normalized == "identities") {
             return Err(extended(&format!("Configuration setting '{key}'")));
         }
     }
@@ -88,7 +88,7 @@ fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
     {
         return Err(extended("Configured signature appearance"));
     }
-    if !config.identities.is_empty()
+    if (!identity && !config.identities.is_empty())
         || !config.plugin_endpoints.is_empty()
         || config.cache_dir.is_some()
     {
@@ -239,7 +239,7 @@ pub fn run_with_runtime(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
-    run_with_input_policy(args, config, runtime, false)
+    run_with_input_policy(args, config, runtime, false, false)
 }
 
 /// Top-level PEM execution with authentication of the continuing PDF reader.
@@ -249,7 +249,15 @@ pub(crate) fn run_with_authenticated_input(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
-    run_with_input_policy(args, config, runtime, true)
+    run_with_input_policy(args, config, runtime, true, false)
+}
+
+pub(crate) fn run_with_identity(
+    args: &[String],
+    identity: &crate::identity_signing::PemIdentity<'_>,
+    runtime: &ValidationRuntime,
+) -> Result<String, String> {
+    run_with_input_policy(args, Some(identity.config()), runtime, false, true)
 }
 
 fn run_with_input_policy(
@@ -257,6 +265,7 @@ fn run_with_input_policy(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
     authenticated_input: bool,
+    identity: bool,
 ) -> Result<String, String> {
     let at = crate::argument_positions(args)
         .find(|&i| {
@@ -273,7 +282,7 @@ fn run_with_input_policy(
     combined.extend_from_slice(&args[at + 1..]);
     let opts = options(&combined)?;
     option_scope(&opts)?;
-    config_scope(config)?;
+    config_scope(config, identity)?;
     if opts.paths.len() != 2 {
         return Err("Input and output file arguments are required.".into());
     }
@@ -319,6 +328,13 @@ fn run_with_input_policy(
         metadata.validation_context = Some(Arc::new(context));
     }
     let mut pdf_signer = PdfSigner::new(metadata, Arc::new(signer));
+    if identity {
+        let mut complete = crate::usage::key_usage_constraints(&policy);
+        if complete.key_usage.is_none() {
+            complete.key_usage = Some(BTreeSet::from(["non_repudiation".into()]));
+        }
+        pdf_signer = pdf_signer.with_signer_key_usage_policy(complete);
+    }
     pdf_signer.signing_time = Some(runtime.now);
     pdf_signer.stamp_style = Some(CliConfig::parse("")?.stamp_style(None)?);
     crate::software_signing::sign_pdf_and_write(&pdf_signer, &input, &settings, &opts.paths[1])?;
