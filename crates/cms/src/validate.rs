@@ -608,6 +608,11 @@ pub struct CmsValidationOptions<'a> {
     pub ac_validation_context: Option<&'a ValidationContext>,
     /// Key usage requirements for the signer.
     pub key_usage_settings: Option<KeyUsageConstraints>,
+    /// Exact native predicate for the main signer, without facade defaults.
+    /// `None` preserves ordinary key usage normalization. An intentional empty
+    /// predicate is preserved. Mutually exclusive with `key_usage_settings`;
+    /// timestamp purpose and all other validation requirements are unchanged.
+    pub exact_key_usage_settings: Option<KeyUsageConstraints>,
     /// CMS algorithm usage policy; defaults to the context's policy, lifted.
     pub algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
     /// Validate this path instead of building one.
@@ -946,6 +951,17 @@ pub fn validate_detached_cms_with(
     signer_ctx: Option<&ValidationContext>,
     options: &CmsValidationOptions<'_>,
 ) -> CmsResult<StandardCmsSignatureStatus> {
+    if options.key_usage_settings.is_some() && options.exact_key_usage_settings.is_some() {
+        return Err(CmsError::Malformed(
+            "key_usage_settings and exact_key_usage_settings are mutually exclusive".into(),
+        ));
+    }
+    let ku = match &options.exact_key_usage_settings {
+        Some(exact) => exact.clone(),
+        None => {
+            StatusKind::Signature.default_usage_constraints(options.key_usage_settings.as_ref())
+        }
+    };
     // Context identity determines whether the reference API shares a registry.
     // Equal-valued but separately supplied contexts must stay independent.
     let shared_roles = match (signer_ctx, options.ts_validation_context) {
@@ -959,7 +975,6 @@ pub fn validate_detached_cms_with(
     };
     let si = extract_signer_info(sd)?;
     let digest_bytes = content.digest(&si.digest_algorithm)?;
-    let ku = StatusKind::Signature.default_usage_constraints(options.key_usage_settings.as_ref());
     let validate_signer = |ctx: &mut ValidationContext| {
         cms_basic_validation_in_operation(
             sd,
