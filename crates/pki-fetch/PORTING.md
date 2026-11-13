@@ -1,5 +1,21 @@
 # Lead acceptance update
 
+Accepted source21323f9c: **56 total /46 passed /10 skipped /0 pending**.
+Exactly two backend-context lifecycle originals complete: supplied backend
+close0/private owner-None and adopted backend close1/exact private Arc identity.
+Actual explicit close remains distinct from Drop; repeated typed errors,
+clones/security fields, explicit-fetchers precedence, factory-after-validation,
+managed versus caller transport and cache/budget boundaries are tested. Fresh
+unchanged pinned originals and current source-specific gate precede acceptance.
+No implicit HTTP default, weaker context or universal lifecycle/timeout/profile
+claim is introduced. The prior44 functions retain their counts. The ten other
+lifecycle originals remain skipped; tables and exclusions below describe their
+original historical snapshots. See docs/lanes/round3/l-detached-backend-context.md.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted source7232e9c: **56 total /44 passed /12 skipped /0 pending**.
 One deprecated supplied-session forwarding original is accepted, with standard
 Rust compile-time deprecation as an explicit phase adaptation. Actual constructor

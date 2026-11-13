@@ -1,5 +1,22 @@
 # Lead acceptance update
 
+Accepted assigned counts: **252 total /185 passed /0 skipped /67 pending**.
+Source21323f9c accepts exactly two detached PEM/DER originals/13parameters.
+Timestamp2 x RSA/ECDSA/Ed25519 x PEM/DER2 produces12 actual CMS outputs;
+RSA field incompatibility rejects with exact diagnostic and unchanged sentinel.
+Current coherent CLI91088a34/native/source/ELF and fresh same-output reference
+proof precede the complete workspace gate. Native and independent reference
+TSA requests remain separate; equal-evidence empty-root controls deny. Prior183
+functions remain once. Supported detached configuration/effective fields and
+mandatory usage/context/runtime refusals remain authoritative; no attached
+engine fallback or broad command coverage claim. See DETACHED_SIGNING_PORTING.md
+and docs/lanes/round3/l-detached-backend-context.md. Complete-port and universal
+fail-closed claims remain unsupported.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted assigned counts: **252 total /183 passed /0 skipped /69 pending**.
 Source73d9c14c accepts exactly three encrypted PEM originals/six cases:
 four RSA/ECDSA/Ed25519/Ed448 encrypted successes, RSA public-key-handler refusal

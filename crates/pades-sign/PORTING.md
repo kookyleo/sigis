@@ -1,5 +1,21 @@
 # Current lead acceptance
 
+Accepted counts: **297 total /296 passed /1 skipped /0 pending**.
+Source21323f9c accepts one required-validation-context original with an explicit
+language-phase adaptation: real API positive compiles; None/omitted calls first
+fail ordinary fences E0308/E0061 and then exact diagnostic doctests pass. The
+real signed PDF validates with explicit roots and denies explicit empty roots,
+with fresh same-PDF pinned decisions. Three doctests plus one native function
+are one original, not four. No Rust runtime warning, OS-trust default, new API
+or ban on signing without context is claimed. SafeNet PIN remains one skip.
+The accepted legacy missing-KU guard repair and prior295 functions remain;
+provider/raw-facade/Core/empty-PIN boundaries preclude universal parity. See
+docs/lanes/round3/l-detached-backend-context.md and the exact contract.
+
+## Historical preceding lead acceptance
+
+# Current lead acceptance
+
 Accepted counts remain **297 total /295 passed /2 skipped /0 pending**.
 Source73d9c14c repairs the measured legacy missing-KU guard with zero new IDs:
 attached context/nonempty metadata KU now refuses absent extension; six original

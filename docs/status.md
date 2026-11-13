@@ -17,11 +17,12 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped183
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped185
 includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
 ordinary validation39, basic software2, PKCS12/LTA11, PEM/DER10, timestamp2,
-the remaining five runtime originals and three encrypted PEM originals.
-All11 lead live functions are accepted;69 pending functions remain in C.
+the remaining five runtime originals, three encrypted PEM originals and two
+detached PEM/DER originals.
+All11 lead live functions are accepted;67 pending functions remain in C.
 Other signing, qualification, provider and reader-state commands
 and the complete port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
@@ -30,7 +31,22 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **73d9c14c**. All six source-specific workspace
+Current accepted source: **21323f9c**. All six source-specific workspace
+gates passed. Actual Rust results: **2,061 discovered /2,058 passed
+/3 ignored /0 failed**,206 reports. Immutable inventory:
+**1,431 total /1,347 passed /17 skipped /67 pending**. Exactly five originals
+complete: C2 detached CLI/13parameters, S2 backend ownership originals and P1
+required-context language-phase adaptation. C185/67,P296/1,S808/16; library
+1151/17,V47,L11 retain exact ownership. CMS exact-main selection and all
+supplemental controls add zero IDs. Current native source/product/runtime and
+fresh same-output references precede acceptance. External exhaustive CMS options
+literals require the new field; ordinary defaults and TSA purpose remain.
+This is not a complete-port or universal-fail-closed claim. See
+[current acceptance](lanes/round3/l-detached-backend-context.md).
+
+### Historical accepted checkpoints
+
+Historical accepted source: **73d9c14c**. All six source-specific workspace
 gates passed. Actual native results: **2,014 discovered /2,011 passed
 /3 ignored /0 failed**,200 reports. Immutable inventory:
 **1,431 total /1,342 passed /20 skipped /69 pending**. Exactly three encrypted
@@ -40,8 +56,6 @@ adds zero IDs and closes the measured original signing mismatch(6/6 cases
 agree versus priorROOT5/6). Remaining raw optional-EKU/Core/provider boundaries
 preclude a complete-port or universal fail-closed claim. See
 [current acceptance](lanes/round3/l-ku-encrypted.md).
-
-### Historical accepted checkpoints
 
 Historical accepted source: **05f46f46**. All six source-specific workspace
 gates passed. Actual native results: **2,010 discovered /2,007 passed
@@ -248,17 +262,17 @@ integration and the lead gate; their claimed passes are not accepted early.
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
-| `sigis-pki-fetch` | 56 | 44 | 12 | 0 |
+| `sigis-pki-fetch` | 56 | 46 | 10 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 402 | 4 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
-| `sigis-pades-sign` | 297 | 295 | 2 | 0 |
+| `sigis-pades-sign` | 297 | 296 | 1 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,148** | **20** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 183 | 0 | 69 |
+| **Library lanes A–E** | **1,168** | **1,151** | **17** | **0** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 185 | 0 | 67 |
 | Lead: live integration (round-3 L) | 11 | 11 | 0 | 0 |
-| **Overall** | **1,431** | **1,342** | **20** | **69** |
+| **Overall** | **1,431** | **1,347** | **17** | **67** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -283,15 +297,15 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| C / CLI and configuration | 69 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is183 unique functions |
+| C / CLI and configuration | 67 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is185 unique functions |
 | Lead / live integration | 0 | All11 assigned live functions accepted; integration, parameter/skip/provenance audits and final acceptance remain L work |
-| **Total** | **69** | All pending immutable functions are C-owned |
+| **Total** | **67** | All pending immutable functions are C-owned |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not complete the20 remaining library skips, provider parameter gaps or unassigned
+This does not complete the17 remaining library skips, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -299,15 +313,15 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The20 skipped functions comprise certvalidator two, fetchers12,
-CMS zero, PDF four and signing two. Skip reasons remain in the
+The17 skipped functions comprise certvalidator two, fetchers10,
+CMS zero, PDF four and signing one. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
   exact policy-graph functions pass using actual native graph operations;
   eight former partial adapters were replaced. All six name-predicate functions
-  exercise their54 exact pinned cases. Fetchers retain12 ownership/
-  bootstrap gaps; the deprecated TSA forwarding original is accepted with an
+  exercise their54 exact pinned cases. Fetchers retain10 lifecycle/
+  bootstrap gaps after the two complete backend ownership originals; the deprecated TSA forwarding original is accepted with an
   explicit compiler-diagnostic phase adaptation. Four lifecycle functions and
   nonsensical auth rejection were accepted previously.
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
@@ -323,14 +337,15 @@ owning `PORTING.md` and lane files:
 - Both former PDF-diff skips now execute their complete native validator
   assertions and exact parameters, credited once to S/PDF-diff. No empty
   extraction wrapper or extra V function is counted.
-- Signing retains two skipped functions: the deprecated Python warning
-  entry point and SafeNet signing-PIN hardware. Eight
+- Signing retains one skipped function: SafeNet signing-PIN hardware. The
+  omitted-context warning original is accepted with explicit Rust type-phase
+  exclusion and real signed-PDF/empty-root controls, not a runtime warning. Eight
   certificate-less flows, duplicate SET values and detached-econtent rejection
   now have complete accepted assertions. The dedicated raw DSA original is accepted;
   other DSA provider matrix parameters still require proof.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the69 pending
+provider behaviour and remaining validator compatibility; the67 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -347,7 +362,17 @@ other global/provider exclusions remain unchanged.
 
 ## Differential results
 
-Current accepted source73d9c14c adds three encrypted PEM originals/six cases,
+Current accepted source21323f9c adds C2 detached originals/13cases, S2
+backend explicit-close/private identity originals and P1 required-context
+language-phase adaptation. Actual fresh same-native-output CMS/PDF results,
+independent native and reference TSA acquisition, empty-root controls and
+current-source fullgate renewals remain distinct from replayed fixtures.
+The CMS exact-main seam adds zero IDs: exact Core/AdES and ordinary normalized
+facade surfaces, two constructor refusals and two stricter forbidden-only
+cases remain separate. No earlier focused source/result is relabelled213.
+See l-detached-backend-context.md and current immutable evidence.
+
+Historical accepted source73d9c14c adds three encrypted PEM originals/six cases,
 with actual encrypted fixtures, authenticated continuing reader, four native
 output PDFs and two original error/sentinel refusals. Six actual fresh pinned
 CLI peers and four same-native-output reference validations are distinct from
@@ -447,7 +472,16 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-Current source73d repairs the measured legacy missing-KU signing decision:
+Current source21323 preserves the previously measured legacy-KU repair.
+The exact-main CMS seam is opt-in and MAIN-only; it adds neither implicit trust
+roots nor timestamp-purpose relaxation. Exact and normalizing facade surfaces
+and the two native-stricter forbidden-only cases remain explicitly distinct.
+Backend close authority is not Arc memory lifetime; required-context typing is
+not a runtime OS-trust warning or a no-context signing prohibition. Remaining
+raw optional-EKU/Core/provider/empty-PIN and other feature boundaries preclude
+universal fail-closed or complete-port claims.
+
+Accepted source73d repaired the measured legacy missing-KU signing decision:
 with an attached context and nonempty metadata KU requirement, a genuinely
 absent extension now refuses, matching original Python. Six cases agree(6/6)
 and the preceding ROOT207d RED remains preserved. Empty Vec, noVC early return,
@@ -594,10 +628,10 @@ acceptance remain L-owned. No service switch follows from function totals.
 
 | Lane | Exclusive file scope | Remaining work | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review2 skips (deprecated warning, SafeNet PIN), audit repaired legacy-KU beyond the measured profiles, generic provider parameters and evidence/state compatibility | Keep mandatory rejection and scoped native/oracle proofs; source-only empty-PIN direction remains unknown |
+| P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review1 skip (SafeNet PIN); retain explicit required-context type-phase boundary, audit repaired legacy-KU beyond the measured profiles, generic provider parameters and evidence/state compatibility | Keep mandatory rejection and scoped native/oracle proofs; source-only empty-PIN direction remains unknown |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 assigned functions accepted; audit archival/POE, independent trust domains, historical fetching and registry persistence beyond accepted profiles | Retain explicit NO_POE/API-bottom-line and legacy timestamp-first boundaries; no trust/algorithm/revocation waiver |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review18 skips (PDF4/CV2/fetch12), parser/model/resource and trust-boundary coverage | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish69pending originals after scoped183: other signing/LTV/qualified, provider and reader-state flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review16 skips (PDF4/CV2/fetch10), parser/model/resource and trust-boundary coverage | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish67pending originals after scoped185: other signing/LTV/qualified, provider and reader-state flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
 | L — Lead / integration | Root/tools/shared APIs/lock/central status | Assigned live functions11/11; pending0. Continue integration, parameter/skip/provenance audits, complete gates and final service-replacement decision | Keep coherent source/ELF/runtime acceptance and immutable ownership; no service restart or complete-port inference |
 
 P/V/S/C can proceed within exclusive paths while L coordinates interfaces and
