@@ -1,0 +1,567 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "Fresh fixed-time signed public fixtures; no HTTP/native execution or upstream credit",
+  "generated_utc": "2026-11-13T17:18:22.920617+00:00",
+  "versions": {
+    "pyHanko": "0.38.1",
+    "certvalidator": "0.33.0"
+  },
+  "runtime": {
+    "python_executable": "/tmp/pyhanko-oracle/venv/bin/python",
+    "python_version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]"
+  },
+  "validation_time": "2020-11-01T00:00:00Z",
+  "preimage_hex": "485454502054534120726571756573742062696e64696e670070726f6265ff",
+  "fixed_nonce_hex": "0102030405060708",
+  "fixed_tst_serial_hex": "0102030405060709",
+  "trust_root": {
+    "path": "root.der",
+    "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+    "length": 976
+  },
+  "tsa_cert": {
+    "path": "tsa.der",
+    "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+    "length": 997
+  },
+  "revocation_mode": "require",
+  "allow_fetching": false,
+  "crls": [
+    {
+      "path": "root-crl.der",
+      "sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701",
+      "length": 542
+    }
+  ],
+  "crl_this_update": "2020-09-12T00:00:00+00:00",
+  "crl_next_update": "2020-12-11T00:00:00+00:00",
+  "signer_input_format": "TSTInfo DER, exact CMS encapsulated/signed content",
+  "modified_request_format": "TimeStampReq DER copied from request and mutated before DummyTimeStamper signs",
+  "generator": {
+    "path": "generate.py",
+    "sha256": "c33774c8171407ccdeb59cccc2faf7d6f0ef490174ef3612db5311a836dee6a2"
+  },
+  "validation_driver": {
+    "path": "validate.py",
+    "sha256": "03f1a4761fc9b866c17f341008b6fdd10fd4862d9032ab73fdd600a5143f8ccf"
+  },
+  "sources_sha256": {
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/timestamps/api.py": "4e9e7df485fce36fce6153e6ad7bc252ac691c2284fc2943efa8557e2e82ed55",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/timestamps/common_utils.py": "6d07ff63f492e33e0dc75d54b55783d2e4e867586623dcebd91dda26fce1a9ea",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/timestamps/dummy_client.py": "fe15a88cccb05b3bacf9f62b0df301068706ff6191b4f9259d44254c19c0f3e2",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py": "6d57fc2788534d6c1c00ea3031dcf7c641a396ad65074bc708508788d403b47c",
+    "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/signing_commons.py": "3b24730daa1454bb78138f2c9330fb71ee255fbfdfee4eb258f6b416e126b7e3"
+  },
+  "cases": {
+    "matching-sha256-null": {
+      "request": {
+        "path": "matching-sha256-null/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "matching-sha256-null/modified-request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "matching-sha256-null/signer-input.der",
+        "sha256": "3bd67ca9412bdbbd348d0bad9b417f55ef743181d408524c98d57c3a18751825",
+        "length": 208
+      },
+      "response": {
+        "path": "matching-sha256-null/response.der",
+        "sha256": "303617d18eff0e8647b7603782ea44152c8c5d0e88a28dfe187840990f429659",
+        "length": 3885
+      },
+      "token": {
+        "path": "matching-sha256-null/token.der",
+        "sha256": "7c8d89eaf4f7bbb53cca8d301c58d03ccb79ff6f962efd4e858b3381cb8fba20",
+        "length": 3876
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300d06096086480165030402010500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {}
+    },
+    "matching-sha256-absent": {
+      "request": {
+        "path": "matching-sha256-absent/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "matching-sha256-absent/modified-request.der",
+        "sha256": "d012edd7733dd16cf020e2fb97425b77ef61dd200287313142b89cfd6d932e2d",
+        "length": 67
+      },
+      "signer_input": {
+        "path": "matching-sha256-absent/signer-input.der",
+        "sha256": "768838f621d51d479c96a4b96ca8935c1bc582626a19a21eb0d67f06b4c7ab16",
+        "length": 206
+      },
+      "response": {
+        "path": "matching-sha256-absent/response.der",
+        "sha256": "3f9d7e7774e4c2d6fd6746c952445a25d813ec875c4c5c7d5de212419cf144fc",
+        "length": 3883
+      },
+      "token": {
+        "path": "matching-sha256-absent/token.der",
+        "sha256": "02f6b0420b2d13c3e2d129e5859c539b5aa590643133669ddf0ba3f8a03305ee",
+        "length": 3874
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300b0609608648016503040201",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "absent",
+      "mutation_before_signing": {
+        "parameters": "absent"
+      }
+    },
+    "matching-sha384": {
+      "request": {
+        "path": "matching-sha384/request.der",
+        "sha256": "4eab4be80cf871a0ea64d8d73de19e4bd2351ac35c2ef90051254320bb6933f4",
+        "length": 85
+      },
+      "modified_request": {
+        "path": "matching-sha384/modified-request.der",
+        "sha256": "4eab4be80cf871a0ea64d8d73de19e4bd2351ac35c2ef90051254320bb6933f4",
+        "length": 85
+      },
+      "signer_input": {
+        "path": "matching-sha384/signer-input.der",
+        "sha256": "1e6dabba00c335f8580fbaaf41d63b98bc2d49341c1390db4e377306a00e21dd",
+        "length": 224
+      },
+      "response": {
+        "path": "matching-sha384/response.der",
+        "sha256": "00b73b697ead6e6c4b6f5278e428deb87b30c0aebf29027172165e2a2915ad6c",
+        "length": 3901
+      },
+      "token": {
+        "path": "matching-sha384/token.der",
+        "sha256": "23e48ee47f08e0db33318ce3c91d5f1dfe15071ebc2f6526544976a34745af2d",
+        "length": 3892
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "request_algorithm_der_hex": "300d06096086480165030402020500",
+      "request_digest_hex": "4447d0f0b2fc3dcad494cd2ff0e490aa62013ec6894fe6573076c4b32713d9b3326cdc13fd519831fcff599f50493f21",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "4447d0f0b2fc3dcad494cd2ff0e490aa62013ec6894fe6573076c4b32713d9b3326cdc13fd519831fcff599f50493f21",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "request_algorithm": "sha384"
+      }
+    },
+    "independent-cms-sha512": {
+      "request": {
+        "path": "independent-cms-sha512/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "independent-cms-sha512/modified-request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "independent-cms-sha512/signer-input.der",
+        "sha256": "3bd67ca9412bdbbd348d0bad9b417f55ef743181d408524c98d57c3a18751825",
+        "length": 208
+      },
+      "response": {
+        "path": "independent-cms-sha512/response.der",
+        "sha256": "fe6f39486e6954a279138cbeb6a11c8ce62c267377a1d8b53339c5cebf753195",
+        "length": 3918
+      },
+      "token": {
+        "path": "independent-cms-sha512/token.der",
+        "sha256": "1b739c8d403f430d01b505a02a7c55e97ce770e5711fac3e357c0abbd3ffed51",
+        "length": 3909
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300d06096086480165030402010500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha512",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.3",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "cms_digest": "sha512"
+      }
+    },
+    "algorithm-only": {
+      "request": {
+        "path": "algorithm-only/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "algorithm-only/modified-request.der",
+        "sha256": "602aba51383c16c49763091f15d5f35151a767accbdc5d28d0aa8b4b9c8ad8cb",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "algorithm-only/signer-input.der",
+        "sha256": "f3e60a4dfb94feed44ae2cf70b5e1a2d833b69963a0c9270cb4a28e4c31c6cb6",
+        "length": 208
+      },
+      "response": {
+        "path": "algorithm-only/response.der",
+        "sha256": "52572dbfa9f991dd462f0e69c5be1c0435de461a59af0b0a25c1da8c964ed4f4",
+        "length": 3885
+      },
+      "token": {
+        "path": "algorithm-only/token.der",
+        "sha256": "ac95087248dde47212ade96c4411299e90b490be1b7ff87d800c662bc181b5d7",
+        "length": 3876
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "change_algorithm": true
+      }
+    },
+    "digest-only": {
+      "request": {
+        "path": "digest-only/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "digest-only/modified-request.der",
+        "sha256": "87f50fec3897a37f695805e2268224724f2a6dbd02ec86471d5ddbe11e9cfa2c",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "digest-only/signer-input.der",
+        "sha256": "746032b9d5b4f410387ec8733331a9cf0dbbb0a62e67787616d0c92921c5181f",
+        "length": 208
+      },
+      "response": {
+        "path": "digest-only/response.der",
+        "sha256": "e2b0e7c1e1187c83f03ae5a8fb64bb71a31989a42a42bbdd93fd84ab9a8d2ffd",
+        "length": 3885
+      },
+      "token": {
+        "path": "digest-only/token.der",
+        "sha256": "ca83cdca895b982618bcb87baff48082979d5b2e5f5b0b03c2b38a9fe2a7d222",
+        "length": 3876
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300d06096086480165030402010500",
+      "token_digest_hex": "5d8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "change_digest": true
+      }
+    },
+    "both": {
+      "request": {
+        "path": "both/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "both/modified-request.der",
+        "sha256": "f061bfdebd830b8042b121b24e681f8ac13f2390ca780ad944041f95c2eb6675",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "both/signer-input.der",
+        "sha256": "cac1942ba5694c752aa463ebeed508f8d217eca707f86badd61cc1baaedab269",
+        "length": 208
+      },
+      "response": {
+        "path": "both/response.der",
+        "sha256": "92bebc5fb326ce2714976af34fc11da3d4d8309a8a191c2e976e0daa14528692",
+        "length": 3885
+      },
+      "token": {
+        "path": "both/token.der",
+        "sha256": "9ebb0b9b90b17a5456f139698cc6b7b02ca8dbbe98c42523383620a9cd9a3af8",
+        "length": 3876
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "5d8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060708",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "change_algorithm": true,
+        "change_digest": true
+      }
+    },
+    "wrong-nonce": {
+      "request": {
+        "path": "wrong-nonce/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "wrong-nonce/modified-request.der",
+        "sha256": "acdb14077ab13a339b557b0d4943c5ef6d028d865c4c39ad5b10ebf6d2b31052",
+        "length": 69
+      },
+      "signer_input": {
+        "path": "wrong-nonce/signer-input.der",
+        "sha256": "5642080758e67201226ce444c13113df473f04b9cca79b462eca9b7a378b0197",
+        "length": 208
+      },
+      "response": {
+        "path": "wrong-nonce/response.der",
+        "sha256": "1cd88425b83ee72ebf41655bfafc2c42122b674baceae1007f3687674e08e8e0",
+        "length": 3885
+      },
+      "token": {
+        "path": "wrong-nonce/token.der",
+        "sha256": "b87c4b2bb3a5e0b05c936f560d05d40dfe64afc593a57d7851ea98273bd5cb42",
+        "length": 3876
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": "0102030405060709",
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "change_algorithm": true,
+        "nonce_change": "wrong"
+      }
+    },
+    "missing-nonce": {
+      "request": {
+        "path": "missing-nonce/request.der",
+        "sha256": "8a41c29e8b518e403047c94ddbb9403142ff316b2eee4610f64eb65e1e381b24",
+        "length": 69
+      },
+      "modified_request": {
+        "path": "missing-nonce/modified-request.der",
+        "sha256": "7fa8300679b363947ab50608212426243c93541f76f759e66a520235ab4c5102",
+        "length": 59
+      },
+      "signer_input": {
+        "path": "missing-nonce/signer-input.der",
+        "sha256": "96c02a89f17b06002c949704e9ee9f2c98d7f4a8d034e6b8860416af13419238",
+        "length": 198
+      },
+      "response": {
+        "path": "missing-nonce/response.der",
+        "sha256": "9ebf0c18ca2547a850389ff8efa29fcf4b32fc5be370f1ae8a0defb95879d334",
+        "length": 3875
+      },
+      "token": {
+        "path": "missing-nonce/token.der",
+        "sha256": "61882d4754b9f12c3f242e9cab8369223b79c7c9145d359d47d6cf3cf68b82fb",
+        "length": 3866
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": "0102030405060708",
+      "token_nonce_hex": null,
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "change_algorithm": true,
+        "nonce_change": "missing"
+      }
+    },
+    "no-nonce-valid": {
+      "request": {
+        "path": "no-nonce-valid/request.der",
+        "sha256": "3d414c4d03549a317a59c796fd185db25fda9c464e6523a05e53071a3fc503ce",
+        "length": 59
+      },
+      "modified_request": {
+        "path": "no-nonce-valid/modified-request.der",
+        "sha256": "3d414c4d03549a317a59c796fd185db25fda9c464e6523a05e53071a3fc503ce",
+        "length": 59
+      },
+      "signer_input": {
+        "path": "no-nonce-valid/signer-input.der",
+        "sha256": "8513adbe2f62f04b4601af0489b991f976ed69589f952eae12fbac90d77c05bb",
+        "length": 198
+      },
+      "response": {
+        "path": "no-nonce-valid/response.der",
+        "sha256": "cd8568d0b49e84299373d1b9344985cce83ba6848d23ebce296952d26322465a",
+        "length": 3875
+      },
+      "token": {
+        "path": "no-nonce-valid/token.der",
+        "sha256": "e9a3c53fb4ad573da60082ae2666bb5c21308ad260b52064dd16388f88cb00b5",
+        "length": 3866
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300d06096086480165030402010500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": null,
+      "token_nonce_hex": null,
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "include_nonce": false
+      }
+    },
+    "no-nonce-algorithm": {
+      "request": {
+        "path": "no-nonce-algorithm/request.der",
+        "sha256": "3d414c4d03549a317a59c796fd185db25fda9c464e6523a05e53071a3fc503ce",
+        "length": 59
+      },
+      "modified_request": {
+        "path": "no-nonce-algorithm/modified-request.der",
+        "sha256": "7fa8300679b363947ab50608212426243c93541f76f759e66a520235ab4c5102",
+        "length": 59
+      },
+      "signer_input": {
+        "path": "no-nonce-algorithm/signer-input.der",
+        "sha256": "96c02a89f17b06002c949704e9ee9f2c98d7f4a8d034e6b8860416af13419238",
+        "length": 198
+      },
+      "response": {
+        "path": "no-nonce-algorithm/response.der",
+        "sha256": "9ebf0c18ca2547a850389ff8efa29fcf4b32fc5be370f1ae8a0defb95879d334",
+        "length": 3875
+      },
+      "token": {
+        "path": "no-nonce-algorithm/token.der",
+        "sha256": "61882d4754b9f12c3f242e9cab8369223b79c7c9145d359d47d6cf3cf68b82fb",
+        "length": 3866
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.2",
+      "token_algorithm_der_hex": "300d06096086480165030402020500",
+      "token_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": null,
+      "token_nonce_hex": null,
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "include_nonce": false,
+        "change_algorithm": true
+      }
+    },
+    "no-nonce-digest": {
+      "request": {
+        "path": "no-nonce-digest/request.der",
+        "sha256": "3d414c4d03549a317a59c796fd185db25fda9c464e6523a05e53071a3fc503ce",
+        "length": 59
+      },
+      "modified_request": {
+        "path": "no-nonce-digest/modified-request.der",
+        "sha256": "2f77fe9d8445aceefe3a786f389b86c85750c38bcb11904ebc448fc54a85e915",
+        "length": 59
+      },
+      "signer_input": {
+        "path": "no-nonce-digest/signer-input.der",
+        "sha256": "492998fa64b8e9f7cd91cc2e5d9ba1dde2a4a4660e6f3fcca280cb323014e3d6",
+        "length": 198
+      },
+      "response": {
+        "path": "no-nonce-digest/response.der",
+        "sha256": "6398d4b86973e663adbc95268436efc7787074913cdf6126e95dfe54d612eea2",
+        "length": 3875
+      },
+      "token": {
+        "path": "no-nonce-digest/token.der",
+        "sha256": "0941191946ffc6304bf2c3fb1b8edc8b82f980ce20e8a9b9e2cbd7ae222c535a",
+        "length": 3866
+      },
+      "request_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_algorithm_der_hex": "300d06096086480165030402010500",
+      "request_digest_hex": "5c8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "token_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "token_algorithm_der_hex": "300d06096086480165030402010500",
+      "token_digest_hex": "5d8b5aa498f3417fa0677032835c628304760a8e92c476b89f3f5f00bc699730",
+      "expected_nonce_hex": null,
+      "token_nonce_hex": null,
+      "cms_digest_algorithm": "sha256",
+      "cms_digest_algorithm_oid": "2.16.840.1.101.3.4.2.1",
+      "request_parameters_profile": "null",
+      "parameters_profile": "null",
+      "mutation_before_signing": {
+        "include_nonce": false,
+        "change_digest": true
+      }
+    }
+  },
+  "private_keys_written": false,
+  "HTTP_calls": 0,
+  "new_upstream_credit": 0
+}
