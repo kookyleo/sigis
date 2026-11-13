@@ -25,6 +25,12 @@ sigis-pki-fetch = { workspace = true }
 rpassword = "=7.4.0"
 openssl = "=0.10.81"
 
+der = { workspace = true }
+sigis-cms = { workspace = true }
+sigis-pades = { workspace = true }
+sigis-pdf-diff = { workspace = true }
+sigis-pki-certvalidator = { workspace = true }
+
 [dev-dependencies]
 sigis-cms = { workspace = true }
 lopdf = { workspace = true }
