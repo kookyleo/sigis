@@ -583,28 +583,10 @@ fn test_simple_sign_with_raw_rsa() {
     check_signed(&out, &cfg);
 }
 
-#[test]
-#[ignore = "Implementation gap: cryptoki 0.12.1 cannot construct standard CKM_DSA through its safe API; native DSA token import is not enabled"]
-fn test_simple_sign_with_raw_dsa() {
-    let Some((_g, cfg)) = p11("dsa", Some(Pkcs11Mechanism::Dsa)) else {
-        return;
-    };
-    let signer = Pkcs11Signer::new(
-        session(&cfg),
-        Pkcs11SignerOptions {
-            other_certs_to_pull: Some(cfg.cert_chain_labels.clone()),
-            use_raw_mechanism: true,
-            ..opts(&cfg)
-        },
-    )
-    .unwrap();
-    let meta = PdfSignatureMetadata {
-        md_algorithm: Some(DigestAlgorithm::Sha256),
-        ..meta()
-    };
-    let out = sign_with(Arc::new(signer), meta).unwrap();
-    check_signed(&out, &cfg);
-}
+// The exact upstream test_simple_sign_with_raw_dsa is located in
+// tests/round3_raw_dsa.rs::test_simple_sign_with_raw_dsa (root integration).
+// That suite checks the actual token/PDF, complete native trust/status and a
+// mandatory pinned same-output oracle. Count this upstream function once.
 
 #[test]
 fn test_no_raw_pss() {
