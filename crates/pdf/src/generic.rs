@@ -13,6 +13,8 @@
 //!   text/byte string classification on demand;
 //! * reals are `f32` (pyHanko uses `Decimal`).
 
+use std::hash::{Hash, Hasher};
+
 use lopdf::{Dictionary, Object, ObjectId, Stream, StringFormat};
 
 use crate::error::{PdfError, PdfResult};
@@ -47,12 +49,101 @@ impl ContentOpReading {
 }
 
 /// Result of [`read_item`]: an object, or an operator in a content stream.
+///
+/// Hashing follows the stored object's equality, including string format and
+/// stream metadata, without resolving references. Hash values depend on the
+/// process and hasher; they are not stable or cryptographic digests.
+/// Real objects retain their existing non-reflexive NaN equality, so `Item`
+/// does not implement `Eq`.
+///
+/// Hashing recurses over nested objects. Parsed values are bounded by
+/// [`MAX_NESTING_DEPTH`]; manually constructed deeper trees may exhaust the stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Item {
     /// A PDF object.
     Object(Object),
     /// An operator literal (`OperatorLiteral`).
     Operator(String),
+}
+
+impl Hash for Item {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Object(object) => {
+                0u8.hash(state);
+                hash_object(object, state);
+            }
+            Self::Operator(operator) => {
+                1u8.hash(state);
+                operator.hash(state);
+            }
+        }
+    }
+}
+
+fn hash_object<H: Hasher>(object: &Object, state: &mut H) {
+    match object {
+        Object::Null => 0u8.hash(state),
+        Object::Boolean(value) => {
+            1u8.hash(state);
+            value.hash(state);
+        }
+        Object::Integer(value) => {
+            2u8.hash(state);
+            value.hash(state);
+        }
+        Object::Real(value) => {
+            3u8.hash(state);
+            // IEEE equality identifies positive and negative zero.
+            let bits = if *value == 0.0 { 0 } else { value.to_bits() };
+            bits.hash(state);
+        }
+        Object::Name(bytes) => {
+            4u8.hash(state);
+            bytes.hash(state);
+        }
+        Object::String(bytes, format) => {
+            5u8.hash(state);
+            match format {
+                StringFormat::Literal => 0u8.hash(state),
+                StringFormat::Hexadecimal => 1u8.hash(state),
+            }
+            bytes.hash(state);
+        }
+        Object::Array(values) => {
+            6u8.hash(state);
+            values.len().hash(state);
+            for value in values {
+                hash_object(value, state);
+            }
+        }
+        Object::Dictionary(dictionary) => {
+            7u8.hash(state);
+            hash_dictionary(dictionary, state);
+        }
+        Object::Stream(stream) => {
+            8u8.hash(state);
+            hash_dictionary(&stream.dict, state);
+            stream.content.hash(state);
+            stream.allows_compression.hash(state);
+            stream.start_position.hash(state);
+        }
+        Object::Reference(id) => {
+            9u8.hash(state);
+            id.hash(state);
+        }
+    }
+}
+
+fn hash_dictionary<H: Hasher>(dictionary: &Dictionary, state: &mut H) {
+    // IndexMap equality ignores insertion order; compare and hash raw keys.
+    let mut entries: Vec<_> = dictionary.iter().collect();
+    entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
+    entries.len().hash(state);
+    for (key, value) in entries {
+        key.hash(state);
+        hash_object(value, state);
+    }
 }
 
 /// Resolves indirect `/Length` entries while parsing streams.
