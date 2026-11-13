@@ -67,7 +67,10 @@ fn read_next_end_line(data: &[u8], pos: usize) -> Result<(Vec<u8>, usize), EofEr
 /// Find `%%EOF` and the `startxref` value reading backwards from `pos`
 /// (`process_data_at_eof`).
 pub fn process_data_at_eof(data: &[u8], pos: usize) -> Result<u64, EofError> {
-    let last_1k = (pos + 1).saturating_sub(1024);
+    let last_1k = pos
+        .checked_add(1)
+        .ok_or(EofError("invalid EOF cursor"))?
+        .saturating_sub(1024);
     let mut pos = pos;
     let mut line: Vec<u8> = Vec::new();
     while !line.starts_with(b"%%EOF") {
