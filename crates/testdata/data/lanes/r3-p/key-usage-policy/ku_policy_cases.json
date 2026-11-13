@@ -1,0 +1,523 @@
+[
+  {
+    "id": "attached-match-any",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation",
+      "key_encipherment"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "attached-match-all",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation",
+      "key_encipherment"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": true
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "forbidden-only-none",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": null,
+      "key_usage_forbidden": [
+        "non_repudiation"
+      ],
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "forbidden-only-empty",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [],
+      "key_usage_forbidden": [
+        "non_repudiation"
+      ],
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "forbidden-with-positive",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": [
+        "non_repudiation"
+      ],
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "missing-eku-required",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "missing-eku-optional",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": false,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "any-eku-required",
+    "variant": "any-eku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "extended key usages"
+  },
+  {
+    "id": "any-eku-optional",
+    "variant": "any-eku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": false,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "exact-eku",
+    "variant": "exact-eku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "other-eku",
+    "variant": "other-eku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [
+        "time_stamping"
+      ],
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "extended key usages"
+  },
+  {
+    "id": "empty-eku-set",
+    "variant": "exact-eku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": [],
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "extended key usages"
+  },
+  {
+    "id": "legacy-default",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": null,
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "legacy-all",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation",
+      "key_encipherment"
+    ],
+    "policy": null,
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "key usage extension does not include key_encipherment"
+  },
+  {
+    "id": "legacy-missing-request",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "crl_sign"
+    ],
+    "policy": null,
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "key usage extension does not include crl_sign"
+  },
+  {
+    "id": "legacy-empty",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [],
+    "policy": null,
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "legacy-no-context-default",
+    "variant": "base",
+    "context": "none",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": null,
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "legacy-no-context-impossible",
+    "variant": "base",
+    "context": "none",
+    "legacy": [
+      "crl_sign"
+    ],
+    "policy": null,
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "explicit-no-context-match-any",
+    "variant": "base",
+    "context": "none",
+    "legacy": [
+      "non_repudiation",
+      "key_encipherment"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "explicit-no-context-match-all",
+    "variant": "base",
+    "context": "none",
+    "legacy": [
+      "non_repudiation",
+      "key_encipherment"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": true
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "missing-ku-explicit",
+    "variant": "missing-ku",
+    "context": "valid",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": false,
+    "core_policy_ok": false,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "explicit-no-requirements",
+    "variant": "base",
+    "context": "valid",
+    "legacy": [
+      "crl_sign"
+    ],
+    "policy": {
+      "key_usage": null,
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": true,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "active key usage policy"
+  },
+  {
+    "id": "guard-empty-roots",
+    "variant": "base",
+    "context": "empty-roots",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "validation path"
+  },
+  {
+    "id": "guard-require-revinfo",
+    "variant": "base",
+    "context": "require-revinfo",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "revocation"
+  },
+  {
+    "id": "guard-expired",
+    "variant": "base",
+    "context": "expired",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "expired"
+  },
+  {
+    "id": "guard-digest-policy",
+    "variant": "base",
+    "context": "deny-digest",
+    "legacy": [
+      "non_repudiation"
+    ],
+    "policy": {
+      "key_usage": [
+        "non_repudiation",
+        "key_encipherment"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "native_ok": false,
+    "oracle_policy_ok": true,
+    "core_policy_ok": true,
+    "error_contains": "sha256 is not allowed"
+  }
+]
