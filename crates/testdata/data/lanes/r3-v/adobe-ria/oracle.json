@@ -1,0 +1,298 @@
+{
+  "reference": "pyHanko0.38.1/certvalidator0.33.0",
+  "at": "2020-11-01T00:00:00+00:00",
+  "revocation_policy": "REQUIRE_REVINFO",
+  "online_fetching": false,
+  "generator_scope": "Python consumer fixtures, not native P signing acceptance",
+  "determinism": "Fixed time; fresh timestamp serial/nonce and PDF IDs are frozen after generation",
+  "crls": [
+    "crl-0.der",
+    "crl-1.der",
+    "crl-2.der",
+    "crl-3.der",
+    "crl-4.der"
+  ],
+  "ocsps": [],
+  "signed_ria": "good-ria.der",
+  "original_function": "pyhanko/test_cms.py::test_embed_ac_revinfo_adobe_style",
+  "original_fetcher_parameters": [
+    "aiohttp",
+    "requests"
+  ],
+  "new_upstream_credit": 0,
+  "cases": {
+    "good": {
+      "case": "good",
+      "pdf": "cases/good.pdf",
+      "sha256": "356cf863a9c07d36a3bc0675b98979b8b0e08764ca3c6e5a74e13b2724884035",
+      "length": 42835,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [
+        "bigboss@example.com"
+      ],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": []
+    },
+    "missing": {
+      "case": "missing",
+      "pdf": "cases/missing.pdf",
+      "sha256": "d17cc6d912adfa92958f3528e0850d2032850f470e050522d4db8947fae295d2",
+      "length": 34193,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "CERTIFICATE_CHAIN_GENERAL_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CERTIFICATE_CHAIN_GENERAL_FAILURE. Past validation not applicable.",
+      "ac_errors": [
+        "The path could not be validated because no revocation information could be found for intermediate certificate 1 Common Name: Intermediate AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE"
+      ]
+    },
+    "malformed": {
+      "case": "malformed",
+      "pdf": "cases/malformed.pdf",
+      "sha256": "b952857d1c07e10bb61bf8ba679f7f365794933cefc099b757260ac5518149d5",
+      "length": 34247,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "error_type": "ValueError",
+      "error": "Error parsing asn1crypto.pdf.RevocationInfoArchival - method should have been constructed, but primitive was found"
+    },
+    "forged-crl": {
+      "case": "forged-crl",
+      "pdf": "cases/forged-crl.pdf",
+      "sha256": "cf66822a5def3dc0e93ab1a68f13e93102e7833732edffb06fe6a85f7d1a9071",
+      "length": 42835,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "CERTIFICATE_CHAIN_GENERAL_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CERTIFICATE_CHAIN_GENERAL_FAILURE. Past validation not applicable.",
+      "ac_errors": [
+        "The path could not be validated because the intermediate certificate 1 revocation checks failed: CRL signature could not be verified"
+      ]
+    },
+    "empty": {
+      "case": "empty",
+      "pdf": "cases/empty.pdf",
+      "sha256": "c3eacd71861e55e26ccad97a6cc100b498d69fb8e562565fa8a93baa30f4d427",
+      "length": 34243,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "CERTIFICATE_CHAIN_GENERAL_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CERTIFICATE_CHAIN_GENERAL_FAILURE. Past validation not applicable.",
+      "ac_errors": [
+        "The path could not be validated because no revocation information could be found for intermediate certificate 1 Common Name: Intermediate AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE"
+      ]
+    },
+    "duplicate": {
+      "case": "duplicate",
+      "pdf": "cases/duplicate.pdf",
+      "sha256": "83a24ff0c5866d4089a48fcd01e6a376a7650bd834c6e76a0f34886f67422e4b",
+      "length": 51479,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "CERTIFICATE_CHAIN_GENERAL_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CERTIFICATE_CHAIN_GENERAL_FAILURE. Past validation not applicable.",
+      "ac_errors": [
+        "The path could not be validated because no revocation information could be found for intermediate certificate 1 Common Name: Intermediate AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE"
+      ]
+    },
+    "unsigned-only": {
+      "case": "unsigned-only",
+      "pdf": "cases/unsigned-only.pdf",
+      "sha256": "22424775b782339bd65b0e7fbffc870d9a4eff9754ce451d28c5e82d9cfabfb6",
+      "length": 42835,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "CERTIFICATE_CHAIN_GENERAL_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CERTIFICATE_CHAIN_GENERAL_FAILURE. Past validation not applicable.",
+      "ac_errors": [
+        "The path could not be validated because no revocation information could be found for intermediate certificate 1 Common Name: Intermediate AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE"
+      ]
+    },
+    "bad-signature": {
+      "case": "bad-signature",
+      "pdf": "cases/bad-signature.pdf",
+      "sha256": "a73b395c91be6cc9c0acdf8b8fe6c74d2365a54aeaf95429582b49744966c482",
+      "length": 42835,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "SIG_CRYPTO_FAILURE",
+      "bottom_line": false,
+      "intact": true,
+      "valid": false,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESFailure.SIG_CRYPTO_FAILURE. Past validation not applicable.",
+      "ac_errors": []
+    },
+    "tampered-content": {
+      "case": "tampered-content",
+      "pdf": "cases/tampered-content.pdf",
+      "sha256": "d889b28737ebea095fe09c6000d954cc9b7093e255f062604b9aafb8a8980116",
+      "length": 42835,
+      "other_embedded_certs": 5,
+      "embedded_attr_certs": 1,
+      "dss": false,
+      "subindication": "HASH_FAILURE",
+      "bottom_line": false,
+      "intact": false,
+      "valid": true,
+      "trusted": false,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Validation of signature at current time failed with indication AdESFailure.HASH_FAILURE. Past validation not applicable.",
+      "ac_errors": []
+    }
+  },
+  "files": {
+    "cases/bad-signature.pdf": {
+      "sha256": "a73b395c91be6cc9c0acdf8b8fe6c74d2365a54aeaf95429582b49744966c482",
+      "length": 42835
+    },
+    "cases/duplicate.pdf": {
+      "sha256": "83a24ff0c5866d4089a48fcd01e6a376a7650bd834c6e76a0f34886f67422e4b",
+      "length": 51479
+    },
+    "cases/empty.pdf": {
+      "sha256": "c3eacd71861e55e26ccad97a6cc100b498d69fb8e562565fa8a93baa30f4d427",
+      "length": 34243
+    },
+    "cases/forged-crl.pdf": {
+      "sha256": "cf66822a5def3dc0e93ab1a68f13e93102e7833732edffb06fe6a85f7d1a9071",
+      "length": 42835
+    },
+    "cases/good.pdf": {
+      "sha256": "356cf863a9c07d36a3bc0675b98979b8b0e08764ca3c6e5a74e13b2724884035",
+      "length": 42835
+    },
+    "cases/malformed.pdf": {
+      "sha256": "b952857d1c07e10bb61bf8ba679f7f365794933cefc099b757260ac5518149d5",
+      "length": 34247
+    },
+    "cases/missing.pdf": {
+      "sha256": "d17cc6d912adfa92958f3528e0850d2032850f470e050522d4db8947fae295d2",
+      "length": 34193
+    },
+    "cases/tampered-content.pdf": {
+      "sha256": "d889b28737ebea095fe09c6000d954cc9b7093e255f062604b9aafb8a8980116",
+      "length": 42835
+    },
+    "cases/unsigned-only.pdf": {
+      "sha256": "22424775b782339bd65b0e7fbffc870d9a4eff9754ce451d28c5e82d9cfabfb6",
+      "length": 42835
+    },
+    "crl-0.der": {
+      "sha256": "ddd292b4d70320c1731f8c9cea8e23081c8cc77d50f72e4bd9b4890485e19368",
+      "length": 550
+    },
+    "crl-1.der": {
+      "sha256": "311390d4aa8d0f819f81d32f16e57000f73450cb6902e839449d5f38ecdd3c05",
+      "length": 563
+    },
+    "crl-2.der": {
+      "sha256": "804941c714eeca75e20c3e8ce754b20ea2d0a4481ec11feb458594182dc51bd8",
+      "length": 577
+    },
+    "crl-3.der": {
+      "sha256": "35494426aa44a42349caace875effcfa111796f1669838f9d600d735b38a1f81",
+      "length": 585
+    },
+    "crl-4.der": {
+      "sha256": "f530766ce22b1fd6c14484e9a46ea6ee130fdc80c01829092cb62a9bab636630",
+      "length": 575
+    },
+    "good-content.bin": {
+      "sha256": "ada69bdbaf477e71a0afcb4ef5a85e21dec9b3e396d8bdfdc00ad7b14da04a5f",
+      "length": 1767
+    },
+    "good-ria.der": {
+      "sha256": "70663a0d35f8975a326345e128b6dd0768442160746d7c5b34a5c7b7f6f5e8b5",
+      "length": 2862
+    },
+    "good.cms.der": {
+      "sha256": "e81628227d41c3a20af5afc513857f67974ca08891b994b0b05dd0acf97f1ec9",
+      "length": 13689
+    },
+    "interm-aa.der": {
+      "sha256": "3b666a81888b05c209ef878249d4972ffad6a1374e47b0bec393dc24e070ef17",
+      "length": 1124
+    },
+    "interm.der": {
+      "sha256": "b36869c240c05764c667fb31180c08a84e65a2d083642e884584cc820d2487fe",
+      "length": 995
+    },
+    "leaf-aa.der": {
+      "sha256": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b",
+      "length": 1105
+    },
+    "root-aa.der": {
+      "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06",
+      "length": 941
+    },
+    "root.der": {
+      "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c",
+      "length": 984
+    },
+    "signer1.der": {
+      "sha256": "3e563a2331afff25b6f47641ecef9248645665922d5eec2fc0913089bd2da098",
+      "length": 1166
+    },
+    "tsa.der": {
+      "sha256": "db48a63a28a9dfd7385515728c8c0f8b750b2d4c04e79a8883f37f0306b3cc72",
+      "length": 1005
+    }
+  }
+}

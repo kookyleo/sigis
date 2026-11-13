@@ -1,0 +1,208 @@
+{
+  "reference": "pyHanko0.38.1/certvalidator0.33.0",
+  "original_frozen_inputs_unchanged": {
+    "good.cms.der": "e81628227d41c3a20af5afc513857f67974ca08891b994b0b05dd0acf97f1ec9",
+    "crl-3.der": "35494426aa44a42349caace875effcfa111796f1669838f9d600d735b38a1f81",
+    "good-ria.der": "70663a0d35f8975a326345e128b6dd0768442160746d7c5b34a5c7b7f6f5e8b5",
+    "crl-1.der": "311390d4aa8d0f819f81d32f16e57000f73450cb6902e839449d5f38ecdd3c05",
+    "generate.py": "4d076c9c8f969fef30f71e39891aefb99b459c46fc5d644c61fea6acc9305a43",
+    "crl-2.der": "804941c714eeca75e20c3e8ce754b20ea2d0a4481ec11feb458594182dc51bd8",
+    "interm.der": "b36869c240c05764c667fb31180c08a84e65a2d083642e884584cc820d2487fe",
+    "crl-4.der": "f530766ce22b1fd6c14484e9a46ea6ee130fdc80c01829092cb62a9bab636630",
+    "interm-aa.der": "3b666a81888b05c209ef878249d4972ffad6a1374e47b0bec393dc24e070ef17",
+    "leaf-aa.der": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b",
+    "README.md": "5f4fa8b0bced2e5e536784e3c6f72c27bf0693fe12a0173ac5e4bf580d417f26",
+    "good-content.bin": "ada69bdbaf477e71a0afcb4ef5a85e21dec9b3e396d8bdfdc00ad7b14da04a5f",
+    "root-aa.der": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06",
+    "signer1.der": "3e563a2331afff25b6f47641ecef9248645665922d5eec2fc0913089bd2da098",
+    "tsa.der": "db48a63a28a9dfd7385515728c8c0f8b750b2d4c04e79a8883f37f0306b3cc72",
+    "crl-0.der": "ddd292b4d70320c1731f8c9cea8e23081c8cc77d50f72e4bd9b4890485e19368",
+    "root.der": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c",
+    "oracle.json": "78597d5466c2a6f59a37fbc9c786d71e41a5cca4321ab10bd16b394d704e2ed5",
+    "cases/tampered-content.pdf": "d889b28737ebea095fe09c6000d954cc9b7093e255f062604b9aafb8a8980116",
+    "cases/malformed.pdf": "b952857d1c07e10bb61bf8ba679f7f365794933cefc099b757260ac5518149d5",
+    "cases/unsigned-only.pdf": "22424775b782339bd65b0e7fbffc870d9a4eff9754ce451d28c5e82d9cfabfb6",
+    "cases/good.pdf": "356cf863a9c07d36a3bc0675b98979b8b0e08764ca3c6e5a74e13b2724884035",
+    "cases/forged-crl.pdf": "cf66822a5def3dc0e93ab1a68f13e93102e7833732edffb06fe6a85f7d1a9071",
+    "cases/missing.pdf": "d17cc6d912adfa92958f3528e0850d2032850f470e050522d4db8947fae295d2",
+    "cases/duplicate.pdf": "83a24ff0c5866d4089a48fcd01e6a376a7650bd834c6e76a0f34886f67422e4b",
+    "cases/bad-signature.pdf": "a73b395c91be6cc9c0acdf8b8fe6c74d2365a54aeaf95429582b49744966c482",
+    "cases/empty.pdf": "c3eacd71861e55e26ccad97a6cc100b498d69fb8e562565fa8a93baa30f4d427"
+  },
+  "scope": "Additional V consumer proof, not native P signing or new upstream credit",
+  "fresh_public_lta_calls": 5,
+  "fresh_internal_authenticated_poe_calls": 5,
+  "no_network": true,
+  "no_injected_poes": true,
+  "cases": {
+    "ocsp-good": {
+      "pdf": "additional/ocsp-good.pdf",
+      "sha256": "a263c1257d26a3b14c3999cf96a2d039c7b616a433102cbba7490a1dca025b4b",
+      "length": 45931,
+      "validation_time": "2020-11-01T00:00:00+00:00",
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [
+        "bigboss@example.com"
+      ],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": [],
+      "document_timestamp_count": 0,
+      "authenticated_ria_crl_poes": [],
+      "poe_validation_error": null
+    },
+    "ocsp-forged": {
+      "pdf": "additional/ocsp-forged.pdf",
+      "sha256": "b636f9dc4e850b5bdb197651e4c8f12b40e9cdb124c26145ff11c8cddd2ca1c5",
+      "length": 45931,
+      "validation_time": "2020-11-01T00:00:00+00:00",
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": [
+        "The path could not be validated because the intermediate certificate 4 revocation checks failed: Unable to verify OCSP response signature"
+      ],
+      "document_timestamp_count": 0,
+      "authenticated_ria_crl_poes": [],
+      "poe_validation_error": null
+    },
+    "enclosing-good": {
+      "pdf": "additional/enclosing-good.pdf",
+      "sha256": "407c89da57222348edde1d0263801db65bad9a9779845eddbe3c0a90bbf851d0",
+      "length": 52678,
+      "validation_time": "2020-11-02T00:00:00+00:00",
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [
+        "bigboss@example.com"
+      ],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": [],
+      "document_timestamp_count": 1,
+      "authenticated_ria_crl_poes": [
+        {
+          "sha256": "ddd292b4d70320c1731f8c9cea8e23081c8cc77d50f72e4bd9b4890485e19368",
+          "time": "2020-11-02T00:00:00+00:00",
+          "type": "VALIDATION"
+        },
+        {
+          "sha256": "311390d4aa8d0f819f81d32f16e57000f73450cb6902e839449d5f38ecdd3c05",
+          "time": "2020-11-02T00:00:00+00:00",
+          "type": "VALIDATION"
+        },
+        {
+          "sha256": "804941c714eeca75e20c3e8ce754b20ea2d0a4481ec11feb458594182dc51bd8",
+          "time": "2020-11-02T00:00:00+00:00",
+          "type": "VALIDATION"
+        },
+        {
+          "sha256": "35494426aa44a42349caace875effcfa111796f1669838f9d600d735b38a1f81",
+          "time": "2020-11-02T00:00:00+00:00",
+          "type": "VALIDATION"
+        },
+        {
+          "sha256": "f530766ce22b1fd6c14484e9a46ea6ee130fdc80c01829092cb62a9bab636630",
+          "time": "2020-11-02T00:00:00+00:00",
+          "type": "VALIDATION"
+        }
+      ],
+      "poe_validation_error": null
+    },
+    "enclosing-bad": {
+      "pdf": "additional/enclosing-bad.pdf",
+      "sha256": "54bd9a11c2c1b4e84472f4c4098e08025f7c759b2f630c9e2e83b6147cfde647",
+      "length": 52678,
+      "validation_time": "2020-11-02T00:00:00+00:00",
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [
+        "bigboss@example.com"
+      ],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": [],
+      "document_timestamp_count": 1,
+      "authenticated_ria_crl_poes": [],
+      "poe_validation_error": {
+        "type": "SignatureValidationError",
+        "message": "Permanent failure while evaluating timestamp in PoE chain [AdESFailure.SIG_CRYPTO_FAILURE]"
+      }
+    },
+    "original-no-doc-ts": {
+      "pdf": "cases/good.pdf",
+      "sha256": "356cf863a9c07d36a3bc0675b98979b8b0e08764ca3c6e5a74e13b2724884035",
+      "length": 42835,
+      "validation_time": "2020-11-02T00:00:00+00:00",
+      "dss": false,
+      "subindication": "OK",
+      "bottom_line": true,
+      "intact": true,
+      "valid": true,
+      "trusted": true,
+      "role_names": [
+        "bigboss@example.com"
+      ],
+      "roles_are_role_syntax": true,
+      "best_signature_time": "2020-11-01 00:00:00+00:00",
+      "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]",
+      "ac_errors": [],
+      "document_timestamp_count": 0,
+      "authenticated_ria_crl_poes": [],
+      "poe_validation_error": null
+    }
+  },
+  "files": {
+    "additional/ac-forged.ocsp.der": {
+      "sha256": "e2fb708b35a4a22da100ba9dcce2f388bdd94851cd730dff8970f2478ae15d6d",
+      "length": 1599
+    },
+    "additional/ac-good.ocsp.der": {
+      "sha256": "9ed6c32437afdac0e67d489057ccf26e7d0dbef98fcd392b943370a014daa314",
+      "length": 1599
+    },
+    "additional/ac-request.der": {
+      "sha256": "809d79504d441168a389393a5c1d42e8aeec5dc3063fb5e20b9c380461c3146f",
+      "length": 97
+    },
+    "additional/enclosing-bad.pdf": {
+      "sha256": "54bd9a11c2c1b4e84472f4c4098e08025f7c759b2f630c9e2e83b6147cfde647",
+      "length": 52678
+    },
+    "additional/enclosing-good.pdf": {
+      "sha256": "407c89da57222348edde1d0263801db65bad9a9779845eddbe3c0a90bbf851d0",
+      "length": 52678
+    },
+    "additional/ocsp-forged.pdf": {
+      "sha256": "b636f9dc4e850b5bdb197651e4c8f12b40e9cdb124c26145ff11c8cddd2ca1c5",
+      "length": 45931
+    },
+    "additional/ocsp-good.pdf": {
+      "sha256": "a263c1257d26a3b14c3999cf96a2d039c7b616a433102cbba7490a1dca025b4b",
+      "length": 45931
+    }
+  }
+}
