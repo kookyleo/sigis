@@ -1,8 +1,9 @@
 # Actual-process PKCS12/LTA current-clock fixtures
 
-These test helpers support the proposed C slice of nine P12 original functions
-(32 parameters), strict/non-strict LTA two originals (six parameters), and one
-missing-TSA negative. They implement no Rust signing/validation code and earn no
+These test helpers support eight new P12 original functions (28 parameters),
+two strict/non-strict LTA originals (six parameters), and one missing-TSA
+negative: eleven new unique functions and 35 parameters. The previously accepted
+basic P12 function and its four parameters are excluded from this slice. They implement no Rust signing/validation code and earn no
 unique-function credit. Parent tests must use a newly produced immutable native
 CLI and keep actual executable/input/output/source hashes.
 
