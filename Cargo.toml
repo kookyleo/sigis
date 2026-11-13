@@ -135,6 +135,9 @@ sigis-testdata.workspace = true
 tempfile = "3"
 # Test-only inspection of cryptoki's existing public CK_MECHANISM conversion.
 cryptoki-sys = "=0.5.0"
+# Test-only reuse of the native token fixture codecs; existing locked versions.
+rsa.workspace = true
+pkcs8 = { version = "0.11", features = ["alloc"] }
 
 # Vendored underskrift 0.1.4 with a minimal patch that embeds an RFC 3161
 # signature timestamp (PAdES B-T). See vendor/README.md.
