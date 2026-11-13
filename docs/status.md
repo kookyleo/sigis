@@ -354,8 +354,11 @@ resource/type-model differences into trust-verdict proofs. See the PKI audit.
 
 The integration removes the known decimal-collision, image-mode and
 schema-content leniency. Known trust-verdict differences require individual
-evidence. The retained combined-PKI context discrepancy remains an unresolved
-compatibility boundary; it cannot be called universally conservative. The final
+evidence. A new physically retained29b input confirms the combined-PKI discrepancy:
+native trusted/bottom_line=true versus pinned Python false under both matched
+timing flags; separate-role positives pass in both. Actual input/root/binary
+hashes and fresh registration traces are in [the open finding](lanes/round3/l-mixed-context.md).
+It is more trusting and remains unresolved, so it is not fail-closed. The final
 gate verifies exercised corpus behaviour; it does not establish safety for
 every possible input. **All differences cannot be labelled fail-closed**:
 semantic decoding and artifact compatibility differences below are not
