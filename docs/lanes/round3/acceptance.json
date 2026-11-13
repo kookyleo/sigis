@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "7500fc743fef42a258cafe03cb60699c6b7fa914",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-ac-combined/accepted-gate/gate.json",
+  "accepted_source_commit": "09ec130bff0d823733bb9b66c308943bed559785",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/c-prefix-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -675,6 +675,594 @@
       "status": "passed",
       "rust_test": "ades_lta_report::test_pades_with_attributes_report_smoke_test",
       "reason": "Complete nine original report substring assertions after authenticated AC/LTA and certified role validation; forged response cannot produce a certified report. Native fresh-input recordings are replay, not new live HTTP. Independent exact-source audit and whole gate pass. Accepted on source 7500fc7."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_encrypt_file",
+      "status": "passed",
+      "rust_test": "crypt::test_encrypt_file",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_encrypt_file_with_stdin_pass",
+      "status": "passed",
+      "rust_test": "crypt::test_encrypt_file_with_stdin_pass",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_encrypt_file_with_recipient_cert",
+      "status": "passed",
+      "rust_test": "crypt::test_encrypt_file_with_recipient_cert",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_encrypt_not_both_pubkey_and_password",
+      "status": "passed",
+      "rust_test": "crypt::test_encrypt_not_both_pubkey_and_password",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_owner_password",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_owner_password",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_owner_password_on_stdin",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_owner_password_on_stdin",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_force_decrypt_with_user_password",
+      "status": "passed",
+      "rust_test": "crypt::test_force_decrypt_with_user_password",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_user_password_no_force",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_user_password_no_force",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_unencrypted_file",
+      "status": "passed",
+      "rust_test": "crypt::test_attempt_decrypt_unencrypted_file",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_wrong_sh_type",
+      "status": "passed",
+      "rust_test": "crypt::test_attempt_decrypt_wrong_sh_type",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_wrong_password",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_wrong_password",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_wrong_key",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_wrong_key",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_no_force_change_of_encryption_forbidden",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key_no_force_change_of_encryption_forbidden",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_force_change_of_encryption_forbidden",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key_force_change_of_encryption_forbidden",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_and_passfile",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key_and_passfile",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_private_key_unencrypted_file",
+      "status": "passed",
+      "rust_test": "crypt::test_attempt_decrypt_with_private_key_unencrypted_file",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_private_key_sh_type_mismatch",
+      "status": "passed",
+      "rust_test": "crypt::test_attempt_decrypt_with_private_key_sh_type_mismatch",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_attempt_decrypt_with_non_matching_key",
+      "status": "passed",
+      "rust_test": "crypt::test_attempt_decrypt_with_non_matching_key",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_no_pass",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key_no_pass",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_crypt.py::test_decrypt_with_private_key_empty_pass_on_stdin",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_with_private_key_empty_pass_on_stdin",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_decode_limits.py::test_decrypt_password",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_password",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_decode_limits.py::test_decrypt_pubkey",
+      "status": "passed",
+      "rust_test": "crypt::test_decrypt_pubkey",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_list_empty_fields_with_status",
+      "status": "passed",
+      "rust_test": "fields::test_list_empty_fields_with_status",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_list_mixed_fields_with_status",
+      "status": "passed",
+      "rust_test": "fields::test_list_mixed_fields_with_status",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_list_empty_fields_without_status",
+      "status": "passed",
+      "rust_test": "fields::test_list_empty_fields_without_status",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_incremental_update_by_default",
+      "status": "passed",
+      "rust_test": "fields::test_cli_add_field_incremental_update_by_default",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_with_resave",
+      "status": "passed",
+      "rust_test": "fields::test_cli_add_field_with_resave",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_cli_add_field_to_last_page",
+      "status": "passed",
+      "rust_test": "fields::test_cli_add_field_to_last_page",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_field_mgmt.py::test_cli_field_spec_errors",
+      "status": "passed",
+      "rust_test": "fields::test_cli_field_spec_errors",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_load_plugins_from_config",
+      "status": "passed",
+      "rust_test": "plugins::test_load_plugins_from_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_gracefully_handle_dupe_plugins",
+      "status": "passed",
+      "rust_test": "plugins::test_gracefully_handle_dupe_plugins",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_plugin_must_be_class",
+      "status": "passed",
+      "rust_test": "plugins::test_plugin_must_be_class",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_disable_non_default_plugins",
+      "status": "passed",
+      "rust_test": "plugins::test_disable_non_default_plugins",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_show_unavailable_plugins",
+      "status": "passed",
+      "rust_test": "plugins::test_show_unavailable_plugins",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_trigger_unavailable_plugin",
+      "status": "passed",
+      "rust_test": "plugins::test_trigger_unavailable_plugin",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_too_few_parameters",
+      "status": "passed",
+      "rust_test": "plugins::test_identity_setup_with_too_few_parameters",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_unknown_parameters",
+      "status": "passed",
+      "rust_test": "plugins::test_identity_setup_with_unknown_parameters",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_identity_setup_with_unknown_plugin",
+      "status": "passed",
+      "rust_test": "plugins::test_identity_setup_with_unknown_plugin",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_unknown_identity",
+      "status": "passed",
+      "rust_test": "plugins::test_unknown_identity",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_plugins.py::test_identity_without_config",
+      "status": "passed",
+      "rust_test": "plugins::test_identity_without_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_vc_kwargs",
+      "status": "passed",
+      "rust_test": "config::test_read_vc_kwargs",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_os_trust_fallback_warning",
+      "status": "passed",
+      "rust_test": "config::test_os_trust_fallback_warning",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_no_os_trust_fallback_warning_with_trust_replace",
+      "status": "passed",
+      "rust_test": "config::test_no_os_trust_fallback_warning_with_trust_replace",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_qr_config",
+      "status": "passed",
+      "rust_test": "config::test_read_qr_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_bad_config",
+      "status": "passed",
+      "rust_test": "config::test_read_bad_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_bad_background_config",
+      "status": "passed",
+      "rust_test": "config::test_read_bad_background_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_bad_config2",
+      "status": "passed",
+      "rust_test": "config::test_read_bad_config2",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_empty_config",
+      "status": "passed",
+      "rust_test": "config::test_empty_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_logging_config",
+      "status": "passed",
+      "rust_test": "config::test_read_logging_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_logging_config_defaults",
+      "status": "passed",
+      "rust_test": "config::test_read_logging_config_defaults",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_logging_config_errors",
+      "status": "passed",
+      "rust_test": "config::test_read_logging_config_errors",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_key_usage",
+      "status": "passed",
+      "rust_test": "config::test_read_key_usage",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_extd_key_usage",
+      "status": "passed",
+      "rust_test": "config::test_read_extd_key_usage",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_key_usage_policy_1",
+      "status": "passed",
+      "rust_test": "config::test_read_key_usage_policy_1",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_key_usage_policy_2",
+      "status": "passed",
+      "rust_test": "config::test_read_key_usage_policy_2",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_key_usage_policy_3",
+      "status": "passed",
+      "rust_test": "config::test_read_key_usage_policy_3",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_extd_key_usage_errors",
+      "status": "passed",
+      "rust_test": "config::test_extd_key_usage_errors",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_key_usage_errors",
+      "status": "passed",
+      "rust_test": "config::test_key_usage_errors",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_time_tolerance",
+      "status": "passed",
+      "rust_test": "config::test_read_time_tolerance",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_time_tolerance_input_issues",
+      "status": "passed",
+      "rust_test": "config::test_read_time_tolerance_input_issues",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_retroactive_revinfo",
+      "status": "passed",
+      "rust_test": "config::test_read_retroactive_revinfo",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_legacy",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_legacy",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_legacy_with_extra_criteria",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_legacy_with_extra_criteria",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_slot_no",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_slot_no",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_nothing_to_pull",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_nothing_to_pull",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_ids",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_ids",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_external_cert",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_external_cert",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_bad_criteria_type",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_bad_criteria_type",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_bad_serial",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_bad_serial",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_no_cert_spec_or_key_spec",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_no_cert_spec_or_key_spec",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_cert_label_from_key_label",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_cert_label_from_key_label",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_cert_id_from_key_id",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_cert_id_from_key_id",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_key_id_from_cert_id",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_key_id_from_cert_id",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_key_label_from_cert_label",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_key_label_from_cert_label",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_config_key_label_not_from_cert_label_if_key_id_defined",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_config_key_label_not_from_cert_label_if_key_id_defined",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_prompt_pin",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_prompt_pin",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_prompt_pin_default",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_prompt_pin_default",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_prompt_pin_invalid",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_prompt_pin_invalid",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_signing_pin_mode",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_signing_pin_mode",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs11_signing_pin_invalid",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs11_signing_pin_invalid",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs12_config",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs12_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs12_config_null_pw",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs12_config_null_pw",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pemder_config",
+      "status": "passed",
+      "rust_test": "config::test_read_pemder_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pemder_config_wrong_passphrase",
+      "status": "passed",
+      "rust_test": "config::test_read_pemder_config_wrong_passphrase",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pemder_config_missing_passphrase",
+      "status": "passed",
+      "rust_test": "config::test_read_pemder_config_missing_passphrase",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_pkcs12_config_wrong_passphrase",
+      "status": "passed",
+      "rust_test": "config::test_read_pkcs12_config_wrong_passphrase",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_simple_layout_config",
+      "status": "passed",
+      "rust_test": "config::test_read_simple_layout_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_read_simple_layout_config_failures",
+      "status": "passed",
+      "rust_test": "config::test_read_simple_layout_config_failures",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_configurable_recurse",
+      "status": "passed",
+      "rust_test": "config::test_configurable_recurse",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_enforce_required",
+      "status": "passed",
+      "rust_test": "config::test_enforce_required",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_enforce_required_recursive",
+      "status": "passed",
+      "rust_test": "config::test_enforce_required_recursive",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_configurable_recurse_optional_styles",
+      "status": "passed",
+      "rust_test": "config::test_configurable_recurse_optional_styles",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_default_stamp_style_fetch",
+      "status": "passed",
+      "rust_test": "config::test_default_stamp_style_fetch",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_cache_dir_config",
+      "status": "passed",
+      "rust_test": "config::test_cache_dir_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_fail_to_read_default_config",
+      "status": "passed",
+      "rust_test": "config::test_fail_to_read_default_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "pyhanko-cli/test_config.py::test_fail_to_read_nondefault_config",
+      "status": "passed",
+      "rust_test": "config::test_fail_to_read_nondefault_config",
+      "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
     }
   ]
 }

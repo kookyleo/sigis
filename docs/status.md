@@ -17,7 +17,8 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-The launch adds the L6 `sigis-cli` application shell; it earns no new passes.
+At launch, the L6 `sigis-cli` shell earned no passes. Its later scoped98
+acceptance is recorded below; the complete CLI remains unfinished.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
@@ -58,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main 7500fc7 found **1,578 Rust tests: 1,570 passed, 8
-ignored, zero failed**, across142 reports. Build, workspace tests, strict
+The latest gate on main 09ec130 found **1,706 Rust tests: 1,698 passed, 8
+ignored, zero failed**, across150 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-ac-combined/accepted-gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/c-prefix-integration/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -179,9 +180,9 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
 | **Library lanes A–E** | **1,168** | **1,125** | **30** | **13** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 0 | 0 | 252 |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 98 | 0 | 154 |
 | Lead: live integration (round-3 L) | 11 | 6 | 0 | 5 |
-| **Overall** | **1,431** | **1,131** | **30** | **270** |
+| **Overall** | **1,431** | **1,229** | **30** | **172** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -209,9 +210,9 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 | A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`: complete authenticated AC/LTA and embedded material/RoleSyntax caller |
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
-| Lead / CLI and configuration | 252 | Signing, validation, encryption, fields, stamps, plugins, configuration and runtime suites |
+| C / CLI and configuration | 154 | Remaining signing, validation/LTV, stamps, runtime/provider and reader-state commands; config57/plugins11/crypt23/fields7 are accepted |
 | Lead / live integration | 5 | Lazy-session, concurrent signing, two requests backend functions and CLI LTA; exact PFX/AIA prerequisites and two other LTA functions are accepted |
-| **Total** | **270** | |
+| **Total** | **172** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
@@ -248,7 +249,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the270 pending
+provider behaviour and remaining validator compatibility; the172 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -315,27 +316,23 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-An unmerged C configuration review reproduced a real fail-open for three
-unknown/misspelled nested signer policy keys: key-usage-forbiden,
-require-qualified-signature and match-all-key-usage. A preserved Cargo-produced
-CLI executable returned exit0/INTACT:TRUSTED for the signed PDF; the fresh
-pinned Python CLI rejected each configuration (exit1). The reviewed C commit/executable
-silently ignored the unknown keys. C is preparing a source/test repair; it
-remains unaccepted. L blocked CLI integration and routed
-tests-first unknown-key/alias rejection before trust evaluation. Evidence:
+A historical unmerged C configuration review reproduced a real fail-open for
+three unknown/misspelled policy keys: key-usage-forbiden,
+require-qualified-signature and match-all-key-usage. The preserved executable
+returned exit0/INTACT:TRUSTED while the fresh pinned Python CLI rejected them.
+Evidence remains at
 `round3-launch/c-config-review/unknown-policy-native-cli-differential.json`.
-These unmerged divergences are not fail closed; no CLI pass is accepted.
+The accepted configuration prefix now rejects unknown keys and conflicting
+aliases. It does not import the affected full CLI validation commands, which
+remain pending under their separate trust-result holds.
 
-A separate configuration risk: quoted nonempty
-YAML strings such as no/off can be coerced to false, weakening match-all KU
-or explicit-EKU requirements relative to Python truthiness. Fresh pinned
-oracle cases and the native source consumption path establish the discrepancy;
-Eight comparisons using C's preserved Cargo-produced CLI executable did
-not show a more trusting native CLI verdict: the Python CLI itself drops
-one policy flag and another shared default rejects the EKU adversary. This
-does not repair the configuration-object discrepancy. L blocked CLI acceptance
-and routed the policy interpretation/regressions to C. The proposed230 CLI passes remain
-unaccepted; this is not merely an encoding difference.
+The historical quoted-YAML truth discrepancy is also repaired in the accepted
+configuration object: nonempty quoted no/off strings retain Python truthiness.
+The earlier eight full-CLI comparisons did not prove end-to-end conservatism:
+Python drops one flag and another shared default rejects the EKU adversary.
+The complete validation consumers still require separate acceptance. The
+scoped98 prefix is accepted; the old230/full-source proposals are not thereby
+accepted, and no configuration-only assertion earns signing/validation credit.
 
 S also reproduced the current default DSS operation accepting an oversized
 object-stream input that Python rejects. The native default reader rejects,
@@ -420,7 +417,7 @@ parallel with system per-host worktree locks and automatic worker placement.
 | P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Seven AC/DSS signing functions, three inherited skips, remaining evidence acquisition/state compatibility | Complete exact assertions, actual output oracle validation and unsupported mandatory requirements reject |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 baseline functions accepted; continue security/parameter compatibility audits and new P/S/CLI consumers | Preserve proof/algorithm/coverage/qualification denials, exact source boundaries and fresh-input provenance |
 | S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Six pending callers (five PDF and Adobe AC CMS),27 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | All252 accepted IDs remain pending; review scoped module increments, repair three CMS sanity assertions and retained full-source failures | Real commands/artifacts/exit behavior; exact parameter coverage, mandatory requirements reject and full gate |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish154 pending functions; retain known failed full-source assertions and trust holds, complete state and CLI LTA | Actual commands/artifacts/exit behavior, exact parameters, mandatory rejection and source-specific full gates |
 | L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Five live functions, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
 
 P, V, S and C can start concurrently. S starts decode-limit assertions and
@@ -784,3 +781,57 @@ Unmerged CLI code remains outside acceptance; three configuration loader functio
 need their exact CMS intact/valid assertions despite a raw-signature control.
 Detailed red/green logs, oracle outputs, public byte hashes and independent
 reviews are retained under round3-launch/s-ac-combined and round3/l-certomancer-next.
+
+
+## Accepted scoped CLI configuration and operations
+
+Source 09ec130 passes all six workspace gates: 1706 discovered,
+1698 passed, 8 ignored, zero failed, 150 reports.
+Only the reviewed standalone prefix is integrated: configuration57, native
+plugin registration/identity11, encryption/decryption23 (including two exact
+decode-limit functions), and field management7. The98 immutable IDs and original
+parameters are in crates/cli/INCREMENT_PARAMETERS.md and PORTING.md. Other154
+CLI functions stay pending; later full-source restoration and its known runtime
+or trust-result failures are not imported by this acceptance. No function was
+ignored, removed from its inventory, or counted from an empty wrapper.
+
+Three configuration loader functions previously had only raw-signature checks.
+They now sign the independent SHA256 digest of Hello world! through the actual
+production CMS builder and verify its unique SignerInfo with the loaded
+certificate, expected data OID and original digest. Intact and valid must both
+hold; a changed expected digest must fail integrity. The focused44 native
+configuration tests pass. Four retained native CMS/certificate output cases
+received eight fresh pinned Python integrity decisions with matching actual
+input hashes. The fourth missing-passphrase function is not counted twice;
+it already had complete original loading/refusal assertions. CMS integrity
+does not establish certificate trust or CLI signing-command coverage.
+
+The scoped CLI package has128 passed native tests, zero failures/ignores.
+Cargo copied its actual ELF into an immutable artifact directory while holding
+the build lock. Producer source 09ec130, ELF SHA256 ffc61fff25eacf12cd8f57b67fb6767e9729a6a7efaa5cffd36b22e064738c69,
+88102784bytes. Same-path copies on both workers match SHA/version.
+Explicit test-only Cargo env selectors chose that executable for every actual
+CLI subprocess; its hash is unchanged before/after the full gate. Canonical
+targets, compiler flags/profiles/features, sccache and automatic placement are
+unchanged. Artifact copy uses the existing nightly Cargo artifact-dir facility.
+
+The existing scoped tests freshly execute17 configuration oracle cases,
+36 crypt CLI comparisons plus18 artifact checks, and10 field oracle calls.
+The independent loader output comparison adds eight integrity decisions;
+these are separate measurements, not new unique functions. Plugin reference
+evidence is historical source execution; native11 tests exercise registry/help
+and typed identity behavior, using native endpoint interfaces rather than
+importing Python modules. They do not execute a signing engine. Field tests
+use real lower-layer signing to check occupied fields; they do not establish
+a trusted PDF signature. No runtime provider exclusion was added.
+
+PKCS11 commands, other signing/stamping/runtime/validation/LTV functions,
+complete reader-state callers and final CLI LTA integration remain pending.
+Unsupported commands and mandatory requirements reject explicitly. Known
+unmerged CLI trust failures and the retained combined-PKI registry discrepancy
+still prevent any universal all-divergences-fail-closed claim. This is a scoped
+98-function acceptance, not completion of the252-function CLI or full port.
+
+Accepted C252/98/0/154; overall1431/1229/30/172. Detailed source/binary/fixture
+hashes, independent assertion reviews, actual test selectors and full logs:
+round3-launch/c-prefix-integration/ and round3-launch/c-prefix-review/.
