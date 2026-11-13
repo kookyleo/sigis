@@ -3,6 +3,7 @@ pub mod config;
 pub mod crypt;
 pub mod fields;
 pub mod pkcs12_signing;
+pub mod pemder_signing;
 pub mod plugins;
 pub mod runtime;
 pub mod software_signing;
@@ -269,7 +270,7 @@ fn run_signing(
         return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);
     }
     if args[i] == "pemder" && rewritten[i] == "pemder" {
-        return software_signing::run_with_runtime(&rewritten, config, runtime);
+        return pemder_signing::run_with_runtime(&rewritten, config, runtime);
     }
     Err(format!(
         "Signing engine '{}' is not available in this increment.",
