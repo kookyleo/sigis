@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "a48fb320b8a665eaee39a4eb346c5b7eaa7d4965",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/pemder-next-integration/gate/gate.json",
+  "accepted_source_commit": "95dd1192b323c35a58749c1446aa13363e2e2cb7",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/timestamp-next-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1875,6 +1875,24 @@
       "status": "passed",
       "rust_test": "pemder_signing::test_cli_addsig_pemder_with_unreadable_additional_certs",
       "reason": "Complete bounded PEM/DER original assertions and all 1 upstream parameters, actual current CLI and fresh same-native-output Python trust verification where successful; full A48 workspace gate and current independent runtime/source/serial-policy acceptance."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_timestamp",
+      "status": "passed",
+      "rust_test": "timestamp::test_cli_timestamp",
+      "reason": "All three pinned RSA/ECDSA/Ed25519 original parameters on source95dd current real CLI/live TSA, actual signatures/context/nonce/imprints/ByteRanges and four output cohort fresh pinned validations; whole current source/full gate independently accepted. Current-clock fixture adaptation and whole-context/TSA-role boundaries explicit."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_decode_limits.py::test_timestamp",
+      "status": "passed",
+      "rust_test": "timestamp::test_timestamp",
+      "reason": "Exact one RSA original and both default-budget exit1/rerun diagnostic before TSA IO and explicit trusted-limit success through actual downstream reader state, real output/fresh pinned verification; accepted after current full gate. Five commands across both originals are not extra function IDs."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_stream_pathological_encode_decode",
+      "status": "passed",
+      "rust_test": "stream_state_contract (five positive tests/nine controls); stream module constructor compile-fail doctests (two E0308 cases)",
+      "reason": "Explicit lead-approved Rust constructor-time type-phase exclusion of Python both-buffers-absent state, with two actual E0308 checks, five legal-state tests/nine controls, current full gate and separate fresh pinned original. No runtime getter-error, original same-object runtime getter sequence, or same-native-compressed-byte parity is claimed; production non-doc stream code unchanged."
     }
   ],
   "source_verification_note": "Sourcef1cd5948 complete six-stage workspace gate1937discovered/1934passed/3ignored/0failed/188reports; independent final review and lead readiness bind actual final producer/runtime. Exactly14 IDs C11/S2/L1 accepted, C11has35original decision pairs/30fresh same-native-output checks and165durable records; 48retained basic records stay separately credited. Complete actual serial45+61 mandatory refusals supplement preserved malformed parallel raw logs. Native full-LTA CMS status plus same-output/context StandardDiffPolicy LTA_UPDATES, relational DefaultHasher/noEq and current long-signer adaptation are explicit. Overall1431/1321/21/89; no complete-port/universal fail-closed claim. Historical preceding note: Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."

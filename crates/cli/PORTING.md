@@ -1,15 +1,16 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /173 passed /0 skipped /79 pending**.
-Sourcea48fb320 accepts exactly10 new PEM/DER originals/30parameters after
-coherent current CLI/source/runtime, actual serial mandatory-policy proof and
-all-six-gate acceptance. Configuration57/plugins11/crypt23/fields7/stamps12/
-runtime-read1/ordinary39/basic2/P12-LTA11/PEM-DER10 comprise173.
-Prior basic/P12 functions remain credited once. Alias regressions and generic
-DSA parameter completion add zero IDs. The bounded stricter EKU xfail and
-attached-context match-any/all-KU limitation remain explicit. Other signing/
-LTV/qualified/provider/runtime/reader flows remain pending.
-See PEMDER_SIGNING_PORTING.md and docs/lanes/round3/l-pemder.md.
+Accepted assigned counts: **252 total /175 passed /0 skipped /77 pending**.
+Source95dd1192 accepts exactly two standalone timestamp originals/four
+parameters/five original commands after coherent current CLI/source/runtime,
+serial policy proof and all six gates. The previous173 functions retain their
+counts; configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1/
+ordinary39/basic2/P12-LTA11/PEM-DER10/timestamp2 comprise175.
+All six timestamp supplements and malicious-response tests add zero IDs.
+Ordinary signer KU is not TSA purpose; entire-revision timestamp coverage
+with later DSS is not entire-final-file coverage. Shared fetcher binding,
+raw optional-EKU facade differences and other unfinished flows remain explicit.
+See TIMESTAMP_PORTING.md and docs/lanes/round3/l-timestamp-stream.md.
 Historical owner projections below do not accept the complete CLI.
 
 # Historical independently verified CLI increments

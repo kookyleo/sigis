@@ -1,5 +1,16 @@
 # Porting status: sigis-pdf (crates/pdf)
 
+Lead acceptance on source95dd1192: **406 total /402 passed /4 skipped /0 pending**.
+One original, test_stream_pathological_encode_decode, is accepted with explicit
+constructor-time Rust type-phase exclusion of both-buffers-absent state:
+two actual E0308 checks and five positive tests/nine deterministic controls.
+This does not reproduce runtime getter errors or the original same-object
+sequence, and makes no comparison of identical native compressed bytes. Production non-documentation stream code is
+unchanged. Prior Hash/trailer/enum/caller assertions stay accepted; four
+object-model/writer skips remain. See docs/lanes/round3/l-timestamp-stream.md.
+
+Historical preceding lead note:
+
 Lead acceptance on sourcef1cd5948: **406 total /401 passed /5 skipped /0 pending**.
 Two exact relational Hash originals now exercise the existing parser Item with
 DefaultHasher, plus9supplemental controls. No Eq, numeric Python hash equality,
