@@ -13,8 +13,8 @@ use super::policy::{
 use super::revinfo::freshness::{DefaultFreshnessJudge, FreshnessJudge};
 use super::revinfo::{CrlContainer, OcspContainer};
 use sigis_pki_core::algorithms::{AlgorithmUsagePolicy, DisallowWeakAlgorithmsPolicy};
-use sigis_pki_core::errors::ValidationError;
-use sigis_pki_core::fetch::Fetchers;
+use sigis_pki_core::errors::{FetchError, ValidationError};
+use sigis_pki_core::fetch::{FetcherBackend, Fetchers};
 use sigis_pki_core::time::Moment;
 
 /// Default allowed clock drift.
@@ -35,6 +35,7 @@ pub struct ValidationContext {
     pub(crate) freshness_judge: Arc<dyn FreshnessJudge>,
     pub(crate) assertions: Vec<NonRevokedStatusAssertion>,
     pub(crate) fetchers: Fetchers,
+    owned_fetcher_backend: Option<Arc<dyn FetcherBackend>>,
     pub(crate) acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
     pub(crate) trust_manager: Option<Arc<dyn TrustManager>>,
 }
@@ -107,6 +108,19 @@ impl ValidationContext {
     /// Configured fetchers (none by default).
     pub fn fetchers(&self) -> &Fetchers {
         &self.fetchers
+    }
+
+    /// Close only the backend explicitly adopted by this context.
+    ///
+    /// Borrowed backends and supplied fetchers are left alone. Every explicit
+    /// call delegates to the same adopted backend and propagates its error;
+    /// the owner is retained, and issued caches/budgets are not reset. Clones
+    /// retain this authority. Dropping a context does not call this method.
+    pub fn close(&self) -> Result<(), FetchError> {
+        match &self.owned_fetcher_backend {
+            Some(backend) => backend.close(),
+            None => Ok(()),
+        }
     }
 
     /// Clone this context, replacing only its fetchers.
@@ -304,7 +318,8 @@ pub struct ValidationContextBuilder {
     algorithm_policy: Option<Arc<dyn AlgorithmUsagePolicy>>,
     freshness_judge: Option<Arc<dyn FreshnessJudge>>,
     assertions: Vec<NonRevokedStatusAssertion>,
-    fetchers: Fetchers,
+    fetchers: Option<Fetchers>,
+    fetcher_backend: Option<(Arc<dyn FetcherBackend>, bool)>,
     acceptable_ac_targets: Option<crate::ac::AcTargetDescription>,
     trust_manager: Option<Arc<dyn TrustManager>>,
 }
@@ -415,7 +430,27 @@ impl ValidationContextBuilder {
     /// Allow retrieving revocation information and certificates with these
     /// fetchers. The default is [`Fetchers::none`]: nothing is fetched.
     pub fn fetchers(mut self, fetchers: Fetchers) -> Self {
-        self.fetchers = fetchers;
+        self.fetchers = Some(fetchers);
+        self
+    }
+
+    /// Select a borrowed backend. The caller retains authority to close it.
+    ///
+    /// The last backend setter selects its backend and close mode. Explicit
+    /// [`Self::fetchers`] takes precedence in either setter order, including
+    /// explicit [`Fetchers::none`]. No default HTTP backend is provisioned.
+    pub fn fetcher_backend(mut self, backend: Arc<dyn FetcherBackend>) -> Self {
+        self.fetcher_backend = Some((backend, false));
+        self
+    }
+
+    /// Adopt a backend, retaining the exact supplied handle for explicit close.
+    ///
+    /// The backend is retained even when explicit [`Self::fetchers`] wins
+    /// retrieval. Its factory runs at most once, only after builder validation
+    /// succeeds and only when no explicit fetcher set was supplied.
+    pub fn owned_fetcher_backend(mut self, backend: Arc<dyn FetcherBackend>) -> Self {
+        self.fetcher_backend = Some((backend, true));
         self
     }
 
@@ -440,6 +475,17 @@ impl ValidationContextBuilder {
         for der in &self.ocsps {
             ocsps.extend(OcspContainer::load(der)?);
         }
+        // Factories may allocate transport resources: resolve the selection
+        // only after all fallible builder validation above has succeeded.
+        let fetchers = self.fetchers.unwrap_or_else(|| {
+            self.fetcher_backend
+                .as_ref()
+                .map(|(backend, _)| backend.get_fetchers())
+                .unwrap_or_default()
+        });
+        let owned_fetcher_backend = self
+            .fetcher_backend
+            .and_then(|(backend, owned)| owned.then_some(backend));
         Ok(ValidationContext {
             trust_anchors: self.trust_anchors,
             other_certs: self.other_certs,
@@ -461,7 +507,8 @@ impl ValidationContextBuilder {
                 .freshness_judge
                 .unwrap_or_else(|| Arc::new(DefaultFreshnessJudge)),
             assertions: self.assertions,
-            fetchers: self.fetchers,
+            fetchers,
+            owned_fetcher_backend,
             acceptable_ac_targets: self.acceptable_ac_targets,
             trust_manager: self.trust_manager,
         })

@@ -12,7 +12,9 @@ use der::Encode;
 
 use sigis_pki_core::cert::Cert;
 use sigis_pki_core::errors::{FetchError, FetchErrorKind};
-use sigis_pki_core::fetch::{CertificateFetcher, CrlFetcher, Fetchers, OcspFetcher};
+use sigis_pki_core::fetch::{
+    CertificateFetcher, CrlFetcher, FetcherBackend, Fetchers, OcspFetcher,
+};
 
 use crate::budget::{cap_aia_urls, FetchBudget, FetchKind, FetchLimits};
 use crate::common::{
@@ -97,9 +99,12 @@ struct Inner {
 /// HTTP fetchers with caching, size limits, timeouts and multi-URL
 /// fallback (`RequestsFetcherBackend.get_fetchers()`). Clones share the
 /// caches and the request budget; a new instance starts a fresh budget.
+/// [`FetcherBackend::get_fetchers`] creates an independent set over the same
+/// transport, while [`Self::as_fetchers`] retains the current shared state.
 #[derive(Clone, Debug)]
 pub struct HttpFetchers {
     inner: Arc<Inner>,
+    managed_transport: Option<Arc<LazyTransport>>,
 }
 
 impl Default for HttpFetchers {
@@ -111,14 +116,19 @@ impl Default for HttpFetchers {
 impl HttpFetchers {
     /// Fetchers over HTTP (reqwest) with the given settings.
     pub fn new(settings: FetcherSettings) -> Self {
-        let transport: Arc<dyn HttpTransport> = Arc::new(LazyTransport::new(
+        let transport = Arc::new(LazyTransport::new(
             settings.limits.timeout,
             settings.limits.max_response_bytes,
         ));
-        Self::with_transport(transport, settings)
+        let mut backend = Self::with_transport(transport.clone(), settings);
+        backend.managed_transport = Some(transport);
+        backend
     }
 
-    /// Fetchers over a custom transport (tests, proxies).
+    /// Fetchers over a caller-managed transport (tests, proxies).
+    ///
+    /// Backend close never closes this transport, including a supplied
+    /// [`LazyTransport`]. Its caller retains explicit close authority.
     pub fn with_transport(transport: Arc<dyn HttpTransport>, settings: FetcherSettings) -> Self {
         let budget = FetchBudget::new(settings.limits.clone());
         Self {
@@ -131,6 +141,7 @@ impl HttpFetchers {
                 crls_by_cert: Mutex::default(),
                 ocsp_by_cert: Mutex::default(),
             }),
+            managed_transport: None,
         }
     }
 
@@ -439,6 +450,22 @@ impl HttpFetchers {
         lock(&self.inner.crls_by_cert)
             .get(&issuer_serial(cert).ok()?)
             .cloned()
+    }
+}
+
+impl FetcherBackend for HttpFetchers {
+    fn get_fetchers(&self) -> Fetchers {
+        Self::with_transport(self.inner.transport.clone(), self.inner.settings.clone())
+            .as_fetchers()
+    }
+
+    fn close(&self) -> Result<(), FetchError> {
+        match &self.managed_transport {
+            Some(transport) => transport
+                .close()
+                .map_err(|error| fetch_error(transport_kind(&error), error.to_string())),
+            None => Ok(()),
+        }
     }
 }
 

@@ -53,6 +53,21 @@ pub trait CertificateFetcher: Send + Sync + std::fmt::Debug {
     fn fetch_issuers(&self, cert: &Cert) -> Result<Vec<Cert>, FetchError>;
 }
 
+/// A fetcher factory with an explicit resource-close operation.
+///
+/// Each factory call creates a fresh set of component caches and request budget;
+/// configured transports may be shared. A context only calls [`Self::close`]
+/// when the caller explicitly grants it that authority. Borrowing an `Arc` alone
+/// never grants close authority, and dropping a context does not imply closing.
+pub trait FetcherBackend: Send + Sync + std::fmt::Debug {
+    /// Create a fresh set using the backend's configured transport and settings.
+    fn get_fetchers(&self) -> Fetchers;
+
+    /// Release managed resources, propagating any typed failure to the caller.
+    /// Explicit repeated calls are delegated; issued fetcher state is retained.
+    fn close(&self) -> Result<(), FetchError>;
+}
+
 /// The set of fetchers a validation may use (`Fetchers`). Absent fetchers
 /// mean "do not fetch".
 #[derive(Clone, Debug, Default)]
