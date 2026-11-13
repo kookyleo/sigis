@@ -8,6 +8,7 @@ pub mod plugins;
 pub mod runtime;
 pub mod software_signing;
 pub mod stamp;
+pub mod timestamp;
 pub mod usage;
 pub mod validation;
 
@@ -135,8 +136,9 @@ pub fn run_with_runtime(
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
             Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
+            Some("timestamp") => timestamp::run_with_runtime(&values[1..], config.as_ref(), runtime),
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry, runtime),
-            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig (native registry help and identity validation only)\n".into()),
+            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig, timestamp\n".into()),
             Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
         _ => Err(format!("Command '{name}' is not available in this cryptography-and-fields increment.")),
