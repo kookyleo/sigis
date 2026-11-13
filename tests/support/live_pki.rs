@@ -13,11 +13,13 @@ pub struct LivePki {
 }
 
 impl LivePki {
+    #[allow(dead_code, reason = "Used by the fixed-clock integration targets")]
     pub fn start() -> Self {
         Self::start_with_time(TIME)
     }
 
     /// Actual request-time PKI for an out-of-process current-time CLI.
+    #[allow(dead_code, reason = "Used by the current-time CLI integration target")]
     pub fn start_live() -> Self {
         Self::start_with_time("now")
     }
