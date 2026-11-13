@@ -110,7 +110,7 @@ fn leaf_not_before_and_not_after_use_the_selected_tolerance() {
             .intermediates()
             .iter()
             .all(|c| c.not_before() <= at && at <= c.not_after()));
-        for seconds in [30, 3600] {
+        for seconds in [0, 30, 1799, 1800, 3600] {
             let ctx = context(&path, at, seconds);
             let snapshot = format!("{ctx:?}");
             record(
@@ -124,10 +124,12 @@ fn leaf_not_before_and_not_after_use_the_selected_tolerance() {
                 seconds,
             );
             let result = validate_path_detailed(&ctx, &path, None);
-            if seconds == 30 {
+            if seconds < 1800 {
                 assert_time_failure(&result.unwrap_err(), &path, before, true, leaf);
             } else {
-                result.expect("one hour covers the actual thirty-minute leaf boundary");
+                result.expect(
+                    "the exact inclusive tolerance covers the actual thirty-minute leaf boundary",
+                );
             }
             assert_eq!(format!("{ctx:?}"), snapshot);
         }
