@@ -3286,6 +3286,7 @@ dependencies = [
  "axum",
  "cms 0.3.0-rc.1",
  "const-oid 0.10.3",
+ "cryptoki-sys",
  "der 0.8.3",
  "lopdf 0.47.0",
  "openssl",
