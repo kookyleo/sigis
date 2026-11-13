@@ -1,6 +1,7 @@
 //! pyHanko-compatible configuration, plugins, PDF cryptography, fields and stamps.
 pub mod config;
 pub mod crypt;
+pub mod detached_signing;
 pub mod fields;
 pub mod pemder_signing;
 pub mod pkcs12_signing;
@@ -267,6 +268,13 @@ fn run_signing(
     }
     // Keep identity and extension-provider execution unavailable. Only a
     // directly selected built-in may enter the reviewed ordinary adapter.
+    if args[i] == "pemder"
+        && rewritten[i] == "pemder"
+        && argument_positions(&rewritten)
+            .any(|position| matches!(rewritten[position].as_str(), "--detach" | "--detach-pem"))
+    {
+        return detached_signing::run_with_runtime(&rewritten, config, runtime);
+    }
     pkcs12_signing::require_timestamp(&rewritten)?;
     if args[i] == "pkcs12" && rewritten[i] == "pkcs12" {
         return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);

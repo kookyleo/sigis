@@ -96,7 +96,7 @@ fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
     }
     Ok(())
 }
-fn setup_schema(config: &CliConfig, name: &str) -> Result<(), String> {
+pub(crate) fn setup_schema(config: &CliConfig, name: &str) -> Result<(), String> {
     let selected = config
         .raw_config
         .get("pemder-setups")
@@ -181,7 +181,7 @@ fn raw_chain(opts: &Options) -> Result<Vec<Cert>, String> {
     }
     Ok(chain)
 }
-fn material(
+pub(crate) fn material(
     opts: &Options,
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
