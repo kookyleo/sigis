@@ -2,8 +2,8 @@
 pub mod config;
 pub mod crypt;
 pub mod fields;
-pub mod pkcs12_signing;
 pub mod pemder_signing;
+pub mod pkcs12_signing;
 pub mod plugins;
 pub mod runtime;
 pub mod software_signing;
