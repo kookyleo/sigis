@@ -161,6 +161,37 @@ mod tests {
     }
 
     #[test]
+    fn nonstandard_cardinality_cannot_gain_coverage() {
+        for range in [
+            vec![],
+            vec![0],
+            vec![0, 690],
+            vec![0, 0, 0],
+            vec![0, 0, 0, 0, 0],
+            vec![0, 0, 0, 0, 0, 0],
+        ] {
+            assert_eq!(
+                evaluate_signature_coverage(&[], &range, 0, 0, &[]),
+                SignatureCoverageLevel::Unclear,
+                "{range:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn oversized_contents_length_cannot_panic_or_gain_coverage() {
+        // Numeric-domain calls to the public helper, without allocating a
+        // giant PDF or claiming any corresponding CMS/trust validation.
+        for length in [usize::MAX / 2, usize::MAX / 2 + 1, usize::MAX] {
+            assert_eq!(
+                evaluate_signature_coverage(&[], &[0, 0, 0, 0], length, 0, &[]),
+                SignatureCoverageLevel::Unclear,
+                "{length}"
+            );
+        }
+    }
+
+    #[test]
     fn coverage_levels() {
         // file: [0..10) + <hex of 3 bytes = 8 chars> + [18..28)
         let mut file = vec![b'a'; 10];
