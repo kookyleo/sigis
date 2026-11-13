@@ -142,7 +142,10 @@ fn setup() -> Result<SoftHsm, String> {
     std::env::set_var("SOFTHSM2_CONF", &conf);
     let usable: Vec<_> = ALL_ALGOS.iter().filter(|(_, _, r)| r.is_none()).collect();
     for (algo, _, _) in &usable {
-        let out = Command::new("softhsm2-util")
+        let utility =
+            std::env::var_os("PKCS11_TEST_SOFTHSM_UTIL").unwrap_or_else(|| "softhsm2-util".into());
+        let out = Command::new(utility)
+            .args(["--module", &module])
             .env("SOFTHSM2_CONF", &conf)
             .args([
                 "--init-token",
@@ -225,6 +228,59 @@ fn key_base(label: &str, key_type: KeyType) -> Vec<Attribute> {
         Attribute::Label(label.as_bytes().to_vec()),
         Attribute::Id(label.as_bytes().to_vec()),
     ]
+}
+
+/// Standard finite-field DSA parameters from PKCS#8 or SubjectPublicKeyInfo.
+#[derive(Debug, der::Sequence)]
+pub struct DsaParameters<'a> {
+    pub prime: der::asn1::UintRef<'a>,
+    pub subprime: der::asn1::UintRef<'a>,
+    pub base: der::asn1::UintRef<'a>,
+}
+
+/// Import a fixture's DSA private key without a software DSA signing fallback.
+/// Metadata is decoded and checked before the sole native create_object call.
+pub fn import_dsa_pkcs8(
+    session: &sigis_pades_sign::pkcs11::cryptoki::session::Session,
+    pkcs8_der: &[u8],
+    label: &str,
+) -> Result<sigis_pades_sign::pkcs11::cryptoki::object::ObjectHandle, String> {
+    use sigis_pades_sign::pkcs11::cryptoki::object::AttributeType;
+
+    let key = pkcs8::PrivateKeyInfoRef::from_der(pkcs8_der).map_err(|e| e.to_string())?;
+    if key.algorithm.oid != oids::DSA {
+        return Err("expected a DSA private key".into());
+    }
+    let params: DsaParameters<'_> = key
+        .algorithm
+        .parameters
+        .as_ref()
+        .ok_or("missing DSA parameters")?
+        .decode_as::<DsaParameters<'_>>()
+        .map_err(|e| e.to_string())?;
+    let private =
+        der::asn1::UintRef::from_der(key.private_key.as_bytes()).map_err(|e| e.to_string())?;
+    if [params.prime, params.subprime, params.base, private]
+        .iter()
+        .any(|value| value.as_bytes().iter().all(|byte| *byte == 0))
+    {
+        return Err("DSA parameters and private value must be positive".into());
+    }
+    let mut template = key_base(label, KeyType::DSA);
+    template.extend([
+        Attribute::Prime(params.prime.as_bytes().to_vec()),
+        // cryptoki's safe generic attribute variant carries the standard
+        // CKA_SUBPRIME number absent from its named attribute variants.
+        Attribute::VendorDefined((
+            AttributeType::VendorDefined(0x131),
+            params.subprime.as_bytes().to_vec(),
+        )),
+        // In cryptoki 0.12.1 the named Base variant reports length one.
+        // The safe generic attribute preserves the full standard CKA_BASE.
+        Attribute::VendorDefined((AttributeType::Base, params.base.as_bytes().to_vec())),
+        Attribute::Value(private.as_bytes().to_vec()),
+    ]);
+    session.create_object(&template).map_err(|e| e.to_string())
 }
 
 fn import_key(
