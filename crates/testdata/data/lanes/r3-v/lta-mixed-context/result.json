@@ -1,0 +1,563 @@
+{
+  "receipt": {
+    "opened_before_parse": {
+      "pdf": {
+        "path": "/home/l/D/kooky/sigis/crates/testdata/data/lanes/r3-s/mixed-context/different-generation-reproducer.pdf",
+        "length": 26213,
+        "sha256": "29b0a8a97e32bb220c96ac34d9906bcadf2d38dc7a13eb77336b63eaa6cdc4b2"
+      },
+      "ecc": {
+        "path": "/home/l/D/kooky/sigis/crates/testdata/data/lanes/r3-s/mixed-context/testing-ca-ecdsa-root.der",
+        "length": 648,
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90"
+      },
+      "rsa": {
+        "path": "/home/l/D/kooky/sigis/crates/testdata/data/lanes/r3-s/mixed-context/testing-ca-root.der",
+        "length": 976,
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+      }
+    },
+    "native_source_head": "45a8b44262dac39e7a13942beeb1eba50a922585",
+    "helper_sha256": "55d3e84ff54c6d641ceb337249c59a4cd1bf077df747eaf9503a26a32dbd278e",
+    "pyhanko": "0.38.1",
+    "certvalidator": "0.33.0",
+    "primary_source_before": {
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/types.py": "ef420f56f29019772701f1127d2af7c3efd6146c3deb3b2392d6682ec31857f6",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361"
+    },
+    "primary_source_after": {
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/types.py": "ef420f56f29019772701f1127d2af7c3efd6146c3deb3b2392d6682ec31857f6",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+      "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361"
+    }
+  },
+  "profiles": [
+    {
+      "id": "public-full-lta-implicit-shared-false",
+      "role_profile": "implicit shared policy; no explicit TS override",
+      "point_in_time_validation_argument": false,
+      "timing_argument": {
+        "validation_time": "2020-11-01T00:00:00Z",
+        "best_signature_time": "2020-11-01T00:00:00Z",
+        "point_in_time_validation": false
+      },
+      "trust_roots_in_input_order": [
+        "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+      ],
+      "revocation": "NO_REVOCATION (nocheck/nocheck)",
+      "gathering": "LOCAL_ONLY; NEVER_FETCH certificates",
+      "time_tolerance_seconds": 1,
+      "preloaded_local_knowledge": false,
+      "algorithm_policy": "<pyhanko_certvalidator.policy_decl.DisallowWeakAlgorithmsPolicy object at 0x7ae29edd91d0>",
+      "mac_status": "SUCCESSFUL",
+      "exception": null,
+      "ades_subindication": "NO_POE",
+      "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+      "best_signature_time": "2020-11-01T00:00:00Z",
+      "signature_not_before_time": null,
+      "oldest_evidence_record_timestamp": null,
+      "api_status": {
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "bottom_line": true,
+        "summary": "INTACT:TRUSTED,TIMESTAMP_TOKEN<INTACT:TRUSTED>,UNTOUCHED",
+        "signer_sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+        "path_sha256": [
+          "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+          "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+          "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a"
+        ],
+        "timestamp": {
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "timestamp": "2020-11-01T00:00:00Z",
+          "summary": "INTACT:TRUSTED",
+          "signer_sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+          "path_sha256": [
+            "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+          ]
+        },
+        "all_dataclass_fields": {
+          "intact": true,
+          "valid": true,
+          "trust_problem_indic": null,
+          "signing_cert": {
+            "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+            "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          },
+          "pkcs7_signature_mechanism": "sha384_ecdsa",
+          "md_algorithm": "sha384",
+          "validation_path": [
+            {
+              "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+              "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4096"
+            },
+            {
+              "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+              "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4097"
+            },
+            {
+              "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+              "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4097"
+            }
+          ],
+          "revocation_details": null,
+          "error_time_horizon": null,
+          "validation_time": "2020-11-01T00:00:00Z",
+          "qualification_result": null,
+          "ac_attrs": null,
+          "ac_validation_errs": null,
+          "cades_signer_attrs": null,
+          "signer_reported_dt": null,
+          "timestamp_validity": {
+            "intact": true,
+            "valid": true,
+            "trust_problem_indic": null,
+            "signing_cert": {
+              "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+              "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4098"
+            },
+            "pkcs7_signature_mechanism": "rsassa_pkcs1v15",
+            "md_algorithm": "sha384",
+            "validation_path": [
+              {
+                "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+                "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4096"
+              },
+              {
+                "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+                "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4098"
+              }
+            ],
+            "revocation_details": null,
+            "error_time_horizon": null,
+            "validation_time": "2020-11-01T00:00:00Z",
+            "qualification_result": null,
+            "timestamp": "2020-11-01T00:00:00Z"
+          },
+          "content_timestamp_validity": null,
+          "coverage": {
+            "enum": "SignatureCoverageLevel",
+            "name": "ENTIRE_FILE",
+            "value": "3"
+          },
+          "diff_result": {
+            "modification_level": {
+              "enum": "ModificationLevel",
+              "name": "NONE",
+              "value": "0"
+            },
+            "changed_form_fields": []
+          },
+          "docmdp_ok": true,
+          "has_seed_values": false,
+          "seed_value_constraint_error": null
+        }
+      },
+      "signature_timestamp_status": {
+        "ades_subindication": "OK",
+        "failure_msg": null,
+        "api_status": {
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "bottom_line": null,
+          "summary": "INTACT:TRUSTED",
+          "signer_sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+          "path_sha256": [
+            "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+          ],
+          "timestamp": null,
+          "all_dataclass_fields": {
+            "intact": true,
+            "valid": true,
+            "trust_problem_indic": null,
+            "signing_cert": {
+              "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+              "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4098"
+            },
+            "pkcs7_signature_mechanism": "rsassa_pkcs1v15",
+            "md_algorithm": "sha384",
+            "validation_path": [
+              {
+                "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+                "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4096"
+              },
+              {
+                "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+                "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4098"
+              }
+            ],
+            "revocation_details": null,
+            "error_time_horizon": null,
+            "validation_time": "2020-11-01T00:00:00Z",
+            "qualification_result": null,
+            "timestamp": "2020-11-01T00:00:00Z"
+          }
+        }
+      },
+      "validation_objects": [
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+            "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4096"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+            "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+            "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4096"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+            "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4098"
+          }
+        }
+      ],
+      "full_result_repr": "AdESLTAValidationResult(ades_subindic=<AdESIndeterminate.NO_POE: 18>, api_status=PdfSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113746000864 b'0\\x82\\x0350\\x82\\x02\\xbb\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x010\\n\\x06\\x08*\\x86H\\xce=\\x04\\x03\\x020Y1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x180\\x16\\x06\\x03U\\x04\\x03\\x0c\\x0fIntermediate CA0\\x1e\\x17\\r200101000000Z\\x17\\r220101000000Z0q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x0e0\\x0c\\x06\\x03U\\x04\\x03\\x0c\\x05Alice1 0\\x1e\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\t\\x01\\x16\\x11alice@example.com0v0\\x10\\x06\\x07*\\x86H\\xce=\\x02\\x01\\x06\\x05+\\x81\\x04\\x00\"\\x03b\\x00\\x04s\\xecz\\xc1Z\\x80\\xaf\\xec\\xac\\xa1z\\xb9\\xea\\xaa\\xa0\\x06\\x0e\\x88\\xb0\\xdf\\x86\\x9d\\x19\\x07v\\xc2k\\r\\xfb\\x94\\xd8\\x87\\x08C\\x0b4\\xbe\\xbe\\xabcs\\x89\\xbd\\x15\\x81\\x11\\xd1>4\\xd8v\\x0c{\\xb6\\xccJ)\\x18\\xdf-I!3%\\x18\\xbd\\xe6\\xb2\\x97\\xe7\\xb8\\xc1 y\\x14i7\\x0f#\\x02\\xab\\xbb\\x8at\\x9c<\\xe7\\xd3\\xa7\\x8a\\n\\xc8\\x8a\\xce\\xa64\\xa3\\x82\\x01<0\\x82\\x0180\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14\\x8d\\x07{\\x91\\xee\\xe2\\xd8(\\x16\\xcd$\\xeb\\xbfW\\xac\\xf6\\xe4]\\x13\\x890\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xd8)\\x89&\\xd1h@\\th\\xc2\\xef\\xdbM#\\xcfQkD\\xd5|0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x06\\xc00M\\x06\\x03U\\x1d\\x1f\\x04F0D0B\\xa0@\\xa0>\\x86<http://pyhanko.tests/testing-ca-ecdsa/crls/interm/latest.crl0\\x81\\x96\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x01\\x01\\x04\\x81\\x890\\x81\\x860=\\x06\\x08+\\x06\\x01\\x05\\x05\\x070\\x01\\x861http://pyhanko.tests/testing-ca-ecdsa/ocsp/interm0E\\x06\\x08+\\x06\\x01\\x05\\x05\\x070\\x02\\x869http://pyhanko.tests/testing-ca-ecdsa/certs/interm/ca.crt0\\n\\x06\\x08*\\x86H\\xce=\\x04\\x03\\x02\\x03h\\x000e\\x020J\\xae\\xb0\\xae)\\xb9\\x80\\x8a\"\\xec\\x0c\\xfb\\xf3{\\xac\\x9f5\\x9c\\xc2\\x9a\\xd3Yr\\x1b\\x8e2*\\xf8\\xe9>\\xae\\xfd\\x17\\xb8x\\xb2w\\x14\\x05\\x1e\\xd7\\xf3\\xf0\\xa3-\\xa3\\xa7\\x08\\x021\\x00\\xd4N\\xf8\\xd4\\x0cP\\x926\\x91|\\x11\\x8f\\xb5\\xd4\\x8f\\x01\\x92\\x8b\\xf0\\xdf\\xc0\\xd4\\n:\\x0e\\x8b]\\xd2\\xc1\\x1d\\xf8\\x8a\\x18\\xb8i\\xf9\\xf8n\\xba\\x8a?|\\x1d\\xbc\\xbc\\xb3\\xf3\\x88'>, pkcs7_signature_mechanism='sha384_ecdsa', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29ec156a0>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, ac_attrs=None, ac_validation_errs=None, cades_signer_attrs=None, signer_reported_dt=None, timestamp_validity=TimestampSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113744859760 b'0\\x82\\x03\\xe10\\x82\\x02\\xc9\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x020\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x000Q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x100\\x0e\\x06\\x03U\\x04\\x03\\x0c\\x07Root CA0\\x1e\\x17\\r000101000000Z\\x17\\r300101000000Z0a1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1 0\\x1e\\x06\\x03U\\x04\\x03\\x0c\\x17Time Stamping Authority0\\x82\\x01\"0\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x01\\x05\\x00\\x03\\x82\\x01\\x0f\\x000\\x82\\x01\\n\\x02\\x82\\x01\\x01\\x00\\xbe0V\\xe2ug\\xefG3\\x0b\\x80P\\x85e\\xc5](|\\xb3\\x03!\\x1bzyl\\xff_R\\x1c\\xc6q\\xaa\\xce\\x82\\x83\\x18dP#\\xd7\\xe41\\xdb\\xb7\\x12C\\xe1g:;\\xfb>\\xa5\\xb3\\x1a\\xdeB\\x12\\x18x\\x0ee@\\xec\\xb0<\\xe4\\xa2\\xed\\xcd}DTW^ffHebM\\xd4\\xef\\x9a\\xdc\\xeag>sk\\x93K\\xa9\\xa5\\xb0\\xf2\\x13|i\\x16\\xf8Nk\\x127[\\x84\\x97\\xfd\\x98\\xc6N\\x16\\xb5\\xc7\\xb4\\n\\xaeu\\xe1\\x83kf\\x07\\xdc\\xdcn\\'\\xda\\xcf\\xa3\\x87\\xe2\\xf4\\n\\x0f\\xde}Hg\\x19f\\xf6\\x06\\xb5\\x1fd\\xb4\\x8a-\\x16\\xebi\\xe7>\\xd4\\x11\\x14\\x1eu\\xfc^\\xa1\\xe9S]B\\x03\\xce\\x06\\xbdHB\\xf4\\x8e\\xec\\x92\\xb9\\xe2\\\\\\x07(ay\\xd7\\xa6/\\x90\\xf8\\x16\\xd1\\x9f\\xbd\\x16c\\xb95\\xef}\\x99kq\\xa7.\\xaaa\\xd9\\xd1^V\\xae\\xc77I\\xca\\xf7\\x04#\\n7\\x00k\\xbdM\\x0c\\x8f\\xaah\\x8f\\xed\\x11\\xcc$\\xedLb&\\xbeT\\xff\\xc3?k\\x93\\xa2+\\x85%\\x18Be\\xf6\\xfac\\'\\x83\\x02\\x03\\x01\\x00\\x01\\xa3\\x81\\xb20\\x81\\xaf0\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14:-\\xe4W\\xf0U!\\\\\\x0bDe\\x06\\x83p\\xeb\\xba@|Y\\x1d0\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xf1\\xb4y\\x95\\x02\\xb2\\xb4_9r\\xfd\\xb0\\x8f\\xc2_\\xaf[\\x9aP\\xb50E\\x06\\x03U\\x1d\\x1f\\x04>0<0:\\xa08\\xa06\\x864http://pyhanko.tests/testing-ca/crls/root/latest.crl0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x07\\x800\\x16\\x06\\x03U\\x1d%\\x01\\x01\\xff\\x04\\x0c0\\n\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x03\\x080\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x00\\x03\\x82\\x01\\x01\\x00\\xc9O\\x95\\x9eU\\xc0\\xb7\\x97G\\xec\\\\/\\x87\\xb4\\xba\\x85\\x03\\x84\\xf6\\xab\\x84\\x1d^\\xccg\\x88\\r$\\'\\xc8\\x96\\x9fVb\\x100=\\xe2\\xf8jDu\\xc9\\x9b8\\x90\\x06\\xff\\xb9*\\n^\\xc6W\\x8ce\\xdc#\\xb3\\xc0zX\\xe9\\xe9\\x90Hpw\\xaf#\\x87\\xec\\xd7\\xd8]\\x06pU\\xe0\\x00\\xd2\\x11\\x8a\\rM{\\x1a\\x7fI\\xbf\\xb4\\xe6\\xa5\\'98\\x9f\\xd7\\xd5oh\\xd0\\x9c\\xb5\\'x\\xc5>c\\xed\\x08\\xb7\\xb4z\\x7f0L\\x88\\xf3\\xdcD\\t\\xb5h# &z;\\xf6\"\\xa2r\\xbf\\x8eR\\x8f\\xcd\\x9fu\\xa8\\x18\\xa6\\xf0E\\xc9i;+\\n\\x1c\\xe8 \\xac\\xcc!\\xe5\\xb8\\t+\\x9d\\xea\\xed`\\xb9W\\xf8\\x1f\\xe8.\\xa4\\xf1E\\xecY\\x02O\\x99Tp\\xaa\\xcfoq3g\\x84\\xf4S\\xebW\\'\\xb5W\\x87+?\\xf3\\xf9\\xc2D\\x80\\xddO\\xea\\x1cN\\xc70\\xe7\\xbb\\x84\\x00.\\x00\\xe2\\xbe\\xb6\\xcaH\\xc9C\\xc0j\\xbf\\xbc:\\x92\\x0b_0}?\\xe0\\xbc\\xd5\\xa7\\x1f\\x05bI?\\xda\\x1e\\xe4\\x1d\\n\\x14\\x94\\xdan#\\xd4\\xb5p\\xae'>, pkcs7_signature_mechanism='rsassa_pkcs1v15', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29ec45260>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, timestamp=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc)), content_timestamp_validity=None, coverage=<SignatureCoverageLevel.ENTIRE_FILE: 3>, diff_result=DiffResult(modification_level=<ModificationLevel.NONE: 0>, changed_form_fields=set()), docmdp_ok=True, has_seed_values=False, seed_value_constraint_error=None), failure_msg='Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]', validation_objects=<pyhanko.sign.validation.ades.ValidationObjectSet object at 0x7ae29ec3cb00>, best_signature_time=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), signature_not_before_time=None, oldest_evidence_record_timestamp=None, signature_timestamp_status=AdESBasicValidationResult(ades_subindic=<AdESPassed.OK: 1>, api_status=TimestampSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113744859760 b'0\\x82\\x03\\xe10\\x82\\x02\\xc9\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x020\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x000Q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x100\\x0e\\x06\\x03U\\x04\\x03\\x0c\\x07Root CA0\\x1e\\x17\\r000101000000Z\\x17\\r300101000000Z0a1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1 0\\x1e\\x06\\x03U\\x04\\x03\\x0c\\x17Time Stamping Authority0\\x82\\x01\"0\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x01\\x05\\x00\\x03\\x82\\x01\\x0f\\x000\\x82\\x01\\n\\x02\\x82\\x01\\x01\\x00\\xbe0V\\xe2ug\\xefG3\\x0b\\x80P\\x85e\\xc5](|\\xb3\\x03!\\x1bzyl\\xff_R\\x1c\\xc6q\\xaa\\xce\\x82\\x83\\x18dP#\\xd7\\xe41\\xdb\\xb7\\x12C\\xe1g:;\\xfb>\\xa5\\xb3\\x1a\\xdeB\\x12\\x18x\\x0ee@\\xec\\xb0<\\xe4\\xa2\\xed\\xcd}DTW^ffHebM\\xd4\\xef\\x9a\\xdc\\xeag>sk\\x93K\\xa9\\xa5\\xb0\\xf2\\x13|i\\x16\\xf8Nk\\x127[\\x84\\x97\\xfd\\x98\\xc6N\\x16\\xb5\\xc7\\xb4\\n\\xaeu\\xe1\\x83kf\\x07\\xdc\\xdcn\\'\\xda\\xcf\\xa3\\x87\\xe2\\xf4\\n\\x0f\\xde}Hg\\x19f\\xf6\\x06\\xb5\\x1fd\\xb4\\x8a-\\x16\\xebi\\xe7>\\xd4\\x11\\x14\\x1eu\\xfc^\\xa1\\xe9S]B\\x03\\xce\\x06\\xbdHB\\xf4\\x8e\\xec\\x92\\xb9\\xe2\\\\\\x07(ay\\xd7\\xa6/\\x90\\xf8\\x16\\xd1\\x9f\\xbd\\x16c\\xb95\\xef}\\x99kq\\xa7.\\xaaa\\xd9\\xd1^V\\xae\\xc77I\\xca\\xf7\\x04#\\n7\\x00k\\xbdM\\x0c\\x8f\\xaah\\x8f\\xed\\x11\\xcc$\\xedLb&\\xbeT\\xff\\xc3?k\\x93\\xa2+\\x85%\\x18Be\\xf6\\xfac\\'\\x83\\x02\\x03\\x01\\x00\\x01\\xa3\\x81\\xb20\\x81\\xaf0\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14:-\\xe4W\\xf0U!\\\\\\x0bDe\\x06\\x83p\\xeb\\xba@|Y\\x1d0\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xf1\\xb4y\\x95\\x02\\xb2\\xb4_9r\\xfd\\xb0\\x8f\\xc2_\\xaf[\\x9aP\\xb50E\\x06\\x03U\\x1d\\x1f\\x04>0<0:\\xa08\\xa06\\x864http://pyhanko.tests/testing-ca/crls/root/latest.crl0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x07\\x800\\x16\\x06\\x03U\\x1d%\\x01\\x01\\xff\\x04\\x0c0\\n\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x03\\x080\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x00\\x03\\x82\\x01\\x01\\x00\\xc9O\\x95\\x9eU\\xc0\\xb7\\x97G\\xec\\\\/\\x87\\xb4\\xba\\x85\\x03\\x84\\xf6\\xab\\x84\\x1d^\\xccg\\x88\\r$\\'\\xc8\\x96\\x9fVb\\x100=\\xe2\\xf8jDu\\xc9\\x9b8\\x90\\x06\\xff\\xb9*\\n^\\xc6W\\x8ce\\xdc#\\xb3\\xc0zX\\xe9\\xe9\\x90Hpw\\xaf#\\x87\\xec\\xd7\\xd8]\\x06pU\\xe0\\x00\\xd2\\x11\\x8a\\rM{\\x1a\\x7fI\\xbf\\xb4\\xe6\\xa5\\'98\\x9f\\xd7\\xd5oh\\xd0\\x9c\\xb5\\'x\\xc5>c\\xed\\x08\\xb7\\xb4z\\x7f0L\\x88\\xf3\\xdcD\\t\\xb5h# &z;\\xf6\"\\xa2r\\xbf\\x8eR\\x8f\\xcd\\x9fu\\xa8\\x18\\xa6\\xf0E\\xc9i;+\\n\\x1c\\xe8 \\xac\\xcc!\\xe5\\xb8\\t+\\x9d\\xea\\xed`\\xb9W\\xf8\\x1f\\xe8.\\xa4\\xf1E\\xecY\\x02O\\x99Tp\\xaa\\xcfoq3g\\x84\\xf4S\\xebW\\'\\xb5W\\x87+?\\xf3\\xf9\\xc2D\\x80\\xddO\\xea\\x1cN\\xc70\\xe7\\xbb\\x84\\x00.\\x00\\xe2\\xbe\\xb6\\xcaH\\xc9C\\xc0j\\xbf\\xbc:\\x92\\x0b_0}?\\xe0\\xbc\\xd5\\xa7\\x1f\\x05bI?\\xda\\x1e\\xe4\\x1d\\n\\x14\\x94\\xdan#\\xd4\\xb5p\\xae'>, pkcs7_signature_mechanism='rsassa_pkcs1v15', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29ec45260>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, timestamp=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc)), failure_msg=None, validation_objects=<pyhanko.sign.validation.ades.ValidationObjectSet object at 0x7ae29ec44af0>))"
+    },
+    {
+      "id": "public-full-lta-implicit-shared-true",
+      "role_profile": "implicit shared policy; no explicit TS override",
+      "point_in_time_validation_argument": true,
+      "timing_argument": {
+        "validation_time": "2020-11-01T00:00:00Z",
+        "best_signature_time": "2020-11-01T00:00:00Z",
+        "point_in_time_validation": true
+      },
+      "trust_roots_in_input_order": [
+        "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+      ],
+      "revocation": "NO_REVOCATION (nocheck/nocheck)",
+      "gathering": "LOCAL_ONLY; NEVER_FETCH certificates",
+      "time_tolerance_seconds": 1,
+      "preloaded_local_knowledge": false,
+      "algorithm_policy": "<pyhanko_certvalidator.policy_decl.DisallowWeakAlgorithmsPolicy object at 0x7ae29edee520>",
+      "mac_status": "SUCCESSFUL",
+      "exception": null,
+      "ades_subindication": "NO_POE",
+      "failure_msg": "Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]",
+      "best_signature_time": "2020-11-01T00:00:00Z",
+      "signature_not_before_time": null,
+      "oldest_evidence_record_timestamp": null,
+      "api_status": {
+        "intact": true,
+        "valid": true,
+        "trusted": true,
+        "bottom_line": true,
+        "summary": "INTACT:TRUSTED,TIMESTAMP_TOKEN<INTACT:TRUSTED>,UNTOUCHED",
+        "signer_sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+        "path_sha256": [
+          "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+          "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+          "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a"
+        ],
+        "timestamp": {
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "timestamp": "2020-11-01T00:00:00Z",
+          "summary": "INTACT:TRUSTED",
+          "signer_sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+          "path_sha256": [
+            "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+          ]
+        },
+        "all_dataclass_fields": {
+          "intact": true,
+          "valid": true,
+          "trust_problem_indic": null,
+          "signing_cert": {
+            "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+            "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          },
+          "pkcs7_signature_mechanism": "sha384_ecdsa",
+          "md_algorithm": "sha384",
+          "validation_path": [
+            {
+              "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+              "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4096"
+            },
+            {
+              "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+              "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4097"
+            },
+            {
+              "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+              "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4097"
+            }
+          ],
+          "revocation_details": null,
+          "error_time_horizon": null,
+          "validation_time": "2020-11-01T00:00:00Z",
+          "qualification_result": null,
+          "ac_attrs": null,
+          "ac_validation_errs": null,
+          "cades_signer_attrs": null,
+          "signer_reported_dt": null,
+          "timestamp_validity": {
+            "intact": true,
+            "valid": true,
+            "trust_problem_indic": null,
+            "signing_cert": {
+              "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+              "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4098"
+            },
+            "pkcs7_signature_mechanism": "rsassa_pkcs1v15",
+            "md_algorithm": "sha384",
+            "validation_path": [
+              {
+                "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+                "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4096"
+              },
+              {
+                "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+                "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4098"
+              }
+            ],
+            "revocation_details": null,
+            "error_time_horizon": null,
+            "validation_time": "2020-11-01T00:00:00Z",
+            "qualification_result": null,
+            "timestamp": "2020-11-01T00:00:00Z"
+          },
+          "content_timestamp_validity": null,
+          "coverage": {
+            "enum": "SignatureCoverageLevel",
+            "name": "ENTIRE_FILE",
+            "value": "3"
+          },
+          "diff_result": {
+            "modification_level": {
+              "enum": "ModificationLevel",
+              "name": "NONE",
+              "value": "0"
+            },
+            "changed_form_fields": []
+          },
+          "docmdp_ok": true,
+          "has_seed_values": false,
+          "seed_value_constraint_error": null
+        }
+      },
+      "signature_timestamp_status": {
+        "ades_subindication": "OK",
+        "failure_msg": null,
+        "api_status": {
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "bottom_line": null,
+          "summary": "INTACT:TRUSTED",
+          "signer_sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+          "path_sha256": [
+            "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+          ],
+          "timestamp": null,
+          "all_dataclass_fields": {
+            "intact": true,
+            "valid": true,
+            "trust_problem_indic": null,
+            "signing_cert": {
+              "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+              "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+              "serial": "4098"
+            },
+            "pkcs7_signature_mechanism": "rsassa_pkcs1v15",
+            "md_algorithm": "sha384",
+            "validation_path": [
+              {
+                "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+                "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4096"
+              },
+              {
+                "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+                "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+                "serial": "4098"
+              }
+            ],
+            "revocation_details": null,
+            "error_time_horizon": null,
+            "validation_time": "2020-11-01T00:00:00Z",
+            "qualification_result": null,
+            "timestamp": "2020-11-01T00:00:00Z"
+          }
+        }
+      },
+      "validation_objects": [
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+            "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4096"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+            "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a",
+            "subject": "Email Address: alice@example.com, Common Name: Alice, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4097"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+            "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4096"
+          }
+        },
+        {
+          "object_type": {
+            "enum": "ValidationObjectType",
+            "name": "CERTIFICATE",
+            "value": "certificate"
+          },
+          "value": {
+            "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+            "subject": "Common Name: Time Stamping Authority, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+            "serial": "4098"
+          }
+        }
+      ],
+      "full_result_repr": "AdESLTAValidationResult(ades_subindic=<AdESIndeterminate.NO_POE: 18>, api_status=PdfSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113744863024 b'0\\x82\\x0350\\x82\\x02\\xbb\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x010\\n\\x06\\x08*\\x86H\\xce=\\x04\\x03\\x020Y1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x180\\x16\\x06\\x03U\\x04\\x03\\x0c\\x0fIntermediate CA0\\x1e\\x17\\r200101000000Z\\x17\\r220101000000Z0q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x0e0\\x0c\\x06\\x03U\\x04\\x03\\x0c\\x05Alice1 0\\x1e\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\t\\x01\\x16\\x11alice@example.com0v0\\x10\\x06\\x07*\\x86H\\xce=\\x02\\x01\\x06\\x05+\\x81\\x04\\x00\"\\x03b\\x00\\x04s\\xecz\\xc1Z\\x80\\xaf\\xec\\xac\\xa1z\\xb9\\xea\\xaa\\xa0\\x06\\x0e\\x88\\xb0\\xdf\\x86\\x9d\\x19\\x07v\\xc2k\\r\\xfb\\x94\\xd8\\x87\\x08C\\x0b4\\xbe\\xbe\\xabcs\\x89\\xbd\\x15\\x81\\x11\\xd1>4\\xd8v\\x0c{\\xb6\\xccJ)\\x18\\xdf-I!3%\\x18\\xbd\\xe6\\xb2\\x97\\xe7\\xb8\\xc1 y\\x14i7\\x0f#\\x02\\xab\\xbb\\x8at\\x9c<\\xe7\\xd3\\xa7\\x8a\\n\\xc8\\x8a\\xce\\xa64\\xa3\\x82\\x01<0\\x82\\x0180\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14\\x8d\\x07{\\x91\\xee\\xe2\\xd8(\\x16\\xcd$\\xeb\\xbfW\\xac\\xf6\\xe4]\\x13\\x890\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xd8)\\x89&\\xd1h@\\th\\xc2\\xef\\xdbM#\\xcfQkD\\xd5|0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x06\\xc00M\\x06\\x03U\\x1d\\x1f\\x04F0D0B\\xa0@\\xa0>\\x86<http://pyhanko.tests/testing-ca-ecdsa/crls/interm/latest.crl0\\x81\\x96\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x01\\x01\\x04\\x81\\x890\\x81\\x860=\\x06\\x08+\\x06\\x01\\x05\\x05\\x070\\x01\\x861http://pyhanko.tests/testing-ca-ecdsa/ocsp/interm0E\\x06\\x08+\\x06\\x01\\x05\\x05\\x070\\x02\\x869http://pyhanko.tests/testing-ca-ecdsa/certs/interm/ca.crt0\\n\\x06\\x08*\\x86H\\xce=\\x04\\x03\\x02\\x03h\\x000e\\x020J\\xae\\xb0\\xae)\\xb9\\x80\\x8a\"\\xec\\x0c\\xfb\\xf3{\\xac\\x9f5\\x9c\\xc2\\x9a\\xd3Yr\\x1b\\x8e2*\\xf8\\xe9>\\xae\\xfd\\x17\\xb8x\\xb2w\\x14\\x05\\x1e\\xd7\\xf3\\xf0\\xa3-\\xa3\\xa7\\x08\\x021\\x00\\xd4N\\xf8\\xd4\\x0cP\\x926\\x91|\\x11\\x8f\\xb5\\xd4\\x8f\\x01\\x92\\x8b\\xf0\\xdf\\xc0\\xd4\\n:\\x0e\\x8b]\\xd2\\xc1\\x1d\\xf8\\x8a\\x18\\xb8i\\xf9\\xf8n\\xba\\x8a?|\\x1d\\xbc\\xbc\\xb3\\xf3\\x88'>, pkcs7_signature_mechanism='sha384_ecdsa', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29eeef350>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, ac_attrs=None, ac_validation_errs=None, cades_signer_attrs=None, signer_reported_dt=None, timestamp_validity=TimestampSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113744867376 b'0\\x82\\x03\\xe10\\x82\\x02\\xc9\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x020\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x000Q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x100\\x0e\\x06\\x03U\\x04\\x03\\x0c\\x07Root CA0\\x1e\\x17\\r000101000000Z\\x17\\r300101000000Z0a1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1 0\\x1e\\x06\\x03U\\x04\\x03\\x0c\\x17Time Stamping Authority0\\x82\\x01\"0\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x01\\x05\\x00\\x03\\x82\\x01\\x0f\\x000\\x82\\x01\\n\\x02\\x82\\x01\\x01\\x00\\xbe0V\\xe2ug\\xefG3\\x0b\\x80P\\x85e\\xc5](|\\xb3\\x03!\\x1bzyl\\xff_R\\x1c\\xc6q\\xaa\\xce\\x82\\x83\\x18dP#\\xd7\\xe41\\xdb\\xb7\\x12C\\xe1g:;\\xfb>\\xa5\\xb3\\x1a\\xdeB\\x12\\x18x\\x0ee@\\xec\\xb0<\\xe4\\xa2\\xed\\xcd}DTW^ffHebM\\xd4\\xef\\x9a\\xdc\\xeag>sk\\x93K\\xa9\\xa5\\xb0\\xf2\\x13|i\\x16\\xf8Nk\\x127[\\x84\\x97\\xfd\\x98\\xc6N\\x16\\xb5\\xc7\\xb4\\n\\xaeu\\xe1\\x83kf\\x07\\xdc\\xdcn\\'\\xda\\xcf\\xa3\\x87\\xe2\\xf4\\n\\x0f\\xde}Hg\\x19f\\xf6\\x06\\xb5\\x1fd\\xb4\\x8a-\\x16\\xebi\\xe7>\\xd4\\x11\\x14\\x1eu\\xfc^\\xa1\\xe9S]B\\x03\\xce\\x06\\xbdHB\\xf4\\x8e\\xec\\x92\\xb9\\xe2\\\\\\x07(ay\\xd7\\xa6/\\x90\\xf8\\x16\\xd1\\x9f\\xbd\\x16c\\xb95\\xef}\\x99kq\\xa7.\\xaaa\\xd9\\xd1^V\\xae\\xc77I\\xca\\xf7\\x04#\\n7\\x00k\\xbdM\\x0c\\x8f\\xaah\\x8f\\xed\\x11\\xcc$\\xedLb&\\xbeT\\xff\\xc3?k\\x93\\xa2+\\x85%\\x18Be\\xf6\\xfac\\'\\x83\\x02\\x03\\x01\\x00\\x01\\xa3\\x81\\xb20\\x81\\xaf0\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14:-\\xe4W\\xf0U!\\\\\\x0bDe\\x06\\x83p\\xeb\\xba@|Y\\x1d0\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xf1\\xb4y\\x95\\x02\\xb2\\xb4_9r\\xfd\\xb0\\x8f\\xc2_\\xaf[\\x9aP\\xb50E\\x06\\x03U\\x1d\\x1f\\x04>0<0:\\xa08\\xa06\\x864http://pyhanko.tests/testing-ca/crls/root/latest.crl0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x07\\x800\\x16\\x06\\x03U\\x1d%\\x01\\x01\\xff\\x04\\x0c0\\n\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x03\\x080\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x00\\x03\\x82\\x01\\x01\\x00\\xc9O\\x95\\x9eU\\xc0\\xb7\\x97G\\xec\\\\/\\x87\\xb4\\xba\\x85\\x03\\x84\\xf6\\xab\\x84\\x1d^\\xccg\\x88\\r$\\'\\xc8\\x96\\x9fVb\\x100=\\xe2\\xf8jDu\\xc9\\x9b8\\x90\\x06\\xff\\xb9*\\n^\\xc6W\\x8ce\\xdc#\\xb3\\xc0zX\\xe9\\xe9\\x90Hpw\\xaf#\\x87\\xec\\xd7\\xd8]\\x06pU\\xe0\\x00\\xd2\\x11\\x8a\\rM{\\x1a\\x7fI\\xbf\\xb4\\xe6\\xa5\\'98\\x9f\\xd7\\xd5oh\\xd0\\x9c\\xb5\\'x\\xc5>c\\xed\\x08\\xb7\\xb4z\\x7f0L\\x88\\xf3\\xdcD\\t\\xb5h# &z;\\xf6\"\\xa2r\\xbf\\x8eR\\x8f\\xcd\\x9fu\\xa8\\x18\\xa6\\xf0E\\xc9i;+\\n\\x1c\\xe8 \\xac\\xcc!\\xe5\\xb8\\t+\\x9d\\xea\\xed`\\xb9W\\xf8\\x1f\\xe8.\\xa4\\xf1E\\xecY\\x02O\\x99Tp\\xaa\\xcfoq3g\\x84\\xf4S\\xebW\\'\\xb5W\\x87+?\\xf3\\xf9\\xc2D\\x80\\xddO\\xea\\x1cN\\xc70\\xe7\\xbb\\x84\\x00.\\x00\\xe2\\xbe\\xb6\\xcaH\\xc9C\\xc0j\\xbf\\xbc:\\x92\\x0b_0}?\\xe0\\xbc\\xd5\\xa7\\x1f\\x05bI?\\xda\\x1e\\xe4\\x1d\\n\\x14\\x94\\xdan#\\xd4\\xb5p\\xae'>, pkcs7_signature_mechanism='rsassa_pkcs1v15', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29ecaf850>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, timestamp=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc)), content_timestamp_validity=None, coverage=<SignatureCoverageLevel.ENTIRE_FILE: 3>, diff_result=DiffResult(modification_level=<ModificationLevel.NONE: 0>, changed_form_fields=set()), docmdp_ok=True, has_seed_values=False, seed_value_constraint_error=None), failure_msg='Unable to construct plausible past validation path [AdESIndeterminate.NO_POE]', validation_objects=<pyhanko.sign.validation.ades.ValidationObjectSet object at 0x7ae29ec27980>, best_signature_time=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), signature_not_before_time=None, oldest_evidence_record_timestamp=None, signature_timestamp_status=AdESBasicValidationResult(ades_subindic=<AdESPassed.OK: 1>, api_status=TimestampSignatureStatus(intact=True, valid=True, trust_problem_indic=None, signing_cert=<asn1crypto.x509.Certificate 135113744867376 b'0\\x82\\x03\\xe10\\x82\\x02\\xc9\\xa0\\x03\\x02\\x01\\x02\\x02\\x02\\x10\\x020\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x000Q1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1\\x100\\x0e\\x06\\x03U\\x04\\x03\\x0c\\x07Root CA0\\x1e\\x17\\r000101000000Z\\x17\\r300101000000Z0a1\\x0b0\\t\\x06\\x03U\\x04\\x06\\x13\\x02BE1\\x140\\x12\\x06\\x03U\\x04\\n\\x0c\\x0bExample Inc1\\x1a0\\x18\\x06\\x03U\\x04\\x0b\\x0c\\x11Testing Authority1 0\\x1e\\x06\\x03U\\x04\\x03\\x0c\\x17Time Stamping Authority0\\x82\\x01\"0\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x01\\x05\\x00\\x03\\x82\\x01\\x0f\\x000\\x82\\x01\\n\\x02\\x82\\x01\\x01\\x00\\xbe0V\\xe2ug\\xefG3\\x0b\\x80P\\x85e\\xc5](|\\xb3\\x03!\\x1bzyl\\xff_R\\x1c\\xc6q\\xaa\\xce\\x82\\x83\\x18dP#\\xd7\\xe41\\xdb\\xb7\\x12C\\xe1g:;\\xfb>\\xa5\\xb3\\x1a\\xdeB\\x12\\x18x\\x0ee@\\xec\\xb0<\\xe4\\xa2\\xed\\xcd}DTW^ffHebM\\xd4\\xef\\x9a\\xdc\\xeag>sk\\x93K\\xa9\\xa5\\xb0\\xf2\\x13|i\\x16\\xf8Nk\\x127[\\x84\\x97\\xfd\\x98\\xc6N\\x16\\xb5\\xc7\\xb4\\n\\xaeu\\xe1\\x83kf\\x07\\xdc\\xdcn\\'\\xda\\xcf\\xa3\\x87\\xe2\\xf4\\n\\x0f\\xde}Hg\\x19f\\xf6\\x06\\xb5\\x1fd\\xb4\\x8a-\\x16\\xebi\\xe7>\\xd4\\x11\\x14\\x1eu\\xfc^\\xa1\\xe9S]B\\x03\\xce\\x06\\xbdHB\\xf4\\x8e\\xec\\x92\\xb9\\xe2\\\\\\x07(ay\\xd7\\xa6/\\x90\\xf8\\x16\\xd1\\x9f\\xbd\\x16c\\xb95\\xef}\\x99kq\\xa7.\\xaaa\\xd9\\xd1^V\\xae\\xc77I\\xca\\xf7\\x04#\\n7\\x00k\\xbdM\\x0c\\x8f\\xaah\\x8f\\xed\\x11\\xcc$\\xedLb&\\xbeT\\xff\\xc3?k\\x93\\xa2+\\x85%\\x18Be\\xf6\\xfac\\'\\x83\\x02\\x03\\x01\\x00\\x01\\xa3\\x81\\xb20\\x81\\xaf0\\x1d\\x06\\x03U\\x1d\\x0e\\x04\\x16\\x04\\x14:-\\xe4W\\xf0U!\\\\\\x0bDe\\x06\\x83p\\xeb\\xba@|Y\\x1d0\\x1f\\x06\\x03U\\x1d#\\x04\\x180\\x16\\x80\\x14\\xf1\\xb4y\\x95\\x02\\xb2\\xb4_9r\\xfd\\xb0\\x8f\\xc2_\\xaf[\\x9aP\\xb50E\\x06\\x03U\\x1d\\x1f\\x04>0<0:\\xa08\\xa06\\x864http://pyhanko.tests/testing-ca/crls/root/latest.crl0\\x0e\\x06\\x03U\\x1d\\x0f\\x01\\x01\\xff\\x04\\x04\\x03\\x02\\x07\\x800\\x16\\x06\\x03U\\x1d%\\x01\\x01\\xff\\x04\\x0c0\\n\\x06\\x08+\\x06\\x01\\x05\\x05\\x07\\x03\\x080\\r\\x06\\t*\\x86H\\x86\\xf7\\r\\x01\\x01\\x0b\\x05\\x00\\x03\\x82\\x01\\x01\\x00\\xc9O\\x95\\x9eU\\xc0\\xb7\\x97G\\xec\\\\/\\x87\\xb4\\xba\\x85\\x03\\x84\\xf6\\xab\\x84\\x1d^\\xccg\\x88\\r$\\'\\xc8\\x96\\x9fVb\\x100=\\xe2\\xf8jDu\\xc9\\x9b8\\x90\\x06\\xff\\xb9*\\n^\\xc6W\\x8ce\\xdc#\\xb3\\xc0zX\\xe9\\xe9\\x90Hpw\\xaf#\\x87\\xec\\xd7\\xd8]\\x06pU\\xe0\\x00\\xd2\\x11\\x8a\\rM{\\x1a\\x7fI\\xbf\\xb4\\xe6\\xa5\\'98\\x9f\\xd7\\xd5oh\\xd0\\x9c\\xb5\\'x\\xc5>c\\xed\\x08\\xb7\\xb4z\\x7f0L\\x88\\xf3\\xdcD\\t\\xb5h# &z;\\xf6\"\\xa2r\\xbf\\x8eR\\x8f\\xcd\\x9fu\\xa8\\x18\\xa6\\xf0E\\xc9i;+\\n\\x1c\\xe8 \\xac\\xcc!\\xe5\\xb8\\t+\\x9d\\xea\\xed`\\xb9W\\xf8\\x1f\\xe8.\\xa4\\xf1E\\xecY\\x02O\\x99Tp\\xaa\\xcfoq3g\\x84\\xf4S\\xebW\\'\\xb5W\\x87+?\\xf3\\xf9\\xc2D\\x80\\xddO\\xea\\x1cN\\xc70\\xe7\\xbb\\x84\\x00.\\x00\\xe2\\xbe\\xb6\\xcaH\\xc9C\\xc0j\\xbf\\xbc:\\x92\\x0b_0}?\\xe0\\xbc\\xd5\\xa7\\x1f\\x05bI?\\xda\\x1e\\xe4\\x1d\\n\\x14\\x94\\xdan#\\xd4\\xb5p\\xae'>, pkcs7_signature_mechanism='rsassa_pkcs1v15', md_algorithm='sha384', validation_path=<pyhanko_certvalidator.path.ValidationPath object at 0x7ae29ecaf850>, revocation_details=None, error_time_horizon=None, validation_time=datetime.datetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc), qualification_result=None, timestamp=FakeDatetime(2020, 11, 1, 0, 0, tzinfo=datetime.timezone.utc)), failure_msg=None, validation_objects=<pyhanko.sign.validation.ades.ValidationObjectSet object at 0x7ae29ec10830>))"
+    }
+  ],
+  "fresh_public_calls": 2,
+  "new_native_execution": false,
+  "new_unique_credit": 0,
+  "expected_verdict_forced": false,
+  "frozen_input_not_new_signature_generation": true,
+  "context_semantics_note": "Public policy build_validation_context_kwargs supplies moment for both flags. The input timing flag is retained; no internal context identity hook or TS-role override is injected."
+}

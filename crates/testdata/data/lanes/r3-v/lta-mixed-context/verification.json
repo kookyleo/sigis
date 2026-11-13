@@ -1,0 +1,100 @@
+{
+  "reviewed_native_source": "45a8b44262dac39e7a13942beeb1eba50a922585",
+  "current_native_execution": false,
+  "native_compilation": false,
+  "new_unique_credit": 0,
+  "primary_fresh_public_calls": 2,
+  "observational_fresh_public_calls": 2,
+  "total_fresh_public_calls": 4,
+  "primary_exceptions": 0,
+  "observational_exceptions": 0,
+  "actual_registration_events": 28,
+  "comparison": [
+    {
+      "id": "public-full-lta-implicit-shared-false",
+      "all_compared_fields_equal": true,
+      "fields": {
+        "exception": true,
+        "ades_subindication": true,
+        "failure_msg": true,
+        "best_signature_time": true,
+        "api_status": true,
+        "signature_timestamp_status": true
+      }
+    },
+    {
+      "id": "public-full-lta-implicit-shared-true",
+      "all_compared_fields_equal": true,
+      "fields": {
+        "exception": true,
+        "ades_subindication": true,
+        "failure_msg": true,
+        "best_signature_time": true,
+        "api_status": true,
+        "signature_timestamp_status": true
+      }
+    }
+  ],
+  "helper_source_pins": {
+    "oracle.py": "55d3e84ff54c6d641ceb337249c59a4cd1bf077df747eaf9503a26a32dbd278e",
+    "trace.py": "f5f16d8780258e6c08705e66a9af7f08f3a2261aa37ece19075c357277e942c7",
+    "root-test-draft.rs": "af542c2d9e9155af94fb87086f45bba7da47dbbe137ab707e4b275a21ee685ce"
+  },
+  "primary_source_current_read_pins": {
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py": "6d57fc2788534d6c1c00ea3031dcf7c641a396ad65074bc708508788d403b47c",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/pdf_embedded.py": "3455928ac7588ca1b5c836b58b0c7c678ff982c484bd5a1602bdbe62e24bdd8a",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/types.py": "ef420f56f29019772701f1127d2af7c3efd6146c3deb3b2392d6682ec31857f6"
+  },
+  "primary_source_before_after_pins": {
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/types.py": "ef420f56f29019772701f1127d2af7c3efd6146c3deb3b2392d6682ec31857f6",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361"
+  },
+  "outputs": {
+    "result.json": "5bb79eb089af83c28f649accb64a86d4c0a6f24d56fd91ca4bd66840624dc189",
+    "traced-result.json": "3a5a041da2a6f1204710ba0fd79acc6c0c461a73654b729c3dc26fe54085c1c9",
+    "registration-events.json": "eaea7813bb72b1053074ae5add78e316efe6d5e2380190007ced292de273c197",
+    "stderr.log": "521cf0d29823123d0cef19f57de1e1416412d5e5a4a898b75784322ccd39e8c3",
+    "traced-stderr.log": "f3d28700d1a6a39dc9f534762b195e584e0b89bed7978d639402b7ecc461f4e2"
+  },
+  "result_summary": [
+    {
+      "id": "public-full-lta-implicit-shared-false",
+      "subindication": "NO_POE",
+      "api_bottom_line": true,
+      "api_trusted": true,
+      "timestamp_trusted": true,
+      "main_path": [
+        "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a"
+      ],
+      "timestamp_path": [
+        "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+      ]
+    },
+    {
+      "id": "public-full-lta-implicit-shared-true",
+      "subindication": "NO_POE",
+      "api_bottom_line": true,
+      "api_trusted": true,
+      "timestamp_trusted": true,
+      "main_path": [
+        "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "899920fac432386b36a5a0cbccd5c681a215df2accf35e0280560fef8749555a"
+      ],
+      "timestamp_path": [
+        "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3495 @@
+{
+  "helper_sha256": "55d3e84ff54c6d641ceb337249c59a4cd1bf077df747eaf9503a26a32dbd278e",
+  "profiler_sha256": "f5f16d8780258e6c08705e66a9af7f08f3a2261aa37ece19075c357277e942c7",
+  "mechanism": "sys.setprofile observing original registry function calls and actual returns",
+  "events": [
+    {
+      "event": 0,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_init_vcs",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 674
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1056
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 1,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_init_vcs",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 674
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1056
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 2,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "_ades_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 897
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1065
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 3,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "_ades_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 897
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1065
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 4,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "_ades_process_attached_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 554
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1141
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 5,
+      "store": "store-1",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      },
+      "retained_before": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "_ades_process_attached_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 554
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1141
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 6,
+      "store": "store-2",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 380
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 7,
+      "store": "store-2",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 380
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 8,
+      "store": "store-2",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 387
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 9,
+      "store": "store-2",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 387
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      }
+    },
+    {
+      "event": 10,
+      "store": "store-3",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1435
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        },
+        {
+          "function": "run_path",
+          "file": "<frozen runpy>",
+          "line": 287
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/trace.py",
+          "line": 76
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 11,
+      "store": "store-3",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1435
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        },
+        {
+          "function": "run_path",
+          "file": "<frozen runpy>",
+          "line": 287
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/trace.py",
+          "line": 76
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 12,
+      "store": "store-4",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_past_validate_precheck",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 60
+        },
+        {
+          "function": "past_validate",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 114
+        },
+        {
+          "function": "handle_certvalidator_errors",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 1232
+        },
+        {
+          "function": "_build_and_past_validate_cert",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1388
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1464
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 13,
+      "store": "store-4",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": false,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_past_validate_precheck",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 60
+        },
+        {
+          "function": "past_validate",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 114
+        },
+        {
+          "function": "handle_certvalidator_errors",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 1232
+        },
+        {
+          "function": "_build_and_past_validate_cert",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1388
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1464
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 14,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_init_vcs",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 674
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1056
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 15,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_init_vcs",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 674
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1056
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 16,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "_ades_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 897
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1065
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 17,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "_ades_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 897
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1065
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 18,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "_ades_process_attached_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 554
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1141
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 19,
+      "store": "store-5",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      },
+      "retained_before": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "_ades_process_attached_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 554
+        },
+        {
+          "function": "_scoped_ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1141
+        },
+        {
+          "function": "ades_with_time_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1023
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2283
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 20,
+      "store": "store-6",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 380
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 21,
+      "store": "store-6",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 380
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 22,
+      "store": "store-6",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 387
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 23,
+      "store": "store-6",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "cms_basic_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 554
+        },
+        {
+          "function": "validate_tst_signed_data",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 926
+        },
+        {
+          "function": "ades_timestamp_validation_internal",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 464
+        },
+        {
+          "function": "ades_timestamp_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 387
+        },
+        {
+          "function": "_process_signature_ts",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2038
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2333
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314"
+      }
+    },
+    {
+      "event": 24,
+      "store": "store-7",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1435
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        },
+        {
+          "function": "run_path",
+          "file": "<frozen runpy>",
+          "line": 287
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/trace.py",
+          "line": 76
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 25,
+      "store": "store-7",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "register_multiple",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py",
+          "line": 138
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1435
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 183
+        },
+        {
+          "function": "_run_code",
+          "file": "<frozen runpy>",
+          "line": 88
+        },
+        {
+          "function": "_run_module_code",
+          "file": "<frozen runpy>",
+          "line": 98
+        },
+        {
+          "function": "run_path",
+          "file": "<frozen runpy>",
+          "line": 287
+        },
+        {
+          "function": "<module>",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/trace.py",
+          "line": 76
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+        "serial": "4097",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303937",
+        "subject": "Common Name: Intermediate CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "daac4fc48b1904954324269c9814fe64fc73bd251f2c5e33b09c642268aa414b"
+      }
+    },
+    {
+      "event": 26,
+      "store": "store-8",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "retained_before": null,
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_past_validate_precheck",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 60
+        },
+        {
+          "function": "past_validate",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 114
+        },
+        {
+          "function": "handle_certvalidator_errors",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 1232
+        },
+        {
+          "function": "_build_and_past_validate_cert",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1388
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1464
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": true,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    },
+    {
+      "event": 27,
+      "store": "store-8",
+      "store_type": "CertificateRegistry",
+      "historical_visible_on_stack": true,
+      "certificate": {
+        "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "5e621b298c92a65cd79ef4ed6fc09bcec979b87a9f244fe042686a85831330c3"
+      },
+      "retained_before": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      },
+      "caller_stack": [
+        {
+          "function": "__init__",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 293
+        },
+        {
+          "function": "build_validation_context",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py",
+          "line": 767
+        },
+        {
+          "function": "_past_validate_precheck",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 60
+        },
+        {
+          "function": "past_validate",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/ltv/ades_past.py",
+          "line": 114
+        },
+        {
+          "function": "handle_certvalidator_errors",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/generic_cms.py",
+          "line": 1232
+        },
+        {
+          "function": "_build_and_past_validate_cert",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1388
+        },
+        {
+          "function": "_ades_past_signature_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 1464
+        },
+        {
+          "function": "_scoped_ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2359
+        },
+        {
+          "function": "ades_lta_validation",
+          "file": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py",
+          "line": 2185
+        },
+        {
+          "function": "run",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 145
+        },
+        {
+          "function": "run_all",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 179
+        },
+        {
+          "function": "_run",
+          "file": "/usr/lib/python3.14/asyncio/events.py",
+          "line": 94
+        },
+        {
+          "function": "_run_once",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 2057
+        },
+        {
+          "function": "run_forever",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 677
+        },
+        {
+          "function": "run_until_complete",
+          "file": "/usr/lib/python3.14/asyncio/base_events.py",
+          "line": 706
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 127
+        },
+        {
+          "function": "run",
+          "file": "/usr/lib/python3.14/asyncio/runners.py",
+          "line": 204
+        },
+        {
+          "function": "main",
+          "file": "/home/l/.codex/artifacts/sigis/round3-launch/lta-registry-next/oracle.py",
+          "line": 167
+        }
+      ],
+      "accepted_actual_return": false,
+      "retained_after": {
+        "sha256": "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+        "issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+        "serial": "4096",
+        "issuer_serial": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c83a34303936",
+        "subject": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "issuer": "Common Name: Root CA, Organizational Unit: Testing Authority, Organization: Example Inc, Country: BE",
+        "public_key_sha256": "40d6cd9efde91ba3286f399fe8bafb5487be4398977f6fd14643d1bb66adeb4a"
+      }
+    }
+  ],
+  "pending_frames": 0,
+  "no_registry_or_validation_replacement": true
+}
