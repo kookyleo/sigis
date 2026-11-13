@@ -68,8 +68,8 @@ fn sample_signer_attributes() -> SignerAttributesV2 {
     }
 }
 
-/// SHA-256 raw DSA parameter selection already works. The remaining token
-/// invocation blocker is cryptoki's rejection of CKM_DSA, not core verification.
+/// SHA-256 raw DSA keeps its hash/DER transforms and translates through the
+/// safe cryptoki adapter with the standard null, zero-length parameters.
 #[test]
 fn raw_dsa_sha256_selects_hash_and_signature_transforms() {
     let cert = support::pki("testing-ca-dsa").cert("signer1");
@@ -92,11 +92,52 @@ fn raw_dsa_sha256_selects_hash_and_signature_transforms() {
         Some(PostSignTransform::EncodeDsa)
     );
     assert_eq!(operation.mechanism.mechanism_type(), 0x11);
-    assert!(
-        pkcs11::cryptoki::mechanism::MechanismType::try_from(operation.mechanism.mechanism_type())
-            .is_err(),
-        "cryptoki cannot translate CKM_DSA into a usable mechanism"
-    );
+    use pkcs11::cryptoki::mechanism::{
+        vendor_defined::VendorDefinedMechanism, Mechanism, MechanismType,
+    };
+
+    let mechanism_type = MechanismType::try_from(operation.mechanism.mechanism_type())
+        .expect("the standard CKM_DSA mechanism must be usable");
+    let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
+        mechanism_type,
+        None,
+    ));
+    let raw: cryptoki_sys::CK_MECHANISM = (&mechanism).into();
+    assert_eq!(raw.mechanism, 0x11);
+    assert!(raw.pParameter.is_null());
+    assert_eq!(raw.ulParameterLen, 0);
+}
+
+/// Recognising a standard mechanism is not a claim that a token implements it.
+/// Keep numeric inputs so the unpatched dependency fails at runtime conversion,
+/// rather than failing to compile because the new named constants are absent.
+#[test]
+fn standard_dsa_mechanisms_preserve_ids_and_empty_parameters() {
+    use pkcs11::cryptoki::mechanism::{
+        vendor_defined::VendorDefinedMechanism, Mechanism, MechanismType,
+    };
+
+    let signing_ids: [cryptoki_sys::CK_MECHANISM_TYPE; 6] = [0x11, 0x12, 0x13, 0x14, 0x15, 0x16];
+    for value in signing_ids {
+        let mechanism_type = MechanismType::try_from(value)
+            .expect("standard DSA mechanisms must survive conversion and slot enumeration");
+        assert_eq!(*mechanism_type, value);
+        assert!(MechanismType::new_vendor_defined(value).is_err());
+        let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
+            mechanism_type,
+            None,
+        ));
+        assert_eq!(mechanism.mechanism_type(), mechanism_type);
+        let raw: cryptoki_sys::CK_MECHANISM = (&mechanism).into();
+        assert_eq!(raw.mechanism, value);
+        assert!(raw.pParameter.is_null());
+        assert_eq!(raw.ulParameterLen, 0);
+    }
+    // This bounded patch deliberately does not add DSA key-generation/SHA-3.
+    let unpatched_ids: [cryptoki_sys::CK_MECHANISM_TYPE; 5] = [0x10, 0x18, 0x19, 0x1a, 0x1b];
+    for value in unpatched_ids {
+        assert!(MechanismType::try_from(value).is_err());
+    }
 }
 
 /// This fixture uses DSA-with-SHA256, the digest required by the inherited

@@ -133,6 +133,8 @@ sigis-pki-certvalidator.workspace = true
 sigis-pki-fetch.workspace = true
 sigis-testdata.workspace = true
 tempfile = "3"
+# Test-only inspection of cryptoki's existing public CK_MECHANISM conversion.
+cryptoki-sys = "=0.5.0"
 
 # Vendored underskrift 0.1.4 with a minimal patch that embeds an RFC 3161
 # signature timestamp (PAdES B-T). See vendor/README.md.
