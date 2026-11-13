@@ -96,7 +96,7 @@ fn reject_alias_conflicts(m: &Map<String, Value>, keys: &[&str]) -> ConfigResult
     }
     Ok(())
 }
-fn reject_unsupported_outer_aliases(m: &Map<String, Value>, keys: &[&str]) -> ConfigResult<()> {
+pub(crate) fn reject_unsupported_outer_aliases(m: &Map<String, Value>, keys: &[&str]) -> ConfigResult<()> {
     reject_alias_conflicts(m, keys)?;
     for (key, value) in m {
         let normalised = key.replace('_', "-");

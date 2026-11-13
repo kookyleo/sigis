@@ -126,6 +126,7 @@ fn check_context_settings(config: &CliConfig, name: Option<&str>) -> Result<(), 
     let mapping = raw
         .as_object()
         .ok_or("The validation context requires a dictionary.")?;
+    crate::config::reject_unsupported_outer_aliases(mapping, &allowed)?;
     for key in mapping.keys() {
         if !allowed.contains(&key.replace('_', "-").as_str()) {
             return Err(format!("Unknown setting '{key}' in validation context."));
