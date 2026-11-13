@@ -1,5 +1,12 @@
 # Rust port status
 
+> Verification hold: a new cross-worktree Cargo mtime-cache counterexample
+> reused a foreign library despite a missing API in the selected source tree.
+> The previously reported 1,259/29/143 inventory and 1,760 native passes below
+> are retained historical results; their complete source identity needs a
+> content-freshness fix and a new full main gate. No new increment is accepted
+> during this hold. Evidence: round3-launch/ria-http-pdf-integration/.
+
 Updated: 2026-11-13. Baseline: **pyHanko 0.38.1** (`v0.38.1`,
 `580f49498f76`) and **pyhanko-certvalidator 0.33.0**
 (`pyhanko-certvalidator/v0.33.0`, `b48999514cb4`).
