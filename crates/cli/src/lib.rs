@@ -5,6 +5,8 @@ pub mod fields;
 pub mod plugins;
 pub mod runtime;
 pub mod stamp;
+pub mod usage;
+pub mod validation;
 
 use clap::{Arg, ArgAction, Command};
 use std::{fs, io::Write, path::Path};
@@ -62,7 +64,7 @@ pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) ->
 }
 
 /// Run cryptography with explicit runtime services and native plugin dispatch.
-/// Signing and validation engines are unavailable in this increment.
+/// Ordinary PDF/CMS validation is available; signing engines remain unavailable.
 pub fn run_with_runtime(
     args: &[String],
     registry: &plugins::PluginRegistry,
@@ -109,7 +111,7 @@ pub fn run_with_runtime(
         }
     };
     let mut registry = registry.clone();
-    let diagnostics = registry.load(config.as_ref(), matches.get_flag("no-plugins"));
+    let mut diagnostics = registry.load(config.as_ref(), matches.get_flag("no-plugins"));
     let (name, sub) = matches.subcommand().expect("required subcommand");
     let values: Vec<String> = sub
         .get_many::<String>("arguments")
@@ -117,6 +119,9 @@ pub fn run_with_runtime(
         .flatten()
         .cloned()
         .collect();
+    if name == "sign" && values.first().is_some_and(|s| s == "validate") {
+        diagnostics.extend(validation::warnings(&values[1..], config.as_ref()));
+    }
     let result = match name {
         "stamp" => stamp::run(&values, config.as_ref()),
         "encrypt" | "decrypt" => {
@@ -126,8 +131,9 @@ pub fn run_with_runtime(
         }
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
+            Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry),
-            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, addsig (native registry help and identity validation only)\n".into()),
+            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig (native registry help and identity validation only)\n".into()),
             Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
         _ => Err(format!("Command '{name}' is not available in this cryptography-and-fields increment.")),
