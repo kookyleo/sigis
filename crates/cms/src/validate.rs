@@ -1402,3 +1402,7 @@ mod algorithm_horizon_tests {
 #[cfg(test)]
 #[path = "validate_registration_tests.rs"]
 mod operation_registration_tests;
+
+#[cfg(test)]
+#[path = "validate_order_tests.rs"]
+mod validation_order_tests;
