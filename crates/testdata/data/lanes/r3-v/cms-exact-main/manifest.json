@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "purpose": "Public genuinely issued digital-signature-only certificate, same fixture key and serial as signer1; not a claimed executed LTA projection.",
+  "certificate": {
+    "file": "digital-signature-only.der",
+    "sha256": "5053f3bcc821e7d82527b4f73247c34c36f5caef955945a3e8cf915f8dc0895c",
+    "length": 1140
+  },
+  "source": {
+    "owner_test_commit": "56ba96bfa734cbda2a3039f978099f491d183d58",
+    "manifest_sha256": "11c6cb8ee06f8a9e3164069c42f2d8de8c580f13925e73031415ca7450a79148",
+    "case": "digital_signature_only"
+  }
+}

@@ -506,3 +506,112 @@ impl CertificateFetcher for HttpFetchers {
         Ok(self.fetch_issuers_from_urls(gather_aia_issuer_urls(cert), "certificate"))
     }
 }
+
+#[cfg(test)]
+mod backend_lifecycle_tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+    use super::*;
+    use sigis_pki_core::fetch::FetcherBackend;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[derive(Debug)]
+    struct Session {
+        number: usize,
+        dropped: Arc<AtomicUsize>,
+    }
+
+    impl Drop for Session {
+        fn drop(&mut self) {
+            self.dropped.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    impl HttpTransport for Session {
+        fn send(&self, _: &HttpRequest<'_>) -> Result<HttpResponse, TransportError> {
+            Ok(HttpResponse {
+                status: 200,
+                content_type: None,
+                body: self.number.to_be_bytes().to_vec(),
+            })
+        }
+    }
+
+    #[test]
+    fn backend_new_and_default_own_only_their_exact_managed_transport() {
+        for backend in [
+            HttpFetchers::default(),
+            HttpFetchers::new(FetcherSettings::default()),
+        ] {
+            let pool = backend.managed_transport.as_ref().unwrap();
+            let erased: Arc<dyn HttpTransport> = pool.clone();
+            assert!(Arc::ptr_eq(&backend.inner.transport, &erased));
+            assert!(Arc::ptr_eq(
+                backend.managed_transport.as_ref().unwrap(),
+                backend.clone().managed_transport.as_ref().unwrap()
+            ));
+            backend.close().unwrap();
+            backend.close().unwrap();
+            let external = HttpFetchers::with_transport(pool.clone(), backend.settings().clone());
+            assert!(external.managed_transport.is_none());
+        }
+    }
+
+    #[test]
+    fn backend_managed_close_recreates_real_lazy_session_without_resetting_state() {
+        let created = Arc::new(AtomicUsize::new(0));
+        let dropped = Arc::new(AtomicUsize::new(0));
+        let pool = Arc::new(LazyTransport::with_factory({
+            let created = created.clone();
+            let dropped = dropped.clone();
+            move || {
+                Ok(Arc::new(Session {
+                    number: created.fetch_add(1, Ordering::SeqCst),
+                    dropped: dropped.clone(),
+                }))
+            }
+        }));
+        let settings = FetcherSettings {
+            limits: FetchLimits {
+                max_requests: Some(1),
+                ..Default::default()
+            },
+            user_agent: "owned-lifecycle".into(),
+            ..Default::default()
+        };
+        let mut backend = HttpFetchers::with_transport(pool.clone(), settings.clone());
+        // Inject an observable factory into the same private managed-pool slot.
+        // Public with_transport itself never adopts this caller's pool.
+        backend.managed_transport = Some(pool);
+        let view = backend.clone();
+        let request = HttpRequest {
+            method: "GET",
+            url: "https://example.invalid",
+            headers: Vec::new(),
+            body: None,
+        };
+        assert_eq!(created.load(Ordering::SeqCst), 0);
+        let first = backend.inner.transport.send(&request).unwrap();
+        assert_eq!(first, view.inner.transport.send(&request).unwrap());
+        assert_eq!(created.load(Ordering::SeqCst), 1);
+        backend.charge(FetchKind::Ocsp).unwrap();
+        let cached = FetchError::new(FetchErrorKind::Timeout, "retained cached failure");
+        lock(&backend.inner.crls_by_url)
+            .insert("https://cache.invalid".into(), Err(cached.clone()));
+        backend.close().unwrap();
+        assert_eq!(dropped.load(Ordering::SeqCst), 1);
+        assert_eq!(backend.settings(), &settings);
+        assert!(Arc::ptr_eq(&backend.inner, &view.inner));
+        assert_eq!(view.fetch_crl_url("https://cache.invalid"), Err(cached));
+        assert_eq!(
+            view.charge(FetchKind::Crl).unwrap_err().kind,
+            FetchErrorKind::Disabled
+        );
+        let second = view.inner.transport.send(&request).unwrap();
+        assert_ne!(first.body, second.body);
+        assert_eq!(created.load(Ordering::SeqCst), 2);
+        view.close().unwrap();
+        view.close().unwrap();
+        assert_eq!(dropped.load(Ordering::SeqCst), 2);
+        assert_eq!(created.load(Ordering::SeqCst), 2);
+    }
+}

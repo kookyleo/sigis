@@ -76,7 +76,20 @@ impl TrustManager for OneAnchor {
 }
 
 fn original_context() -> ValidationContext {
-    let read = |parts: &[&str]| std::fs::read(sigis_testdata::certvalidator(parts)).unwrap();
+    let read = |parts: &[&str]| {
+        let path = sigis_testdata::certvalidator(parts).canonicalize().unwrap();
+        let data = std::fs::read(&path).unwrap();
+        let hash: String = sigis_pki_core::algorithms::DigestAlgorithm::Sha256
+            .digest(&data)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
+        eprintln!(
+            "BACKEND_CONTEXT_INPUT {}",
+            serde_json::json!({"path":path,"length":data.len(),"sha256":hash})
+        );
+        data
+    };
     let certificate = |label: &str| {
         Cert::from_pem_or_der(&read(&["ades", "time-slide", "certs", label])).unwrap()
     };
@@ -381,4 +394,266 @@ fn registered_clone_does_not_enumerate_a_custom_trust_manager_into_candidates() 
     assert!(registered.is_trust_anchor(&rsa));
     assert!(!registered.is_trust_anchor(&ecc));
     assert!(original.is_trust_anchor(&rsa));
+}
+
+// Exact backend ownership assertions from CV 0.33.0, plus selection guards.
+#[derive(Debug, Default)]
+struct RecordingBackend {
+    retrievals: std::sync::atomic::AtomicUsize,
+    closes: std::sync::atomic::AtomicUsize,
+    close_error: Option<FetchError>,
+}
+
+impl sigis_pki_core::fetch::FetcherBackend for RecordingBackend {
+    fn get_fetchers(&self) -> Fetchers {
+        self.retrievals
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        marker_fetchers()
+    }
+
+    fn close(&self) -> Result<(), FetchError> {
+        self.closes
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.close_error.clone().map_or(Ok(()), Err)
+    }
+}
+
+fn backend_execution_identity() {
+    static IMAGE: std::sync::Once = std::sync::Once::new();
+    IMAGE.call_once(|| {
+        let path = std::env::current_exe().unwrap().canonicalize().unwrap();
+        let data = std::fs::read(&path).unwrap();
+        let hash: String = sigis_pki_core::algorithms::DigestAlgorithm::Sha256
+            .digest(&data)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
+        eprintln!(
+            "BACKEND_CONTEXT_ELF {}",
+            serde_json::json!({"path":path,"length":data.len(),"sha256":hash})
+        );
+    });
+}
+
+fn backend_count(counter: &std::sync::atomic::AtomicUsize) -> usize {
+    counter.load(std::sync::atomic::Ordering::SeqCst)
+}
+
+#[test]
+fn backend_context_leaves_a_supplied_backend_alone_private_owner() {
+    backend_execution_identity();
+    let backend = Arc::new(RecordingBackend::default());
+    let context = ValidationContext::builder()
+        .fetcher_backend(backend.clone())
+        .build()
+        .unwrap();
+    // The original inspects _owned_fetcher_backend, not just Arc lifetime.
+    assert!(context.owned_fetcher_backend.is_none());
+    context.close().unwrap();
+    assert_eq!(backend_count(&backend.closes), 0);
+    assert_eq!(backend_count(&backend.retrievals), 1);
+    assert!(!context.fetchers().is_empty());
+}
+
+#[test]
+fn backend_context_adopts_an_owned_backend_private_identity() {
+    backend_execution_identity();
+    let backend = Arc::new(RecordingBackend::default());
+    let identity: Arc<dyn sigis_pki_core::fetch::FetcherBackend> = backend.clone();
+    let context = ValidationContext::builder()
+        .owned_fetcher_backend(identity.clone())
+        .build()
+        .unwrap();
+    assert!(Arc::ptr_eq(
+        context.owned_fetcher_backend.as_ref().unwrap(),
+        &identity
+    ));
+    context.close().unwrap();
+    assert_eq!(backend_count(&backend.closes), 1);
+    assert_eq!(backend_count(&backend.retrievals), 1);
+}
+
+#[test]
+fn backend_explicit_fetchers_win_in_both_orders_including_explicit_none() {
+    backend_execution_identity();
+    for owned in [false, true] {
+        for explicit_first in [false, true] {
+            for empty in [false, true] {
+                let backend = Arc::new(RecordingBackend::default());
+                let identity: Arc<dyn sigis_pki_core::fetch::FetcherBackend> = backend.clone();
+                let explicit = if empty {
+                    Fetchers::none()
+                } else {
+                    marker_fetchers()
+                };
+                let mut builder = ValidationContext::builder();
+                if explicit_first {
+                    builder = builder.fetchers(explicit.clone());
+                }
+                builder = if owned {
+                    builder.owned_fetcher_backend(identity.clone())
+                } else {
+                    builder.fetcher_backend(identity.clone())
+                };
+                if !explicit_first {
+                    builder = builder.fetchers(explicit.clone());
+                }
+                let context = builder.build().unwrap();
+                assert_eq!(backend_count(&backend.retrievals), 0);
+                assert_eq!(context.fetchers().is_empty(), empty);
+                if !empty {
+                    assert_registered_fetchers_unchanged(
+                        &context,
+                        &context.with_fetchers(explicit),
+                    );
+                }
+                assert_eq!(context.owned_fetcher_backend.is_some(), owned);
+                if owned {
+                    assert!(Arc::ptr_eq(
+                        context.owned_fetcher_backend.as_ref().unwrap(),
+                        &identity
+                    ));
+                }
+                context.close().unwrap();
+                assert_eq!(backend_count(&backend.closes), usize::from(owned));
+            }
+        }
+    }
+}
+
+#[test]
+fn backend_last_selection_replaces_both_identity_and_close_authority() {
+    backend_execution_identity();
+    for first_owned in [false, true] {
+        for last_owned in [false, true] {
+            let first = Arc::new(RecordingBackend::default());
+            let last = Arc::new(RecordingBackend::default());
+            let last_identity: Arc<dyn sigis_pki_core::fetch::FetcherBackend> = last.clone();
+            let builder = ValidationContext::builder();
+            let builder = if first_owned {
+                builder.owned_fetcher_backend(first.clone())
+            } else {
+                builder.fetcher_backend(first.clone())
+            };
+            let builder = if last_owned {
+                builder.owned_fetcher_backend(last_identity.clone())
+            } else {
+                builder.fetcher_backend(last_identity.clone())
+            };
+            let context = builder.build().unwrap();
+            assert_eq!(backend_count(&first.retrievals), 0);
+            assert_eq!(backend_count(&last.retrievals), 1);
+            assert_eq!(context.owned_fetcher_backend.is_some(), last_owned);
+            if last_owned {
+                assert!(Arc::ptr_eq(
+                    context.owned_fetcher_backend.as_ref().unwrap(),
+                    &last_identity
+                ));
+            }
+            context.close().unwrap();
+            drop(context);
+            assert_eq!(backend_count(&first.closes), 0);
+            assert_eq!(backend_count(&last.closes), usize::from(last_owned));
+        }
+    }
+}
+
+#[test]
+fn backend_factory_runs_only_after_successful_builder_validation_once() {
+    backend_execution_identity();
+    for invalid in [0, 1, 2] {
+        let backend = Arc::new(RecordingBackend::default());
+        let builder = ValidationContext::builder().owned_fetcher_backend(backend.clone());
+        let builder = match invalid {
+            0 => builder.revocation_mode("invalid-mode"),
+            1 => builder.crl(vec![0x30, 0x00]),
+            _ => builder.ocsp_response(vec![0x30, 0x00]),
+        };
+        assert!(builder.build().is_err());
+        assert_eq!(backend_count(&backend.retrievals), 0);
+        assert_eq!(backend_count(&backend.closes), 0);
+    }
+    let default = ValidationContext::builder().build().unwrap();
+    assert!(default.fetchers().is_empty());
+    assert!(default.owned_fetcher_backend.is_none());
+    default.close().unwrap();
+    let backend = Arc::new(RecordingBackend::default());
+    let context = ValidationContext::builder()
+        .owned_fetcher_backend(backend.clone())
+        .build()
+        .unwrap();
+    assert_eq!(backend_count(&backend.retrievals), 1);
+    let clone = context
+        .clone()
+        .with_fetchers(Fetchers::none())
+        .with_timing(*context.timing());
+    assert_eq!(backend_count(&backend.retrievals), 1);
+    drop(clone);
+    drop(context);
+    // Drop is not an implicit close, even when the context was the last owner.
+    assert_eq!(backend_count(&backend.closes), 0);
+}
+
+#[test]
+fn backend_explicit_close_repeats_and_preserves_typed_error_and_owner() {
+    backend_execution_identity();
+    let error = FetchError::new(
+        sigis_pki_core::errors::FetchErrorKind::Timeout,
+        "close timeout",
+    );
+    let backend = Arc::new(RecordingBackend {
+        close_error: Some(error.clone()),
+        ..Default::default()
+    });
+    let identity: Arc<dyn sigis_pki_core::fetch::FetcherBackend> = backend.clone();
+    let context = ValidationContext::builder()
+        .owned_fetcher_backend(identity.clone())
+        .build()
+        .unwrap();
+    for count in 1..=3 {
+        assert_eq!(context.close(), Err(error.clone()));
+        assert_eq!(backend_count(&backend.closes), count);
+        assert!(Arc::ptr_eq(
+            context.owned_fetcher_backend.as_ref().unwrap(),
+            &identity
+        ));
+    }
+    drop(context);
+    assert_eq!(backend_count(&backend.closes), 3);
+}
+
+#[test]
+fn backend_clone_timing_and_replacement_preserve_owner_and_all_security_fields() {
+    backend_execution_identity();
+    let backend = Arc::new(RecordingBackend::default());
+    let identity: Arc<dyn sigis_pki_core::fetch::FetcherBackend> = backend.clone();
+    let mut original = original_context();
+    // Reuse the accepted restrictive fixture, never reconstruct its context.
+    original.owned_fetcher_backend = Some(identity.clone());
+    let mut timing = *original.timing();
+    timing.validation_time = moment("2020-11-02T00:00:00Z");
+    timing.time_tolerance = Duration::from_secs(19);
+    let copies = [
+        original.clone(),
+        original.with_timing(timing),
+        original.with_fetchers(Fetchers::none()),
+    ];
+    for copy in &copies {
+        assert_security_configuration_preserved(&original, copy);
+        assert!(Arc::ptr_eq(
+            copy.owned_fetcher_backend.as_ref().unwrap(),
+            &identity
+        ));
+        copy.close().unwrap();
+    }
+    assert_timing_equal(copies[1].timing(), &timing);
+    assert_timing_equal(copies[2].timing(), original.timing());
+    assert_registered_fetchers_unchanged(&original, &copies[0]);
+    assert_registered_fetchers_unchanged(&original, &copies[1]);
+    assert!(copies[2].fetchers().is_empty());
+    assert!(!original.fetchers().is_empty());
+    assert_eq!(backend_count(&backend.retrievals), 0);
+    assert_eq!(backend_count(&backend.closes), 3);
+    original.close().unwrap();
+    assert_eq!(backend_count(&backend.closes), 4);
 }
