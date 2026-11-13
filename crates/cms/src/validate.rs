@@ -584,9 +584,24 @@ pub fn validate_cert_usage(
     }
 }
 
+/// Order of signer and timestamp validation within a private CMS operation.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum CmsValidationOrder {
+    /// Preserve `async_validate_detached_cms`: timestamps precede the signer.
+    #[default]
+    TimestampsFirst,
+    /// Follow AdES basic validation: check the signer before its timestamps.
+    ///
+    /// Only the existing raw-valid, algorithm-allowed registration point can
+    /// make signer candidates available to a shared timestamp context.
+    SignerFirst,
+}
+
 /// Options shared by the validation entry points.
 #[derive(Clone, Debug, Default)]
 pub struct CmsValidationOptions<'a> {
+    /// Signer/timestamp processing order; defaults to timestamps first.
+    pub validation_order: CmsValidationOrder,
     /// Context for timestamp tokens; defaults to the signer's context.
     pub ts_validation_context: Option<&'a ValidationContext>,
     /// Context for attribute certificates; without it, ACs are not validated.
@@ -919,6 +934,11 @@ fn collect_timing_info_in_operation(
 /// `async_validate_detached_cms`, generalized over how the content digest
 /// is obtained. With `encapsulated = true` the content is the
 /// `SignedData`'s own `eContent` and `content` must digest it.
+///
+/// [`CmsValidationOrder::SignerFirst`] instead uses the AdES basic ordering.
+/// An invalid or non-intact main signature returns before timestamp or signer
+/// attribute processing. Algorithm-denied but raw-valid signatures retain
+/// their typed denial and can still have timestamp evidence processed.
 pub fn validate_detached_cms_with(
     sd: &SignedData,
     content: &dyn ContentDigester,
@@ -939,6 +959,35 @@ pub fn validate_detached_cms_with(
     };
     let si = extract_signer_info(sd)?;
     let digest_bytes = content.digest(&si.digest_algorithm)?;
+    let ku = StatusKind::Signature.default_usage_constraints(options.key_usage_settings.as_ref());
+    let validate_signer = |ctx: &mut ValidationContext| {
+        cms_basic_validation_in_operation(
+            sd,
+            (!encapsulated).then_some(digest_bytes.as_slice()),
+            ctx,
+            &ku,
+            options.algorithm_policy.clone(),
+            options.validation_path.as_ref(),
+            options.pkix_validation_params.as_ref(),
+        )
+    };
+    let signature_before_timing = match options.validation_order {
+        CmsValidationOrder::SignerFirst => {
+            // This is the same validation/registration operation, not a
+            // candidate preseed or a second validation with weaker policy.
+            let signature = validate_signer(&mut signer_operation_ctx)?;
+            if !signature.intact || !signature.valid {
+                // AdES basic integrity failures do not visit timestamps or
+                // expose signer attributes from an unauthenticated message.
+                return Ok(StandardCmsSignatureStatus {
+                    signature,
+                    ..StandardCmsSignatureStatus::default()
+                });
+            }
+            Some(signature)
+        }
+        CmsValidationOrder::TimestampsFirst => None,
+    };
     let timing = if shared_roles {
         collect_timing_info_in_operation(
             si,
@@ -958,16 +1007,10 @@ pub fn validate_detached_cms_with(
             options.algorithm_policy.clone(),
         )?
     };
-    let ku = StatusKind::Signature.default_usage_constraints(options.key_usage_settings.as_ref());
-    let signature = cms_basic_validation_in_operation(
-        sd,
-        (!encapsulated).then_some(digest_bytes.as_slice()),
-        &mut signer_operation_ctx,
-        &ku,
-        options.algorithm_policy.clone(),
-        options.validation_path.as_ref(),
-        options.pkix_validation_params.as_ref(),
-    )?;
+    let signature = match signature_before_timing {
+        Some(signature) => signature,
+        None => validate_signer(&mut signer_operation_ctx)?,
+    };
     let cert_info = extract_certificate_info(sd)?;
     let SignerAttrStatus {
         cades_signer_attrs,

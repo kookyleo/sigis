@@ -47,7 +47,9 @@ pub use status::{
     RevocationDetails, SignatureStatus, StandardCmsSignatureStatus, TimestampSignatureStatus,
     TrustProblem,
 };
-pub use validate::{CmsValidationOptions, ContentDigester, DataDigester, PrecomputedDigest};
+pub use validate::{
+    CmsValidationOptions, CmsValidationOrder, ContentDigester, DataDigester, PrecomputedDigest,
+};
 
 /// What the signature covers.
 #[derive(Clone, Copy, Debug)]
