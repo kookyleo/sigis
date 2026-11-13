@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "09ec130bff0d823733bb9b66c308943bed559785",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/c-prefix-integration/gate/gate.json",
+  "accepted_source_commit": "8819a77c424f1d5b0f40a423d8d5191fae3824e0",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3/l-next/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1263,6 +1263,30 @@
       "status": "passed",
       "rust_test": "config::test_fail_to_read_nondefault_config",
       "reason": "Scoped CLI config/plugins/crypt/field increment preserves exact pinned function assertions and original parameters. Actual immutable Cargo-produced executable and complete source gate 09ec130 pass. Loader tests use actual prehashed CMS with the loaded certificate, not raw signature-only checks. Plugin registration does not claim signing-engine execution; field occupancy does not claim trust validation. See the scoped parameter inventory and lead acceptance report."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_async_lazy_session",
+      "status": "passed",
+      "rust_test": "live_pades_lazy::test_async_lazy_session",
+      "reason": "Exact original lifetime/backend and parameter assertions with real loopback PFX/AIA/TSA signing; full native LTA and LtaUpdates, mandatory fresh same-output pinned Python verdict and empty-root denial. Four original functions independently execute six times and validate fifteen outputs. Complete source gate 8819a77 passes. Session/backend implementation adaptation and original upstream lazy cleanup warnings remain documented; native wrappers/oracle calls add no function credit."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_async_sign_many_concurrent",
+      "status": "passed",
+      "rust_test": "live_pades_concurrent::test_async_sign_many_concurrent",
+      "reason": "Exact original lifetime/backend and parameter assertions with real loopback PFX/AIA/TSA signing; full native LTA and LtaUpdates, mandatory fresh same-output pinned Python verdict and empty-root denial. Four original functions independently execute six times and validate fifteen outputs. Complete source gate 8819a77 passes. Session/backend implementation adaptation and original upstream lazy cleanup warnings remain documented; native wrappers/oracle calls add no function credit."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_requests_fetcher_backend_happy_path",
+      "status": "passed",
+      "rust_test": "live_pades::requests::test_requests_fetcher_backend_happy_path",
+      "reason": "Exact original lifetime/backend and parameter assertions with real loopback PFX/AIA/TSA signing; full native LTA and LtaUpdates, mandatory fresh same-output pinned Python verdict and empty-root denial. Four original functions independently execute six times and validate fifteen outputs. Complete source gate 8819a77 passes. Session/backend implementation adaptation and original upstream lazy cleanup warnings remain documented; native wrappers/oracle calls add no function credit."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_requests_fetchers_happy_path",
+      "status": "passed",
+      "rust_test": "live_pades::requests::test_requests_fetchers_happy_path",
+      "reason": "Exact original lifetime/backend and parameter assertions with real loopback PFX/AIA/TSA signing; full native LTA and LtaUpdates, mandatory fresh same-output pinned Python verdict and empty-root denial. Four original functions independently execute six times and validate fifteen outputs. Complete source gate 8819a77 passes. Session/backend implementation adaptation and original upstream lazy cleanup warnings remain documented; native wrappers/oracle calls add no function credit."
     }
   ]
 }

@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main 09ec130 found **1,706 Rust tests: 1,698 passed, 8
-ignored, zero failed**, across150 reports. Build, workspace tests, strict
+The latest gate on main 8819a77 found **1,710 Rust tests: 1,702 passed, 8
+ignored, zero failed**, across152 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3-launch/c-prefix-integration/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3/l-next/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -181,8 +181,8 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
 | **Library lanes A–E** | **1,168** | **1,125** | **30** | **13** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 98 | 0 | 154 |
-| Lead: live integration (round-3 L) | 11 | 6 | 0 | 5 |
-| **Overall** | **1,431** | **1,229** | **30** | **172** |
+| Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
+| **Overall** | **1,431** | **1,233** | **30** | **168** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -211,8 +211,8 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 | B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
 | C / CLI and configuration | 154 | Remaining signing, validation/LTV, stamps, runtime/provider and reader-state commands; config57/plugins11/crypt23/fields7 are accepted |
-| Lead / live integration | 5 | Lazy-session, concurrent signing, two requests backend functions and CLI LTA; exact PFX/AIA prerequisites and two other LTA functions are accepted |
-| **Total** | **172** | |
+| Lead / live integration | 1 | Actual CLI LTA after complete C signing/LTV commands; other ten live functions are accepted |
+| **Total** | **168** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
@@ -249,7 +249,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the172 pending
+provider behaviour and remaining validator compatibility; the168 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -418,7 +418,7 @@ parallel with system per-host worktree locks and automatic worker placement.
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 baseline functions accepted; continue security/parameter compatibility audits and new P/S/CLI consumers | Preserve proof/algorithm/coverage/qualification denials, exact source boundaries and fresh-input provenance |
 | S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Six pending callers (five PDF and Adobe AC CMS),27 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
 | C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish154 pending functions; retain known failed full-source assertions and trust holds, complete state and CLI LTA | Actual commands/artifacts/exit behavior, exact parameters, mandatory rejection and source-specific full gates |
-| L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Five live functions, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
+| L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final CLI live function, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
 
 P, V, S and C can start concurrently. S starts decode-limit assertions and
 independent parity work while coordinating PDF MAC/PAdES acceptance with
@@ -835,3 +835,77 @@ still prevent any universal all-divergences-fail-closed claim. This is a scoped
 Accepted C252/98/0/154; overall1431/1229/30/172. Detailed source/binary/fixture
 hashes, independent assertion reviews, actual test selectors and full logs:
 round3-launch/c-prefix-integration/ and round3-launch/c-prefix-review/.
+
+
+## Accepted live backend lifetimes and concurrency
+
+Source `8819a77c424f1d5b0f40a423d8d5191fae3824e0` passes build, workspace tests, clippy with -D warnings,
+strict documentation, dependency layering/cycles and formatting. Native gate:
+1710 discovered / 1702 passed / 8 ignored /
+0 failed, 152 reports. The four new immutable IDs are:
+
+| Exact upstream function | Rust target / test | Original executions | Produced PDFs |
+| --- | --- | ---: | ---: |
+| test_requests_fetchers_happy_path | live_pades / requests::test_requests_fetchers_happy_path | 2 (strict True/False) | 2 |
+| test_requests_fetcher_backend_happy_path | live_pades / requests::test_requests_fetcher_backend_happy_path | 2 (strict True/False) | 2 |
+| test_async_lazy_session | live_pades_lazy / test_async_lazy_session | 1 | 1 |
+| test_async_sign_many_concurrent | live_pades_concurrent / test_async_sign_many_concurrent | 1 | 10 |
+
+All IDs belong to integration-tests/test_live_certomancer.py. Unique functions
+count once. The focused three-target run passes six native tests, including
+the previously accepted strict/base functions. Its eighteen real output PDFs
+have independently recomputed native/Python PDF/root hashes; fifteen PDFs
+belong to the four new functions. Every produced output receives real native
+AdES LTA OK, intact/valid/trusted, exact StandardDiffPolicy LtaUpdates, fresh
+pinned Python0.38.1/CV0.33.0 same-output LTA and empty-root distrust.
+The complete workspace gate separately repeats these checks and retains its
+own eighteen PDF outputs and actual hashes. Nothing is counted from replayed
+verdicts, a reader-only test or an unavailable provider.
+
+Requests explicit construction retains three independent blocking production
+HTTP fetchers with ten-second request limits and literal permit_pem=strict.
+Backend construction ignores the original strict parameter exactly as upstream
+does. Its close method is a pinned upstream no-op; dropping only the facade
+while retained real fetcher handles remain usable preserves that contract.
+The unique eager setup client is out of scope before signing. Leaf-only flows
+must forward the exact downloaded signer-leaf DER and perform actual AIA HTTP
+before native/Python validation; no static issuer or manual prefetch substitutes.
+
+The lazy case drops the unique real setup client before publishing closure.
+Independent real production LazyTransport factories for fetchers and TSA each
+remain uncreated before closure, then create exactly one actual Reqwest client
+during signing. Default async-backend timeout10 and setup/TSA/new validation
+timeout5 are retained. A fresh eager validation session is opened after signing.
+This establishes resource-owner release, not immediate kernel socket teardown.
+
+Concurrency uses one sidecar/session and the same Arc signer, context/fetchers
+and production TSA across ten distinct PdfSigners/readers/writers/outputs.
+A start barrier launches the jobs; the completion channel retains the original
+index and the actual Sig1 Reason suffix for every completed output. It does
+not wait for ten callbacks at one TSA/cache stage or impose a completion order.
+Nonblocking telemetry measured ten actual sign calls in flight in the focused
+run; the full gate measured 10. Each output independently
+passes the full native/Python checker and empty-root controls.
+
+The exact pinned original Python functions independently pass six parameter
+executions and their original checker validates all fifteen generated PDFs.
+Actual outputs/root DER, source/function hashes and original completion/index
+assertions are preserved. The original lazy path emits four unclosed aiohttp
+warning headers; run.log retains them. They are not hidden or relabelled as
+native failures. No oracle venv package, source function or trust policy changed.
+
+The gate selects a Cargo-produced immutable CLI ELF from this exact source:
+SHA256 b7ac8de6226a30d0800510bbc72169b07088fa64da1640b282c015a9e2d7a24c. Its before/after hash and three actual
+selection records agree, including identical worker copies. The213 actual V
+fixture-open receipts are independently checked against bytes/lengths on their
+recorded paths. Canonical target, sccache and system placement are unchanged;
+no other job/session, service, target flag, profile or feature was changed.
+
+Accepted root11/10/0/1; overall1431/1233/30/168. Remaining L function is
+test_pades_lta_live_with_cli and requires complete real C signing/LTV commands.
+Library counts, C98/252 and existing skips are unchanged. Known combined-PKI
+registry/path-selection and encoding/model compatibility limitations remain
+open; these successful controls do not establish universal fail-closed parity.
+
+Evidence: /home/l/.codex/artifacts/sigis/round3/l-next/ (all-native-v1/, upstream-v1/, independent audits,
+executable-v1-receipt.json, gate/gate.json and runtime-verification.json).
