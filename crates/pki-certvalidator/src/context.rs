@@ -221,6 +221,37 @@ impl ValidationContext {
         out
     }
 
+    /// A copy with operation-local certificate registration, retaining the
+    /// first certificate with each issuer/serial identity. This models
+    /// `certificate_registry.register_multiple` without mutating the caller.
+    ///
+    /// Candidate certificates are registered before explicit root certificates,
+    /// as when a validation context is constructed, followed by `certs` in order.
+    /// All trust anchors and security requirements remain unchanged: registry
+    /// collisions never delete or add trust anchors. This does not import state
+    /// from another validation context or change general `with_other_certs`.
+    pub fn with_registered_other_certs<'a>(
+        &self,
+        certs: impl IntoIterator<Item = &'a Cert>,
+    ) -> Self {
+        let mut registry =
+            crate::registry::CertificateRegistry::build(self.other_certs.iter().cloned());
+        for anchor in &self.trust_anchors {
+            registry.register(anchor.cert().clone());
+        }
+        for cert in certs {
+            registry.register(cert.clone());
+        }
+        let mut out = self.clone();
+        out.other_certs = registry
+            .certs()
+            .iter()
+            .filter(|cert| !self.is_trust_anchor(cert))
+            .cloned()
+            .collect();
+        out
+    }
+
     /// Every CRL the context knows for `cert`: the supplied ones, plus
     /// those the CRL fetcher returns (`async_retrieve_crls`). Fetch
     /// failures yield the supplied CRLs only.

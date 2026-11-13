@@ -622,18 +622,35 @@ pub fn cms_basic_validation(
     validation_path: Option<&ValidationPath>,
     params: Option<&PkixValidationParams>,
 ) -> CmsResult<SignatureStatus> {
+    let mut operation_ctx = match ctx {
+        Some(ctx) => ctx.clone(),
+        None => empty_context()?,
+    };
+    cms_basic_validation_in_operation(
+        sd,
+        raw_digest,
+        &mut operation_ctx,
+        key_usage_settings,
+        algorithm_policy,
+        validation_path,
+        params,
+    )
+}
+
+// Only this private owned context accumulates registrations between stages.
+// The public caller and independently supplied role contexts remain immutable.
+fn cms_basic_validation_in_operation(
+    sd: &SignedData,
+    raw_digest: Option<&[u8]>,
+    ctx: &mut ValidationContext,
+    key_usage_settings: &KeyUsageConstraints,
+    algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
+    validation_path: Option<&ValidationPath>,
+    params: Option<&PkixValidationParams>,
+) -> CmsResult<SignatureStatus> {
     let si = extract_signer_info(sd)?;
     let cert_info = extract_certs_for_validation(sd)?;
     let cert = &cert_info.signer_cert;
-
-    let owned_ctx;
-    let ctx = match ctx {
-        Some(c) => c,
-        None => {
-            owned_ctx = empty_context()?;
-            &owned_ctx
-        }
-    };
     let time_indic = Some(ctx.best_signature_time());
     let policy = algorithm_policy.unwrap_or_else(|| lift_policy(ctx.algorithm_policy_arc()));
 
@@ -706,8 +723,11 @@ pub fn cms_basic_validation(
                 validation_time: Some(ctx.moment()),
             });
         }
-        let ctx = ctx.with_other_certs(&cert_info.other_certs);
-        let r = validate_cert_usage(cert, &ctx, key_usage_settings, validation_path, params);
+        // Preserve the reference registration point: only a raw-valid CMS
+        // signature with no algorithm denial reaches this block. Registration
+        // precedes path trust and timestamp-imprint decisions.
+        *ctx = ctx.with_registered_other_certs(&cert_info.other_certs);
+        let r = validate_cert_usage(cert, ctx, key_usage_settings, validation_path, params);
         ades_status = r.error_subindic;
         trust_problem = r.trust_problem;
         revocation_details = r.revo_details;
@@ -791,10 +811,29 @@ pub fn validate_tst_signed_data(
     expected_imprint: &dyn Fn(&AlgorithmIdentifierOwned) -> CmsResult<Vec<u8>>,
     algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
 ) -> CmsResult<TimestampSignatureStatus> {
+    let mut operation_ctx = match ctx {
+        Some(ctx) => ctx.clone(),
+        None => empty_context()?,
+    };
+    validate_tst_signed_data_in_operation(
+        tst_sd,
+        &mut operation_ctx,
+        expected_imprint,
+        algorithm_policy,
+    )
+}
+
+fn validate_tst_signed_data_in_operation(
+    tst_sd: &SignedData,
+    ctx: &mut ValidationContext,
+    expected_imprint: &dyn Fn(&AlgorithmIdentifierOwned) -> CmsResult<Vec<u8>>,
+    algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
+) -> CmsResult<TimestampSignatureStatus> {
     let info = tst_info(tst_sd)?;
     let timestamp = Moment::from(info.gen_time.to_date_time());
     let ku = StatusKind::Timestamp.default_usage_constraints(None);
-    let mut signature = cms_basic_validation(tst_sd, None, ctx, &ku, algorithm_policy, None, None)?;
+    let mut signature =
+        cms_basic_validation_in_operation(tst_sd, None, ctx, &ku, algorithm_policy, None, None)?;
     let mi = &info.message_imprint;
     let alg = AlgorithmIdentifierOwned {
         oid: mi.hash_algorithm.oid,
@@ -830,6 +869,19 @@ pub fn collect_timing_info(
     content: &dyn ContentDigester,
     algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
 ) -> CmsResult<TimingInfo> {
+    let mut operation_ctx = match ts_ctx {
+        Some(ctx) => ctx.clone(),
+        None => empty_context()?,
+    };
+    collect_timing_info_in_operation(si, &mut operation_ctx, content, algorithm_policy)
+}
+
+fn collect_timing_info_in_operation(
+    si: &SignerInfo,
+    ts_ctx: &mut ValidationContext,
+    content: &dyn ContentDigester,
+    algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
+) -> CmsResult<TimingInfo> {
     let mut out = TimingInfo {
         signer_reported_dt: extract_self_reported_ts(si),
         ..TimingInfo::default()
@@ -839,7 +891,12 @@ pub fn collect_timing_info(
         Ok(digest_algorithm(alg)?.digest(&signature))
     };
     for tst in extract_tst_data(si, false)? {
-        let status = validate_tst_signed_data(&tst, ts_ctx, &imprint, algorithm_policy.clone())?;
+        let status = validate_tst_signed_data_in_operation(
+            &tst,
+            ts_ctx,
+            &imprint,
+            algorithm_policy.clone(),
+        )?;
         let trusted = status.trusted();
         out.timestamp_validity = Some(status);
         if trusted {
@@ -849,7 +906,7 @@ pub fn collect_timing_info(
     // pyHanko does not pass the algorithm policy for content timestamps.
     let content_imprint = |alg: &AlgorithmIdentifierOwned| content.digest(alg);
     for tst in extract_tst_data(si, true)? {
-        let status = validate_tst_signed_data(&tst, ts_ctx, &content_imprint, None)?;
+        let status = validate_tst_signed_data_in_operation(&tst, ts_ctx, &content_imprint, None)?;
         let trusted = status.trusted();
         out.content_timestamp_validity = Some(status);
         if trusted {
@@ -869,15 +926,43 @@ pub fn validate_detached_cms_with(
     signer_ctx: Option<&ValidationContext>,
     options: &CmsValidationOptions<'_>,
 ) -> CmsResult<StandardCmsSignatureStatus> {
-    let ts_ctx = options.ts_validation_context.or(signer_ctx);
+    // Context identity determines whether the reference API shares a registry.
+    // Equal-valued but separately supplied contexts must stay independent.
+    let shared_roles = match (signer_ctx, options.ts_validation_context) {
+        (_, None) => true,
+        (Some(signer), Some(timestamp)) => core::ptr::eq(signer, timestamp),
+        (None, Some(_)) => false,
+    };
+    let mut signer_operation_ctx = match signer_ctx {
+        Some(ctx) => ctx.clone(),
+        None => empty_context()?,
+    };
     let si = extract_signer_info(sd)?;
     let digest_bytes = content.digest(&si.digest_algorithm)?;
-    let timing = collect_timing_info(si, ts_ctx, content, options.algorithm_policy.clone())?;
+    let timing = if shared_roles {
+        collect_timing_info_in_operation(
+            si,
+            &mut signer_operation_ctx,
+            content,
+            options.algorithm_policy.clone(),
+        )?
+    } else {
+        let mut timestamp_operation_ctx = options
+            .ts_validation_context
+            .ok_or_else(|| CmsError::Malformed("independent timestamp context is missing".into()))?
+            .clone();
+        collect_timing_info_in_operation(
+            si,
+            &mut timestamp_operation_ctx,
+            content,
+            options.algorithm_policy.clone(),
+        )?
+    };
     let ku = StatusKind::Signature.default_usage_constraints(options.key_usage_settings.as_ref());
-    let signature = cms_basic_validation(
+    let signature = cms_basic_validation_in_operation(
         sd,
         (!encapsulated).then_some(digest_bytes.as_slice()),
-        signer_ctx,
+        &mut signer_operation_ctx,
         &ku,
         options.algorithm_policy.clone(),
         options.validation_path.as_ref(),
@@ -1313,3 +1398,7 @@ mod algorithm_horizon_tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "validate_registration_tests.rs"]
+mod operation_registration_tests;

@@ -129,9 +129,15 @@ fn original_context() -> ValidationContext {
 }
 
 fn assert_security_configuration_preserved(a: &ValidationContext, b: &ValidationContext) {
+    assert_eq!(a.other_certs, b.other_certs);
+    assert_security_requirements_preserved(a, b);
+}
+
+// Registration deliberately changes candidates; every other caller requirement
+// must survive through the same assertions used by historical context clones.
+fn assert_security_requirements_preserved(a: &ValidationContext, b: &ValidationContext) {
     assert_eq!(a.trust_anchors.len(), 1);
     assert_eq!(a.trust_anchors, b.trust_anchors);
-    assert_eq!(a.other_certs, b.other_certs);
     assert!(!a.crls.is_empty());
     assert!(!a.ocsps.is_empty());
     assert_eq!(a.crls().collect::<Vec<_>>(), b.crls().collect::<Vec<_>>());
@@ -217,4 +223,162 @@ fn replacement_fetchers_preserve_validation_requirements() {
     ));
     assert!(original.with_fetchers(Fetchers::none()).fetchers.is_empty());
     assert!(!original.fetchers.is_empty());
+}
+
+fn registered_fixture(arch: &str, label: &str, expected_sha256: &str) -> Cert {
+    let path = sigis_testdata::path(&["lanes", "d", "pki", arch, &format!("{label}.crt")]);
+    let der = std::fs::read(&path).unwrap();
+    let actual: String = sigis_pki_core::algorithms::DigestAlgorithm::Sha256
+        .digest(&der)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    assert_eq!(actual, expected_sha256, "{}", path.display());
+    eprintln!(
+        "REGISTERED_CONTEXT_INPUT path={} sha256={actual} length={}",
+        path.display(),
+        der.len()
+    );
+    Cert::from_der(&der).unwrap()
+}
+
+fn registered_collision_pair() -> (Cert, Cert) {
+    let rsa = registered_fixture(
+        "testing-ca",
+        "interm",
+        "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+    );
+    let ecc = registered_fixture(
+        "testing-ca-ecdsa",
+        "interm",
+        "563435c97dca8ee1ba43f084d9330e66f0dee1b83bac98d03ff181b37ea00b5e",
+    );
+    assert_eq!(rsa.issuer(), ecc.issuer());
+    assert_eq!(rsa.serial_bytes(), ecc.serial_bytes());
+    assert_ne!(rsa.public_key(), ecc.public_key());
+    (rsa, ecc)
+}
+
+fn assert_registered_fetchers_unchanged(a: &ValidationContext, b: &ValidationContext) {
+    assert!(Arc::ptr_eq(
+        a.fetchers.cert.as_ref().unwrap(),
+        b.fetchers.cert.as_ref().unwrap()
+    ));
+    assert!(Arc::ptr_eq(
+        a.fetchers.crl.as_ref().unwrap(),
+        b.fetchers.crl.as_ref().unwrap()
+    ));
+    assert!(Arc::ptr_eq(
+        a.fetchers.ocsp.as_ref().unwrap(),
+        b.fetchers.ocsp.as_ref().unwrap()
+    ));
+}
+
+#[test]
+fn registered_clone_preserves_nondefault_security_state_and_caller() {
+    let original = original_context();
+    let before = original.clone();
+    let (rsa, ecc) = registered_collision_pair();
+    let registered = original.with_registered_other_certs([&rsa, &ecc]);
+
+    // Reuse the restrictive original fixture and its full existing retention
+    // checks, excluding only the intentionally changed candidate certificate set.
+    assert_security_requirements_preserved(&original, &registered);
+    assert_timing_equal(&original.timing, &registered.timing);
+    assert_registered_fetchers_unchanged(&original, &registered);
+
+    // The operation must not normalize/mutate the caller's candidates, policies,
+    // custom trust manager, evidence or mutable-looking shared configuration.
+    assert_security_configuration_preserved(&before, &original);
+    assert_timing_equal(&before.timing, &original.timing);
+    assert_registered_fetchers_unchanged(&before, &original);
+}
+
+fn registered_native_anchor_context() -> ValidationContext {
+    let rsa_root = registered_fixture(
+        "testing-ca",
+        "root",
+        "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+    );
+    let ecc_root = registered_fixture(
+        "testing-ca-ecdsa",
+        "root",
+        "ccc409838b97b5c04b18f889fa39b9b123868ff685751f58956206fb86d5ba90",
+    );
+    ValidationContext::builder()
+        .trust_anchor(TrustAnchor::with_qualifiers(
+            rsa_root,
+            TrustQualifiers {
+                max_path_length: Some(0),
+                valid_until: Some(moment("2020-11-02T00:00:00Z")),
+                ..TrustQualifiers::default()
+            },
+        ))
+        .trust_anchor(TrustAnchor::with_qualifiers(
+            ecc_root,
+            TrustQualifiers {
+                max_aa_path_length: Some(0),
+                valid_from: Some(moment("2020-10-01T00:00:00Z")),
+                ..TrustQualifiers::default()
+            },
+        ))
+        .moment(moment("2020-11-01T00:00:00Z"))
+        .build()
+        .unwrap()
+}
+
+#[test]
+fn registered_candidates_keep_first_identity_per_operation_and_never_change_anchors() {
+    let original = registered_native_anchor_context();
+    let anchors = original.trust_anchors.clone();
+    assert_eq!(anchors.len(), 2);
+    let (rsa, ecc) = registered_collision_pair();
+    let rsa_first = original.with_registered_other_certs([&rsa, &ecc, &rsa]);
+    let ecc_first = original.with_registered_other_certs([&ecc, &rsa]);
+    assert_eq!(rsa_first.other_certs(), std::slice::from_ref(&rsa));
+    assert_eq!(ecc_first.other_certs(), std::slice::from_ref(&ecc));
+    assert!(original.other_certs().is_empty());
+
+    // Independent calls do not share a registry, while later additions to a
+    // returned clone cannot overwrite its already-retained issuer/serial key.
+    assert_eq!(
+        rsa_first.with_registered_other_certs([&ecc]).other_certs(),
+        std::slice::from_ref(&rsa)
+    );
+    assert_eq!(
+        ecc_first.with_registered_other_certs([&rsa]).other_certs(),
+        std::slice::from_ref(&ecc)
+    );
+    // General evidence extension remains a separate DER-deduplicating API.
+    assert_eq!(
+        original.with_other_certs([&rsa, &ecc]).other_certs(),
+        &[rsa.clone(), ecc.clone()]
+    );
+    for context in [&original, &rsa_first, &ecc_first] {
+        assert_eq!(context.trust_anchors(), anchors.as_slice());
+        assert!(!context.is_trust_anchor(&rsa));
+        assert!(!context.is_trust_anchor(&ecc));
+        for anchor in &anchors {
+            assert_eq!(context.as_trust_anchor(anchor.cert()).unwrap(), *anchor);
+        }
+    }
+}
+
+#[test]
+fn registered_clone_does_not_enumerate_a_custom_trust_manager_into_candidates() {
+    let (rsa, ecc) = registered_collision_pair();
+    let manager: Arc<dyn TrustManager> = Arc::new(OneAnchor(rsa.clone()));
+    let mut original = registered_native_anchor_context();
+    original.trust_manager = Some(manager.clone());
+    let registered = original.with_registered_other_certs([&ecc]);
+    // The public TrustManager has query methods but no enumeration contract.
+    // Only explicit roots are seeded; an implicit custom anchor is not a
+    // hidden pre-registered candidate that can evict the incoming ECC identity.
+    assert_eq!(registered.other_certs(), std::slice::from_ref(&ecc));
+    assert!(original.other_certs().is_empty());
+    assert_eq!(registered.trust_anchors(), original.trust_anchors());
+    assert!(Arc::ptr_eq(registered.trust_manager().unwrap(), &manager));
+    assert!(registered.is_trust_anchor(&rsa));
+    assert!(!registered.is_trust_anchor(&ecc));
+    assert!(original.is_trust_anchor(&rsa));
 }
