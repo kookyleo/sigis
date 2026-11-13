@@ -430,7 +430,23 @@ impl HttpTimeStamper {
             .and_then(|r| r.to_der())
             .map_err(|e| TimestampRequestError(format!("could not encode the request: {e}")))?;
         let response = self.request_tsa_response(&req)?;
-        handle_tsp_response(&response, nonce.as_deref())
+        let token = handle_tsp_response(&response, nonce.as_deref())?;
+        let tst_info = token_tst_info(&token).map_err(|e| {
+            TimestampRequestError(format!("Timestamp server response is malformed: {e}"))
+        })?;
+        if tst_info.message_imprint.hash_algorithm.oid != digest.oid() {
+            return Err(TimestampRequestError(
+                "Timestamp server response does not match the requested message imprint algorithm."
+                    .into(),
+            ));
+        }
+        if tst_info.message_imprint.hashed_message.as_bytes() != message_digest {
+            return Err(TimestampRequestError(
+                "Timestamp server response does not match the requested message imprint digest."
+                    .into(),
+            ));
+        }
+        Ok(token)
     }
 }
 
