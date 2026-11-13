@@ -4,6 +4,7 @@
 //! RFC 3161 time-stamping client.
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use base64::Engine;
 use der::asn1::{Int, OctetString};
@@ -210,6 +211,89 @@ pub struct HttpTimeStamper {
     transport: Option<Arc<dyn HttpTransport>>,
 }
 
+/// Compatibility constructor for the former `AIOHttpTimeStamper` entry point.
+///
+/// A caller-supplied native HTTP transport and timeout are required. Requests
+/// use the existing [`HttpTimeStamper`] implementation; this adapter shares
+/// the caller's transport without closing it. Use [`Self::into_http`] to migrate to
+/// the modern client's configuration builders.
+///
+/// Rust reports deprecation at compile time, rather than emitting Python's
+/// runtime `DeprecationWarning`:
+///
+/// ```compile_fail
+/// #![deny(deprecated)]
+/// use std::{sync::Arc, time::Duration};
+/// use sigis_pki_fetch::{HttpTransport, ReqwestTransport};
+/// // Allow only the import: the constructor call below must be diagnosed.
+/// #[allow(deprecated)]
+/// use sigis_pki_fetch::tsa::AioHttpTimeStamper;
+/// let timeout = Duration::from_secs(30);
+/// let transport: Arc<dyn HttpTransport> =
+///     Arc::new(ReqwestTransport::new(timeout, 1024).unwrap());
+/// let _client = AioHttpTimeStamper::new("http://example.invalid", transport, timeout);
+/// ```
+///
+/// The modern constructor independently compiles under the same diagnostic
+/// policy and preserves the explicitly supplied transport:
+///
+/// ```
+/// #![deny(deprecated)]
+/// use std::{sync::Arc, time::Duration};
+/// use sigis_pki_fetch::{FetchLimits, HttpTimeStamper, HttpTransport, ReqwestTransport};
+/// let timeout = Duration::from_secs(30);
+/// let transport: Arc<dyn HttpTransport> =
+///     Arc::new(ReqwestTransport::new(timeout, 1024).unwrap());
+/// let client = HttpTimeStamper::new("http://example.invalid")
+///     .with_transport(transport.clone())
+///     .with_limits(FetchLimits { timeout, ..FetchLimits::default() });
+/// assert!(Arc::ptr_eq(client.transport().unwrap(), &transport));
+/// assert_eq!(client.limits.timeout, timeout);
+/// ```
+#[deprecated(note = "Use HttpTimeStamper::new(...).with_transport(...) instead")]
+#[derive(Clone, Debug)]
+pub struct AioHttpTimeStamper {
+    client: HttpTimeStamper,
+}
+
+#[allow(deprecated)]
+impl AioHttpTimeStamper {
+    /// Retain the supplied transport and timeout in the delegated client.
+    /// The transport enforces its own timeout and response-size configuration;
+    /// constructing this adapter does not reconfigure a caller-owned session.
+    pub fn new(
+        url: impl Into<String>,
+        transport: Arc<dyn HttpTransport>,
+        timeout: Duration,
+    ) -> Self {
+        let mut client = HttpTimeStamper::new(url).with_transport(transport);
+        client.limits.timeout = timeout;
+        Self { client }
+    }
+
+    /// Consume the compatibility adapter without replacing its transport or
+    /// resetting any client configuration.
+    pub fn into_http(self) -> HttpTimeStamper {
+        self.client
+    }
+}
+
+#[allow(deprecated)]
+impl std::ops::Deref for AioHttpTimeStamper {
+    type Target = HttpTimeStamper;
+
+    fn deref(&self) -> &Self::Target {
+        &self.client
+    }
+}
+
+#[allow(deprecated)]
+impl TimeStamper for AioHttpTimeStamper {
+    fn timestamp(&self, message_digest: &[u8], digest: DigestAlgorithm) -> Result<Vec<u8>> {
+        self.client.timestamp(message_digest, digest)
+    }
+}
+
 impl HttpTimeStamper {
     /// A client for `url` with default limits.
     pub fn new(url: impl Into<String>) -> Self {
@@ -268,6 +352,12 @@ impl HttpTimeStamper {
     pub fn with_transport(mut self, transport: Arc<dyn HttpTransport>) -> Self {
         self.transport = Some(transport);
         self
+    }
+
+    /// The explicitly supplied HTTP transport, if any. Borrowing this handle
+    /// preserves its identity and does not create a default session.
+    pub fn transport(&self) -> Option<&Arc<dyn HttpTransport>> {
+        self.transport.as_ref()
     }
 
     /// The `Authorization` header value, if any (`auth`).
