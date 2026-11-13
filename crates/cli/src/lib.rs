@@ -272,7 +272,7 @@ fn run_signing(
         return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);
     }
     if args[i] == "pemder" && rewritten[i] == "pemder" {
-        return pemder_signing::run_with_runtime(&rewritten, config, runtime);
+        return pemder_signing::run_with_authenticated_input(&rewritten, config, runtime);
     }
     Err(format!(
         "Signing engine '{}' is not available in this increment.",

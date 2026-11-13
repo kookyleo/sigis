@@ -239,6 +239,25 @@ pub fn run_with_runtime(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
+    run_with_input_policy(args, config, runtime, false)
+}
+
+/// Top-level PEM execution with authentication of the continuing PDF reader.
+/// The original direct adapter retains its explicit plaintext-only contract.
+pub(crate) fn run_with_authenticated_input(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+) -> Result<String, String> {
+    run_with_input_policy(args, config, runtime, true)
+}
+
+fn run_with_input_policy(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+    authenticated_input: bool,
+) -> Result<String, String> {
     let at = crate::argument_positions(args)
         .find(|&i| {
             matches!(
@@ -273,13 +292,17 @@ pub fn run_with_runtime(
     let input = read(&opts.paths[0])?;
     let reader = crate::read_for_update(&input, sigis_pdf::ReaderOptions::default())
         .map_err(|e| e.to_string())?;
-    if reader.encrypted() {
+    if reader.encrypted() && !authenticated_input {
         return Err(extended("Encrypted PDF input"));
     }
+    // Authenticate the reader that owns the spent decode budget before handing
+    // its state to the signer. Do not reopen plaintext or reset reader policy.
+    let password = crate::software_signing::authenticate_document(&reader, &opts, runtime)?;
     let (signer, warn) = material(&opts, config, runtime)?;
     enforce_usage(&signer, &policy)?;
     let settings = SignOptions {
         strict: true,
+        password,
         reopen_state: Some(PdfReopenState::from_reader(reader)),
         ..Default::default()
     };
