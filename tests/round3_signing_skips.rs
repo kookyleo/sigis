@@ -98,10 +98,8 @@ fn raw_dsa_sha256_selects_hash_and_signature_transforms() {
 
     let mechanism_type = MechanismType::try_from(operation.mechanism.mechanism_type())
         .expect("the standard CKM_DSA mechanism must be usable");
-    let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-        mechanism_type,
-        None,
-    ));
+    let mechanism =
+        Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(mechanism_type, None));
     let raw: cryptoki_sys::CK_MECHANISM = (&mechanism).into();
     assert_eq!(raw.mechanism, 0x11);
     assert!(raw.pParameter.is_null());
@@ -123,10 +121,8 @@ fn standard_dsa_mechanisms_preserve_ids_and_empty_parameters() {
             .expect("standard DSA mechanisms must survive conversion and slot enumeration");
         assert_eq!(*mechanism_type, value);
         assert!(MechanismType::new_vendor_defined(value).is_err());
-        let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-            mechanism_type,
-            None,
-        ));
+        let mechanism =
+            Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(mechanism_type, None));
         assert_eq!(mechanism.mechanism_type(), mechanism_type);
         let raw: cryptoki_sys::CK_MECHANISM = (&mechanism).into();
         assert_eq!(raw.mechanism, value);
