@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "45a8b44262dac39e7a13942beeb1eba50a922585",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/source-freshness-rerun/gate/gate.json",
+  "accepted_source_commit": "e353d42d2cbfa5e0c4be13ddaf2641bd2ba30d81",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/ria-http-pdf-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1443,7 +1443,31 @@
       "status": "passed",
       "rust_test": "stamp::test_cli_stamp_style_malformed",
       "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_ordered_enum",
+      "status": "passed",
+      "rust_test": "ordered_enums::test_ordered_enum",
+      "reason": "All six original ordered comparisons on production AuthStatus enums; no original parameters or provider exclusions. Sourcee353d42; Complete source-specific workspace gate, actual executable/runtime evidence and independent compiler-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_version_enum",
+      "status": "passed",
+      "rust_test": "ordered_enums::test_version_enum",
+      "reason": "All14 original finite/future comparisons on production SecurityHandlerVersion enums; three extra raw-value controls earn no extra ID. Sourcee353d42; Complete source-specific workspace gate, actual executable/runtime evidence and independent compiler-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_unbound_reference",
+      "status": "passed",
+      "rust_test": "reference_resolution::test_unbound_reference",
+      "reason": "Exact unbound(1,0)->Null assertion through public resolve_reference; five bound-policy controls are supplemental. Handler/budget retention is source delegation evidence, not a new directly exercised remaining-budget test. Sourcee353d42; Complete source-specific workspace gate, actual executable/runtime evidence and independent compiler-input verification passed."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_fail_read",
+      "status": "passed",
+      "rust_test": "runtime_read::test_fail_read",
+      "reason": "Exact encrypted addfields argv and MINIMAL_AES256 input; actual native exit1 and Failed to read compared with fresh pinned Python. No trust/signing success or output-file side-effect parity requirement. Sourcee353d42; Complete source-specific workspace gate, actual executable/runtime evidence and independent compiler-input verification passed."
     }
   ],
-  "source_verification_note": "Existing1431/1259/29/143 inventory renewed on45a8b44 after content-freshness controls, a complete repeated gate and independent391-unit/2411-input/381-source verification including both vendor packages; no new unique functions. Prior mtime false-green and E0463 logs remain preserved."
+  "source_verification_note": "Source e353d42: all six gates passed,1795 discovered/1791 passed/4 ignored/0 failed/170 reports;405 phase/unit observations,2475 emitted input records and393 actual source files independently content-verified including both vendor packages. Exactly four unique functions added: S PDF3 and C runtime-read1. RIA/order/HTTP/old-input/FULL-LTA regressions earn zero additional IDs. Prior source-freshness failures remain preserved."
 }

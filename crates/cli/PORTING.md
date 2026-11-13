@@ -1,6 +1,13 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /110 passed /0 skipped /142 pending**. Configuration57/plugins11/crypt23/fields7/stamps12 are integrated after the full ac1bdbc workspace gate; later owner full-source proposals remain separate. The owner checkpoint below is historical provenance and its zero-accepted figures are superseded by this lead update. See docs/lanes/round3/l-cli-prefix.md and l-ac-stamps.md for source, immutable executable and gate evidence.
+Accepted assigned counts: **252 total /111 passed /0 skipped /141 pending**.
+Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 are integrated.
+Source e353d42 passes the complete workspace gate with source-specific compiler,
+immutable CLI and runtime evidence. The new runtime original checks only the
+real encrypted addfields read failure; it proves no signing or trust success.
+Owner full-source proposals and validation/qualification holds remain separate.
+Earlier owner checkpoints below are historical. See l-ria-order.md, l-cli-prefix.md
+and l-ac-stamps.md under docs/lanes/round3/.
 
 # Independently verified CLI increments
 

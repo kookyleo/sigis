@@ -1,5 +1,11 @@
 # Porting status: sigis-pdf (crates/pdf)
 
+Lead acceptance on source e353d42: **406 total /398 passed /8 skipped /0 pending**.
+The exact ordered-enum, version-enum and unbound-reference originals passed
+with the complete workspace gate. Five bound-reference controls are supplemental;
+no direct remaining-budget assertion is claimed. Earlier counts/skip lists below
+are historical. See docs/lanes/round3/l-ria-order.md and acceptance.json.
+
 Owner: B. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.
 Plan and test assignment: `docs/hanko-lanes.md`.
 

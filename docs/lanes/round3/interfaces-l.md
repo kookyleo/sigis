@@ -600,9 +600,24 @@ parity claim. See [acceptance](l-s-callers.md) and [counterexample](l-mixed-cont
 
 ## Accepted AC capture and complete callers
 
-Source ac1bdbc passed the complete workspace gate with root P7 and Adobe CMS callers. Native AC outcome capture delegates one validation and publishes an operation-local evidence journal only after the complete batch succeeds. Full caller context/security requirements, NoCheck/OCSP-CRL rules and issuer-name guards are preserved. Root tests retain separate main/AC trust, exact typed attributes and the2028 current/stale provider controls. Adobe finalNO_POE versus PythonOK remains a separate RIA/POE consumer feature gap, not a reason to weaken status classification. No new shared dependency or layer exemption was added. Details: l-ac-stamps.md.
+Source ac1bdbc passed the complete workspace gate with root P7 and Adobe CMS callers. Native AC outcome capture delegates one validation and publishes an operation-local evidence journal only after the complete batch succeeds. Full caller context/security requirements, NoCheck/OCSP-CRL rules and issuer-name guards are preserved. Root tests retain separate main/AC trust, exact typed attributes and the2028 current/stale provider controls. At source ac1bdbc, Adobe finalNO_POE versus PythonOK remained a RIA/POE consumer gap; the e353 section below supersedes that bounded discrepancy without weakening status classification. No new shared dependency or layer exemption was added. Details: l-ac-stamps.md.
 
 
 ## Source-correct main revalidation
 
-The current source45a8b44 and both local vendor dependencies pass the complete repeated workspace gate with content-based source checking. The two-key Cargo configuration and wrapper downgrade guard preserve the canonical target, system scheduler and sccache. Prior mtime reuse and the first retry's dependency-hash failure are preserved;391 compiler-unit observations/2411 input records/381 source files independently match Git main45. This restores the existing inventory only, with no new function credit. See l-source-freshness.md; future cache races and build-script mtime inputs are not universally proven safe.
+The source45a8b44 checkpoint and both local vendor dependencies pass the complete repeated workspace gate with content-based source checking. The two-key Cargo configuration and wrapper downgrade guard preserve the canonical target, system scheduler and sccache. Prior mtime reuse and the first retry's dependency-hash failure are preserved;391 compiler-unit observations/2411 input records/381 source files independently match Git main45. This restores the existing inventory only, with no new function credit. See l-source-freshness.md; future cache races and build-script mtime inputs are not universally proven safe.
+
+
+## Explicit CMS order and signed Adobe evidence
+
+Accepted source e353d42 adds `CmsValidationOrder::{TimestampsFirst, SignerFirst}`
+and `CmsValidationOptions.validation_order`. Default/struct-update callers retain
+timestamp-first behavior. Exhaustive external Rust literals must add the field;
+this is not blanket source compatibility. AdES consumers choose signer-first
+explicitly through the existing main validation helper, once per operation.
+Private registry scope, original role-context identity, raw validity/algorithm
+registration gates, typed cutoff metadata and independent AC trust survive.
+An invalid/nonintact signer-first main returns before timestamp/AC processing.
+Signed Adobe RIA feeds the actual validation evidence consumer; it does not
+create trust anchors, POE or policy waivers. Exact old/new Adobe finalOK parity
+and retained Full-LTA/BASIC limits are in l-ria-order.md.
