@@ -76,6 +76,7 @@ pub const ALL_ALGOS: &[(&str, &str, Option<&str>)] = &[
 pub struct SoftHsm {
     pub module: String,
     pub dir: PathBuf,
+    raw_dsa_enabled: bool,
 }
 
 /// Serialises the tests that use the token: login state is shared by all
@@ -118,6 +119,30 @@ pub fn p11_config(algo: &str) -> Option<P11Config> {
     })
 }
 
+/// Explicit acceptance-only DSA fixture; generic ALL_ALGOS stays excluded.
+/// Select before this test binary first initializes its native fixture.
+pub fn raw_dsa_config() -> Result<P11Config, String> {
+    if std::env::var("PKCS11_TEST_RAW_DSA").as_deref() != Ok("1") {
+        return Err(
+            "raw DSA acceptance requires PKCS11_TEST_RAW_DSA=1 before initialization".into(),
+        );
+    }
+    let hsm = softhsm().ok_or("mandatory raw DSA native fixture setup failed")?;
+    if !hsm.raw_dsa_enabled {
+        return Err("raw DSA opt-in must precede the first native fixture initialization".into());
+    }
+    Ok(P11Config {
+        algo: "dsa",
+        arch: "testing-ca-dsa",
+        token_label: "testdsa".into(),
+        module: hsm.module.clone(),
+        user_pin: USER_PIN.into(),
+        cert_label: "signer1".into(),
+        key_label: None,
+        cert_chain_labels: vec!["root".into(), "interm".into()],
+    })
+}
+
 fn setup() -> Result<SoftHsm, String> {
     let module = std::env::var("PKCS11_TEST_MODULE")
         .unwrap_or_else(|_| "/usr/lib/softhsm/libsofthsm2.so".into());
@@ -140,7 +165,18 @@ fn setup() -> Result<SoftHsm, String> {
     // Before the module is initialised in this process; SoftHSM reads the
     // variable in C_Initialize.
     std::env::set_var("SOFTHSM2_CONF", &conf);
-    let usable: Vec<_> = ALL_ALGOS.iter().filter(|(_, _, r)| r.is_none()).collect();
+    let mut usable: Vec<_> = ALL_ALGOS.iter().filter(|(_, _, r)| r.is_none()).collect();
+    let raw_dsa_enabled = std::env::var("PKCS11_TEST_RAW_DSA").as_deref() == Ok("1");
+    if raw_dsa_enabled {
+        // Only the dedicated complete acceptance test opts in. General
+        // parametrized tests still exclude DSA through ALL_ALGOS.
+        usable.push(
+            ALL_ALGOS
+                .iter()
+                .find(|(algo, _, _)| *algo == "dsa")
+                .unwrap(),
+        );
+    }
     for (algo, _, _) in &usable {
         let utility =
             std::env::var_os("PKCS11_TEST_SOFTHSM_UTIL").unwrap_or_else(|| "softhsm2-util".into());
@@ -191,13 +227,30 @@ fn setup() -> Result<SoftHsm, String> {
         session
             .create_object(&cert_template(&p.cert("signer1"), "signer1"))
             .map_err(|e| format!("{label}: importing signer1 cert: {e}"))?;
-        let key = p.key(&p.key_label_of("signer1"));
-        import_key(&session, &key, "signer1")
-            .map_err(|e| format!("{label}: importing key: {e}"))?;
+        if *algo == "dsa" {
+            let key_path = sigis_testdata::pyhanko(&["crypto", "keys-dsa", "signer.key.pem"]);
+            let pem = std::fs::read(&key_path)
+                .map_err(|e| format!("read {}: {e}", key_path.display()))?;
+            let blocks = sigis_pades_sign::keys::parse_pem(&pem)
+                .map_err(|e| format!("decode original DSA fixture PEM: {e}"))?;
+            if blocks.len() != 1 || blocks[0].label != "PRIVATE KEY" {
+                return Err("original DSA fixture must contain one unencrypted PKCS#8 key".into());
+            }
+            import_dsa_pkcs8(&session, &blocks[0].der, "signer1")
+                .map_err(|e| format!("{label}: importing DSA key: {e}"))?;
+        } else {
+            let key = p.key(&p.key_label_of("signer1"));
+            import_key(&session, &key, "signer1")
+                .map_err(|e| format!("{label}: importing key: {e}"))?;
+        }
         session.logout().ok();
         session.close().ok();
     }
-    Ok(SoftHsm { module, dir })
+    Ok(SoftHsm {
+        module,
+        dir,
+        raw_dsa_enabled,
+    })
 }
 
 fn cert_template(cert: &Cert, label: &str) -> Vec<Attribute> {

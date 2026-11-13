@@ -1,9 +1,7 @@
-"""Mandatory same-output oracle draft; final path tests/support/raw_dsa_oracle.py.
+"""Mandatory pinned validation of the actual native raw-DSA output.
 
-Validates native.pdf only. Original Python token-signing execution is a separate
-required receipt. No PKCS#11 signing or software-signing fallback occurs here.
-The validator was exercised on a freshly generated ORIGINAL PYTHON output;
-validation of a native Rust output remains UNRUN. See input-origin receipts.
+Original Python token-signing execution is a separate required receipt.
+No PKCS#11 signing or software-signing fallback occurs in this validator.
 """
 import asyncio
 import hashlib
