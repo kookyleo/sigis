@@ -6,7 +6,8 @@ use super::{
     AdesIndeterminate, AdesPassed, AdesSubIndic,
 };
 use sigis_cms::{
-    CmsValidationOptions, SignedContent, StandardCmsSignatureStatus, TimestampSignatureStatus,
+    CmsValidationOptions, CmsValidationOrder, SignedContent, StandardCmsSignatureStatus,
+    TimestampSignatureStatus,
 };
 use sigis_cms::{SignedData, SignerInfo, TrustProblem};
 use sigis_eutl::q_status::QualificationResult;
@@ -389,11 +390,16 @@ pub fn lta_validation_with_options(
     }
     let sd = signed_data(crate::cms_from_contents(&signature.contents)?)?;
     let si = signer(&sd)?;
-    let pdf = crate::validate_pdf_signature(
+    let pdf_options = CmsValidationOptions {
+        validation_order: CmsValidationOrder::SignerFirst,
+        ..Default::default()
+    };
+    let pdf = crate::validate_pdf_signature_with_options(
         file,
         signature,
         &ctx,
         Some(&sigis_pdf_diff::StandardDiffPolicy),
+        &pdf_options,
     )?;
     if pdf.docmdp_ok == Some(false)
         || !matches!(
@@ -421,6 +427,7 @@ pub fn lta_validation_with_options(
         })
         .transpose()?;
     let cms_options = CmsValidationOptions {
+        validation_order: CmsValidationOrder::SignerFirst,
         ac_validation_context: ac.as_ref(),
         ..Default::default()
     };
@@ -656,6 +663,7 @@ pub fn lta_validation_with_options(
         }
         let historical = at(&ctx, control, best, false);
         let historical_options = CmsValidationOptions {
+            validation_order: CmsValidationOrder::SignerFirst,
             ac_validation_context: ac.as_ref(),
             ts_validation_context: Some(&historical),
             ..Default::default()

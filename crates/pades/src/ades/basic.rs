@@ -292,7 +292,16 @@ pub(crate) fn cms_status(
         }
         None => SignedContent::Encapsulated,
     };
-    match sigis_cms::validate_cms_signature(content_info, content, ctx) {
+    // AdES basic validation registers a raw-valid, algorithm-allowed main
+    // signer before processing attached timestamps. Legacy CMS/PDF entry
+    // points retain their default timestamp-first ordering.
+    let options = sigis_cms::CmsValidationOptions {
+        validation_order: sigis_cms::CmsValidationOrder::SignerFirst,
+        ..Default::default()
+    };
+    match sigis_cms::validate_cms_signature_with(content_info, content, ctx, &options)
+        .map_err(HankoError::from)
+    {
         Ok(status) => Ok(Ok(status)),
         Err(e @ HankoError::NotImplemented(_)) => Err(e),
         Err(e) => {
