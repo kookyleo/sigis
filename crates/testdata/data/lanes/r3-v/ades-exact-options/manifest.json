@@ -1,0 +1,1483 @@
+{
+  "schema": 1,
+  "pyhanko": "0.38.1",
+  "certvalidator": "0.33.0",
+  "unique_upstream_credit": 0,
+  "interpreter": "/tmp/pyhanko-oracle/venv/bin/python",
+  "assertions_enabled": true,
+  "source_modules": [
+    {
+      "module": "pyhanko.sign.validation.ades",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/validation/ades.py",
+      "git": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+      "relative": "pkgs/pyhanko/src/pyhanko/sign/validation/ades.py",
+      "sha256": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc"
+    },
+    {
+      "module": "pyhanko.sign.validation.generic_cms",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/validation/generic_cms.py",
+      "git": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+      "relative": "pkgs/pyhanko/src/pyhanko/sign/validation/generic_cms.py",
+      "sha256": "6d57fc2788534d6c1c00ea3031dcf7c641a396ad65074bc708508788d403b47c"
+    },
+    {
+      "module": "pyhanko.sign.validation.policy_decl",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/validation/policy_decl.py",
+      "git": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+      "relative": "pkgs/pyhanko/src/pyhanko/sign/validation/policy_decl.py",
+      "sha256": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f"
+    },
+    {
+      "module": "pyhanko.sign.validation.settings",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/validation/settings.py",
+      "git": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+      "relative": "pkgs/pyhanko/src/pyhanko/sign/validation/settings.py",
+      "sha256": "cd18586bce329f604fce902ea1dd051b40d26088f1b97766f5d0594febe403cb"
+    },
+    {
+      "module": "pyhanko_certvalidator.context",
+      "path": "/tmp/pyhanko-oracle/src/cv-0.33.0/pkgs/pyhanko-certvalidator/src/pyhanko_certvalidator/context.py",
+      "git": "b48999514cb4925e7b0c8215da15cec1c7f1df4b",
+      "relative": "pkgs/pyhanko-certvalidator/src/pyhanko_certvalidator/context.py",
+      "sha256": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d"
+    },
+    {
+      "module": "tests.test_ades_validation",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/tests/test_ades_validation.py",
+      "git": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+      "relative": "pkgs/pyhanko/tests/test_ades_validation.py",
+      "sha256": "10d660311f672edd7d22f10b32cd2743862e410a9ce2fca4c09faa7edb7deea2"
+    }
+  ],
+  "signed_at": "2020-11-20T00:00:00Z",
+  "historical_validation_time": "2020-11-20T00:00:00Z",
+  "validation_time": "2024-11-20T00:00:00Z",
+  "future_validation_time": "2029-11-20T00:00:00Z",
+  "revocation_policy": "REQUIRE_REVINFO",
+  "online_fetching_rule": "LOCAL_ONLY",
+  "certificate_fetching_rule": "NEVER_FETCH",
+  "root_der": "MIIDzDCCArSgAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTAgFw0wMDAxMDEwMDAwMDBaGA8yNTAwMDEwMTAwMDAwMFowUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANB//m+farVsSmZXTNIJCmQcieVlbHkf0dXe+Vw27S2Op5FiNkDuLNJCCNsqhE+HhITzPjiv+BsUlJTzOssGqm7WhuNQCaKmtuOH701HImMdoJ4EcLXWycg2rJiR3R83BsyT+FJaGuPFGDc3ljzrG6ChzT/ZrgmjIaSStWX3JQDJhK71NUTWTzX1gzF+aitx5UZ5CewBQkeUD/EWcwhrBB6/xIrNMxsVPd6Ui6kOowfISQorusdnpxSaxeYeGY2f6Xdc5JtR9EIlY/ErJmAasmQlowXEVudFupX+YG1cGWK3p5NAoXGc1VS7jqNSyqXaJe+D4l6y5AhE4i5A+JcSrWkCAwEAAaOBqzCBqDAdBgNVHQ4EFgQU8bR5lQKytF85cv2wj8Jfr1uaULUwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwRQYDVR0fBD4wPDA6oDigNoY0aHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jcmxzL3Jvb3QvbGF0ZXN0LmNybDANBgkqhkiG9w0BAQsFAAOCAQEAL1KoggyZ9ZHvkN44Ht/jNlh5cRLqIjidcK408jDWAEwo3a4MCYQs26APAf0OXePYc5lM0+62NSdlgf5GhwetbyiY2FJE4BOV/iJkKr53cWBUz+kKAfQgT5ck/SZV+4J8BMadKQFxJB40JXyJmX+ZL05L0xJFcns8gtZWpyqwqIORjCH5GR0/j8wTo8y453cQaLdOODCoeVB7UagQy+xaIzsFClybGYQeLzuY0lJCYg0InBIKM5o2F01reW1UcVCRMh+RhXYwgoEKtXBKPJO3/WW83cxZkXNnibOeg1oCXktDW7JR6wO2LeOuQcbqP7DFjjiwhDcc+ANzHl1mbjQjzw==",
+  "root_file": "root.der",
+  "predicates": {
+    "unrestricted": {
+      "key_usage": null,
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "digital_signature": {
+      "key_usage": [
+        "digital_signature"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "non_repudiation": {
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "key_usage_forbidden": null,
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    },
+    "forbid_non_repudiation": {
+      "key_usage": null,
+      "key_usage_forbidden": [
+        "non_repudiation"
+      ],
+      "extd_key_usage": null,
+      "explicit_extd_key_usage_required": true,
+      "match_all_key_usages": false
+    }
+  },
+  "cases": [
+    {
+      "name": "digital_signature_only",
+      "pdf": "digital_signature_only.pdf",
+      "length": 48361,
+      "sha256": "e8117e94f75357b57a346c5a9cbd81959aeaeb4c08ed4ff299a28711d0494aba",
+      "field_name": "Sig1",
+      "key_usage": [
+        "digital_signature"
+      ],
+      "signer_der": "MIIEcDCCA1igAwIBAgICEAEwDQYJKoZIhvcNAQELBQAwWTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEYMBYGA1UEAwwPSW50ZXJtZWRpYXRlIENBMB4XDTIwMDEwMTAwMDAwMFoXDTIyMDEwMTAwMDAwMFowcTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEOMAwGA1UEAwwFQWxpY2UxIDAeBgkqhkiG9w0BCQEWEWFsaWNlQGV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4XOCbh4vfi69RitfhqTIQGL6yfSAJijxQ62ECl+W7EXhxxoaEId2NlrU/BGlXdsMYVClRuE27SO4IGRhtEbFqxA6fUJQMXsMIKPO00R3vv1bBGUDl2epYwVTkiO2hq9JiX4IDUCx7Z53GrtSMRmviQibsAOVRWl0rEsi0kUQ/hA6Oq/mwQ26IYIqkypv8kaa+cvFF6/ENlDyEgNXazTuSsKiDyFEKGJ7f2YM2Zn9Ef8luAwTqYZj31sMCeG7zEfjWIGjwZ6YSaYV6zHxg+syK9xceTdA23YuwoIAZmUbnV+yu2ILfXvfZbT51zT0+ghNLQ0y8/z/fx1Cah3eS0kG6wIDAQABo4IBKDCCASQwHQYDVR0OBBYEFF7Hp7rUCmetna56Pa0Uaji1cwq4MB8GA1UdIwQYMBaAFO+/elGLLqQuSl3SzudheM5qNklPMA4GA1UdDwEB/wQEAwIHgDBHBgNVHR8EQDA+MDygOqA4hjZodHRwOi8vcHloYW5rby50ZXN0cy90ZXN0aW5nLWNhL2NybHMvaW50ZXJtL2xhdGVzdC5jcmwwgYgGCCsGAQUFBwEBBHwwejA3BggrBgEFBQcwAYYraHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9vY3NwL2ludGVybTA/BggrBgEFBQcwAoYzaHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jZXJ0cy9pbnRlcm0vY2EuY3J0MA0GCSqGSIb3DQEBCwUAA4IBAQCnwrzgy7Hxei86Wu6P8Iik3AtI40zoDRTVbVIB10fMjl0HJ939+3FgP90Db/HxAyKpWCslyVhq1hbfZIAVzAICWbhfmfhpctM6eR6qDpTxI/Ll0sW/3MT8ZNfttV2FqsRjEA8KHsO281/7UQbfmyPfCmsAhNXnHsRW2JD+ENMR2uJT8F07VjMwPHX4XfdQsDjp5X7gdN+bq8ttOHcmPZI96dc7dfvoIUy/VkhtlHk3KM9vkkNVvZJAPBwj4MEbyyH/QnFapreiQIJYxnsgp07tPmW86YDg/gt0X0esC28bWzOEXxqgBKjsj8LqDS7+UCuj85qsalcUgNCSYNAfyfOD",
+      "files": {
+        "archived": {
+          "file": "digital_signature_only.pdf",
+          "length": 48361,
+          "sha256": "e8117e94f75357b57a346c5a9cbd81959aeaeb4c08ed4ff299a28711d0494aba",
+          "timestamp_count": 1
+        },
+        "no_poe": {
+          "file": "digital_signature_only-no_poe.pdf",
+          "length": 35347,
+          "sha256": "463eaafce6fa83e9b3fe2b6f2d8495af332ce6be5df3f819f7cc49e3dcd4e583",
+          "timestamp_count": 0
+        },
+        "corrupt_imprint": {
+          "file": "digital_signature_only-corrupt_imprint.pdf",
+          "length": 48361,
+          "sha256": "d615fd18e45748d50e9b9f89f2f589f758db017709f6643220c771ed51e3c315",
+          "timestamp_count": 1
+        }
+      },
+      "oracle": [
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "CHAIN_CONSTRAINTS_FAILURE",
+            "intact": true,
+            "valid": true,
+            "trusted": false,
+            "bottom_line": false,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CHAIN_CONSTRAINTS_FAILURE. Past validation not applicable."
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "CHAIN_CONSTRAINTS_FAILURE",
+            "intact": true,
+            "valid": true,
+            "trusted": false,
+            "bottom_line": false,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CHAIN_CONSTRAINTS_FAILURE. Past validation not applicable."
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "CHAIN_CONSTRAINTS_FAILURE",
+            "intact": true,
+            "valid": true,
+            "trusted": false,
+            "bottom_line": false,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Validation of signature at current time failed with indication AdESIndeterminate.CHAIN_CONSTRAINTS_FAILURE. Past validation not applicable."
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        }
+      ],
+      "dss_counts": {
+        "known_certs": 5,
+        "known_crls": 1,
+        "known_ocsps": 1
+      }
+    },
+    {
+      "name": "non_repudiation",
+      "pdf": "non_repudiation.pdf",
+      "length": 48361,
+      "sha256": "b2f0868bcbedace58419a12d022b9319c3781ab0b82683dd42bdc6a762ca7835",
+      "field_name": "Sig1",
+      "key_usage": [
+        "digital_signature",
+        "non_repudiation"
+      ],
+      "signer_der": "MIIEcDCCA1igAwIBAgICEAEwDQYJKoZIhvcNAQELBQAwWTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEYMBYGA1UEAwwPSW50ZXJtZWRpYXRlIENBMB4XDTIwMDEwMTAwMDAwMFoXDTIyMDEwMTAwMDAwMFowcTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEOMAwGA1UEAwwFQWxpY2UxIDAeBgkqhkiG9w0BCQEWEWFsaWNlQGV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4XOCbh4vfi69RitfhqTIQGL6yfSAJijxQ62ECl+W7EXhxxoaEId2NlrU/BGlXdsMYVClRuE27SO4IGRhtEbFqxA6fUJQMXsMIKPO00R3vv1bBGUDl2epYwVTkiO2hq9JiX4IDUCx7Z53GrtSMRmviQibsAOVRWl0rEsi0kUQ/hA6Oq/mwQ26IYIqkypv8kaa+cvFF6/ENlDyEgNXazTuSsKiDyFEKGJ7f2YM2Zn9Ef8luAwTqYZj31sMCeG7zEfjWIGjwZ6YSaYV6zHxg+syK9xceTdA23YuwoIAZmUbnV+yu2ILfXvfZbT51zT0+ghNLQ0y8/z/fx1Cah3eS0kG6wIDAQABo4IBKDCCASQwHQYDVR0OBBYEFF7Hp7rUCmetna56Pa0Uaji1cwq4MB8GA1UdIwQYMBaAFO+/elGLLqQuSl3SzudheM5qNklPMA4GA1UdDwEB/wQEAwIGwDBHBgNVHR8EQDA+MDygOqA4hjZodHRwOi8vcHloYW5rby50ZXN0cy90ZXN0aW5nLWNhL2NybHMvaW50ZXJtL2xhdGVzdC5jcmwwgYgGCCsGAQUFBwEBBHwwejA3BggrBgEFBQcwAYYraHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9vY3NwL2ludGVybTA/BggrBgEFBQcwAoYzaHR0cDovL3B5aGFua28udGVzdHMvdGVzdGluZy1jYS9jZXJ0cy9pbnRlcm0vY2EuY3J0MA0GCSqGSIb3DQEBCwUAA4IBAQCZs+7uCzIZWy0YRm7tJiEpdxFcdV+hw794AZTuvXN6JaApn99kzpIZMlh09sA5q6YX1w054cBKxRPgVWz2Ty3CmlMkj74T0GqbOMnxd+E8dAhhrq0FNWpsIzQ9nIjBx2cUKy1fBc+UcmBLr14uOFt7/6TawPNI+EVZ4SPY/wahlhAUSkFFnc0k6YT7BT7NEj1bjbnj7MCGDGuTil/vJBUGN8w0LQYxXvSNRkjn/Zi2J+vQEmYuqtAHDDmT5AeTdg/6r7xC3lGbE2n8rcj7iOdwcsIFJKSyMcGOTWJTAHCZHXF5T6NelFtIw1QQpkp6FRs2tc714a/J64EVNVqsd11i",
+      "files": {
+        "archived": {
+          "file": "non_repudiation.pdf",
+          "length": 48361,
+          "sha256": "b2f0868bcbedace58419a12d022b9319c3781ab0b82683dd42bdc6a762ca7835",
+          "timestamp_count": 1
+        },
+        "no_poe": {
+          "file": "non_repudiation-no_poe.pdf",
+          "length": 35347,
+          "sha256": "e1caf20b88758e53b6ab3ea393ac2ff49841e1c48d09a20ebbda7e6746d31007",
+          "timestamp_count": 0
+        },
+        "corrupt_imprint": {
+          "file": "non_repudiation-corrupt_imprint.pdf",
+          "length": 48361,
+          "sha256": "9fb84fd2cd2720f27b5ce74ea5ba7fb327594dae20541f95659aaf4e5edef7c9",
+          "timestamp_count": 1
+        }
+      },
+      "oracle": [
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "no_poe",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2020-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2024-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "corrupt_imprint",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": "Past signature validation did not manage to improve current time result. [AdESPassed.OK]"
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "unrestricted",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "digital_signature",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "non_repudiation",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        },
+        {
+          "kind": "archived",
+          "validation_time": "2029-11-20T00:00:00Z",
+          "predicate": "forbid_non_repudiation",
+          "surface": "public_simulate_future_ades_lta_validation",
+          "result": {
+            "subindication": "OK",
+            "intact": true,
+            "valid": true,
+            "trusted": true,
+            "bottom_line": true,
+            "best_signature_time": "2020-11-20 00:00:00+00:00",
+            "failure_msg": null
+          }
+        }
+      ],
+      "dss_counts": {
+        "known_certs": 5,
+        "known_crls": 1,
+        "known_ocsps": 1
+      }
+    }
+  ],
+  "known_poes": [
+    {
+      "digest": "K23qeHN9R46vkRzdxx1YsMVX7OsWI+ZHXfpXcNP/Jvo=",
+      "time": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "digest": "Do+nhxn92XrI+aUx+jKSlGLWUwa5xYpjiB7yHKGpUJ8=",
+      "time": "2000-01-01T00:00:00+00:00"
+    }
+  ],
+  "limits": [
+    "Provided root/intermediate existence facts are explicit caller knowledge, not document-authenticated evidence.",
+    "Future simulation adds existence/nonrevocation facts by fiat; direct future LTA is separately recorded.",
+    "Forbidden-only behavior differs from ordinary facade normalization and can be stricter in native Core.",
+    "No native execution or API parity is claimed by fixture generation."
+  ],
+  "root_crls": {
+    "2020-11-20T00:00:00Z": {
+      "file": "root-2020.crl.der",
+      "length": 542,
+      "sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    "2024-11-20T00:00:00Z": {
+      "file": "root-2024.crl.der",
+      "length": 542,
+      "sha256": "810d7c1cee123edab918142f061e5d3f2702dd0dd377035d68f55e0a3a835c6c"
+    },
+    "2029-11-20T00:00:00Z": {
+      "file": "root-2029.crl.der",
+      "length": 542,
+      "sha256": "6b2fd68f35730e5d4978126d2dadd6126d0e2adaf897c1a5a07224da558e3b36"
+    }
+  },
+  "root_crls_by_time": {
+    "2020-11-20T00:00:00Z": [
+      "MIICGjCCAQICAQEwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQRgPMjAyMDA5MTIwMDAwMDBaGA8yMDIwMTIxMTAwMDAwMFowAKB3MHUwCgYDVR0UBAMCAVQwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwRgYDVR0cAQH/BDwwOqA4oDaGNGh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDQYJKoZIhvcNAQELBQADggEBAG039S0ZNfnS4v6gPQwlnofNk/LeRYqkbpj8xDJCTzTCB89QBroMS67hgsHgdPgDHG7lxlnvI4JFWn211LGd7Ewl0X6QXeEofjaNZwvjvQyrX8qcBpGArGPREo8WnxShN8Sriy7SmVGVxKH4DDYKGuEHYM7sYtizF1ph1g6gLil3Fw4N7im2F5RPbauIBt5nNPbznhG7OO7hG9AqGw/F4koj3K3h0LjNbEGYOPSjQK/lZzh1ZpCc1WgsfprlZ6cFOnlV23kqFVzUTEU7qBoSJqXL979xzRspaVkYoKT0XDOUFhJv6Mff8lzUz80sJSo6GbAtN/FVG3u4azdcoVDaau4="
+    ],
+    "2024-11-20T00:00:00Z": [
+      "MIICGjCCAQICAQEwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQRgPMjAyNDExMjAwMDAwMDBaGA8yMDI1MDIxODAwMDAwMFowAKB3MHUwCgYDVR0UBAMCAWUwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwRgYDVR0cAQH/BDwwOqA4oDaGNGh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDQYJKoZIhvcNAQELBQADggEBAHmsx1/iUBOqa2PFztt00IqJVDUAc3dwJHO7Tn+sUKGelqJEdI3tUMZ2TDqBREtKT89qJd7vUV94wqqJrkx+X+cfALVUkRa9XwYMB4AAjwVGY0Yk5rOudt+EuBySIl9wyLIGcBNdv0G4LiVVI3q6PhEd60wbSyNLTMAlMppkZTkVXLNCm+hSuJ/1cIh7M3BkLJbMsHxwjK61T8Ft3IwLRnh0xbGTWhsnbn2Jvc8IDmYsmgORv1rVAbhv6JtFz4NMBhOO/KBGWxjTz6gJCIAHkcKkIsaMF4KWUuwd8/FnaKHpVaBaiz/smDpbFoPpkjKbtxyZH7y257lDLF94kTQRLdM="
+    ],
+    "2029-11-20T00:00:00Z": [
+      "MIICGjCCAQICAQEwDQYJKoZIhvcNAQELBQAwUTELMAkGA1UEBhMCQkUxFDASBgNVBAoMC0V4YW1wbGUgSW5jMRowGAYDVQQLDBFUZXN0aW5nIEF1dGhvcml0eTEQMA4GA1UEAwwHUm9vdCBDQRgPMjAyOTEwMjUwMDAwMDBaGA8yMDMwMDEyMzAwMDAwMFowAKB3MHUwCgYDVR0UBAMCAXkwHwYDVR0jBBgwFoAU8bR5lQKytF85cv2wj8Jfr1uaULUwRgYDVR0cAQH/BDwwOqA4oDaGNGh0dHA6Ly9weWhhbmtvLnRlc3RzL3Rlc3RpbmctY2EvY3Jscy9yb290L2xhdGVzdC5jcmwwDQYJKoZIhvcNAQELBQADggEBAIsHIajZjufONeASQxfp34Rhx4067Le8zs5onT7Rbe+VLbASZG4yB1odL69S6K4BdHutX7rK/0lgD17nTV9knSpD1pTlO/0wlduITzDxg4HBj9wKl0PfpCiLWq339j8QFiGXTAiPrWTGmho/qUF4TH/Ib7PH3OsrolmSsX8OkMp00T0lOBXNrWYGp292oo3ajsfuriHadGK6PIuQdRHSipoik07BKECAvZsn/4woCXtVlqMRY6OoKljqxZLD5W3Slv1fmkKcvi5qs8sEoLU/8bG3eXgE/BSqkGDCQN45zJQrhdYiJYzV7j/Nv0sKx3SiapWmCHtCRWLTmKPuvuyG8wc="
+    ]
+  },
+  "issuer_input": {
+    "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/keys-rsa/intermediate_ca.key.pem",
+    "sha256": "b25f0f9eb395f5c23b6c1c64d129e239635250e038c95a159db3ce4776a92794"
+  },
+  "generation_http": [
+    {
+      "method": "GET",
+      "path": "/testing-ca/crls/root/latest.crl",
+      "status": 200,
+      "content_type": "application/pkix-crl",
+      "response_sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "method": "POST",
+      "path": "/testing-ca/ocsp/interm",
+      "status": 200,
+      "content_type": "application/ocsp-response",
+      "response_sha256": "3a8d307ff3e5e58a8917d7d942aba8fe76871811f0b2e339af0b3eabc7e80468"
+    },
+    {
+      "method": "GET",
+      "path": "/testing-ca/crls/root/latest.crl",
+      "status": 200,
+      "content_type": "application/pkix-crl",
+      "response_sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "method": "POST",
+      "path": "/testing-ca/ocsp/interm",
+      "status": 200,
+      "content_type": "application/ocsp-response",
+      "response_sha256": "7fbd775dc3ec6604c9f351da7458fc4ce558ef54055c18342cf03eed3a2ffad9"
+    },
+    {
+      "method": "GET",
+      "path": "/testing-ca/crls/root/latest.crl",
+      "status": 200,
+      "content_type": "application/pkix-crl",
+      "response_sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "method": "POST",
+      "path": "/testing-ca/ocsp/interm",
+      "status": 200,
+      "content_type": "application/ocsp-response",
+      "response_sha256": "9d4e77840b2559558d2088c59f90670ff8604ecb0f64f822424c9fbc676e01b9"
+    },
+    {
+      "method": "GET",
+      "path": "/testing-ca/crls/root/latest.crl",
+      "status": 200,
+      "content_type": "application/pkix-crl",
+      "response_sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "method": "POST",
+      "path": "/testing-ca/ocsp/interm",
+      "status": 200,
+      "content_type": "application/ocsp-response",
+      "response_sha256": "db0cff22c029c6b9af7b7e098dc29bbb6f312f753c4047d743916dd8c0aa8208"
+    }
+  ],
+  "fresh_public_calls": 80
+}
