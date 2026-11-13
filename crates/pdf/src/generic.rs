@@ -138,7 +138,7 @@ fn hash_object<H: Hasher>(object: &Object, state: &mut H) {
 fn hash_dictionary<H: Hasher>(dictionary: &Dictionary, state: &mut H) {
     // IndexMap equality ignores insertion order; compare and hash raw keys.
     let mut entries: Vec<_> = dictionary.iter().collect();
-    entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
+    entries.sort_unstable_by_key(|(left, _)| *left);
     entries.len().hash(state);
     for (key, value) in entries {
         key.hash(state);
