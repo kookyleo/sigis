@@ -156,15 +156,47 @@ fn check(mode: &str) {
     let imprint = DigestAlgorithm::Sha256.digest(PROBE);
     // Separate control: nonce-correlated HTTP token is correctly CMS-signed by
     // the same genuinely trusted TSA; the public CMS helper is algorithm-agnostic.
-    let token = sigis_pki_fetch::HttpTimeStamper::new(server.ready["tsa_url"].as_str().unwrap())
-        .timestamp_token(&imprint, DigestAlgorithm::Sha256)
+    // Use raw transport plus status/nonce parsing for this deliberate malicious
+    // control. The bound client must reject the substituted imprint instead.
+    let nonce: [u8; 8] = [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef];
+    let request = sigis_pki_fetch::tsa::request_cms(
+        &imprint,
+        DigestAlgorithm::Sha256,
+        Some(nonce.as_slice()),
+    )
+    .unwrap();
+    assert_eq!(
+        request.message_imprint.hash_algorithm.oid,
+        DigestAlgorithm::Sha256.oid()
+    );
+    assert_eq!(
+        request.message_imprint.hashed_message.as_bytes(),
+        imprint.as_slice()
+    );
+    assert_eq!(request.nonce.as_ref().unwrap().as_bytes(), nonce.as_slice());
+    assert!(request.cert_req);
+    let request_der = der::Encode::to_der(&request).unwrap();
+    let request_path = directory.path().join("actual-probe-request.der");
+    fs::write(&request_path, &request_der).unwrap();
+    let response = sigis_pki_fetch::HttpTimeStamper::new(server.ready["tsa_url"].as_str().unwrap())
+        .request_tsa_response(&request_der)
         .unwrap();
+    let response_path = directory.path().join("actual-probe-response.der");
+    fs::write(&response_path, &response).unwrap();
+    let token =
+        sigis_pki_fetch::tsa::handle_tsp_response(&response, Some(nonce.as_slice())).unwrap();
+    let token_path = directory.path().join("actual-probe-token.cms");
+    fs::write(&token_path, &token).unwrap();
     let cms = sigis_cms::validate_timestamp_token(&token, &imprint, &context).unwrap();
     assert!(cms.signature.bottom_line(), "{cms:?}");
     sigis_pki_core::key_usage::KeyUsageConstraints::with_extd_key_usage(["time_stamping"])
         .validate(cms.signature.signing_cert.as_ref().unwrap())
         .unwrap();
     let info = sigis_pki_fetch::tsa::token_tst_info(&token).unwrap();
+    assert_eq!(
+        info.nonce.as_ref().map(|value| value.as_bytes()),
+        Some(nonce.as_slice())
+    );
     assert_eq!(
         info.message_imprint.hashed_message.as_bytes(),
         imprint.as_slice()
@@ -178,8 +210,6 @@ fn check(mode: &str) {
             DigestAlgorithm::Sha256.oid()
         }
     );
-    let token_path = directory.path().join("actual-probe-token.cms");
-    fs::write(&token_path, &token).unwrap();
     let oracle_path = directory.path().join("fresh-probe-verdict.json");
     let preimage_hex = PROBE.iter().map(|b| format!("{b:02x}")).collect::<String>();
     let oracle = Command::new(python())
@@ -236,7 +266,7 @@ fn check(mode: &str) {
     ];
     let result = sigis_cli::timestamp::run_with_runtime(&args, Some(&config), &runtime);
     let actual_events = events(&server_dir);
-    let receipt = json!({"mode":mode,"kind":"in-process existing public timestamp API, not a CLI subprocess","result":result,"argv_after_sign_timestamp":args,"effective_configuration":config_before,"native_test_executable":file_record(&std::env::current_exe().unwrap()),"input":file_record(&input),"output":file_record(&output),"before_command_TSA_tokens":before_count,"after_command_TSA_tokens":actual_events.len(),"events":actual_events,"oracle":verdict,"context_clock":format!("{:?}",runtime.now),"new_unique_credit":0});
+    let receipt = json!({"mode":mode,"kind":"in-process existing public timestamp API, not a CLI subprocess","result":result,"argv_after_sign_timestamp":args,"effective_configuration":config_before,"native_test_executable":file_record(&std::env::current_exe().unwrap()),"input":file_record(&input),"output":file_record(&output),"raw_probe":{"request":file_record(&request_path),"response":file_record(&response_path),"token":file_record(&token_path),"nonce_hex":nonce.iter().map(|byte|format!("{byte:02x}")).collect::<String>()},"before_command_TSA_tokens":before_count,"after_command_TSA_tokens":actual_events.len(),"events":actual_events,"oracle":verdict,"context_clock":format!("{:?}",runtime.now),"new_unique_credit":0});
     fs::write(
         directory.path().join("native-receipt.json"),
         serde_json::to_vec_pretty(&receipt).unwrap(),
