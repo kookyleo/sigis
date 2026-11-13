@@ -1,4 +1,4 @@
-//! UNCOMPILED/UNRUN tests-first candidate for the proposed opt-in policy bridge.
+//! Complete opt-in usage policies and supplemental legacy presign boundaries.
 //! Supplemental zero-ID coverage; no higher-layer dev dependency or shared edit.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -493,4 +493,238 @@ fn explicit_policy_certificate_less_and_legacy_preparation_boundaries() {
             }
         }
     }
+}
+
+/// A real compatibility rejection, not the opt-in policy composition contract.
+/// Collect all native/reference evidence before asserting the legacy refusal.
+#[test]
+fn legacy_missing_key_usage_extension_preserves_original_refusal() {
+    let parent = PathBuf::from(
+        std::env::var_os("HANKO_P_LEGACY_KU_EVIDENCE_DIR")
+            .expect("persistent evidence directory is mandatory"),
+    );
+    std::fs::create_dir_all(&parent).unwrap();
+    std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(parent.join("legacy-ku.started"))
+        .unwrap();
+    let pki = support::pki("testing-ca");
+    let manifest_path = support::data_path(&["lanes", "d", "pki", "testing-ca", "manifest.json"]);
+    let manifest: Value = serde_json::from_slice(&std::fs::read(manifest_path).unwrap()).unwrap();
+    let key_name = pki.key_label_of("signer1");
+    let key_path = support::data_path(&[
+        "pyhanko",
+        "crypto",
+        manifest["keys"][&key_name]["path"].as_str().unwrap(),
+    ]);
+    let preparation = oracle(
+        "prepare",
+        &json!({
+            "leaf":pki.cert_path("signer1"), "intermediate":pki.cert_path("interm"), "root":pki.cert_path("root"),
+            "issuer_key":support::data_path(&["pyhanko", "crypto", "keys-rsa", "intermediate_ca.key.pem"]),
+            "directory":parent.join("certificates"),
+        }),
+        &parent,
+    );
+    let cases = [
+        (
+            "missing-ku-attached-default",
+            true,
+            true,
+            vec!["non_repudiation"],
+            false,
+        ),
+        ("missing-ku-attached-empty", true, true, vec![], true),
+        (
+            "missing-ku-no-context-default",
+            true,
+            false,
+            vec!["non_repudiation"],
+            true,
+        ),
+        ("missing-ku-no-context-empty", true, false, vec![], true),
+        (
+            "present-ku-attached-default",
+            false,
+            true,
+            vec!["non_repudiation"],
+            true,
+        ),
+        (
+            "present-ku-attached-impossible",
+            false,
+            true,
+            vec!["non_repudiation", "key_encipherment"],
+            false,
+        ),
+    ];
+    let mut disagreements = Vec::new();
+    for (name, missing_ku, attached, legacy, expected_ok) in cases {
+        let directory = parent.join(name);
+        std::fs::create_dir(&directory).unwrap();
+        let variant = if missing_ku { "missing-ku" } else { "base" };
+        let leaf_path = PathBuf::from(preparation["variants"][variant]["path"].as_str().unwrap());
+        let leaf_bytes = std::fs::read(&leaf_path).unwrap();
+        assert_eq!(
+            hash(&leaf_bytes),
+            preparation["variants"][variant]["sha256"]
+        );
+        let cert = Cert::from_der(&leaf_bytes).unwrap();
+        assert_eq!(cert.key_usage().is_none(), missing_ku);
+        assert_eq!(
+            !cert.has_extension(&sigis_pki_core::asn1::oids::CE_KEY_USAGE),
+            missing_ku
+        );
+        let ctx = context(if attached { "valid" } else { "none" }, &pki);
+        let mut metadata = PdfSignatureMetadata::pyhanko_defaults("Sig1");
+        metadata.md_algorithm = Some(DigestAlgorithm::Sha256);
+        metadata.validation_context = ctx.clone();
+        metadata.signer_key_usage = legacy.iter().map(|v| (*v).to_owned()).collect();
+        let signer = PdfSigner::new(
+            metadata,
+            Arc::new(
+                SimpleSigner::new(
+                    pki.key(&key_name),
+                    cert.clone(),
+                    vec![pki.cert("root"), pki.cert("interm")],
+                )
+                .unwrap(),
+            ),
+        )
+        .at(support::at(TIME));
+        let input = support::pdf("minimal.pdf");
+        let before = input.clone();
+        let result = signer.sign_pdf(&input);
+        assert_eq!(input, before);
+        if let Some(ctx) = &ctx {
+            assert!(Arc::ptr_eq(
+                ctx,
+                signer.metadata.validation_context.as_ref().unwrap()
+            ));
+        }
+        let native_ok = result.is_ok();
+        let native_path = directory.join("native.pdf");
+        if let Ok(output) = result {
+            std::fs::write(&native_path, &output).unwrap();
+            let signatures = support::pdfcheck::embedded_signatures(&output);
+            assert_eq!(signatures.len(), 1);
+            assert_eq!(signatures[0].field_name, "Sig1");
+            assert_eq!(
+                support::pdfcheck::check_integrity(&output, &signatures[0]),
+                cert
+            );
+            let cms = sigis_pades_sign::cms::decode_signed_data(&support::pdfcheck::cms_bytes(
+                &signatures[0],
+            ))
+            .unwrap();
+            assert_eq!(cms.signer_infos.0.len(), 1);
+            let si = cms.signer_infos.0.iter().next().unwrap();
+            assert_eq!(si.digest_alg.oid, DigestAlgorithm::Sha256.oid());
+            assert_eq!(
+                si.signature_algorithm.oid,
+                sigis_pki_core::asn1::oids::SHA256_WITH_RSA
+            );
+            validate_signature(
+                si.signature.as_bytes(),
+                &si.signed_attrs.as_ref().unwrap().to_der().unwrap(),
+                &cert.public_key(),
+                &si.signature_algorithm,
+                &SignatureValidationContext::default(),
+            )
+            .unwrap();
+            if let Some(ctx) = &ctx {
+                assert_eq!(
+                    CertificateValidator::new(ctx, cert.clone())
+                        .validate()
+                        .unwrap()
+                        .certs()
+                        .len(),
+                    3
+                );
+            }
+        } else if let Err(error) = result {
+            assert!(matches!(error, HankoError::Signing(_)));
+            assert!(error
+                .to_string()
+                .contains("key usage extension does not include"));
+            std::fs::write(directory.join("native-error.txt"), error.to_string()).unwrap();
+        }
+        let request = json!({"case":name,"missing_ku":missing_ku,"attached":attached,"legacy":legacy,"expected_ok":expected_ok,
+            "leaf":leaf_path,"root":pki.cert_path("root"),"intermediate":pki.cert_path("interm"),"signer_key":key_path,
+            "input":support::data_path(&["pyhanko","pdf","minimal.pdf"]),"native_pdf":if native_ok {json!(native_path)} else {Value::Null},
+            "reference_output":directory.join("reference.pdf")});
+        let request_path = directory.join("request.json");
+        std::fs::write(&request_path, serde_json::to_vec_pretty(&request).unwrap()).unwrap();
+        let python = std::env::var_os("HANKO_ORACLE")
+            .unwrap_or_else(|| "/tmp/pyhanko-oracle/venv/bin/python".into());
+        let output = Command::new(python)
+            .args([
+                "-I",
+                "-B",
+                "-c",
+                include_str!(
+                    "../../testdata/data/lanes/r3-p/key-usage-policy/legacy_ku_reference.py"
+                ),
+            ])
+            .arg(&request_path)
+            .output()
+            .unwrap();
+        std::fs::write(directory.join("reference-stdout.json"), &output.stdout).unwrap();
+        std::fs::write(directory.join("reference-stderr.log"), &output.stderr).unwrap();
+        assert!(
+            output.status.success(),
+            "{name}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let reference: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(reference["original_signing_ok"], expected_ok);
+        assert_eq!(
+            reference["versions"],
+            json!({"pyhanko":"0.38.1","certvalidator":"0.33.0"})
+        );
+        let opened_records = reference["opened_inputs"].as_array().unwrap();
+        let mut expected_paths = vec![request_path.clone()];
+        for key in ["leaf", "root", "intermediate", "signer_key", "input"] {
+            expected_paths.push(PathBuf::from(request[key].as_str().unwrap()));
+        }
+        if native_ok {
+            expected_paths.push(native_path.clone());
+            assert_eq!(
+                reference["same_native_output"]["pdf_sha256"],
+                hash(&std::fs::read(&native_path).unwrap())
+            );
+            assert_eq!(reference["same_native_output"]["intact"], true);
+            assert_eq!(reference["same_native_output"]["valid"], true);
+            assert_eq!(reference["same_native_output"]["trusted"], expected_ok);
+            assert_eq!(reference["same_native_output"]["bottom_line"], expected_ok);
+        }
+        if expected_ok {
+            expected_paths.push(directory.join("reference.pdf"));
+        }
+        for path in expected_paths {
+            let path = path.canonicalize().unwrap();
+            assert_eq!(
+                opened_records
+                    .iter()
+                    .filter(|r| r["path"] == path.to_str().unwrap())
+                    .count(),
+                1,
+                "missing/duplicate actual read: {}",
+                path.display()
+            );
+        }
+        for opened in opened_records {
+            let bytes = std::fs::read(opened["path"].as_str().unwrap()).unwrap();
+            assert_eq!(opened["bytes"], bytes.len());
+            assert_eq!(opened["sha256"], hash(&bytes));
+        }
+        let elf_path = std::env::current_exe().unwrap();
+        let elf = std::fs::read(&elf_path).unwrap();
+        std::fs::write(directory.join("native-receipt.json"),serde_json::to_vec_pretty(&json!({"case":name,"native_ok":native_ok,"expected_ok":expected_ok,"elf_path":elf_path,"elf_bytes":elf.len(),"elf_sha256":hash(&elf),"pdf_sha256":if native_ok {Some(hash(&std::fs::read(&native_path).unwrap()))} else {None}})).unwrap()).unwrap();
+        if native_ok != expected_ok {
+            disagreements.push(name);
+        }
+    }
+    assert!(disagreements.is_empty(),"legacy presign differs from the original on {disagreements:?}; do not accept absent KU for a nonempty attached-context requirement");
 }
