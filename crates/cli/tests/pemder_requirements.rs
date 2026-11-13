@@ -368,7 +368,11 @@ fn effective_context_alias_conflicts_cannot_silently_drop_requirements() {
         cfg.validation_contexts.insert("effective".into(), context);
         cfg.default_validation_context = "effective".into();
         assert_eq!(cfg.raw_config, raw);
-        c.rejects(&c.setup_args(), Some(&cfg), &["Conflicting aliases"]);
+        c.rejects(
+            &c.setup_args(),
+            Some(&cfg),
+            &["Conflicting configuration aliases"],
+        );
     }
 }
 
