@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "7232e9c0d80c435cf29035053577ca87badb79a2",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/alias-coverage-integration/gate/gate.json",
+  "accepted_source_commit": "1de31059939f5e9a50be9c482a04abd8ca1954fc",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/c-ordinary-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1473,7 +1473,241 @@
       "status": "passed",
       "rust_test": "deprecated_tsa::test_deprecated_aiohttp_timestamper_forwards",
       "reason": "Exact supplied-session identity and actual timestamp request error assertions; explicit language-phase adaptation uses standard Rust compile-time deprecated diagnostic instead of Python runtime DeprecationWarning. Constructor-level deny guard and independent modern positive controls pass. Source7232e9c full gate/content/ELF proof accepted; fresh original Python1 and actual same-held-endpoint native2/Python2 controls agree. Extra wrappers/doctests add zero IDs; supplied transport deadline/body policy and optional async legacy APIs remain documented gaps."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_revinfo",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_fail_without_revinfo",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_soft_revocation",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_soft_revocation",
+      "reason": "Complete original ordinary validation assertions and all16 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_required_revinfo",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_required_revinfo",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_required_revinfo",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_fail_without_required_revinfo",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_without_revinfo_check",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_without_revinfo_check",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_inconsistent_revo_settings",
+      "status": "passed",
+      "rust_test": "validation::test_inconsistent_revo_settings",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_password",
+      "status": "passed",
+      "rust_test": "validation::test_validate_encrypted_wrong_password",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password",
+      "status": "passed",
+      "rust_test": "validation::test_validate_encrypted_empty_user_password",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password_wrong_explicit_password",
+      "status": "passed",
+      "rust_test": "validation::test_validate_encrypted_empty_user_password_wrong_explicit_password",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_explicit_empty_password",
+      "status": "passed",
+      "rust_test": "validation::test_validate_encrypted_explicit_empty_password",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_explicit_empty_password",
+      "status": "passed",
+      "rust_test": "validation::test_validate_encrypted_wrong_explicit_empty_password",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_unsupported_handler",
+      "status": "passed",
+      "rust_test": "validation::test_validate_unsupported_handler",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_summary",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_summary",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_inconsistent_print_settings",
+      "status": "passed",
+      "rust_test": "validation::test_validate_inconsistent_print_settings",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_pretty_print",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_pretty_print",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_validation_time",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_validation_time",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validation_time_syntax_error",
+      "status": "passed",
+      "rust_test": "validation::test_validation_time_syntax_error",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_claimed_time",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_claimed_time",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_untrusted",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_untrusted",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_weak_hash",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_weak_hash",
+      "reason": "Complete original ordinary validation assertions and all2 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_unknown_hash",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_unknown_hash",
+      "reason": "Complete original ordinary validation assertions and all2 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_signed_with_wrong_key",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_signed_with_wrong_key",
+      "reason": "Complete original ordinary validation assertions and all3 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_default_context",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_default_context",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_system_trust",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_system_trust",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_explicit_context",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_with_explicit_context",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_lacking_intermediate",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate_with_trust_arg",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_lacking_intermediate_with_trust_arg",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_wrong",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_config_wrong",
+      "reason": "Complete original ordinary validation assertions and all2 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_nonsensical_other_certs",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_config_nonsensical_other_certs",
+      "reason": "Complete original ordinary validation assertions and all2 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_trust_replace_arg_applies_to_config_context",
+      "status": "passed",
+      "rust_test": "validation::test_trust_replace_arg_applies_to_config_context",
+      "reason": "Complete original ordinary validation assertions and all32 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_without_config_file",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_without_config_file",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_incompatible_args",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_incompatible_args",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_file_not_found",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_file_not_found",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_malformed_cert",
+      "status": "passed",
+      "rust_test": "validation::test_basic_validate_context_malformed_cert",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_detached_validate",
+      "status": "passed",
+      "rust_test": "validation::test_basic_detached_validate",
+      "reason": "Complete original ordinary validation assertions and all8 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_fail_detached_validate",
+      "status": "passed",
+      "rust_test": "validation::test_fail_detached_validate",
+      "reason": "Complete original ordinary validation assertions and all4 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_malformed_input",
+      "status": "passed",
+      "rust_test": "validation::test_detached_validate_malformed_input",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_bad_cms_type",
+      "status": "passed",
+      "rust_test": "validation::test_detached_validate_bad_cms_type",
+      "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
     }
   ],
-  "source_verification_note": "Source7232e9c: all six gates passed; 1807 runtime tests passed/4 ignored/0 failed/172 reports; content/compiler/executable/runtime proof renewed. One S/fetch original deprecated session-forwarding function accepted with explicit compile-phase diagnostic adaptation. V checked coverage numeric/EOF helpers and supplemental tests add zero IDs. Prior actual failures and all trust-profile limits retained."
+  "source_verification_note": "Source1de3105 complete six-part gate: 1881 discovered/1877 passed/4 ignored/0failed/177 reports;419 compiler-unit observations/2522 input records/402 actual sources independently content-verified. Exactly39 C ordinary validation IDs/223 original parameter executions added; supplemental controls and fresh oracle calls do not create extra IDs. Current private CLI9ddd3379 and8actual selection records/worker copies verified. No old full237/qualified/signing proposal imported; remaining inventory1431/1303/25/103."
 }

@@ -1,6 +1,6 @@
 {
-  "source": "b9729fff80a6189fa81e61555906418fefda1070",
-  "base": "fb56236d1001058aca28687d73041dcd330a7745",
+  "source": "1de31059939f5e9a50be9c482a04abd8ca1954fc",
+  "base": "77b8722",
   "unique_functions": 39,
   "native_original_cases": 223,
   "functions": [
@@ -22,7 +22,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "57996c2ed718bd5a46011738e5ed23b8e371eab590fd370f56907b2583b08ea8",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_revinfo",
@@ -43,7 +43,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "21872e13619366369cd24bd4ccf1c205d804d5d890d37b37d9f5f6eac8603cf1",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_soft_revocation",
@@ -64,7 +64,7 @@
       "native_observed_cases": 16,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "76c72bda401c6d1388429d29001b6f1ad50513ca27604cf0c58d3cbf4fd4e5fa",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_required_revinfo",
@@ -84,7 +84,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "d4215b862ee502278476267bfb1b5b49ee4730c3f6c5e0259159b5269a1484f1",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_required_revinfo",
@@ -105,7 +105,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "26e944aecaa964cfc2efd586975926fb0e74c1a9983214105e921768d087d518",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_without_revinfo_check",
@@ -126,7 +126,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "5c5e767d6dfc5c4871c47412089aee8e2bae956a33619b93ecfa687a29294829",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_inconsistent_revo_settings",
@@ -147,7 +147,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "a62d4daafb0f8d69e5933e9988bb7a4e882ef790e81700d995968fbee3d17c98",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_password",
@@ -166,7 +166,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "c09f4a29be3dea29e801e824c4c575c7563bc596f2438a177f5784ecc3ad80e3",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password",
@@ -185,7 +185,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "e4548f8791ee76e87e26603eeadbce7bac2e7ad0a3eaac0b9373916baf3f24e2",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password_wrong_explicit_password",
@@ -204,7 +204,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "56edf90dc52056009b6555e2019b794afd477e8a033a686f3da05e7d17375a28",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_explicit_empty_password",
@@ -223,7 +223,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "05d429c937da72f33ddf32e75c0663e6821c8ed254292adf0248d2275d7507b5",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_explicit_empty_password",
@@ -242,7 +242,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "f43aefb7cc0296ca6a90456819bac7df8ca0d66e91e2b1d61457331ce088db36",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_unsupported_handler",
@@ -261,7 +261,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "6b6f619ed809e93157f1ca7093ebf9c1c90b66e706fa57b27493cec6065d8eea",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_summary",
@@ -281,7 +281,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "23e1ccddf50ca651de08e9a0ec5b91ff1b419cec7e5dcf6aaaf8b7f4039ab4fc",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_inconsistent_print_settings",
@@ -300,7 +300,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "cf7e9cce67869e468a20f32a24a5ba8e0fd4c7694703320992996150546b85b2",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_pretty_print",
@@ -320,7 +320,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "545153259488774ca3bca6bb43dbb4e52640cf01405ce3a40d1fda57d3a04625",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_validation_time",
@@ -340,7 +340,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "00a0c4278ad01597e7850f9dab6288371251b8f04597e2377554a0e153a6e0f4",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_validation_time_syntax_error",
@@ -359,7 +359,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "7e60c366efe0020b3c118dd6bf8282755e686fb732fc48c32c9d0e042c0fa0ce",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_claimed_time",
@@ -379,7 +379,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "b7d13fa82c13d593a8d1c3738857c50060fd767ea2f025f9f5eda892baeb465c",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_untrusted",
@@ -398,7 +398,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "4632be8ff26a8705be1d369085e0d3e6a7890aaa8cfc8dfea0b0d7eb32d1ee46",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_weak_hash",
@@ -417,7 +417,7 @@
       "native_observed_cases": 2,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "0b8f7a3ce353ed3d8e8a3a76b5e44784e3f3a2140cc272ac4702cee6b064d5f8",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_unknown_hash",
@@ -437,7 +437,7 @@
       "native_observed_cases": 2,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "f9e15ff3567d39661713b4e69a8ba41386274ccdbcc7c504f0865ab3af6524f4",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_signed_with_wrong_key",
@@ -459,7 +459,7 @@
       "native_observed_cases": 3,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "673d17e612a0443a8d83ff32a8a53fbb083fb0dd05962eb4004e7255e5532652",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_default_context",
@@ -479,7 +479,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "03a3bfc834d437a9ae97b3492775528a3e4f102421a54f337ad2917b7f3142ac",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_system_trust",
@@ -498,7 +498,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "a4d0d8ef9303afd2c9e50f0685518ffac9b60cb71e8af7ee83f8fba1c3a7d792",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_explicit_context",
@@ -518,7 +518,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "596653cfd57c22d782b81fab4775aad6e2968fb3adf43570db4de16aa45ab927",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate",
@@ -537,7 +537,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "bb8f45e1b1e51872a65ef0d5ff3afb8de9cb4892acc55c17d8e373b89e8c767d",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate_with_trust_arg",
@@ -556,7 +556,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "211562a8382fac3f42bca55bf45e6ae991b2a8fec62132bc8fd4e27c5f7d1c1a",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_wrong",
@@ -575,7 +575,7 @@
       "native_observed_cases": 2,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "e5a80743168369663b2913bccfd073413f2dfa4e165050fa0dd35557e8cbb93a",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_nonsensical_other_certs",
@@ -594,7 +594,7 @@
       "native_observed_cases": 2,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "2de94dce78e6cc18cd61612fb1fbfec67ce84c69fecc1a486a987c35d785c5ee",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_trust_replace_arg_applies_to_config_context",
@@ -617,7 +617,7 @@
       "native_observed_cases": 32,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "184abdba087d99467f439f58cbf33d75fd10b6f9f2e2ff4c84e0cbeca8a4bda7",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_without_config_file",
@@ -636,7 +636,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "3622dae97b2ed472cae269a59e31398c133ebc20cc160cae87ac98dc0cbe7d0f",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_incompatible_args",
@@ -655,7 +655,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "def5d1de2e46dc35411660d4cdcd40c8effca01b6a3489c2e59bd1c9e742e17e",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_file_not_found",
@@ -674,7 +674,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "67f89ef9162a97664e6954435f9c3852c750b32222dd15d306512b94565d7919",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_malformed_cert",
@@ -693,7 +693,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "421ce66deb82aa25b7c654270524489dc270aa6d4f0056daddf74c57ab5a906a",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_detached_validate",
@@ -713,7 +713,7 @@
       "native_observed_cases": 8,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "d4793f938c33eaf8e52c9fdbf253b8c43a59893e4566793933ec4c1de2ef09a9",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_fail_detached_validate",
@@ -733,7 +733,7 @@
       "native_observed_cases": 4,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "11a5185f40ceaf1e61de5453674349653ffd5203aca905c7543a8df117d33fbd",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_malformed_input",
@@ -752,7 +752,7 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "3e3d701f4edd60954a24ee5424e8c4d2f3e1820873b0e43795fb827ab1709b6f",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_bad_cms_type",
@@ -771,20 +771,24 @@
       "native_observed_cases": 1,
       "original_rust_body_unchanged_from_owner_382132f": true,
       "rust_body_sha256": "a30be32819849ab8dd13636f6b5a09a6b50cca150ee21466c34e7c313c59c098",
-      "accepted": false
+      "accepted": true
     }
   ],
   "original_pytest_cases": 223,
-  "original_pytest_status": "passed; separate fresh run, not same generated input as frozen native corpus",
+  "original_pytest_status": "Historical pinned upstream baseline from the proposal; not newly rerun as223 source1de3105 oracle calls. Current acceptance verifies39 native original functions/223 parameters,48 recorded matrix CLI calls and28 recorded fresh process comparisons, with separate native-only/snapshot controls.",
   "native_original_target": "42/42 passed including3supplemental tests",
   "helper_extra_native_cases": 78,
   "source_closure": "No signing/qualified/LTV/PKCS11 implementation imported",
-  "accepted_C": [
-    252,
-    110,
-    0,
-    142
-  ],
-  "new_accepted_credit": 0,
-  "readiness": "Raw audit candidate held: two supplemental positive tolerance assertions remain red. Bounded candidate must explicitly reject unsupported custom timing and preserve raw tests unchanged in this ref."
+  "accepted_C": {
+    "total": 252,
+    "passed": 150,
+    "skipped": 0,
+    "pending": 102
+  },
+  "new_accepted_credit": 39,
+  "readiness": "Accepted only after the complete1de3105 source-specific root gate, fresh exact executable/provenance and independent review; signing, LTV, qualification, PKCS11 and remaining runtime/reader flows remain pending.",
+  "historical_proposal_source": "b9729fff80a6189fa81e61555906418fefda1070",
+  "historical_proposal_base": "fb56236d1001058aca28687d73041dcd330a7745",
+  "historical_original_pytest_status": "passed; separate fresh run, not same generated input as frozen native corpus",
+  "original_pytest_evidence_scope": "original_pytest_cases records the pinned baseline collection/mapping; source-specific current native/runtime evidence is under docs/lanes/round3/l-cli-validation.md."
 }

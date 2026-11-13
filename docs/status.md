@@ -17,26 +17,27 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped111
-includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1.
-The complete CLI and port remain unfinished.
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped150
+includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 and
+ordinary validation39. Complete signing, LTV, qualification and the rest of the
+CLI and port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **7232e9c**. Build, workspace tests, clippy with
+Current accepted source: **1de3105**. Build, workspace tests, clippy with
 `-D warnings`, strict documentation, layering and formatting all passed.
-Measured Rust results: **1,811 discovered /1,807 passed /4 ignored /0 failed**,
-172 reports. The immutable inventory is **1,431 total /1,264 passed
-/25 skipped /142 pending**. This increment accepts one deprecated TSA
-session-forwarding original, with an explicit Rust compile-time diagnostic
-adaptation. Coverage numeric/EOF guards add zero original IDs. Independent
-source-content and actual executable/runtime evidence are renewed for this
-source. Earlier figures remain historical checkpoints. See
-[current acceptance](lanes/round3/l-alias-coverage.md). Complete-port and
-all-divergences-fail-closed claims remain unsupported.
+Measured Rust results: **1,881 discovered /1,877 passed /4 ignored /0 failed**,
+177 reports. The immutable inventory is **1,431 total /1,303 passed
+/25 skipped /103 pending**. Exactly39 ordinary CLI validation functions and
+223 original parameter executions are accepted. The scoped CLI now has150
+accepted functions, with102 pending. Fresh current-source executable/worker,
+compiler-content and actual-input controls were independently reviewed.
+Earlier figures below are historical checkpoints. Complete-port and
+all-divergences-fail-closed claims remain unsupported. See
+[current CLI acceptance](lanes/round3/l-cli-validation.md).
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,
@@ -193,9 +194,9 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
 | **Library lanes A–E** | **1,168** | **1,143** | **25** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 111 | 0 | 141 |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 150 | 0 | 102 |
 | Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
-| **Overall** | **1,431** | **1,264** | **25** | **142** |
+| **Overall** | **1,431** | **1,303** | **25** | **103** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -220,9 +221,9 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| C / CLI and configuration | 141 | Remaining signing, validation/LTV, five runtime functions, provider and complete reader-state commands; config57/plugins11/crypt23/fields7/stamps12/runtime-read1 are accepted |
+| C / CLI and configuration | 102 | Remaining signing, LTV/qualified validation, five runtime functions, provider and reader-state commands; scoped150 includes ordinary validation39 |
 | Lead / live integration | 1 | Actual CLI LTA after complete C signing/LTV commands; other ten live functions are accepted |
-| **Total** | **142** | |
+| **Total** | **103** | |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
@@ -262,7 +263,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the142 pending
+provider behaviour and remaining validator compatibility; the103 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -343,9 +344,11 @@ The historical quoted-YAML truth discrepancy is also repaired in the accepted
 configuration object: nonempty quoted no/off strings retain Python truthiness.
 The earlier eight full-CLI comparisons did not prove end-to-end conservatism:
 Python drops one flag and another shared default rejects the EKU adversary.
-The complete validation consumers still require separate acceptance. The
-accepted scoped111 prefix is independently gated; the old230/full-source proposals are not thereby
-accepted, and no configuration-only assertion earns signing/validation credit.
+The former full-source validation proposal still requires its separate
+qualification/LTV acceptance. The accepted ordinary39 repairs and controls
+below do not accept the old whole-engine proposal. The scoped150 prefix is
+independently gated; the old230/full-source proposals are not thereby accepted,
+and no configuration-only assertion earns signing/validation credit.
 
 S previously reproduced the default DSS operation accepting an oversized
 object stream that Python rejects. Accepted stateful operation callers now
@@ -434,7 +437,7 @@ parallel with system per-host worktree locks and automatic worker placement.
 | P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Original pending0; resolve3 documented skips (deprecated warning, SafeNet PIN, raw DSA) and audit provider parameters/evidence/state compatibility beyond original assertions | Preserve original/current caller policies, native negative controls and mandatory rejection; new helpers add0IDs |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 assigned functions accepted; bounded Adobe RIA/order repair integrated; audit archival/POE, historical fetch, registry alias/persistence and independent trust-domain compatibility | Verified old/new Adobe profiles now match finalOK; other NO_POE/API-bottom-line distinctions and legacy timestamp-first refusals remain; no POE/imprint/algorithm/revocation waiver |
 | S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review22skips (PDF8/CV2/fetch12), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish141 pending unique functions, including real signing/validation/LTV, five runtime functions, provider and complete reader-state commands; scoped111 does not import full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish102 pending unique functions: real signing, LTV/qualified validation, five runtime functions, provider and remaining reader-state flows; scoped150 does not import the full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
 | L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final1CLI live LTA function after accepted real C commands; coherent lane integration, parameter/skip/provenance audits, complete gates and final service replacement decision | Actual CLI/PFX/config/DSS/LTA flow, source-specific full gates, immutable counts; no service restart or early acceptance |
 
 P, V, S and C can work concurrently within these exclusive scopes; L owns
@@ -1215,3 +1218,34 @@ validation proposal remains unaccepted. Its obsolete custom-tolerance refusal
 and removed positive controls were rejected; the existing accepted f0ed26a
 shared fix must be consumed without dropping assertions. Complete porting and
 universal fail-closed behavior are not established.
+
+
+## Accepted ordinary CLI validation, with restored timing controls
+
+Source1de3105 completes39 exact CLI validation functions and223 original
+parameter executions. Native original tests retain all assertions and each
+parameter count is individually matched to observed execution. Focused70 tests
+include17 policy,42 validation (39 originals/3 supplemental),five process,
+five revocation snapshot and one public tolerance function. The complete gate
+and exact-tree/immutable-CLI evidence are in
+[l-cli-validation.md](lanes/round3/l-cli-validation.md). Old owner whole237 and
+bounded unsupported-tolerance proposals are not the accepted source.
+
+The obsolete nondefault-tolerance refusal and deleted positive tests were
+excluded. Existing shared f0 tolerance behavior is exercised through both
+public API and actual CLI:30seconds rejects a30minute expiry;3600seconds
+accepts. Claimed time is selected before a single trust evaluation, so a
+revoked-first/good-second provider cannot overwrite the denial. Detached
+claimed time and explicit CLI trust-profile isolation preserve their refusals.
+Actual runtime-only force-revinfo claimed tests are not exact Python claimed
+CLI rejection proof: pinned Python automatically disables revocation for an
+explicit time. That bounded stricter native control remains documented.
+
+Fresh evidence includes48 recorded validation-matrix Python CLI calls,
+28 fresh process comparisons and nine additional native-only mandatory/schema
+controls, plus good/revoked signed-evidence public-Python controls. They are
+separate measurements from39 functions/223 native parameters and do not prove
+universal trust parity. Rooted/empty-root and policy controls, actual snapshot
+inputs, private ELF/current workers and old/new Adobe/BASIC/Full-LTA limits
+remain explicit. C is252/150/0/102; overall1431/1303/25/103. True signing,
+LTV, qualification, provider integration and final live CLI-LTA remain pending.

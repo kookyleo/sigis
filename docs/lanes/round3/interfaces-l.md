@@ -646,3 +646,16 @@ No runtime warning or full legacy async backend is implied. Existing timestamp
 validation/trust is unchanged. Checked coverage length and EOF cursor arithmetic
 retain Unclear/typed-error/contiguous fallback semantics without trust upgrades.
 See l-alias-coverage.md.
+
+
+## Ordinary CLI validator integration
+
+Source1de3105 exposes CLI usage-policy conversion and ordinary PDF/detached-CMS
+validation through the existing runtime/dispatch. Caller trust/timing are selected
+before one PDF validation; no denied result is replaced. Supported context time
+tolerance uses the accepted native window without special refusal. Runtime
+fetchers retain caller policy, and explicit CLI trust profiles cannot inherit an
+unselected default root. Qualified/LTV/signing/provider paths are separate.
+Five existing workspace dependencies are used at lower layers; merged lockfile
+changes only sigis-cli dependency edges, with no package-version changes.
+See l-cli-validation.md.

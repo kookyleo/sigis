@@ -1,13 +1,14 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /111 passed /0 skipped /141 pending**.
-Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 are integrated.
-Source e353d42 passes the complete workspace gate with source-specific compiler,
-immutable CLI and runtime evidence. The new runtime original checks only the
-real encrypted addfields read failure; it proves no signing or trust success.
-Owner full-source proposals and validation/qualification holds remain separate.
-Earlier owner checkpoints below are historical. See l-ria-order.md, l-cli-prefix.md
-and l-ac-stamps.md under docs/lanes/round3/.
+Accepted assigned counts: **252 total /150 passed /0 skipped /102 pending**.
+Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 and ordinary
+validation39 are integrated after the complete source1de3105 gate. All223
+original validation parameters execute; the separate70-test focused suite
+retains explicit timing positives and revocation/roots/claimed-time guards.
+The exact immutable CLI/worker/current-source proof and fresh reference scope
+are documented in docs/lanes/round3/l-cli-validation.md. Signing, qualified/LTV,
+provider and other runtime/reader commands remain pending. Earlier owner
+whole-source projections/counts below are historical and not imported.
 
 # Independently verified CLI increments
 
