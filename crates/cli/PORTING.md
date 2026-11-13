@@ -1,5 +1,22 @@
 # Lead acceptance update
 
+Accepted assigned counts: **252 total /183 passed /0 skipped /69 pending**.
+Source73d9c14c accepts exactly three encrypted PEM originals/six cases:
+four RSA/ECDSA/Ed25519/Ed448 encrypted successes, RSA public-key-handler refusal
+and RSA wrong-password refusal. Prior180 functions retain their counts.
+Current actual private CLI/source/worker/ELF/16process+4in-process evidence,
+fresh same-output validation and all six gates precede promotion. Canonical
+PEM authenticates the continuing reader; the public direct adapter retains
+its plaintext-only refusal. Whole configuration/usage/context and mandatory
+refusals stay authoritative. P legacy-KU guard repair adds zero IDs and does
+not establish all-policy/facade/provider parity. See ENCRYPTED_SIGNING_PORTING.md
+and docs/lanes/round3/l-ku-encrypted.md. No complete-port/universal fail-closed
+claim;69 C originals and20 library skips remain unfinished.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted assigned counts: **252 total /180 passed /0 skipped /72 pending**.
 Source05f46f46 accepts exactly five runtime originals/five parameters: strict
 malformed-xref refusal, explicit nonstrict success, stdout logging, default

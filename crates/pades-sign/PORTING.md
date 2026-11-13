@@ -1,5 +1,21 @@
 # Current lead acceptance
 
+Accepted counts remain **297 total /295 passed /2 skipped /0 pending**.
+Source73d9c14c repairs the measured legacy missing-KU guard with zero new IDs:
+attached context/nonempty metadata KU now refuses absent extension; six original
+signing decisions agree, prior30 supplemental cases remain. Empty Vec/noVC
+early return/Some complete policy and existing PKIX/AC/reader/auth/MAC order
+are preserved. Actual ROOT RED207d and current GREEN/fullgate have separate
+source/ELF/input/output evidence. Two optional-EKU raw facade differences,
+two stricter Core refusals and provider/empty-PIN limitations remain explicit.
+No automatic CLI opt-in or universal fail-closed claim. The exact upstream raw
+DSA function stays accepted; SafeNet/deprecated warning remain2skips. See
+docs/lanes/round3/l-ku-encrypted.md.
+
+## Historical preceding lead acceptance
+
+# Current lead acceptance
+
 Accepted: **297 total /295 passed /2 skipped /0 pending** on source724d078d.
 Root round3_raw_dsa covers the exact original with actual native token/PDF/full
 trust/SHA256/Sig1 and mandatory fresh same-output oracle. Default3192 rejects;
