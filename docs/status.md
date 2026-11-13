@@ -27,17 +27,19 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **1de3105**. Build, workspace tests, clippy with
+Current accepted source: **5926ca47**. Build, workspace tests, clippy with
 `-D warnings`, strict documentation, layering and formatting all passed.
-Measured Rust results: **1,881 discovered /1,877 passed /4 ignored /0 failed**,
-177 reports. The immutable inventory is **1,431 total /1,303 passed
-/25 skipped /103 pending**. Exactly39 ordinary CLI validation functions and
-223 original parameter executions are accepted. The scoped CLI now has150
-accepted functions, with102 pending. Fresh current-source executable/worker,
-compiler-content and actual-input controls were independently reviewed.
-Earlier figures below are historical checkpoints. Complete-port and
-all-divergences-fail-closed claims remain unsupported. See
-[current CLI acceptance](lanes/round3/l-cli-validation.md).
+Measured Rust results: **1,884 discovered /1,880 passed /4 ignored /0 failed**,
+178 reports. The immutable inventory remains **1,431 total /1,303 passed
+/25 skipped /103 pending**. The same-version DSA SDK mapping and native import
+controls add zero upstream functions. The full raw DSA token/PDF/oracle case
+remains skipped. The scoped CLI retains150 accepted functions/102 pending,
+including the earlier39 ordinary validation functions/223 native parameters.
+Fresh current-source executable/worker, all three vendor compiler-content,
+retained-base metadata provenance and actual-input controls were independently reviewed. Earlier figures below are
+historical checkpoints. Complete-port and all-divergences-fail-closed claims
+remain unsupported. See [DSA prerequisite](lanes/round3/l-dsa-capability.md)
+and [ordinary CLI acceptance](lanes/round3/l-cli-validation.md).
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,

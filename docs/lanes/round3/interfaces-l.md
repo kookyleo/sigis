@@ -659,3 +659,16 @@ unselected default root. Qualified/LTV/signing/provider paths are separate.
 Five existing workspace dependencies are used at lower layers; merged lockfile
 changes only sigis-cli dependency edges, with no package-version changes.
 See l-cli-validation.md.
+
+
+## Standard DSA mechanism mapping prerequisite
+
+Source5926ca47 selects the same cryptoki0.12.1 package with six bounded standard
+DSA mechanism constants/checked conversions. Existing safe generic parameter
+construction carries standard IDs/null/zero; it does not invent provider
+support. No new unsafe API, signature implementation, algorithm-policy change
+or dependency version change is introduced. The test-only native DSA import
+helper preserves unsigned p/q/g/x and token policy using existing safe generic
+attributes; it does not enable the full DSA fixture or establish signing/trust.
+P must retain exact token/PDF/SHA256/Sig1 and fresh original Python assertions
+before the remaining raw-DSA function can be accepted. See l-dsa-capability.md.

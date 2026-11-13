@@ -28,3 +28,13 @@ Patch (three changes, all in `vendor/underskrift/src/`):
 
 Remove this directory and the `[patch.crates-io]` entry when upstream ships an
 equivalent change.
+
+
+## Additional bounded patches
+
+- `const-oid`0.10.3: large first OID subidentifiers; provenance and exact scope
+  are in [const-oid.UPSTREAM.md](const-oid.UPSTREAM.md).
+- `cryptoki`0.12.1: six standard DSA mechanism constants and checked numeric
+  conversions; [cryptoki.UPSTREAM.md](cryptoki.UPSTREAM.md) records the original
+  archive, license and one-file patch. This capability does not enable the
+  incomplete original raw-DSA token/PDF/oracle function.

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "1de31059939f5e9a50be9c482a04abd8ca1954fc",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/c-ordinary-integration/gate/gate.json",
+  "accepted_source_commit": "5926ca47fd6bb88272cc5e412702f11151d32de9",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-dsa-capability-next/gate-final/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1709,5 +1709,5 @@
       "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
     }
   ],
-  "source_verification_note": "Source1de3105 complete six-part gate: 1881 discovered/1877 passed/4 ignored/0failed/177 reports;419 compiler-unit observations/2522 input records/402 actual sources independently content-verified. Exactly39 C ordinary validation IDs/223 original parameter executions added; supplemental controls and fresh oracle calls do not create extra IDs. Current private CLI9ddd3379 and8actual selection records/worker copies verified. No old full237/qualified/signing proposal imported; remaining inventory1431/1303/25/103."
+  "source_verification_note": "Source5926ca47 complete six-part gate: 1884 discovered/1880 passed/4 ignored/0failed/178 reports;426 compiler-unit observations/2752 input records/448 actual input paths content-verified with recorded current-code/base-metadata origins, including all three vendor dependencies and explicitly retained accepted-base metadata. Same-version safe DSA mechanism mappings and test-only DSA import controls add zero upstream IDs; original raw DSA token/PDF/oracle proof remains skipped. Current private CLI c6c6672a plus actual selection/worker/input/runtime checks independently reviewed. Inventory remains1431/1303/25/103."
 }
