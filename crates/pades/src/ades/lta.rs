@@ -124,6 +124,12 @@ fn register_cms_inner(
     for cert in &sd.attribute_certificates {
         poe.register(cert, time, kind);
     }
+    // Only this authenticated enclosing-material traversal proves archival
+    // objects. A signature timestamp by itself never proves RIA evidence.
+    let ria = super::adobe_revinfo::archival_material(si)?;
+    for bytes in ria.crls.iter().chain(&ria.ocsps) {
+        poe.register(bytes, time, kind);
+    }
     // A proof of the containing CMS also proves every physically embedded
     // timestamp, including its signature and certificate material.
     for token in sigis_cms::signed_data::find_cms_attribute_iter(
@@ -370,7 +376,12 @@ pub fn lta_validation_with_options(
     options: &LtaOptions<'_>,
 ) -> Result<LtaValidationResult> {
     super::basic::check_timestamp_digests(&signature.contents)?;
-    let ctx = dss_context(file, ctx)?;
+    let signed = signature.signed_data(file)?;
+    let ctx = super::adobe_revinfo::with_signed_adobe_revinfo(
+        &dss_context(file, ctx)?,
+        &signature.contents,
+        SignedContent::Data(&signed),
+    )?;
     let now = ctx.moment();
     let mut poe = PoeManager::with_current_time(now);
     if let Some(known) = options.known_poes {
@@ -378,7 +389,6 @@ pub fn lta_validation_with_options(
     }
     let sd = signed_data(crate::cms_from_contents(&signature.contents)?)?;
     let si = signer(&sd)?;
-    let signed = signature.signed_data(file)?;
     let pdf = crate::validate_pdf_signature(
         file,
         signature,
@@ -402,7 +412,13 @@ pub fn lta_validation_with_options(
     }
     let ac = options
         .ac_validation_context
-        .map(|ac| dss_context(file, ac))
+        .map(|ac| {
+            super::adobe_revinfo::with_signed_adobe_revinfo(
+                &dss_context(file, ac)?,
+                &signature.contents,
+                SignedContent::Data(&signed),
+            )
+        })
         .transpose()?;
     let cms_options = CmsValidationOptions {
         ac_validation_context: ac.as_ref(),

@@ -8,6 +8,18 @@ The S-owned original function is
 `pyhanko/test_cms.py::test_embed_ac_revinfo_adobe_style` (aiohttp/requests);
 its native real-operation assertions and credit remain with central integration.
 
+The original test's validation spec defaults to NO_HISTORICAL_FETCH with
+backend=None, which provisions a current online backend when needed. Its
+explicit assertions do not require offline/root-only success. Equivalent
+Services remain permitted in the exact root integration. Historical fetching
+is still disallowed by that rule.
+
+This fixture generator deliberately selects LOCAL_ONLY to isolate the RIA
+consumer, beyond the original assertions. The no-fetcher/no-DSS positive and
+negative results below are supplemental feature checks. Their red/green does
+not invalidate accepted V47 baseline assertions or add a new requirement to the
+S-owned original. Frozen input bytes, manifests and outcomes are unchanged.
+
 `generate.py` creates a signature with the original AC-aware signer material:
 five other embedded PKCs, one embedded AC, the signer certificate and a genuine
 signature timestamp. The signed RIA contains all five genuine Certomancer CRLs.

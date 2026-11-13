@@ -22,6 +22,7 @@
     warn(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod adobe_revinfo;
 pub mod basic;
 pub mod etsi_report;
 pub mod lta;

@@ -14,6 +14,19 @@ use crate::stream::{decode_stream_data, CryptFilterDecode};
 /// Maximal length of a chain of references pointing to references.
 pub const MAX_REFERENCE_CHAIN: usize = 64;
 
+/// Resolve an object reference with an optional PDF handler (`Reference.get_object`).
+///
+/// An unbound reference resolves to [`Object::Null`]. A bound reference uses
+/// the supplied handler, including its historical view, authentication,
+/// strictness and reference-chain limit. Resolution errors are propagated;
+/// they are never converted into an unbound-reference null value.
+pub fn resolve_reference(id: ObjectId, handler: Option<&dyn PdfHandler>) -> PdfResult<Object> {
+    match handler {
+        None => Ok(Object::Null),
+        Some(handler) => handler.resolve(&Object::Reference(id)),
+    }
+}
+
 /// Access to the objects of a PDF (`PdfHandler`).
 pub trait PdfHandler {
     /// The object `id` refers to (`get_object`), decrypted if applicable.
