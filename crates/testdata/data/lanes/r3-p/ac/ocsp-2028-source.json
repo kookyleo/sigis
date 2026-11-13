@@ -1,0 +1,77 @@
+{
+  "purpose": "current-time2028 AC response for test factory mapping; not historical AC retiming",
+  "pyhanko": "0.38.1",
+  "certvalidator": "0.33.0",
+  "certomancer": "0.16.0",
+  "interpreter": "/tmp/pyhanko-oracle/venv/bin/python",
+  "actual_inputs": {
+    "ac.der": {
+      "path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-native-v1/outputs/test_pades_lta_live_ac_presign_validation-requests/ac.der",
+      "bytes": 786,
+      "sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909"
+    },
+    "aa.der": {
+      "path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-native-v1/outputs/test_pades_lta_live_ac_presign_validation-requests/aa.der",
+      "bytes": 1105,
+      "sha256": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b"
+    },
+    "root.der": {
+      "path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-native-v1/outputs/test_pades_lta_live_ac_presign_validation-requests/root.der",
+      "bytes": 984,
+      "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c"
+    },
+    "root-aa.der": {
+      "path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-native-v1/outputs/test_pades_lta_live_ac_presign_validation-requests/root-aa.der",
+      "bytes": 941,
+      "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06"
+    }
+  },
+  "at": "2028-02-01T00:00:00Z",
+  "response": {
+    "file": "ocsp-alice-role-with-rev-2028-02-01.der",
+    "bytes": 1570,
+    "sha256": "d30e61620a051faa16c4385a856e2c212befd1ae388ab7dfe761fac3d7fed1a4",
+    "signature_valid_with_actual_aa": true,
+    "signature_algorithm": "sha256_rsa",
+    "produced_at": "2028-02-01T00:00:00Z",
+    "this_update": "2028-02-01T00:00:00Z",
+    "next_update": "2028-02-01T00:10:00Z",
+    "status": "good",
+    "issuer_name_hash": "5f824762d8863582e644f0fb1038e3ef2d44dd8f",
+    "issuer_key_hash": "7fa5cdd556bd68ade6301918f145aa803914443a",
+    "serial_number": "4096",
+    "cert_id_sha256": "ce698639edc4502efd40bb4d57fdb877f1376ea7b2313ea783a4525cc3ce1921",
+    "nonce": null,
+    "responder_certificate_sha256": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b"
+  },
+  "original2020": {
+    "path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-native-v1/outputs/test_pades_lta_live_ac_presign_validation-requests/ac-ocsp.der",
+    "sha256": "0a2f1f902b1db9794e9df41c30c242b7be980986db21b5f33252feeb32de070d",
+    "this_update": "2020-11-01T00:00:00Z",
+    "next_update": "2020-11-01T00:10:00Z",
+    "same_exact_cert_id": true,
+    "unchanged": true
+  },
+  "source_pins": {
+    "generator": {
+      "path": "/home/l/D/kooky/sigis-wt/r3-p-integrate/crates/testdata/data/lanes/r3-p/ac/generate_ocsp_2028.py",
+      "sha256": "d70e0efe59e7fbdbb229dc9126260d45211bb3cd0a4425ae552f8caed99eed1e"
+    },
+    "certomancer_services": {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/services.py",
+      "sha256": "8f579171a31d0c04103fc3abfe3ee0480bb9f9e0a5731e7db76f5840f6368a12"
+    },
+    "certomancer_registry": {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/registry/pki_arch.py",
+      "sha256": "e71777ada8509e7f5279e4e2c517c0ad0d739d990c448254a11b1b6935072c9c"
+    },
+    "existing_pkc_exporter": {
+      "path": "/home/l/D/kooky/sigis-wt/r3-p-integrate/crates/pades-sign/oracle/export_revinfo.py",
+      "sha256": "b0bf84a108a6ba9e84e1c2a349a03e2069336e806a099bf14600a9d54296ff94"
+    }
+  },
+  "main_source_head": "3cd089293854df1db1f17be88249374c98ac48a8",
+  "whole_ac_validation": "not executed by exporter; root must validate through unchanged native fetch/policy API",
+  "no_private_key_copied": true,
+  "new_unique_credit": 0
+}
