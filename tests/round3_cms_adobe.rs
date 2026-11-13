@@ -308,6 +308,10 @@ fn test_embed_ac_revinfo_adobe_style() {
         assert_eq!(oracle["correct"]["role_type"], "RoleSyntax");
         assert_eq!(oracle["correct"]["role_name"], "bigboss@example.com");
         assert_eq!(oracle["wrong_ac_root"]["authenticated_role"], false);
+        // Supplemental complete-result parity for the RIA consumer repair;
+        // the upstream original only requires API status and the typed role.
+        assert_eq!(subindication, "OK");
+        assert_eq!(oracle["correct"]["ades_subindic"], subindication);
         eprintln!(
             "CMS_ADOBE_AC {}",
             serde_json::json!({
