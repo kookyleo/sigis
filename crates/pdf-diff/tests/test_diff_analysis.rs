@@ -652,15 +652,9 @@ fn test_is_field_visible() {
     assert!(!is_field_visible(&rev, &with_kids(vec![rect([0, 0, 0, 0])])).unwrap());
 }
 
-// ---- skipped: no difference analysis runs in these tests (see PORTING.md) --
-
-#[test]
-#[ignore = "skipped: signature coverage is decided by pdf_embedded (lane E) before any difference analysis"]
-fn test_anomalous_coverage() {}
-
-#[test]
-#[ignore = "skipped: signature coverage is decided by pdf_embedded (lane E) before any difference analysis"]
-fn test_tamper_sig_obj() {}
+// The original test_anomalous_coverage and test_tamper_sig_obj assertions run
+// against the real signature validator in sigis-pades/tests/validator_integrity.rs.
+// No empty wrapper or extra function credit is retained in this crate.
 
 /// pyHanko's reader rejects xref sections that list an object twice. That
 /// is a `sigis-pdf` (lane B) check; this test runs once `PdfFile::parse`

@@ -301,9 +301,8 @@ fn test_signature_nondefault_hash() {
     check_in_sig("test_signature_nondefault_hash", BOTH, None);
 }
 
-#[test]
-#[ignore = "pending: needs lane D PAdES signing with a TSA and lane E AdES validation"]
-fn test_pdf_mac_pades() {}
+// test_pdf_mac_pades executes the complete signing/AdES assertions in the root
+// round3_s_pdfmac_callers target, keeping the crate dependency graph acyclic.
 
 #[test]
 fn test_pdf_mac_timestamp() {
@@ -1045,9 +1044,8 @@ fn test_pdf_mac_attr_missing() {
     );
 }
 
-#[test]
-#[ignore = "pending: needs lane D (PdfSigner reuse with PDF MAC attribute providers)"]
-fn test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel() {}
+// test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel executes the real
+// overlapping signer operations in root round3_s_pdfmac_callers.
 
 #[test]
 fn standalone_mac_on_incremental_update() {
