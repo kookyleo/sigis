@@ -1,0 +1,9 @@
+# Shared canonical targets must validate source contents across worktrees.
+# Relative dep-info plus mtimes can otherwise reuse a newer foreign library.
+# This is a correctness setting for the installed nightly Cargo, not a
+# compiler/profile/feature override. Keep scheduler, target and sccache intact.
+[unstable]
+checksum-freshness = true
+
+[build]
+fingerprint = "content"

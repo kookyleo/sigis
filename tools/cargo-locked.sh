@@ -10,6 +10,12 @@ if [[ -n ${RUST_TARGET_OWNER:-} ]]; then
     echo 'RUST_TARGET_OWNER must be unset: all lanes share the canonical target.' >&2
     exit 2
 fi
+# A shared target may contain newer artifacts from another worktree.
+# Repository content fingerprints must not be downgraded by a shell override.
+if [[ ${CARGO_BUILD_FINGERPRINT-content} != content ]]; then
+    echo 'CARGO_BUILD_FINGERPRINT must be unset or content for source-correct builds.' >&2
+    exit 2
+fi
 for arg in "$@"; do
     case "$arg" in
         --target-dir|--target-dir=*)
