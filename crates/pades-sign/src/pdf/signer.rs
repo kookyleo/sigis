@@ -1148,13 +1148,11 @@ impl PdfSigner {
             })?;
         } else {
             let have = crate::pdf::seed::cert_key_usage_names(cert);
-            if cert.key_usage().is_some() {
-                for ku in &meta.signer_key_usage {
-                    if !have.contains(ku) {
-                        return Err(signing_error(format!(
-                            "The signer's certificate could not be validated: the key usage extension does not include {ku}"
-                        )));
-                    }
+            for ku in &meta.signer_key_usage {
+                if !have.contains(ku) {
+                    return Err(signing_error(format!(
+                        "The signer's certificate could not be validated: the key usage extension does not include {ku}"
+                    )));
                 }
             }
         }
