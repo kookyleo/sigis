@@ -14,7 +14,7 @@ pub(crate) struct Options {
     pub(crate) values: BTreeMap<String, Vec<String>>,
     pub(crate) flags: BTreeSet<String>,
     pub(crate) paths: Vec<String>,
-    repeated_flags: BTreeSet<String>,
+    pub(crate) repeated_flags: BTreeSet<String>,
 }
 impl Options {
     pub(crate) fn get(&self, key: &str) -> Option<&str> {

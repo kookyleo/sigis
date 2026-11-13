@@ -2,6 +2,7 @@
 pub mod config;
 pub mod crypt;
 pub mod fields;
+pub mod pkcs12_signing;
 pub mod plugins;
 pub mod runtime;
 pub mod software_signing;
@@ -263,7 +264,11 @@ fn run_signing(
     }
     // Keep identity and extension-provider execution unavailable. Only a
     // directly selected built-in may enter the reviewed ordinary adapter.
-    if matches!(args[i].as_str(), "pemder" | "pkcs12") && rewritten[i] == args[i] {
+    pkcs12_signing::require_timestamp(&rewritten)?;
+    if args[i] == "pkcs12" && rewritten[i] == "pkcs12" {
+        return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);
+    }
+    if args[i] == "pemder" && rewritten[i] == "pemder" {
         return software_signing::run_with_runtime(&rewritten, config, runtime);
     }
     Err(format!(
