@@ -14,6 +14,15 @@ pub struct LivePki {
 
 impl LivePki {
     pub fn start() -> Self {
+        Self::start_with_time(TIME)
+    }
+
+    /// Actual request-time PKI for an out-of-process current-time CLI.
+    pub fn start_live() -> Self {
+        Self::start_with_time("now")
+    }
+
+    fn start_with_time(time: &str) -> Self {
         let python =
             sigis_testdata::oracle::python().expect("live integration requires the oracle");
         let script = sigis_testdata::manifest_dir().join("tools/pyhanko-oracle/live_pki_server.py");
@@ -21,7 +30,7 @@ impl LivePki {
             .arg(script)
             .arg("--crypto")
             .arg(sigis_testdata::pyhanko(&["crypto"]))
-            .args(["--time", TIME])
+            .args(["--time", time])
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()

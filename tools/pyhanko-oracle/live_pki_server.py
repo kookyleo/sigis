@@ -37,7 +37,7 @@ async def serve(args):
         external_url_prefix=url,
     )
     arch = cfg.get_pki_arch(ArchLabel('testing-ca'))
-    fixed = datetime.fromisoformat(args.time.replace('Z', '+00:00'))
+    fixed = None if args.time == 'now' else datetime.fromisoformat(args.time.replace('Z', '+00:00'))
     app = AsyncIllusionist(arch, at_time=fixed).build_app()
 
     # Bound diagnostic cardinality. Do not record form bodies or passphrases.
