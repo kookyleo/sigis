@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "95dd1192b323c35a58749c1446aa13363e2e2cb7",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/timestamp-next-integration/gate/gate.json",
+  "accepted_source_commit": "05f46f46708f120a613683439e55e96ef0a6017a",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/tsa-runtime-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1893,7 +1893,37 @@
       "status": "passed",
       "rust_test": "stream_state_contract (five positive tests/nine controls); stream module constructor compile-fail doctests (two E0308 cases)",
       "reason": "Explicit lead-approved Rust constructor-time type-phase exclusion of Python both-buffers-absent state, with two actual E0308 checks, five legal-state tests/nine controls, current full gate and separate fresh pinned original. No runtime getter-error, original same-object runtime getter sequence, or same-native-compressed-byte parity is claimed; production non-doc stream code unchanged."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_fail_strict_mildly_broken",
+      "status": "passed",
+      "rust_test": "runtime_validation::test_fail_strict_mildly_broken",
+      "reason": "All exact original assertions and one source parameter on frozen05f current native CLI791b: real malformed-xref strict/nonstrict behavior or real stdout/stderr/file logging, isolated process/cwd/log frozen before fresh pinned CliRunner reference, optimize0/assertions enabled and no reference network; current source/fingerprints/ELF/bytes and all six workspace gates independently accepted. Existing fail_read ID is not counted again."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_succeed_strict_mildly_broken_nonstrict",
+      "status": "passed",
+      "rust_test": "runtime_validation::test_succeed_strict_mildly_broken_nonstrict",
+      "reason": "All exact original assertions and one source parameter on frozen05f current native CLI791b: real malformed-xref strict/nonstrict behavior or real stdout/stderr/file logging, isolated process/cwd/log frozen before fresh pinned CliRunner reference, optimize0/assertions enabled and no reference network; current source/fingerprints/ELF/bytes and all six workspace gates independently accepted. Existing fail_read ID is not counted again."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_stdout",
+      "status": "passed",
+      "rust_test": "runtime_validation::test_log_stdout",
+      "reason": "All exact original assertions and one source parameter on frozen05f current native CLI791b: real malformed-xref strict/nonstrict behavior or real stdout/stderr/file logging, isolated process/cwd/log frozen before fresh pinned CliRunner reference, optimize0/assertions enabled and no reference network; current source/fingerprints/ELF/bytes and all six workspace gates independently accepted. Existing fail_read ID is not counted again."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_stderr_default",
+      "status": "passed",
+      "rust_test": "runtime_validation::test_log_stderr_default",
+      "reason": "All exact original assertions and one source parameter on frozen05f current native CLI791b: real malformed-xref strict/nonstrict behavior or real stdout/stderr/file logging, isolated process/cwd/log frozen before fresh pinned CliRunner reference, optimize0/assertions enabled and no reference network; current source/fingerprints/ELF/bytes and all six workspace gates independently accepted. Existing fail_read ID is not counted again."
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_file",
+      "status": "passed",
+      "rust_test": "runtime_validation::test_log_file",
+      "reason": "All exact original assertions and one source parameter on frozen05f current native CLI791b: real malformed-xref strict/nonstrict behavior or real stdout/stderr/file logging, isolated process/cwd/log frozen before fresh pinned CliRunner reference, optimize0/assertions enabled and no reference network; current source/fingerprints/ELF/bytes and all six workspace gates independently accepted. Existing fail_read ID is not counted again."
     }
   ],
-  "source_verification_note": "Sourcef1cd5948 complete six-stage workspace gate1937discovered/1934passed/3ignored/0failed/188reports; independent final review and lead readiness bind actual final producer/runtime. Exactly14 IDs C11/S2/L1 accepted, C11has35original decision pairs/30fresh same-native-output checks and165durable records; 48retained basic records stay separately credited. Complete actual serial45+61 mandatory refusals supplement preserved malformed parallel raw logs. Native full-LTA CMS status plus same-output/context StandardDiffPolicy LTA_UPDATES, relational DefaultHasher/noEq and current long-signer adaptation are explicit. Overall1431/1321/21/89; no complete-port/universal fail-closed claim. Historical preceding note: Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."
+  "source_verification_note": "Source05f complete source-specific six-gate workspace acceptance; actual2010discovered/2007passed/3ignored/0failed/199reports. Exactly5 C runtime originals/5parameters, excluding accepted fail_read; current product791b and actual fullgate native/reference/input/log/ELF evidence independently reviewed, real logging frozen before reference, optimize0/assertions enabled. Shared HTTP TSA binding12 and unchanged-assertion raw-probe3 add0IDs; actual tests-first RED6pass6fail then12GREEN, fixed2020 signed fixtures/freshRoot24publiccalls and rawlive6cases/20tokens are separate scopes. Current actual serial37 supplies complete mandatory policy traces without repairing malformed parallel raw lines. Overall1431/1339/20/72; known measured legacy absentKU attached-context signing more permissive than Python remains UNFIXED05f; no universal failclosed or complete-port claim. Historical preceding note: Sourcef1cd5948 complete six-stage workspace gate1937discovered/1934passed/3ignored/0failed/188reports; independent final review and lead readiness bind actual final producer/runtime. Exactly14 IDs C11/S2/L1 accepted, C11has35original decision pairs/30fresh same-native-output checks and165durable records; 48retained basic records stay separately credited. Complete actual serial45+61 mandatory refusals supplement preserved malformed parallel raw logs. Native full-LTA CMS status plus same-output/context StandardDiffPolicy LTA_UPDATES, relational DefaultHasher/noEq and current long-signer adaptation are explicit. Overall1431/1321/21/89; no complete-port/universal fail-closed claim. Historical preceding note: Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."
 }

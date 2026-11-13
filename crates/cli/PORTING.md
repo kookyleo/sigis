@@ -1,5 +1,22 @@
 # Lead acceptance update
 
+Accepted assigned counts: **252 total /180 passed /0 skipped /72 pending**.
+Source05f46f46 accepts exactly five runtime originals/five parameters: strict
+malformed-xref refusal, explicit nonstrict success, stdout logging, default
+stderr logging and file logging. Prior fail_read remains credited once.
+The previous175 functions retain their counts; five new current-source native
+subprocesses/fresh pinned CliRunner peers and all six gates precede promotion.
+Current Click8.5.1 executes stderr; native files/logs freeze before reference.
+Shared TSA request-binding12 and raw-probe3 controls add zero IDs. They do
+not add TSA authorization or repair the known more-permissive legacy absent-KU
+signing case. Remaining signing/LTV/qualification/provider/reader-state flows
+and72 C originals remain unfinished. See RUNTIME_VALIDATION_PORTING.md and
+docs/lanes/round3/l-tsa-runtime.md. No universal fail-closed claim.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted assigned counts: **252 total /175 passed /0 skipped /77 pending**.
 Source95dd1192 accepts exactly two standalone timestamp originals/four
 parameters/five original commands after coherent current CLI/source/runtime,
