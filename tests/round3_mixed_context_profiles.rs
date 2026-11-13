@@ -37,7 +37,14 @@ fn frozen_mixed_context_profiles_match_pinned_refusals_and_positives() {
     let rsa = Cert::from_der(&rsa_der).unwrap();
     let mut rows = Vec::new();
     for historical in [false, true] {
-        for separate in [false, true] {
+        for role in [
+            "implicit_shared",
+            "explicit_shared",
+            "equal_distinct",
+            "separate_roots",
+        ] {
+            let separate = role == "separate_roots";
+            let expected = separate || role == "equal_distinct";
             let file = PdfFile::parse(&bytes).unwrap();
             let auth = file.decrypt("secret").unwrap();
             assert_eq!(auth.mac_status, sigis_pdf::crypt::PdfMacStatus::Successful);
@@ -68,8 +75,15 @@ fn frozen_mixed_context_profiles_match_pinned_refusals_and_positives() {
                 .revocation_mode("none")
                 .build()
                 .unwrap();
+            let equal_context = context.clone();
+            let original_context = format!("{context:?}");
             let options = CmsValidationOptions {
-                ts_validation_context: if separate { Some(&ts) } else { None },
+                ts_validation_context: match role {
+                    "explicit_shared" => Some(&context),
+                    "equal_distinct" => Some(&equal_context),
+                    "separate_roots" => Some(&ts),
+                    _ => None,
+                },
                 ..Default::default()
             };
             let status = sigis_pades::validate_pdf_signature_with_options(
@@ -80,6 +94,11 @@ fn frozen_mixed_context_profiles_match_pinned_refusals_and_positives() {
                 &options,
             )
             .unwrap();
+            assert_eq!(
+                format!("{context:?}"),
+                original_context,
+                "caller state must not be mutated"
+            );
             let main_path: Vec<String> = status
                 .cms
                 .signature
@@ -94,7 +113,7 @@ fn frozen_mixed_context_profiles_match_pinned_refusals_and_positives() {
                 .and_then(|t| t.signature.validation_path.as_ref())
                 .map(|p| p.certs().iter().map(|c| hash(c.der())).collect())
                 .unwrap_or_default();
-            rows.push(serde_json::json!({"pdf_path":pdf_path,"pdf_sha256":hash(&bytes),"point_in_time_validation":historical,"separate_role_contexts":separate,"bottom_line":status.bottom_line(),"expected_Python_bottom_line":separate,"intact":status.cms.signature.intact,"valid":status.cms.signature.valid,"trusted":status.cms.signature.trusted(),"timestamp_trusted":status.cms.timestamp_validity.as_ref().map(|t|t.trusted()),"summary":status.summary(),"main_path_sha256":main_path,"timestamp_path_sha256":ts_path,"time":"2020-11-01T00:00:00Z","tolerance_seconds":1,"revocation":"none","root_order":if separate{vec![hash(&ecc_der)]}else{vec![hash(&ecc_der),hash(&rsa_der)]},"timestamp_roots":if separate{vec![hash(&rsa_der)]}else{vec![hash(&ecc_der),hash(&rsa_der)]}}));
+            rows.push(serde_json::json!({"pdf_path":pdf_path,"pdf_sha256":hash(&bytes),"point_in_time_validation":historical,"separate_role_contexts":separate,"bottom_line":status.bottom_line(),"role_identity":role,"expected_Python_bottom_line":expected,"intact":status.cms.signature.intact,"valid":status.cms.signature.valid,"trusted":status.cms.signature.trusted(),"timestamp_trusted":status.cms.timestamp_validity.as_ref().map(|t|t.trusted()),"summary":status.summary(),"main_path_sha256":main_path,"timestamp_path_sha256":ts_path,"time":"2020-11-01T00:00:00Z","tolerance_seconds":1,"revocation":"none","root_order":if separate{vec![hash(&ecc_der)]}else{vec![hash(&ecc_der),hash(&rsa_der)]},"timestamp_roots":if separate{vec![hash(&rsa_der)]}else{vec![hash(&ecc_der),hash(&rsa_der)]}}));
         }
     }
     eprintln!(
