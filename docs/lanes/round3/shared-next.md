@@ -144,3 +144,38 @@ Only after L's current-source integration, complete workspace build/test/strict
 clippy/strictdoc/layer/fmt gate and independent review may S's two original IDs
 move from skipped to passed. V guards and all supplemental controls add0IDs.
 No service switch, push or complete-port/universal trust claim follows.
+
+## P: explicit validation context type-phase candidate
+
+The remaining pyhanko/test_signing.py::test_default_validation_context_deprecated
+asserts a Python DeprecationWarning when PDF VALIDATION omits its context and
+therefore selects OS trust. It does not warn about no-context SIGNING and makes
+no returned-trust assertion. Approve the proposed stronger Rust phase mapping,
+subject to actual diagnostics/native/oracle/gate acceptance: the existing real
+validate_pdf_signature requires &ValidationContext, so None/omitted context is
+excluded by the type system. Do not add OS roots, a shim, a warning-only API or
+an absent-method wrapper to reproduce the deprecated Python behavior. Explicit
+caller contexts remain caller choices; no runtime Rust warning is claimed.
+
+Temporary exact paths are src/lib.rs (PRIVATE cfg(doctest) include_str hook
+only), docs/lanes/round3/p-default-context-contract.md,
+tests/round3_default_context.rs, and
+crates/testdata/data/lanes/r3-p/default-context/explicit_context_oracle.py.
+No other production/V/S file, public API, dependency, export or layer change.
+
+Tests first: install the real four-argument positive and two ordinary negative
+rust fences. Actual wrapper doctest baseline must discover all3 and show the
+positive compile plus E0308 for None and E0061 for omitted context, not missing
+imports/methods. Then change only the negative fences to compile_fail with their
+actual error codes and prove all3 doctests pass. Preserve both diagnostic runs.
+Run the proposed genuine native P-signed PDF with full explicit-root positive
+and SAME-byte empty-root denial, identical time/policy/material, real signer
+identity/path/coverage and mandatory fresh pinned same-output comparisons.
+Retain the already recorded fresh unchanged original Python warning test/PDF
+as reference-only evidence, not native output. No missing tools/provider skips.
+
+This is ONE P-owned candidate, not three doctest IDs or a new L function. P
+remains295/2 until L's current-source integration, explicit adaptation disclosure,
+complete gate and acceptance. Keep SafeNet hardware separate; do not probe it.
+The proposed temporary worktree/projection must preserve original P history/lock
+and use the normal wrapper/scheduler, English local commits and no service/push.
