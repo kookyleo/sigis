@@ -116,7 +116,13 @@ pub fn evaluate_signature_coverage(
         return SignatureCoverageLevel::Unclear;
     }
     let (len1, start2, len2) = (byte_range[1], byte_range[2], byte_range[3]);
-    let embedded = (contents_len as u64) * 2 + 2;
+    let Some(embedded) = u64::try_from(contents_len)
+        .ok()
+        .and_then(|length| length.checked_mul(2))
+        .and_then(|length| length.checked_add(2))
+    else {
+        return SignatureCoverageLevel::Unclear;
+    };
     let Some(signed_zone_len) = len1.checked_add(len2).and_then(|v| v.checked_add(embedded)) else {
         return SignatureCoverageLevel::Unclear;
     };
