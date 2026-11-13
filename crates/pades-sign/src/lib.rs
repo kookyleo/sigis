@@ -180,6 +180,8 @@ pub struct PdfSigner {
     pub signing_time: Option<sigis_pki_core::time::Moment>,
     /// Ignore seed value dictionaries (testing).
     pub ignore_sv: bool,
+    /// Complete opt-in certificate usage policy; `None` retains metadata's KU rules.
+    signer_key_usage_policy: Option<sigis_pki_core::key_usage::KeyUsageConstraints>,
     /// Shared activity lease without document-specific MAC key material.
     pub(crate) mac_sessions: crate::pdf::mac::PdfMacSessions,
 }
@@ -208,8 +210,27 @@ impl PdfSigner {
             cms_options: CmsSignerOptions::default(),
             signing_time: None,
             ignore_sv: false,
+            signer_key_usage_policy: None,
             mac_sessions: Default::default(),
         }
+    }
+
+    /// Enforce a complete certificate usage policy when signing.
+    ///
+    /// This policy replaces only [`PdfSignatureMetadata::signer_key_usage`].
+    /// Without this builder, the metadata's existing key usage rules apply.
+    /// Repeated calls replace the policy, and cloning the signer clones it.
+    ///
+    /// With a validation context, certificate path validation still runs first.
+    /// Without one, the policy checks certificate-local usages only and does
+    /// not establish trust or validate a path. An explicit policy requires a
+    /// signing certificate even without a validation context.
+    pub fn with_signer_key_usage_policy(
+        mut self,
+        policy: sigis_pki_core::key_usage::KeyUsageConstraints,
+    ) -> Self {
+        self.signer_key_usage_policy = Some(policy);
+        self
     }
 
     /// Set the timestamper.

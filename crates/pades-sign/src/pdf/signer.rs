@@ -1117,6 +1117,16 @@ impl PdfSigner {
         }
         let mut info = ValidationInfo::default();
         let Some(ctx) = meta.validation_context.as_deref() else {
+            if let Some(policy) = &self.signer_key_usage_policy {
+                let cert = self.signer.signing_cert().ok_or_else(|| {
+                    signing_error("A signing certificate must be provided for an explicit signer key usage policy")
+                })?;
+                policy.validate(cert).map_err(|e| {
+                    signing_error(format!(
+                        "The signer's certificate could not be validated: {e}"
+                    ))
+                })?;
+            }
             self.presign_ac_validation(&mut info)?;
             let collected =
                 !info.paths.is_empty() || !info.ocsps.is_empty() || !info.crls.is_empty();
@@ -1130,13 +1140,21 @@ impl PdfSigner {
                 "The signer's certificate could not be validated: {e}"
             ))
         })?;
-        let have = crate::pdf::seed::cert_key_usage_names(cert);
-        if cert.key_usage().is_some() {
-            for ku in &meta.signer_key_usage {
-                if !have.contains(ku) {
-                    return Err(signing_error(format!(
-                        "The signer's certificate could not be validated: the key usage extension does not include {ku}"
-                    )));
+        if let Some(policy) = &self.signer_key_usage_policy {
+            policy.validate(cert).map_err(|e| {
+                signing_error(format!(
+                    "The signer's certificate could not be validated: {e}"
+                ))
+            })?;
+        } else {
+            let have = crate::pdf::seed::cert_key_usage_names(cert);
+            if cert.key_usage().is_some() {
+                for ku in &meta.signer_key_usage {
+                    if !have.contains(ku) {
+                        return Err(signing_error(format!(
+                            "The signer's certificate could not be validated: the key usage extension does not include {ku}"
+                        )));
+                    }
                 }
             }
         }
