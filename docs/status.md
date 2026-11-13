@@ -17,13 +17,22 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. Its later scoped98
-acceptance is recorded below; the complete CLI remains unfinished.
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped110
+includes configuration57/plugins11/crypt23/fields7/stamps12; this20function
+integration passed the complete ac1bdbc gate. The complete CLI
+and port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
+
+Current accepted source: **ac1bdbc**. The full gate passed **1,760 native tests,
+4 ignored, zero failed**. The immutable inventory is **1,431 total /1,259
+passed /29 skipped /143 pending**. This adds P7, S/CMS1 and C/stamps12 once
+each. The final section records this acceptance; prior source-specific counts
+below are historical checkpoints. Complete porting and all-divergences-fail-closed
+claims remain unsupported.
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,
@@ -59,7 +68,7 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main dc90dce found **1,724 Rust tests: 1,720 passed, 4
+The preceding accepted gate on main dc90dce found **1,724 Rust tests: 1,720 passed, 4
 ignored, zero failed**, across156 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
 Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/gate/`.
@@ -173,16 +182,16 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
-| `sigis-cms` | 78 | 77 | 0 | 1 |
+| `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 395 | 11 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
-| `sigis-pades-sign` | 297 | 287 | 3 | 7 |
+| `sigis-pades-sign` | 297 | 294 | 3 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,131** | **29** | **8** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 98 | 0 | 154 |
+| **Library lanes A–E** | **1,168** | **1,139** | **29** | **0** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 110 | 0 | 142 |
 | Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
-| **Overall** | **1,431** | **1,239** | **29** | **163** |
+| **Overall** | **1,431** | **1,259** | **29** | **143** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -207,19 +216,18 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`: complete authenticated AC/LTA and embedded material/RoleSyntax caller |
-| D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
-| C / CLI and configuration | 154 | Remaining signing, validation/LTV, stamps, runtime/provider and reader-state commands; config57/plugins11/crypt23/fields7 are accepted |
+| C / CLI and configuration | 142 | Remaining signing, validation/LTV, runtime/provider and complete reader-state commands; config57/plugins11/crypt23/fields7/stamps12 are in the accepted prefix |
 | Lead / live integration | 1 | Actual CLI LTA after complete C signing/LTV commands; other ten live functions are accepted |
-| **Total** | **163** | |
+| **Total** | **143** | |
 
-D integration makes the signer and seed model available to dependent
-callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
-qualified policies and LTV primitives; B supplies DSS, embedded files,
-encryption and incremental writing. These dependencies now exist, but
-remaining callers still need error mapping and substantive upstream
-assertions. The five PDF decode/MAC operation callers are now accepted;
-Adobe AC CMS and complete P AC flows still require integrated assertions.
+The accepted20functions close the last eight pending library-owned callers:
+seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
+source-backed root tests exercise real P outputs and native V consumers with
+original trust/revocation policies, plus fresh same-output pinned Python.
+This does not remove the29library skips, provider parameter gaps or unassigned
+feature limitations. Mandatory unsupported requirements still reject. The
+separate offline Adobe RIA consumer feature is not claimed implemented.
+
 
 ### Skip accounting and limitations
 
@@ -248,7 +256,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the163 pending
+provider behaviour and remaining validator compatibility; the143 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -273,7 +281,7 @@ below. A Python recording alone is not a passing Rust port.
 | CMS | 161/161 committed-call replays agree; a historical lane-A run reported 77 Rust tests | Calls and upstream functions are different denominators |
 | PDF modification analysis | 165 recorded reviews, 982 sweep reviews, 1,308 seeded mutation verdicts agree | Extra historical seeds reported about 10,400 verdicts |
 | Trusted lists | Original 18 cases agree | Signature, parsing and registry outcomes; expanded for this integration |
-| AdES | 76 Python cases recorded, 144 validation calls, 98 HTTP exchanges | Only 12 unique assigned AdES functions currently ported in Rust |
+| AdES | 76 Python cases recorded, 144 validation calls, 98 HTTP exchanges | Historical snapshot only; current accepted assignment is47/47 |
 | PDF encryption | PyHanko opens Rust-produced password/public-key encrypted files, including MAC/incremental cases | Live encryption interop requires `HANKO_ORACLE` |
 | Signing | Test outputs receive Rust integrity checks and oracle PDF/CMS verification when available | No stable aggregate output count was recorded |
 
@@ -330,14 +338,14 @@ configuration object: nonempty quoted no/off strings retain Python truthiness.
 The earlier eight full-CLI comparisons did not prove end-to-end conservatism:
 Python drops one flag and another shared default rejects the EKU adversary.
 The complete validation consumers still require separate acceptance. The
-scoped98 prefix is accepted; the old230/full-source proposals are not thereby
+accepted scoped110 prefix is independently gated; the old230/full-source proposals are not thereby
 accepted, and no configuration-only assertion earns signing/validation credit.
 
-S also reproduced the current default DSS operation accepting an oversized
-object-stream input that Python rejects. The native default reader rejects,
-but a CLI preflight or shared reopen helper does not fix P's internal writer.
-This observed resource-policy gap remains P-owned and is not a trust-verdict
-parity proof. Selected-limit/budget/authentication operation callers stay pending.
+S previously reproduced the default DSS operation accepting an oversized
+object stream that Python rejects. Accepted stateful operation callers now
+cover default/finite refusals and trusted-input sign/archive/DSS updates,
+including encrypted continuation. These bounded resource-policy checks do not
+prove every remaining-budget combination or universal trust-verdict parity.
 
 
 Round-3 primitive compatibility boundaries are explicit: Rust typing rejects
@@ -417,16 +425,18 @@ parallel with system per-host worktree locks and automatic worker placement.
 
 | Lane | Exclusive file scope | Work and dependencies | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Seven AC/DSS signing functions, three inherited skips, remaining evidence acquisition/state compatibility | Complete exact assertions, actual output oracle validation and unsupported mandatory requirements reject |
-| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 baseline functions accepted; continue security/parameter compatibility audits and new P/S/CLI consumers | Preserve proof/algorithm/coverage/qualification denials, exact source boundaries and fresh-input provenance |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | One Adobe AC CMS caller,26 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish154 pending functions; retain known failed full-source assertions and trust holds, complete state and CLI LTA | Actual commands/artifacts/exit behavior, exact parameters, mandatory rejection and source-specific full gates |
-| L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final CLI live function, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
+| P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Original pending0; resolve3 documented skips (deprecated warning, SafeNet PIN, raw DSA) and audit provider parameters/evidence/state compatibility beyond original assertions | Preserve original/current caller policies, native negative controls and mandatory rejection; new helpers add0IDs |
+| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 assigned functions accepted; implement separately tested offline Adobe RIA ingestion and audit final archival/POE, registry alias/persistence and independent trust-domain compatibility | Adobe API bottom_line=true with finalNO_POE is not final archival OK; no POE/imprint/algorithm/revocation waiver |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review26skips (PDF11/CV2/fetch13), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish142 pending unique functions, including real signing/validation/LTV, runtime, provider and complete reader-state commands; stamp12 does not import full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
+| L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final1CLI live LTA function after accepted real C commands; coherent lane integration, parameter/skip/provenance audits, complete gates and final service replacement decision | Actual CLI/PFX/config/DSS/LTA flow, source-specific full gates, immutable counts; no service restart or early acceptance |
 
-P, V, S and C can start concurrently. S starts decode-limit assertions and
-independent parity work while coordinating PDF MAC/PAdES acceptance with
-P/V. Available dependencies do not substitute for completed caller tests.
-The service switch from `underskrift` remains a final parity milestone.
+P, V, S and C can work concurrently within these exclusive scopes; L owns
+cross-lane coordination and final acceptance. Library pending0 refers to the
+assigned function inventory and does not make29skips or unassigned features
+complete. State/HTTP/TSA infrastructure must not substitute for actual pending
+CLI commands. The service switch from `underskrift` remains a final parity
+milestone after functional/trust acceptance, not a consequence of count totals.
 
 ## Separate XML programme
 
@@ -1003,3 +1013,82 @@ scope limits. Old overwritten7075 is not retroactively recovered. Other model,
 encoding, resource and provider differences remain documented; no complete-port
 or all-divergences-fail-closed claim is made. Evidence: /home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/ and
 round3/l-next/mixed-*/ (actual pre-fix RED, fresh profiles, source reviews and units).
+
+
+## Accepted complete AC callers and standalone CLI stamps
+
+Source `ac1bdbc404fa9ddca0a872a3bebccb0d4d2f66b4` passed all six gate
+steps: build, complete workspace tests, strict Clippy, strict docs, layer/cycle
+checking and formatting. Actual native totals: **1,764 discovered /1,760 passed
+/4 ignored /0 failed**, across163 reports. The source-specific CLI executable
+SHA-256 is `8834a8e12e68c1a0853da42bd29cddaee606e9c1def4784b4fab570d60cb97cf`;
+all four actual subprocess selections use it. In-process dispatcher regressions
+are separate. Both workers have byte-identical executable copies.
+
+Accepted increment:20immutable functions/25original parameter executions,
+counted once at original owners: P7/9cases, S-CMS1/2cases, C12/14cases.
+The artifact `acceptance-additions.json` enumerates every exact ID and native
+test. Accepted totals are:
+
+| Owner | Total | Passed | Skipped | Pending |
+| --- | ---: | ---: | ---: | ---: |
+| P | 297 | 294 | 3 | 0 |
+| V | 47 | 47 | 0 | 0 |
+| S | 824 | 798 | 26 | 0 |
+| C | 252 | 110 | 0 | 142 |
+| L | 11 | 10 | 0 | 1 |
+| Overall | 1431 | 1259 | 29 | 143 |
+
+The V row is its assigned AdES scope47; EUTL53/core4 retain their original S
+ownership and are already included in the S824row. Do not add them again.
+
+P's original factories sign actual AC/CAdES/PAdES outputs; root native tails
+preserve all59original post-sign assertions across nine cases. The two live
+functions keep both source backend variants and separate mandatory main/AC
+trust. The historical LTA function validates at2028-02-01, not the signing
+epoch; a genuine current2028AC response is used, and stale2020AC evidence must
+not authenticate a role while the main historical signature can still recover.
+Claimed group IetfAttrSyntax, certified RoleSyntax, wrong-context refusals,
+missing-context None semantics and exact DSS counts remain explicit.
+
+The producer repair captures actual lower-validator retrieval outcomes in an
+operation-local adapter and publishes AC evidence atomically after successful
+validation, without repeating native validation or supplying fixture responses
+as context-preloaded revinfo. Configured replay responses remain labelled as
+replay; fresh same-output Python calls are separate validation evidence. No
+live-HTTP revocation claim follows from shared Services fixture adapters.
+
+The Adobe original uses the real GenericPdf profile, signed RIA with the actual
+AC OCSP response, five other certificates/one AC/seven total choices and full
+native V LTA API status with authenticated typed RoleSyntax under separate
+REQUIREpolicies. Both source backend cases require fresh same-PDF pinned
+Python and real wrong-holder/untrusted-AA controls. Its original default online
+capability is retained. FinalNO_POE with api_status.bottom_line=true is an
+original-assertion success, not final archival OK or an offline RIA consumer
+implementation. The latter remains a separate zero-ID feature/test increment.
+
+C adds only standalone stamp implementation/dispatch plus exact12functions,
+preserving all14source cases, original URL argument positions, meaningful
+errors and genuine native/reference outputs. The selected executable must be
+built from the coherent source. Historical141tests over owner19e4de6 lower
+sources are preserved but not reused as proof of this exact candidate tree.
+No runtime/validation/provider/full-CLI engine or decode-function credit is
+imported by stamps12; accepted reader-state APIs already suffice.
+
+Verified runtime evidence includes all213 V fixture opens,69 S public-input
+reads,18 L live outputs, eight shared/distinct registry-context profiles, six
+fresh S output verdicts, six resource-operation refusals and encrypted state
+readback. P contributes nine retained outputs for seven original functions;
+Adobe contributes two actual outputs for one original function. Their PDF,
+root, AA and AC identities match fresh same-output Python checks. Separate
+complete original Python runs passed9 P parameters and2 Adobe parameters;
+source/conftest hashes remain unchanged. Fourteen standalone stamp parameter
+cases also compare fresh pinned Python. Parameter cases and oracle calls earn
+no additional function credit.
+
+Evidence and machine-readable verification:
+`/home/l/.codex/artifacts/sigis/round3-launch/p-c-stamp-integration/gate/`.
+The earlier failed/stale-response attempts and the owner projection are
+preserved separately. Native Adobe final `NO_POE` versus Python `OK` remains
+an explicit stricter status/feature gap; original API bottom-line and typed
+role assertions pass. No universal fail-closed or full-port claim follows.

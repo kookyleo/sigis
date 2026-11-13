@@ -1,3 +1,7 @@
+# Current lead acceptance
+
+Accepted: **78 total /78 passed /0 skipped /0 pending** on source ac1bdbc after the complete workspace gate. The final Adobe AC original is covered by root `round3_cms_adobe`, both source backend cases, actual signed RIA/AC OCSP and authenticated RoleSyntax, plus fresh same-output Python and wrong-holder/untrusted-AA controls. Native final NO_POE versus Python OK remains an explicit stricter feature/status gap; this function's original API bottom-line assertion passes. Earlier checkpoints below are historical; docs/status.md and the central ledger are authoritative.
+
 # Porting status: sigis-cms (crates/cms)
 
 Owner: lane A. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.

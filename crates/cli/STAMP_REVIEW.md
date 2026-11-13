@@ -1,3 +1,7 @@
+# Lead acceptance
+
+The12 exact functions/14 original parameters are now accepted after the complete coherent ac1bdbc workspace gate and actual-source immutable executable verification. All141 CLI native tests pass in this workspace run. The earlier projection limitation below remains historical evidence; it is superseded by the independent current-source gate, not relabelled retroactively. See docs/lanes/round3/l-ac-stamps.md.
+
 ## Verification basis correction
 
 The reported141 tests are real,but they ran the projected CLI code in the

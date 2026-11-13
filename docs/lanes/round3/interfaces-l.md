@@ -596,3 +596,8 @@ Eight frozen-input profiles and seven security/registration guards are gated.
 
 This is not a cross-call mutable validation session or an AC-alias/fetched-store
 parity claim. See [acceptance](l-s-callers.md) and [counterexample](l-mixed-context.md).
+
+
+## Accepted AC capture and complete callers
+
+Source ac1bdbc passed the complete workspace gate with root P7 and Adobe CMS callers. Native AC outcome capture delegates one validation and publishes an operation-local evidence journal only after the complete batch succeeds. Full caller context/security requirements, NoCheck/OCSP-CRL rules and issuer-name guards are preserved. Root tests retain separate main/AC trust, exact typed attributes and the2028 current/stale provider controls. Adobe finalNO_POE versus PythonOK remains a separate RIA/POE consumer feature gap, not a reason to weaken status classification. No new shared dependency or layer exemption was added. Details: l-ac-stamps.md.

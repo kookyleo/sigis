@@ -1,3 +1,7 @@
+# Current lead acceptance
+
+Accepted: **297 total /294 passed /3 skipped /0 pending** on source ac1bdbc after the complete workspace gate. Root `round3_p_ac_complete` covers the last seven exact AC signing functions over nine output cases, complete native validation assertions and fresh same-output Python. The 2028 case keeps its original time and mandatory revocation policy; a genuine current-time fixture corrects the test provider and separate stale-response controls refuse role authentication. Operation-local AC evidence capture performs one validation and publishes only after whole-batch success. SafeNet PIN, raw DSA provider integration and the deprecated warning entry point remain excluded; function completion is not full feature parity. Earlier checkpoints below are historical.
+
 # Porting status: sigis-pades-sign (crates/pades-sign)
 
 Owner: D. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.

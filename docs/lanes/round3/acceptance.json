@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "dc90dceee5f0ce7d8287019e1b15eae923ea8ee2",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/gate/gate.json",
+  "accepted_source_commit": "ac1bdbc404fa9ddca0a872a3bebccb0d4d2f66b4",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-c-stamp-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1323,6 +1323,126 @@
       "status": "passed",
       "rust_test": "round3_s_pdfmac_callers::test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel",
       "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_pades_live_ac_presign_validation",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_pades_live_ac_presign_validation",
+      "reason": "Real P signing with separate main/AC REQUIRE policies and actual fetched AC evidence, complete native V LTA API-status/typed RoleSyntax plus exact5other/1AC and DSS8cert/2OCSP/3CRL assertions; both requests/aiohttp source cases receive fresh same-output pinned Python tails. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_pades_lta_live_ac_presign_validation",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_pades_lta_live_ac_presign_validation",
+      "reason": "Actual2020 PAdES-LTA output validated at original2028 time with native V API bottom line and authenticated typed role, separate REQUIRE main/AC policies, fresh2028 AC evidence and stale2020 AC-role denial control; both source backend cases preserve fresh same-output original Python assertions. API status success is not relabelled final archival OK. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_autofill_dss",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_cades_signer_attrs_autofill_dss",
+      "reason": "Actual signing starts with the original empty signer registry and includes the exact native DSS7certificate assertion plus real CMS integrity and mandatory same-output pinned Python. This original has one post-sign DSS assertion; no nonexistent LTA assertion is invented. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_validate_acs",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_cades_signer_attrs_validate_acs",
+      "reason": "Actual P signer-attrs-v2 output passes complete native PDF/CMS status, claimed IetfAttrSyntax group set, independently authenticated certified RoleSyntax and original claimed/certified distinctions, with fresh same-output pinned Python assertions. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_validate_acs_no_claimed",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_cades_signer_attrs_validate_acs_no_claimed",
+      "reason": "Actual output preserves empty claimed attributes, authenticated certified RoleSyntax, exact counts and no unknown signer attributes; native status and complete fresh same-output pinned Python tail are required. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_validate_acs_wrong_vc",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_cades_signer_attrs_validate_acs_wrong_vc",
+      "reason": "Actual valid P output is checked with the original wrong AC context: native CAdES invalid status/summary, zero approved/certified attributes and exactly one AC error are preserved with the complete same-output pinned Python tail; refusal concerns AC authorization, not fabricated main-signature invalidity. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_pades.py::test_cades_signer_attrs_validate_acs_missing_vc",
+      "status": "passed",
+      "rust_test": "round3_p_ac_complete::test_cades_signer_attrs_validate_acs_missing_vc",
+      "reason": "Actual P output preserves the explicitly absent AC-validation policy: valid main bottom line, unchecked AC attributes/certified attributes/errors remain None, claimed attributes retained and no false AC-invalid summary; complete native and same-output pinned Python assertions. No authenticated role is inferred from unchecked ACs. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_cms.py::test_embed_ac_revinfo_adobe_style",
+      "status": "passed",
+      "rust_test": "round3_cms_adobe::test_embed_ac_revinfo_adobe_style",
+      "reason": "Actual Adobe-profile P output contains the real signed AC OCSP/RIA material and exact5other/1AC/7total choices; separate main/AC REQUIRE native V LTA API status, authenticated typed RoleSyntax, wrong-holder transactional refusal and untrusted-AA role denial match mandatory fresh same-PDF Python across both source backend cases. Original online-capable policy and finalNO_POE distinction remain explicit; offline RIA ingestion is a separate zero-ID feature gap. Source ac1bdbc; accepted after the complete source-specific workspace gate and retained-input verification passed."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_with_style",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_with_style",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_with_qr_style",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_with_qr_style",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_no_config",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_no_config",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_stamp_url_unnecessary",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_stamp_url_unnecessary",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_stamp_url_mandatory",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_stamp_url_mandatory",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_undefined",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_undefined",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_text_param_missing",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_text_param_missing",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_text_param_formatting_wrong",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_text_param_formatting_wrong",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_text_param_multiple_substitution",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_text_param_multiple_substitution",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_text_param_fail_partial_substitution",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_text_param_fail_partial_substitution",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_unspecified",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_unspecified",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_stamp.py::test_cli_stamp_style_malformed",
+      "status": "passed",
+      "rust_test": "stamp::test_cli_stamp_style_malformed",
+      "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
     }
   ]
 }
