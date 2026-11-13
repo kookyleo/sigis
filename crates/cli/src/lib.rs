@@ -1,9 +1,10 @@
-//! pyHanko-compatible configuration, native plugins, PDF cryptography and fields.
+//! pyHanko-compatible configuration, plugins, PDF cryptography, fields and stamps.
 pub mod config;
 pub mod crypt;
 pub mod fields;
 pub mod plugins;
 pub mod runtime;
+pub mod stamp;
 
 use clap::{Arg, ArgAction, Command};
 use std::{fs, io::Write, path::Path};
@@ -61,7 +62,7 @@ pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) ->
 }
 
 /// Run cryptography with explicit runtime services and native plugin dispatch.
-/// Signing, validation and stamp engines are unavailable in this increment.
+/// Signing and validation engines are unavailable in this increment.
 pub fn run_with_runtime(
     args: &[String],
     registry: &plugins::PluginRegistry,
@@ -117,6 +118,7 @@ pub fn run_with_runtime(
         .cloned()
         .collect();
     let result = match name {
+        "stamp" => stamp::run(&values, config.as_ref()),
         "encrypt" | "decrypt" => {
             let mut crypt_args = vec![name.to_owned()];
             crypt_args.extend(values.iter().cloned());
