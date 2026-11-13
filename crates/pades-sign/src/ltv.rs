@@ -8,11 +8,12 @@
 //! CRLs) for long-term validation (PAdES B-LT / B-LTA).
 //!
 //! pyHanko lets the certificate validator fetch revocation information and
-//! records what it fetched in the `ValidationContext`. The Rust validator
-//! (`sigis-pki-certvalidator`) performs no network access during validation, so
-//! this module fetches first, with the context's fetchers (OCSP first, CRLs
-//! when no OCSP response is available, as pyHanko's default policy does),
-//! and then validates against a context extended with the fetched data.
+//! records what it fetched in the `ValidationContext`. This module explicitly
+//! collects path-prefetch evidence and captures actual native AC/AA
+//! retrieval outcomes through the caller's configured providers. Retrieval
+//! alone does not authenticate every raw object retained for the DSS.
+
+mod capture;
 
 use der::Encode;
 use sigis_pki_certvalidator::{CertificateValidator, ValidationContext};
@@ -26,9 +27,9 @@ use sigis_pki_core::errors::{HankoError, Result};
 pub struct ValidationInfo {
     /// Validation paths (leaf first, trust anchor last).
     pub paths: Vec<Vec<Cert>>,
-    /// DER OCSP responses.
+    /// Raw DER OCSP responses; inclusion alone is not a trust verdict.
     pub ocsps: Vec<Vec<u8>>,
-    /// DER CRLs.
+    /// Raw DER CRLs; inclusion alone is not a trust verdict.
     pub crls: Vec<Vec<u8>>,
 }
 
@@ -171,17 +172,30 @@ fn fetch_missing_issuer_path(
 /// Fetch revocation information for every certificate of `path` except
 /// the trust anchor: an OCSP response if the certificate names a
 /// responder and one can be fetched, CRLs otherwise.
+/// Certificates governed by `NoCheck` are skipped, using the EE rule for
+/// the first path certificate and the intermediate rule for later entries.
+/// OCSP/CRL acquisition respects each selected rule; mandatory CRLs are
+/// collected even after an OCSP response was retrieved.
 pub fn fetch_revinfo(ctx: &ValidationContext, path: &[Cert], info: &mut ValidationInfo) {
     let fetchers = ctx.fetchers();
     for (i, cert) in path.iter().enumerate() {
         let Some(issuer) = path.get(i + 1) else {
             break;
         };
+        let policy = &ctx.revinfo_policy().revocation_checking_policy;
+        let rule = if i == 0 {
+            policy.ee_certificate_rule
+        } else {
+            policy.intermediate_ca_cert_rule
+        };
+        if rule == sigis_pki_certvalidator::policy::RevocationCheckingRule::NoCheck {
+            continue;
+        }
         if cert.is_self_issued() {
             continue;
         }
         let mut have_ocsp = false;
-        if cert.declares_ocsp() {
+        if rule.ocsp_relevant() && cert.declares_ocsp() {
             if let Some(f) = &fetchers.ocsp {
                 if let Ok(resp) = f.fetch_ocsp(cert, issuer) {
                     if !info.ocsps.contains(&resp) {
@@ -191,7 +205,7 @@ pub fn fetch_revinfo(ctx: &ValidationContext, path: &[Cert], info: &mut Validati
                 }
             }
         }
-        if !have_ocsp && cert.declares_crl() {
+        if rule.crl_relevant() && (rule.crl_mandatory() || !have_ocsp) && cert.declares_crl() {
             if let Some(f) = &fetchers.crl {
                 if let Ok(crls) = f.fetch_crls(cert) {
                     for c in crls {
@@ -257,12 +271,16 @@ pub fn validate_and_collect(
 /// `holder` is the signing certificate and must match every AC. The
 /// context supplies the AA trust policy independently of the signer's PKI.
 /// Results and collected information are committed only if every AC
-/// validates, so a rejected AC cannot contribute trusted DSS material.
+/// validates, so a failed batch publishes neither paths nor raw downloads.
 ///
-/// The current fetcher traits accept X.509 certificates only. AA path
-/// revocation information is fetched normally; AC-specific responses must
-/// already be supplied in `ctx`. Missing mandatory AC revocation evidence
-/// is rejected by the lower validator rather than treated as valid.
+/// AA and AC evidence use the caller's separate PKC/AC retrieval methods.
+/// The native validator retrieves and authenticates AC evidence under the
+/// original caller policy; collection never retries a failed AC validation.
+/// Native provider outcomes are also retained as raw, untrusted DSS inputs;
+/// soft-fail validation does not authenticate every downloaded object. The
+/// native validator decides applicable evidence and mandatory requirements.
+/// Collection requires an explicit issuer directory name in v1Form or
+/// v2Form.issuerName, checked before provider work for that AC.
 pub fn validate_and_collect_attribute_certs(
     ctx: &ValidationContext,
     holder: &Cert,
@@ -270,7 +288,12 @@ pub fn validate_and_collect_attribute_certs(
     attribute_certs: &[Vec<u8>],
     info: &mut ValidationInfo,
 ) -> Result<Vec<sigis_pki_certvalidator::ac::AcValidationResult>> {
-    use sigis_pki_certvalidator::ac::{validate_ac, AttrCert};
+    use sigis_pki_certvalidator::ac::{validate_ac, AcError, AttrCert};
+    let ac_error = |error: AcError| {
+        HankoError::Signing(format!(
+            "An attribute certificate could not be validated: {error}"
+        ))
+    };
 
     if attribute_certs.is_empty() {
         return Ok(Vec::new());
@@ -286,7 +309,8 @@ pub fn validate_and_collect_attribute_certs(
             staged.crls.push(crl.to_vec());
         }
     }
-    let ctx = ctx.with_other_certs(pool);
+    let capture = capture::RevinfoCapture::default();
+    let ctx = capture.context(ctx).with_other_certs(pool);
     let mut candidates = pool.to_vec();
     let mut results = Vec::new();
     for der in attribute_certs {
@@ -295,40 +319,57 @@ pub fn validate_and_collect_attribute_certs(
                 "An attribute certificate could not be validated: {error}"
             ))
         })?;
+        let issuer_name = ac
+            .issuer
+            .names
+            .as_ref()
+            .and_then(|names| {
+                names.iter().find_map(|name| match name {
+                    x509_cert::ext::pkix::name::GeneralName::DirectoryName(name) => {
+                        Some(name.clone())
+                    }
+                    _ => None,
+                })
+            })
+            .ok_or_else(|| {
+                ac_error(AcError::InvalidAttrCertificate(
+                    "Attribute certificate presign collection requires an issuer directoryName in v1Form or v2Form.issuerName".into(),
+                ))
+            })?;
         // Fetch evidence for candidate AA paths before asking validate_ac
         // to enforce the holder, AA usage/controls, signature and AC policy.
         // Selection and trust decisions remain with the lower validator.
-        if let Some(issuer_name) = ac.issuer_name() {
-            for issuer in ctx
-                .other_certs()
-                .iter()
-                .filter(|cert| cert.subject() == &issuer_name)
-            {
-                if let Some(path) = build_path(&ctx, issuer, &candidates) {
-                    fetch_revinfo(&ctx, &path, &mut staged);
-                    // Keep fetched AA intermediates available to native AC
-                    // validation. Fetching them twice can exhaust the caller's
-                    // shared request budget, and does not grant them trust.
-                    for cert in path {
-                        if !candidates.contains(&cert) {
-                            candidates.push(cert);
-                        }
+        for issuer in ctx
+            .other_certs()
+            .iter()
+            .filter(|cert| cert.subject() == &issuer_name)
+        {
+            if let Some(path) = build_path(&ctx, issuer, &candidates) {
+                fetch_revinfo(&ctx, &path, &mut staged);
+                // Keep fetched AA intermediates available to native AC
+                // validation. Fetching them twice can exhaust the caller's
+                // shared request budget, and does not grant them trust.
+                for cert in path {
+                    if !candidates.contains(&cert) {
+                        candidates.push(cert);
                     }
                 }
             }
         }
         let extended = extended_context(&ctx, &candidates, &staged)?;
-        let result = validate_ac(&extended, der, Some(holder)).map_err(|error| {
-            HankoError::Signing(format!(
-                "An attribute certificate could not be validated: {error}"
-            ))
-        })?;
+        // Native AC validation now dispatches the original DER and actual AA
+        // through the caller's AC methods. Its result already includes all
+        // mandatory policy checks, exemptions and tolerated retrieval failures.
+        // Repeating it through an explicit fallback would spend the provider's
+        // allowance again and could change that original validation outcome.
+        let result = validate_ac(&extended, der, Some(holder)).map_err(ac_error)?;
         let path: Vec<Cert> = result.aa_path.certs().into_iter().rev().cloned().collect();
         if !staged.paths.contains(&path) {
             staged.paths.push(path);
         }
         results.push(result);
     }
+    staged.extend(capture.snapshot());
     *info = staged;
     Ok(results)
 }
