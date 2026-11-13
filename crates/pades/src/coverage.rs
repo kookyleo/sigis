@@ -192,6 +192,31 @@ mod tests {
     }
 
     #[test]
+    fn extreme_eof_cursor_rejects_without_panic() {
+        for cursor in [0, 1, usize::MAX - 1, usize::MAX] {
+            assert!(process_data_at_eof(&[], cursor).is_err(), "{cursor}");
+        }
+    }
+
+    #[test]
+    fn extreme_revision_end_cannot_panic_or_gain_complete_coverage() {
+        let end = u64::try_from(usize::MAX).unwrap();
+        assert_eq!(
+            evaluate_signature_coverage(
+                &[],
+                &[0, end - 2, end, 0],
+                0,
+                0,
+                &[XrefMeta {
+                    startxref: 0,
+                    xref_end: 0,
+                }],
+            ),
+            SignatureCoverageLevel::ContiguousBlockFromStart
+        );
+    }
+
+    #[test]
     fn coverage_levels() {
         // file: [0..10) + <hex of 3 bytes = 8 chars> + [18..28)
         let mut file = vec![b'a'; 10];
