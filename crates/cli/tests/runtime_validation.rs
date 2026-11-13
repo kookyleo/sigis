@@ -10,7 +10,7 @@ use std::{
     process::{Command, Output, Stdio},
 };
 
-const ORACLE: &str = r#"import hashlib,importlib.metadata,json,pathlib,socket,sys
+const ORACLE: &str = r#"import hashlib,importlib.metadata,json,os,pathlib,socket,sys
 from unittest.mock import patch
 import pyhanko
 pinned=pathlib.Path('/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko')
@@ -43,6 +43,8 @@ print(json.dumps({
     'cli_source':str(module),'cli_source_sha256':hashlib.sha256(module.read_bytes()).hexdigest(),
     'input':snap(input_path,input_bytes),
     'config':None if config_bytes is None else snap(config_path,config_bytes),
+    'python_optimize':sys.flags.optimize,'assertions_enabled':__debug__,
+    'PYTHONOPTIMIZE_environment':os.environ.get('PYTHONOPTIMIZE'),
     'pyhanko_version':importlib.metadata.version('pyHanko'),
     'certvalidator_version':importlib.metadata.version('pyhanko-certvalidator'),
     'click_version':importlib.metadata.version('click'),'network_calls':network,
@@ -164,6 +166,8 @@ fn run(sample: &str, cfg: Option<&str>, args: &[&str]) -> (tempfile::TempDir, Ou
     eprintln!("NATIVE_RUNTIME_CASE {receipt}");
     assert_eq!(reference["pyhanko_version"], "0.38.1");
     assert_eq!(reference["certvalidator_version"], "0.33.0");
+    assert_eq!(reference["python_optimize"], 0);
+    assert_eq!(reference["assertions_enabled"], true);
     assert_eq!(reference["executable"].as_str(), python.to_str());
     assert_eq!(reference["interpreter_sha256"], snapshot(&python)["sha256"]);
     assert!(reference["cli_source"]
