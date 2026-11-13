@@ -1,12 +1,10 @@
 # Round 3 lane S report
 
-Latest lead acceptance: maincef64d3 passed the complete workspace gate.
-S remains824/754/63/7; overall1431/1052/66/313. The historical baseline and
-checkpoint tables below are retained for comparison. The bounded certificate-position, forbidden-only KU and typed algorithm
-consumer follow-ups are integrated; their native regressions add zero
-upstream functions. Known-red and
-unfinished signer CMS/coverage/decode/MAC and full V LTA work remains
-unaccepted.
+Latest lead acceptance: sourcedc90dce, all six workspace gates passed.
+Current S824/797/26/1; overall1431/1239/29/163. PDF operation callers and
+key-based digest selection are accepted; Adobe AC CMS remains pending.
+See [current acceptance](l-s-callers.md) for exact assertions, evidence and scope.
+The following launch/checkpoint material is historical.
 
 Session: `sigis-r3-s`; branch: `hanko/r3-s`; baseline: `34482bf`.
 Status: in progress. No new passes are claimed yet.

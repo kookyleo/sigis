@@ -1,14 +1,15 @@
-# Open matched-input mixed-context trust discrepancy
+# Matched-input counterexample and accepted registry repair
 
-Status: **confirmed more-trusting native verdict; unresolved**. No new upstream
-function credit follows. Accepted counts remain1431/1233/30/168. The completed
-workspace gate exercises its corpus and does not negate this additional red.
+Status: **the matched29b more-trusting profile is repaired and fully gated**.
+Historical pre-fix evidence is retained below; the current gate includes and
+passes its regression. See [accepted repair](l-s-callers.md). The supplemental
+regression adds no upstream IDs. Current counts are1431/1239/29/163.
 
 This is a new, physically retained29b reproduction. It does not recover or
 retroactively prove the earlier overwritten7075 PDF/binary sequence. The frozen
 native executable is b9a854e1245d3201e4afa833223f11734f5a2da154ed120c199eb03e91200166,
-built from09ec130 plus one explicit supplemental test. Its production source
-matches the current accepted main. The actual test executes four profiles,
+built from09ec130 plus one explicit supplemental test. That production source
+matched then-accepted6a33a07; current repaired source differs. The old test executes four profiles,
 records every result, then fails with exit101 on the expected refusals.
 The PDF and both root DER hashes are asserted before parsing:
 
@@ -24,7 +25,7 @@ exact files, logging their hashes before parsing. Time is fixed to
 weak-algorithm constraints. Both point-in-time settings are exercised. Native
 and Python both verify actual signature integrity/validity and timestamp trust.
 
-| Profile, for each timing flag false/true | Native trusted / bottom_line | Python trusted / bottom_line |
+| Pre-fix profile, for each timing flag false/true | Native trusted / bottom_line | Python trusted / bottom_line |
 | --- | --- | --- |
 | combined signer/TSA context, ECC then RSA roots | true / true | false / false |
 | separate ECC signer and RSA TSA contexts | true / true | true / true |
@@ -32,8 +33,8 @@ and Python both verify actual signature integrity/validity and timestamp trust.
 The native successful paths have valid signatures to explicitly trusted ECC
 and RSA roots. This demonstrates a compatibility/trust-result discrepancy;
 it is not evidence of forged signatures or an untrusted root bypass.
-It still violates the required no-more-trusting oracle boundary and prevents
-any assertion that all divergences fail closed.
+The pre-fix result violated the required no-more-trusting oracle boundary;
+the accepted repair below closes this specific finding.
 
 Fresh Python registration diagnostics preserve the unwrapped primary verdicts.
 They record timestamp-first RSA registration, followed by rejection of the ECC
@@ -60,4 +61,14 @@ Evidence:
   pinned versions, current policy and registry snapshots.
 
 No source fixture, root, timing policy or original function is weakened to
-obtain a green result. This supplemental regression remains open.
+obtain a green result. This supplemental regression now runs automatically.
+
+
+## Accepted bounded repair
+
+Sourcedc90dceee5f0ce7d8287019e1b15eae923ea8ee2 passes the full workspace gate. All eight actual profiles match
+the fresh pinned oracle, with raw-invalid/denied/wrong-imprint/unvisited-token
+and nondefault context-state guards. The pre-fix violation is not an accepted
+exception. AC aliases, cross-public-call persistence, fetched-candidate insertion
+and custom-manager seed-order parity are separately scoped; no universal
+all-divergences-fail-closed claim follows.

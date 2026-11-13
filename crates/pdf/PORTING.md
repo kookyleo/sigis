@@ -67,12 +67,12 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 | --- | --- | ---: | ---: | ---: | ---: |
 | `test_xref.py` | `tests/xref.rs` | 60 | 59 | 1 | 0 |
 | `test_internal_utils.py` | `tests/internal_utils.rs`, `generic::pdf_string` doctests | 127 | 113 | 14 | 0 |
-| `test_decode_limits.py` | `tests/decode_limits.rs` | 29 | 26 | 0 | 3 |
+| `test_decode_limits.py` | `tests/decode_limits.rs`, root operation callers | 29 | 29 | 0 | 0 |
 | `test_content_stream_parser.py` | `tests/content_stream_parser.rs` | 8 | 8 | 0 | 0 |
 | `test_embed.py` | `tests/embed.rs` | 9 | 9 | 0 | 0 |
 | `test_meta.py` | `tests/meta.rs` | 39 | 39 | 0 | 0 |
 | `test_crypt.py` | `tests/crypt.rs` | 84 | 84 | 0 | 0 |
-| `test_pdfmac.py` | `tests/pdfmac.rs` | 50 | 48 | 0 | 2 |
+| `test_pdfmac.py` | `tests/pdfmac.rs`, root MAC callers | 50 | 50 | 0 | 0 |
 
 Skipped tests:
 
@@ -96,7 +96,7 @@ rejects integer `-1`, and `test_assign_non_name_to_dict` rejects dictionary
 key `10`. A third doctest verifies legal string input and a legal name key.
 All three passed in `tools/cargo-locked.sh test -p sigis-pdf --doc` after
 the scheduler update. These cover two unique upstream functions, not three.
-The revised crate accounting is **406 / 386 passed / 15 skipped / 5 pending**.
+The revised crate accounting is **406 / 395 passed / 11 skipped / 0 pending**.
 
 - `test_xref.py::test_trailer_refs`: exercises `container_ref` /
   `TrailerReference`, internals of pyHanko's mutable object model that have no
@@ -212,3 +212,13 @@ callers remain central L/V work. Exact commands, native435pass/2existingignore,
 new7pass and fresh pinned36-call evidence are in
 [the S report](../../docs/lanes/round3/s-byte-range-report.md). This adds zero
 unique upstream functions.
+
+
+## Current operation-caller acceptance
+
+The five former pending decode/MAC functions are accepted on the full gated
+source documented in ../../docs/lanes/round3/l-s-callers.md. Current crate
+counts406/395/11/0. Root callers preserve the complete acyclic dependency graph.
+The earlier pending lists above are historical; no empty ignored wrapper is
+counted. Error-class representation, exact NO_POE/API result and remaining
+object-model skips are explicit in the lead acceptance report.

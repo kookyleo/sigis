@@ -59,10 +59,10 @@ gate. It adds P's four complete layout/resource assertion ports, credited only
 to S/PDF, giving accepted S824/753/63/8. The shared algorithm-cutoff metadata
 API has five native regressions but earns no upstream-function credit.
 
-The latest gate on main 8819a77 found **1,710 Rust tests: 1,702 passed, 8
-ignored, zero failed**, across152 reports. Build, workspace tests, strict
+The latest gate on main dc90dce found **1,724 Rust tests: 1,720 passed, 4
+ignored, zero failed**, across156 reports. Build, workspace tests, strict
 clippy, strict documentation, layer/cycle checking and formatting all passed.
-Logs: `/home/l/.codex/artifacts/sigis/round3/l-next/gate/`.
+Logs: `/home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/gate/`.
 The previous reader/CSC/P source8a1568c, S sourceb81c254 and live-fixture
 sourcee476da8 also passed the complete gate.
 The preceding attempt passed all tests but failed one CSC helper lint; the
@@ -173,16 +173,16 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
-| `sigis-cms` | 78 | 76 | 1 | 1 |
-| `sigis-pdf` | 406 | 390 | 11 | 5 |
+| `sigis-cms` | 78 | 77 | 0 | 1 |
+| `sigis-pdf` | 406 | 395 | 11 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 287 | 3 | 7 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,125** | **30** | **13** |
+| **Library lanes A–E** | **1,168** | **1,131** | **29** | **8** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 98 | 0 | 154 |
 | Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
-| **Overall** | **1,431** | **1,233** | **30** | **168** |
+| **Overall** | **1,431** | **1,239** | **29** | **163** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -208,24 +208,23 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
 | A / CMS | 1 | `test_embed_ac_revinfo_adobe_style`: complete authenticated AC/LTA and embedded material/RoleSyntax caller |
-| B / PDF | 5 | Three decode-limit propagation tests after signing, archival timestamp and DSS updates; two PDF MAC/PAdES signer integration tests |
 | D / signing | 7 | Seven complete AC/PAdES presign/DSS-attribute flows; HTTP TSA, seed URL and public-key signing/copy are accepted |
 | C / CLI and configuration | 154 | Remaining signing, validation/LTV, stamps, runtime/provider and reader-state commands; config57/plugins11/crypt23/fields7 are accepted |
 | Lead / live integration | 1 | Actual CLI LTA after complete C signing/LTV commands; other ten live functions are accepted |
-| **Total** | **168** | |
+| **Total** | **163** | |
 
 D integration makes the signer and seed model available to dependent
 callers. A already supplies HTTP TSA, AC validation, trust qualifiers,
 qualified policies and LTV primitives; B supplies DSS, embedded files,
 encryption and incremental writing. These dependencies now exist, but
 remaining callers still need error mapping and substantive upstream
-assertions. PDF MAC and complete AdES-LTA components now exist; the pending
-caller functions require actual integrated assertions before acceptance.
+assertions. The five PDF decode/MAC operation callers are now accepted;
+Adobe AC CMS and complete P AC flows still require integrated assertions.
 
 ### Skip accounting and limitations
 
-The 30 skipped functions comprise certvalidator two, fetchers 13,
-CMS one, PDF 11 and signing three. Skip reasons remain in the
+The 29 skipped functions comprise certvalidator two, fetchers 13,
+CMS zero, PDF 11 and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
@@ -234,7 +233,7 @@ owning `PORTING.md` and lane files:
   exercise their54 exact pinned cases. Fetchers retain12 ownership/
   bootstrap gaps and one deprecated TSA alias; four lifecycle functions and
   nonsensical auth rejection are accepted.
-- The remaining CMS skip is key-based digest selection. Weak-digest
+- All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
   prevention now requires the actual MD5 signer refusal under a caller policy;
   validation replay alone does not satisfy signing assertions.
 - PDF skips retain object-model/trailer gaps. The four layout/resource
@@ -249,7 +248,7 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. DSA binding/import work remains.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the168 pending
+provider behaviour and remaining validator compatibility; the163 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -354,11 +353,12 @@ resource/type-model differences into trust-verdict proofs. See the PKI audit.
 
 The integration removes the known decimal-collision, image-mode and
 schema-content leniency. Known trust-verdict differences require individual
-evidence. A new physically retained29b input confirms the combined-PKI discrepancy:
-native trusted/bottom_line=true versus pinned Python false under both matched
+evidence. A physically retained29b input exposed the combined-PKI discrepancy:
+pre-fix native trusted/bottom_line=true versus pinned Python false under both matched
 timing flags; separate-role positives pass in both. Actual input/root/binary
 hashes and fresh registration traces are in [the open finding](lanes/round3/l-mixed-context.md).
-It is more trusting and remains unresolved, so it is not fail-closed. The final
+That matched29b profile is repaired by the gated shared-operation registry fix;
+other explicit registry scopes remain unproven, so universal parity is not claimed. The final
 gate verifies exercised corpus behaviour; it does not establish safety for
 every possible input. **All differences cannot be labelled fail-closed**:
 semantic decoding and artifact compatibility differences below are not
@@ -419,7 +419,7 @@ parallel with system per-host worktree locks and automatic worker placement.
 | --- | --- | --- | --- |
 | P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Seven AC/DSS signing functions, three inherited skips, remaining evidence acquisition/state compatibility | Complete exact assertions, actual output oracle validation and unsupported mandatory requirements reject |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 baseline functions accepted; continue security/parameter compatibility audits and new P/S/CLI consumers | Preserve proof/algorithm/coverage/qualification denials, exact source boundaries and fresh-input provenance |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Six pending callers (five PDF and Adobe AC CMS),27 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | One Adobe AC CMS caller,26 inherited skips, issuer-cycle and serial/parser audits | Complete actual P/V operation assertions, no empty wrappers, bounded trust differences documented |
 | C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish154 pending functions; retain known failed full-source assertions and trust holds, complete state and CLI LTA | Actual commands/artifacts/exit behavior, exact parameters, mandatory rejection and source-specific full gates |
 | L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final CLI live function, scoped lane integration and final acceptance | Actual lifetime/concurrent/CLI LTA, source-specific serial full gates, exact unique counts; no service restart |
 
@@ -912,3 +912,94 @@ open; these successful controls do not establish universal fail-closed parity.
 
 Evidence: /home/l/.codex/artifacts/sigis/round3/l-next/ (all-native-v1/, upstream-v1/, independent audits,
 executable-v1-receipt.json, gate/gate.json and runtime-verification.json).
+
+
+## Accepted operation callers and registry-order repair
+
+Source `dc90dceee5f0ce7d8287019e1b15eae923ea8ee2` passes build, workspace tests, clippy -D warnings, strict docs,
+dependency layering/cycles and formatting. Native gate: 1724 discovered,
+1720 passed, 4 ignored, zero failed, 156 reports.
+Actual immutable CLI SHA256 2ea48b6911c1d2b4fa57d433aeeb5bfbc84e453cec64735dab05f277ca86f153; three selected
+paths and before/after hashes agree, including both worker copies. The213 actual
+V file opens and 69 S input reads are independently
+recomputed against bytes/lengths. Compiler flags/profiles/features, canonical
+target and configured sccache remain unchanged. All Cargo uses system slots.
+
+Six immutable S-owned IDs are completed, counted under their original crates:
+
+| Function | Crate | Original parameter executions |
+| --- | --- | ---: |
+| test_key_based_digest_selection | sigis-cms | 4 |
+| test_post_sign_reopen_keeps_limits | sigis-pdf | 2 |
+| test_archival_timestamp_update_keeps_limits | sigis-pdf | 1 |
+| test_add_dss_keeps_limits | sigis-pdf | 1 |
+| test_pdf_mac_pades | sigis-pdf | 1 |
+| test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel | sigis-pdf | 1 |
+
+The selector uses real decoded RSA2048/P384/Ed25519/Ed448 public keys and all four
+expected digests; the exact original function independently passes four reference
+executions, plus four same-SPKI public API comparisons. It does not require or
+claim CMS signature generation. The ten focused caller tests include meaningful
+supplemental controls, not ten upstream functions.
+
+Three decode originals use the valid same oversized stream fixture through real
+signing, archival-chain and DSS operations. Both post-sign timestamp placements,
+exact timestamp/certificate/no-VRI assertions and unchanged original input are
+retained. Default/finite limits reject inside each operation. Public operation
+errors are typed HankoError::Malformed with the exact PdfDecodeLimitError prefix;
+the downstream reader rejects with PdfError::DecodeLimit directly. This error
+representation distinction is not falsely described as a typed Hanko DecodeLimit.
+An authenticated lenient sign->archive->DSS continuation preserves password access,
+strictness and a decreasing shared budget, then rejects the final oversized read.
+
+MAC PAdES uses actual encrypted signing, real HTTP TSA tokens bound to the session,
+MAC Successful/ISO32004 and full native V AdES LTA with the original policy. Exact
+native/Python outcome is NO_POE with API bottom_line=true, not final AdES OK.
+Concurrent reuse leaves bytes_reserved=None: the real estimator holds the MAC
+lease while a second actual operation on the same PdfSigner refuses with the
+original conflict text; the first operation and subsequent reuse succeed.
+
+All six actual gated ordinary/MAC output PDFs receive fresh pinned Python checks
+with actual fixed native root DER hashes recorded before parsing. Regenerating an
+ECDSA fixture can change DER signature bytes; the initial root-pin preparation
+failure is preserved and earns no success. The fixed original native roots are
+used by the final comparisons. A seventh encrypted state output receives fresh
+plaintext/two-timestamp readback. Six real Python default/finite operation denials
+are PdfDecodeLimitError. The unchanged L suites independently validate eighteen
+actual gated PDFs in native/Python, including empty-root denials and concurrency.
+
+The actual retained29b shared-context more-trusting counterexample is repaired
+in this source. Eight profiles match pinned Python: implicit/explicit shared
+context refuses main trust; distinct equal-valued/separate-root contexts remain
+trusted, under both timing flags. Main integrity/validity and TSA trust remain.
+CMS carries an owned operation-local registry through visited timestamps then
+main validation; first issuer/serial registration wins. Caller contexts remain
+unchanged; independent role contexts and operations stay isolated. All original
+anchors/policies/assertions/freshness/timing/AC restrictions/fetcher identities
+survive. General with_other_certs remains a separate DER-deduplicating API.
+
+Four real-token private CMS tests prove raw-invalid and algorithm-denied tokens
+do not register, raw-valid wrong-imprint tokens register without trust, and a
+later unvisited raw-valid token cannot register an extra genuine public cert.
+The latter has a direct trusted/registered positive. Three context tests preserve
+restrictive nondefault security state, collision order/independent operations and
+both qualified anchors/custom-manager identity. These add zero upstream IDs.
+
+Four stale empty ignored placeholders are removed with references to the actual
+root MAC/V coverage tests; no empty wrapper is enabled or counted. Existing
+diagnostic/provider/documentation ignores remain distinct from function counts.
+
+Accepted S824/797/26/1: CMS78/77/0/1, PDF406/395/11/0. Overall1431/1239/29/163;
+P297/287/3/7, V47/47/0/0, C252/98/0/154, L11/10/0/1 unchanged.
+Remaining S function is Adobe AC revinfo with complete producer/full-LTA RoleSyntax
+assertions; P must publish genuinely fetched AC material, without a fixture preload
+shortcut. The separate offline Adobe RIA consumer is a production feature gap,
+not an invented original-function offline requirement. The26 S skips remain.
+
+The29b fix does not prove universal registry or fail-closed parity: AC-context
+aliasing, persistent mutation across separate public calls, independently fetched
+candidate registration and custom-manager root enumeration/order retain explicit
+scope limits. Old overwritten7075 is not retroactively recovered. Other model,
+encoding, resource and provider differences remain documented; no complete-port
+or all-divergences-fail-closed claim is made. Evidence: /home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/ and
+round3/l-next/mixed-*/ (actual pre-fix RED, fresh profiles, source reviews and units).

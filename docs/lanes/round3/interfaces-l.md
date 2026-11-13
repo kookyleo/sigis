@@ -578,3 +578,21 @@ still prevent any universal all-divergences-fail-closed claim. This is a scoped
 Accepted C252/98/0/154; overall1431/1229/30/172. Detailed source/binary/fixture
 hashes, independent assertion reviews, actual test selectors and full logs:
 round3-launch/c-prefix-integration/ and round3-launch/c-prefix-review/.
+
+## Accepted operation-local certificate registration
+
+Source dc90dce passes all six workspace gates. The additive API
+`ValidationContext::with_registered_other_certs` clones complete security state
+and registers caller candidates, explicit roots and incoming candidates with the
+existing first-issuer/serial-wins store. All trust anchors remain configured.
+General `with_other_certs` and `with_revinfo` retain their existing behavior.
+
+CMS private helpers carry this owned state through actually visited timestamp
+validation into main validation only for the same original context identity.
+Explicit independent contexts, including equal-valued clones, stay independent;
+callers are never mutated. Registration remains after raw validity/algorithm
+checks and before path/imprint trust, and never creates POE or trust anchors.
+Eight frozen-input profiles and seven security/registration guards are gated.
+
+This is not a cross-call mutable validation session or an AC-alias/fetched-store
+parity claim. See [acceptance](l-s-callers.md) and [counterexample](l-mixed-context.md).

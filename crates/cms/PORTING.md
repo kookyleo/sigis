@@ -21,7 +21,7 @@ Plan and test assignment: `docs/hanko-lanes.md`.
 
 | Upstream test module | Rust test file | Total | Ported-pass | Skipped | Pending |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `test_cms.py` | `tests/test_cms.rs`, cross-layer signer suites | 78 | 76 | 1 | 1 |
+| `test_cms.py` | `tests/test_cms.rs`, cross-layer signer suites | 78 | 77 | 0 | 1 |
 | `test_key_usage_constraints.py` | `tests/test_key_usage_constraints.rs` | 4 | 4 | 0 | 0 |
 
 How `test_cms.py` is ported: the upstream tests sign with pyHanko, then
@@ -34,13 +34,12 @@ field by field (`tests/common/mod.rs`). Unlisted differences fail the test,
 listed ones (`KNOWN`) must still differ, and every difference must fail
 closed. All 161 recorded calls agree (`KNOWN` is empty).
 
-Skipped (signing side, lane D):
-
-- `test_key_based_digest_selection`: `select_suitable_signing_md` (signer).
+No CMS function remains skipped. The exact four key-based digest mappings
+execute in root round3_cms_digest_selection; no upward crate dependency is added.
 
 The accepted overspecified-digest function includes actual signer refusal.
-`test_direct_pdfcmsembedder_usage` remains pending for caller-buffer identity;
-low-level, DocMDP and exact DSS assertions already execute.
+`test_direct_pdfcmsembedder_usage` is accepted with caller-buffer identity,
+low-level, DocMDP and exact DSS assertions in the root caller.
 
 Pending:
 
@@ -99,3 +98,12 @@ The exact direct embedder function now preserves caller Vec identity through
 CMS completion and DSS append, with all original phases/DocMDP/material/status
 assertions. Source03a156c passed the full workspace gate; CMS78/76/1/1.
 Key-based digest selection remains skipped; Adobe AC revinfo remains pending.
+
+
+## Current caller and registry acceptance
+
+CMS78/77/0/1; only Adobe AC revinfo remains pending. Key-based digest
+selection covers all four exact public-key parameters. The shared-operation
+registry repair and actual invalid/denied/imprint/unvisited-token guards pass
+the complete gate. See ../../docs/lanes/round3/l-s-callers.md for source,
+counts, actual-input evidence and bounded registry scope.

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "8819a77c424f1d5b0f40a423d8d5191fae3824e0",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3/l-next/gate/gate.json",
+  "accepted_source_commit": "dc90dceee5f0ce7d8287019e1b15eae923ea8ee2",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/s-caller-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1287,6 +1287,42 @@
       "status": "passed",
       "rust_test": "live_pades::requests::test_requests_fetchers_happy_path",
       "reason": "Exact original lifetime/backend and parameter assertions with real loopback PFX/AIA/TSA signing; full native LTA and LtaUpdates, mandatory fresh same-output pinned Python verdict and empty-root denial. Four original functions independently execute six times and validate fifteen outputs. Complete source gate 8819a77 passes. Session/backend implementation adaptation and original upstream lazy cleanup warnings remain documented; native wrappers/oracle calls add no function credit."
+    },
+    {
+      "id": "pyhanko/test_cms.py::test_key_based_digest_selection",
+      "status": "passed",
+      "rust_test": "round3_cms_digest_selection::test_key_based_digest_selection",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_decode_limits.py::test_post_sign_reopen_keeps_limits",
+      "status": "passed",
+      "rust_test": "round3_s_decode_limit_callers::test_post_sign_reopen_keeps_limits_{together_with_next_ts,separate_revision}",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_decode_limits.py::test_archival_timestamp_update_keeps_limits",
+      "status": "passed",
+      "rust_test": "round3_s_decode_limit_callers::test_archival_timestamp_update_keeps_limits",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_decode_limits.py::test_add_dss_keeps_limits",
+      "status": "passed",
+      "rust_test": "round3_s_decode_limit_callers::test_add_dss_keeps_limits",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_pdfmac.py::test_pdf_mac_pades",
+      "status": "passed",
+      "rust_test": "round3_s_pdfmac_callers::test_pdf_mac_pades",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
+    },
+    {
+      "id": "pyhanko/test_pdfmac.py::test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel",
+      "status": "passed",
+      "rust_test": "round3_s_pdfmac_callers::test_sign_cannot_reuse_pdf_signer_with_macs_in_parallel",
+      "reason": "Complete exact original assertions and parameters in real root signer/validator callers; trusted decode limits survive signing/archival/DSS operations, actual per-document MAC state and concurrent lease refusal, four actual public-key digest mappings. Current-source full gate dc90dce and fresh same-output pinned Python validation pass. Eight matched-input context profiles and real CMS registration guards repair the known shared timestamp/main registry discrepancy. Supplemental wrappers/oracle calls and removed empty ignored placeholders add no function credit."
     }
   ]
 }
