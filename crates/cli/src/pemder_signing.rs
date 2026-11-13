@@ -96,26 +96,6 @@ fn config_scope(config: Option<&CliConfig>) -> Result<(), String> {
     }
     Ok(())
 }
-// Revalidate the selected effective map: public callers can mutate it after
-// the initial YAML alias checks. Never choose one conflicting requirement.
-fn context_schema(config: Option<&CliConfig>, name: Option<&str>) -> Result<(), String> {
-    let Some(config) = config else { return Ok(()) };
-    let selected = config.validation_settings_raw(name)?;
-    let selected = selected
-        .as_object()
-        .ok_or("Validation context requires a dictionary.")?;
-    let mut seen = BTreeSet::new();
-    for key in selected.keys() {
-        let normalized = key.replace('_', "-");
-        if !seen.insert(normalized.clone()) {
-            return Err(format!(
-                "Conflicting aliases in PEM/DER validation context: {normalized}."
-            ));
-        }
-    }
-    Ok(())
-}
-
 fn setup_schema(config: &CliConfig, name: &str) -> Result<(), String> {
     let selected = config
         .raw_config
@@ -284,7 +264,6 @@ pub fn run_with_runtime(
     } else if opts.get("key").is_none() || opts.get("cert").is_none() {
         return Err("Either both the --key and --cert options, or the --pemder-setup option must be provided.".into());
     }
-    context_schema(config, opts.get("validation-context"))?;
     let policy = config
         .map(|c| c.key_usages(opts.get("validation-context")))
         .transpose()?
