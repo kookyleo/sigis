@@ -89,6 +89,14 @@ struct ValidatedTsa<'a> {
 impl TimeStamper for ValidatedTsa<'_> {
     fn timestamp(&self, imprint: &[u8], digest: DigestAlgorithm) -> HankoResult<Vec<u8>> {
         let token = self.http.timestamp(imprint, digest)?;
+        // The CMS helper accepts an already computed imprint. Bind the token's
+        // declared algorithm to this request before trusting dummy or final data.
+        let info = sigis_pades_sign::timestamps::tst_info(&token)?;
+        if DigestAlgorithm::from_oid(&info.message_imprint.hash_algorithm.oid) != Some(digest) {
+            return Err(HankoError::Signing(
+                "The timestamp response changed the requested message imprint algorithm.".into(),
+            ));
+        }
         // Validate every dummy/final response, never a one-time issuer promise.
         let status = sigis_cms::validate_timestamp_token(&token, imprint, self.context)?;
         let certificate = status.signature.signing_cert.as_ref().ok_or_else(|| {
