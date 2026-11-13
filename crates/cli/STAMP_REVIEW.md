@@ -1,3 +1,19 @@
+## Verification basis correction
+
+The reported141 tests are real,but they ran the projected CLI code in the
+assigned owner's lower-layer snapshot19e4de6. Candidate parent e1e916a has22
+different lower-layer files,including7 production sources. The projection
+replaced C-owned files only,so it did not test the full147578e candidate tree.
+The previous wording calling this independent candidate validation was too
+broad. Keep147578e as a reviewable source patch; exact-base verification is
+pending safe synchronization or L's independent candidate-tree gate. No
+behavioral/trust divergence is inferred merely from a source diff. The12
+functions remain unaccepted; accepted C98 is unaffected because its actual
+L gate ran independently on09ec130. The published147578e ref is preserved.
+Exact lower-source hashes are in verification-basis-correction.json under
+the stamp-increment artifacts. The historical result below describes that
+projected CLI execution only,and must not be promoted to complete-tree proof.
+
 # Standalone stamp review increment
 
 Base e1e916a has accepted98 C functions. This candidate proposes only12 exact

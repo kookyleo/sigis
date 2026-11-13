@@ -210,7 +210,7 @@
     "measured": 0,
     "filtered": 0
   },
-  "native_count_scope": "128 accepted prefix tests +12 original standalone stamp tests +1 supplemental opt-out test. Not the unrelated full-C141 config/validation/policy run.",
+  "native_count_scope": "Real CLI projection at owner lower snapshot19e4de6:128 prefix+12 stamp+1 supplemental. NOT a complete147578e/e1e916a candidate-tree validation.",
   "artifact": {
     "recorded_utc": "2026-11-13T00:49:37.610879+00:00",
     "artifact": "/home/l/.codex/artifacts/sigis/round3/c/executable-stamp-increment/pyhanko",
@@ -1665,5 +1665,158 @@
       "sha256": "ef2d733c50507783bac1bd281a7629c72d2640e31814076ddffd739dd33489cd",
       "suite": "stamp"
     }
-  ]
+  ],
+  "verification_basis_correction": {
+    "recorded_utc": "2026-11-13T01:05:08.630477+00:00",
+    "finding": "CLI projection package checks did not run the complete147578e candidate tree; lower layers remained at owner snapshot",
+    "candidate": "147578ec4b4411408300667e19158b3922446a63",
+    "candidate_patch_parent": "e1e916ac93d6b68a408ed0eca79e7f9a8e28abad",
+    "actual_lower_workspace_snapshot": "19e4de6591e28a0c199cab2b39652618f1cc8e43",
+    "changed_lower_files": [
+      {
+        "path": "crates/pades-sign/src/csc.rs",
+        "production_source": true,
+        "actual_owner_sha256": "032c8cd5df4d2f6035282c9c43f45c23cfb7d298ebd30e4e10b3532bba63b9fc",
+        "candidate_parent_sha256": "21872feb40fcbcc1ac912f9c27048ceeb8562a9fe93d04c7b59a1cd93e6d4ae8"
+      },
+      {
+        "path": "crates/pades-sign/src/csc_batch_race_tests.rs",
+        "production_source": true,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "51452c043bd17822fc8a6641e4e5a7380717b40b64f2b06db2358192bc3e64c7"
+      },
+      {
+        "path": "crates/pades-sign/tests/support/services.rs",
+        "production_source": false,
+        "actual_owner_sha256": "ac96502f82f590776cf1e0ecd8788a9bccc5cae2a8a078a4d8cababb50891f86",
+        "candidate_parent_sha256": "005617e80a86a8efd0082d833e146a9f2fcd2ffd6ef2499f0b5ee87924598112"
+      },
+      {
+        "path": "crates/pades-sign/tests/test_round3_ac.rs",
+        "production_source": false,
+        "actual_owner_sha256": "8753d2e3a66f2dca5a528eaa020963778880433bd371c890c76c0bac3702227f",
+        "candidate_parent_sha256": "e802cba5aa897435e9fcfa54487762abb3f83258745cd596e656b096057b5c47"
+      },
+      {
+        "path": "crates/pades-sign/tests/test_round3_issuer_fetch.rs",
+        "production_source": false,
+        "actual_owner_sha256": "bb6deaad4e1385345c1fad8556c4c2d3becfe8dcfb0d9f62271477379dfc079e",
+        "candidate_parent_sha256": "9e52ac356606b9e8073978f62f81c978326870b4dfd0c8a03419d2a141ad6dfb"
+      },
+      {
+        "path": "crates/pades/PORTING.md",
+        "production_source": false,
+        "actual_owner_sha256": "18b28909bb50f07d35b88e2c2edea4c5679ccbb94b423136de2d8e69a9328231",
+        "candidate_parent_sha256": "e32a1571aacd8e293f056061cdb7f4355171c4dc7e3026254ca777be31fdf03c"
+      },
+      {
+        "path": "crates/pades/tests/ades_ac_replay.rs",
+        "production_source": false,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "189fd1ab3b5a69dfeb623e01e3fab9e521f52f78d8f621969d0082ae6fb2d93f"
+      },
+      {
+        "path": "crates/pades/tests/ades_lta.rs",
+        "production_source": false,
+        "actual_owner_sha256": "06da67e4e953f88ba7d342e2883ba4819305d408d21c0a6116266134a06474f9",
+        "candidate_parent_sha256": "a0c3f108c9279abaa5f944268a5e242600b25a81703906b4eaa47884672c5857"
+      },
+      {
+        "path": "crates/pades/tests/ades_lta_report.rs",
+        "production_source": false,
+        "actual_owner_sha256": "59f7830f960dc95df3093158091c1dd97156e93819834d7b3377af9a122be46d",
+        "candidate_parent_sha256": "4bbed8fdc415ac8126d1520122164f029dd84a6fb57e480ce86df0f3c66e2ade"
+      },
+      {
+        "path": "crates/pades/tests/common/mod.rs",
+        "production_source": false,
+        "actual_owner_sha256": "8e3af332583c07e57f2402ad1e27d429c19700f90ddee751688e77f4b0b0e1f4",
+        "candidate_parent_sha256": "fcf9d75c131384e8d1bf3874a6ba4721ac1ef89994fa35f0ee5ce19bd5280f41"
+      },
+      {
+        "path": "crates/pki-certvalidator/PORTING.md",
+        "production_source": false,
+        "actual_owner_sha256": "918312c812641625e6a1781f08676ae61e48529c31ef6bb872ed93e6264edddf",
+        "candidate_parent_sha256": "fb8201475aaec968aa566b450d722802714efed1f9bccba99206ced7ce81cf2c"
+      },
+      {
+        "path": "crates/pki-certvalidator/src/ac.rs",
+        "production_source": true,
+        "actual_owner_sha256": "75be6c975815f03e140245530c271efd2cd879fb1b708f43b4b4bc821de3ac57",
+        "candidate_parent_sha256": "49f19ad0e534fe46f2926bed2bfb46cc300236b4ef9cbb30f8dbd149b5aed749"
+      },
+      {
+        "path": "crates/pki-certvalidator/src/context.rs",
+        "production_source": true,
+        "actual_owner_sha256": "0fcc0a6d55dc4e0273cd9c647648c227f174ce0553a23f0d00ade0d8228e6731",
+        "candidate_parent_sha256": "93cc6cb11b869bc152905509de6de322ec7312bfc407128302135ac29442cf0a"
+      },
+      {
+        "path": "crates/pki-certvalidator/src/revinfo/crl.rs",
+        "production_source": true,
+        "actual_owner_sha256": "0917f080689ef09a0f2c61899ac3dc3b014cbda00dd6b5d7761e772eeddad966",
+        "candidate_parent_sha256": "6b8e917968da37245ffc90a5e2ee5f1a29d84f776ef53d92141d4b4f212feb4c"
+      },
+      {
+        "path": "crates/pki-certvalidator/src/revinfo/ocsp.rs",
+        "production_source": true,
+        "actual_owner_sha256": "282d9800a531b5b6e683cd2f4cd7bdfa0eba7c3f0a4d2a4412c6b755215c57da",
+        "candidate_parent_sha256": "db0f7935ab819f5aa9ebca5eff49b7e28de933ee83825d673ec11ae67d985b98"
+      },
+      {
+        "path": "crates/pki-certvalidator/tests/ac_fetch_routing.rs",
+        "production_source": false,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "779dc9b5cbc3d7b8d1bda1c3edc32445f5f139c1d3b42812fc7e55e68c069a31"
+      },
+      {
+        "path": "crates/pki-certvalidator/tests/context_assertion_api.rs",
+        "production_source": false,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "ea3353099c607ebb114c85c00201fd8e63be476a4942e96ff47eb720ccb16bf5"
+      },
+      {
+        "path": "crates/pki-fetch/PORTING.md",
+        "production_source": false,
+        "actual_owner_sha256": "d26050606cca07ff61fa18d897e1606d37a47d58e0f1c3a8d3c96ca4e4b7e1a8",
+        "candidate_parent_sha256": "5508adee147832ad129c896ec55764e77c94582dc6bae15e2e6dbaf7e9c6c2d2"
+      },
+      {
+        "path": "crates/pki-fetch/oracle/ac_name_der.py",
+        "production_source": false,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "bba4d78ca549a3645102e16170526b40f0bf41d7ef945bc6f07b94e8f54dbf9c"
+      },
+      {
+        "path": "crates/pki-fetch/src/common.rs",
+        "production_source": true,
+        "actual_owner_sha256": "57f0c88c9a13ecb1f98c35b0eb48425c0a68388e3b085f67c33e7e0a556d63ce",
+        "candidate_parent_sha256": "ef096bdb4ba46814cb817c4acc0c947528b15997dc7b4427c0f5fe276cd9fbf3"
+      },
+      {
+        "path": "crates/pki-fetch/src/fetchers.rs",
+        "production_source": true,
+        "actual_owner_sha256": "99d0d9dba6e44cc6f588c89799e4c7af5540bf7eadfc1dd5b7d677414de7c4ae",
+        "candidate_parent_sha256": "866d57737dc721a0ecbecd9ed93c2b73e788ff05a973a10982fa746509942b7e"
+      },
+      {
+        "path": "crates/pki-fetch/tests/ac_fetch.rs",
+        "production_source": false,
+        "actual_owner_sha256": null,
+        "candidate_parent_sha256": "5266571fd65ccf47b798767527ba1accdc99613bb665a59a56a9f63332870f7f"
+      }
+    ],
+    "changed_lower_file_count": 22,
+    "changed_lower_production_source_count": 8,
+    "reported_native141": "Real projected CLI tests,0failed; cannot label complete candidate-tree validation",
+    "compatibility_claim": "No behavior difference inferred solely from these source diffs; no universal trust conclusion",
+    "accepted_C_unchanged": [
+      252,
+      98,
+      0,
+      154
+    ],
+    "required_next_step": "L-coordinated safe sync or independent exact candidate-tree gate; no source imports or automatic branch rewrites"
+  },
+  "exact_candidate_tree_verification_pending": true
 }
