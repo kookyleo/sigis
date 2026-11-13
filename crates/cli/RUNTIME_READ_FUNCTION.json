@@ -1,0 +1,319 @@
+{
+  "schema": "sigis.round3.runtime-read.exact-function-audit.v1",
+  "audit_kind": "bounded read-only static source audit",
+  "audit_date": "2026-11-13",
+  "upstream_version": "pyHanko 0.38.1",
+  "upstream_expected_commit": "580f49498f76a00bda11d5a3fd86f7af3f0da75e",
+  "owner_commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+  "accepted_prefix_commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+  "accepted_prefix_tree": "e227b96da8b08024eb3e8f2500804aa4a7244039",
+  "counts": {
+    "unique_upstream_functions": 1,
+    "parameter_instances": 1,
+    "original_assertion_nodes": 2,
+    "runtime_passes_established": 0,
+    "accepted_credit_established": 0
+  },
+  "execution": {
+    "cargo": false,
+    "native": false,
+    "oracle": false,
+    "repository_or_ref_mutation": false
+  },
+  "function": {
+    "id": "pyhanko-cli/test_runtime.py::test_fail_read",
+    "source_line": 25,
+    "source_end_line": 40,
+    "source_text": "def test_fail_read(cli_runner):\n    with open(INPUT_PATH, 'wb') as inf:\n        inf.write(MINIMAL_AES256)\n    result = cli_runner.invoke(\n        cli_root,\n        [\n            'sign',\n            'addfields',\n            '--field',\n            '1/0,0,100,100/Sig1',\n            INPUT_PATH,\n            \"out.pdf\",\n        ],\n    )\n    assert result.exit_code == 1\n    assert \"Failed to read\" in result.output",
+    "source_function_sha256": "2d7d7b13e42c4961311031324de7769a7c84ca071b6b2fc8112b83f783eddd49",
+    "source_hash_convention": "Exact ast.get_source_segment function text, no trailing newline",
+    "config": null,
+    "marks": [],
+    "fixture_behavior": "cli_runner creates isolated input.pdf from MINIMAL; function overwrites it in binary mode with exact MINIMAL_AES256 before invocation.",
+    "argv": [
+      "sign",
+      "addfields",
+      "--field",
+      "1/0,0,100,100/Sig1",
+      "input.pdf",
+      "out.pdf"
+    ],
+    "positions_zero_based": [
+      {
+        "index": 0,
+        "token": "sign"
+      },
+      {
+        "index": 1,
+        "token": "addfields"
+      },
+      {
+        "index": 2,
+        "token": "--field"
+      },
+      {
+        "index": 3,
+        "token": "1/0,0,100,100/Sig1"
+      },
+      {
+        "index": 4,
+        "token": "input.pdf"
+      },
+      {
+        "index": 5,
+        "token": "out.pdf"
+      }
+    ],
+    "parameters": [],
+    "parameter_instances": 1,
+    "assertions": [
+      {
+        "source_line": 39,
+        "original_assertion": "assert result.exit_code == 1",
+        "expression": "result.exit_code == 1",
+        "native_mapping": "runtime.rs line 146: assert_eq!(o.status.code(), Some(1))",
+        "oracle_mapping": "run lines 62-66 compares live oracle code with native code"
+      },
+      {
+        "source_line": 40,
+        "original_assertion": "assert \"Failed to read\" in result.output",
+        "expression": "\"Failed to read\" in result.output",
+        "native_mapping": "runtime.rs line 147: assert!(text(&o).contains(\"Failed to read\")); text at lines 125-130 concatenates native stdout/stderr",
+        "oracle_mapping": "run lines 67-72 requires Failed to read in live reference.output whenever native text contains it; original test assertion at line 147 ensures that condition is true"
+      }
+    ]
+  },
+  "owner_rust_function": {
+    "path": "crates/cli/tests/runtime.rs",
+    "test_name": "runtime::test_fail_read",
+    "definition_line": 133,
+    "end_line": 148,
+    "full_function_text": "fn test_fail_read() {\n    let (_, o) = run(\n        \"minimal-aes256.pdf\",\n        None,\n        &[\n            \"sign\",\n            \"addfields\",\n            \"--field\",\n            \"1/0,0,100,100/Sig1\",\n            \"input.pdf\",\n            \"out.pdf\",\n        ],\n    );\n    assert_eq!(o.status.code(), Some(1));\n    assert!(text(&o).contains(\"Failed to read\"), \"{}\", text(&o));\n}\n",
+    "full_function_sha256": "c568b142adbecd1320d731822e1fad9b56608da9cb8ddd86a7d6123f7b60fc68",
+    "full_function_hash_convention": "Exact fn declaration through closing brace, includes trailing newline; excludes preceding #[test]",
+    "body_sha256": "1f41a77348a5d0242dbdd4f416fb066314cf85e72ee51d6f1be477205f89f7e3",
+    "body_hash_convention": "Exact bytes after opening brace and before closing brace, including surrounding newlines",
+    "native_call": "run(\"minimal-aes256.pdf\", None, original_argv)",
+    "helper_lines": "9-124; text helper 125-131",
+    "native_assertion_lines": [
+      146,
+      147
+    ]
+  },
+  "fixture": {
+    "owner_path": "crates/testdata/data/lanes/r3-c/runtime/minimal-aes256.pdf",
+    "owner_commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+    "upstream_backing_path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/pdf/minimal-aes256.pdf",
+    "bytes": 1403,
+    "sha256": "eda8c19fae7b63e715f0936d0359b698bc81ab69107e159507842f08dce8b69a",
+    "exact_byte_equality": true,
+    "upstream_binding": "samples.py line 44: MINIMAL_AES256 = read_all(PDF_DATA_DIR + /minimal-aes256.pdf)",
+    "static_encryption_dictionary": {
+      "filter": "Standard",
+      "V": 5,
+      "R": 6,
+      "length_bits": 256,
+      "CFM": "AESV3",
+      "encrypt_reference": "6 0 R"
+    },
+    "present_at_accepted_prefix": false
+  },
+  "feasibility": {
+    "statically_executable_against_accepted_prefix": true,
+    "new_production_code_required": false,
+    "new_shared_interface_required": false,
+    "new_signing_engine_required": false,
+    "new_validation_engine_required": false,
+    "missing_inputs": [
+      "Exact owned minimal-aes256.pdf fixture",
+      "One-function translated test and required helper/provenance projection"
+    ],
+    "reason": "Accepted lib.rs routes sign addfields directly to fields::run. fields.rs parses the original field, reads the PDF, and explicitly rejects encrypted documents with Failed to read PDF before modifying/writing any field. error maps this to process exit 1."
+  },
+  "production_paths": [
+    {
+      "source": "crates/cli/src/lib.rs",
+      "lines": "127-128",
+      "requirement": "sign addfields routes to fields::run independently of addsig/signature engine"
+    },
+    {
+      "source": "crates/cli/src/fields.rs",
+      "lines": "69-74, 84-105",
+      "requirement": "Accept original field/path grammar, parse input, reject encrypted documents with required Failed to read substring"
+    },
+    {
+      "source": "crates/cli/src/lib.rs",
+      "lines": "328-345",
+      "requirement": "read_for_update parses file and avoids unauthenticated encrypted object traversal"
+    },
+    {
+      "source": "crates/cli/src/lib.rs",
+      "lines": "151, 160-183",
+      "requirement": "Error becomes exit status 1 and Error: prefix on default stderr"
+    },
+    {
+      "source": "crates/cli/src/main.rs",
+      "lines": "4-7",
+      "requirement": "Actual CLI emits captured streams and exits with library output code"
+    }
+  ],
+  "excluded_functions": [
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_fail_strict_mildly_broken",
+      "reason": "Uses sign validate, outside accepted independent prefix and this one-function increment"
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_succeed_strict_mildly_broken_nonstrict",
+      "reason": "Uses sign validate, outside accepted independent prefix and this one-function increment"
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_stdout",
+      "reason": "Uses sign validate, outside accepted independent prefix and this one-function increment"
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_stderr_default",
+      "reason": "Uses sign validate, outside accepted independent prefix and this one-function increment"
+    },
+    {
+      "id": "pyhanko-cli/test_runtime.py::test_log_file",
+      "reason": "Uses sign validate, outside accepted independent prefix and this one-function increment"
+    }
+  ],
+  "source_fingerprints": [
+    {
+      "origin": "immutable git object",
+      "commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+      "path": "crates/cli/tests/runtime.rs",
+      "sha256": "100e7d7539953ae0b97c7e038ef1188e1f3cac0190f05c67f97523b53261200b",
+      "bytes": 7206,
+      "git_blob": "dc7112d421c167dd135b217693212205b99f2bc8"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+      "path": "crates/cli/tests/common/mod.rs",
+      "sha256": "1b396b38bdde48ae84506743a963b76605cd87ed80087a21b557a5ad7409b3d9",
+      "bytes": 1780,
+      "git_blob": "add27d66b1bb13f6b6647f31aedff843a25fb775"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+      "path": "crates/testdata/data/lanes/r3-c/runtime/minimal-aes256.pdf",
+      "sha256": "eda8c19fae7b63e715f0936d0359b698bc81ab69107e159507842f08dce8b69a",
+      "bytes": 1403,
+      "git_blob": "3fbf6f510d8c4ffada6d16ba0b8805f05f5ec76f"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "7d2fead6178e6afa303a0fecaa3a6dbf19b6f308",
+      "path": "crates/testdata/data/lanes/r3-c/runtime/README.md",
+      "sha256": "f0fd537197fd86457565aa820c5f27c16a40183110fa6588d21e89e82d8556a5",
+      "bytes": 224,
+      "git_blob": "f2c1259b80d027ec60b2bdc99f963e3a6f6a73ef"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/cli/src/lib.rs",
+      "sha256": "6b43cd1de72cc41202a0e2c3bd989eea47d643d7c160ece62e75788aca168723",
+      "bytes": 11893,
+      "git_blob": "999e2ad198be7f8026ed4219e3cb5917e359c59d"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/cli/src/fields.rs",
+      "sha256": "bab64341e579f28c70a623a160c0efcabe2f70f6291c4a37d0556860fa6c92f6",
+      "bytes": 4798,
+      "git_blob": "8d1321d97a731f4137eb47dfa2952be59d0f18ba"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/cli/src/main.rs",
+      "sha256": "c56d60ea5da6c9f424b42535fdd4638383cefa478c39a2e191dbf4854d5be7a9",
+      "bytes": 315,
+      "git_blob": "1922149e754638ed864dc97f9ed086264140bc2f"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/cli/tests/common/mod.rs",
+      "sha256": "1b396b38bdde48ae84506743a963b76605cd87ed80087a21b557a5ad7409b3d9",
+      "bytes": 1780,
+      "git_blob": "add27d66b1bb13f6b6647f31aedff843a25fb775"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/testdata/src/lib.rs",
+      "sha256": "1958d5d469cdbd7615f8f92e4fca866d246a350705be3343c6c8e7baa6272239",
+      "bytes": 5770,
+      "git_blob": "2f3414e8c072068bfdc066d11dabaa0939335a9a"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "Cargo.lock",
+      "sha256": "67f23bb8e7da87498b82f028b1e3da07529c2b65f88d988f1b7255f63c7a460f",
+      "bytes": 115344,
+      "git_blob": "e3ef9eb66f9f2955c75a13e56a33a7deacb03ab2"
+    },
+    {
+      "origin": "immutable git object",
+      "commit": "afbddf4e1b47cad9e00a4529f311c26d177c4dfa",
+      "path": "crates/cli/Cargo.toml",
+      "sha256": "edbf384650d7af33d4eddb32c9bec1f91fa903d1f9ce6be84e0be0b3fb119c25",
+      "bytes": 879,
+      "git_blob": "327581f48b703a78b34fb25c9680eba27b0c101f"
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_runtime.py",
+      "sha256": "e4a61fdeb60b2819e6cb2257fd96b28f3f833e30070f5b9c202daea922566ee4",
+      "bytes": 3445
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "sha256": "6a67cf73ca8f81394e9fd3fa0fec18ad9a0896e70d0f6c90621787062e1612e6",
+      "bytes": 7107
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/samples.py",
+      "sha256": "778ad36a025556160b6701ebc416e34d6a70bd0d81c977be600363e68890ff8b",
+      "bytes": 7183
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/pdf/minimal-aes256.pdf",
+      "sha256": "eda8c19fae7b63e715f0936d0359b698bc81ab69107e159507842f08dce8b69a",
+      "bytes": 1403
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/fields.py",
+      "sha256": "14f0726bf6e16a6aad5baf0ac4f2793ce0d27c7b280b6337b68f7161d870d4f8",
+      "bytes": 2384
+    },
+    {
+      "origin": "pinned upstream filesystem",
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/runtime.py",
+      "sha256": "2c01e291cf3b61fdae63d9da31bd81c879047d7bbdcd37494d45a0fe262f6739",
+      "bytes": 2783
+    }
+  ],
+  "limitations": [
+    "This audit executed no Cargo, native executable or Python oracle and establishes zero runtime passes and zero accepted credit. Current source/worktree mutations are outside the audit basis.",
+    "The actual new candidate must contain the exact encrypted fixture and the complete translated original function. afbddf4 does not contain the encrypted fixture. Extract only this source function and the necessary helper/provenance code; importing the entire owner runtime suite would include five unavailable validate-dependent functions.",
+    "Original assertions require only exit status 1 and Failed to read in combined Click output. They do not require a particular exception type, complete diagnostic bytes, stdout/stderr routing, empty/nonexistent out.pdf, field contents, decryption success or valid signature/trust result.",
+    "Upstream click.File(wb) for outfile can create/open the output before the command body. Accepted Rust rejects before output writing. Output-file side effects are outside the original assertions and must not be described as established parity.",
+    "Accepted Rust intentionally rejects encrypted field management without authentication. It does not need to attempt password decryption to satisfy this exact negative function. This case does not prove full encrypted-field editing support, encryption-password semantics or every read-error path.",
+    "Owner helper uses two separate tempdirs with identical argument strings and copied exact fixture. Native output cannot be supplied by the Python process. The fixture snapshot is a byte observation, not a production read trace.",
+    "Owner oracle helper asserts pyHanko 0.38.1, certvalidator 0.33.0 and separate oracle cwd, and records interpreter/CLI-source/Click version; interpreter and module path provenance must be tied to the eventual runtime gate. It compares actual live status and the original diagnostic, not a replay fixture.",
+    "The selected native executable can be overridden by SIGIS_CLI_TEST_BIN. Runtime evidence must identify the actual new candidate build, executable/test hashes, host, arguments and fixture hashes under the required Cargo wrapper.",
+    "There are no upstream parameters, architecture fixtures or skip marks on test_fail_read. The other five runtime functions remain excluded and pending; no additional source ID is earned by helper calls or oracle invocations."
+  ]
+}
