@@ -17,19 +17,32 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped163
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped173
 includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
-ordinary validation39, the two prior basic software commands and eleven
-PKCS12/LTA originals. All11 lead live functions are accepted;89pending
-functions remain in C. Other signing, qualification, provider, runtime and
-reader-state commands and the complete port remain unfinished.
+ordinary validation39, prior basic software2, PKCS12/LTA11 and PEM/DER10.
+All11 lead live functions are accepted;79 pending functions remain in C.
+Other signing, qualification, provider, runtime and reader-state commands
+and the complete port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **f1cd5948**. All six source-specific gate steps
+Current accepted source: **a48fb320**. All six current source-specific
+gates passed: build, workspace tests, strict all-target Clippy, strict docs,
+layer/cycle checking and formatting. Measured native results: **1,973 discovered /1,970 passed /3 ignored /0 failed**,
+193 reports. The immutable inventory is **1,431 total /1,331 passed
+/21 skipped /79 pending**. Exactly10 new PEM/DER CLI originals/30 parameters
+are accepted, with29 status agreements and1 bounded stricter EKU xfail difference.
+C173/79 retains basic2 and P12/LTA11 once; library and all11 live counts are
+unchanged. Shared aliases and three generic DSA parameters add zero IDs.
+Complete-port and universal fail-closed claims remain unsupported. See
+[current acceptance](lanes/round3/l-pemder.md).
+
+### Historical accepted checkpoints
+
+Historical accepted source: **f1cd5948**. All six source-specific gate steps
 passed: build, workspace tests, strict all-target Clippy, strict docs,
 layer/cycle checking and formatting. Measured native results: **1,937
 discovered /1,934 passed /3 ignored /0 failed**,188 reports. The immutable
@@ -38,8 +51,6 @@ Exactly14new functions are accepted: C11/35parameters, S2relational hash
 originals and the last L live CLI-LTA original. C163/89 and L11/0 retain
 the prior basic2 only once. The complete port and universal fail-closed
 claims remain unsupported. See [current acceptance](lanes/round3/l-cli-lta.md).
-
-### Historical accepted checkpoints
 
 Historical accepted source: **724d078d**. Build, workspace tests, strict all-target
 clippy, strict documentation, layering and formatting all passed. Measured Rust
@@ -210,9 +221,9 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
 | **Library lanes A–E** | **1,168** | **1,147** | **21** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 163 | 0 | 89 |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 173 | 0 | 79 |
 | Lead: live integration (round-3 L) | 11 | 11 | 0 | 0 |
-| **Overall** | **1,431** | **1,321** | **21** | **89** |
+| **Overall** | **1,431** | **1,331** | **21** | **79** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -237,9 +248,9 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| C / CLI and configuration | 89 | Remaining signing, LTV/qualified validation, five runtime functions, provider and reader-state commands; accepted scope is163 unique functions |
+| C / CLI and configuration | 79 | Remaining signing, LTV/qualified validation, five runtime functions, provider and reader-state commands; accepted scope is173 unique functions |
 | Lead / live integration | 0 | All11 assigned live functions accepted; integration, parameter/skip/provenance audits and final acceptance remain L work |
-| **Total** | **89** | All pending immutable functions are C-owned |
+| **Total** | **79** | All pending immutable functions are C-owned |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
@@ -280,7 +291,7 @@ owning `PORTING.md` and lane files:
   other DSA provider matrix parameters still require proof.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the101 pending
+provider behaviour and remaining validator compatibility; the79 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -290,11 +301,22 @@ cause early returns. Appearance comparisons need `pdftoppm` and
 ImageMagick. Differential helpers can return early without the oracle.
 The acceptance environment below had both rendering tools and the oracle;
 no missing-tool early return was reported. Actual parameter exclusions
-were DSA, ML-DSA and three combined ECDSA mechanism cases.
+were DSA, ML-DSA and three combined ECDSA mechanism cases in that historical
+D matrix. Current A48 separately proves the three generic DSA parameters of
+two already accepted functions, alongside the dedicated raw DSA original;
+other global/provider exclusions remain unchanged.
 
 ## Differential results
 
-Latest accepted sourcef1cd5948 adds35original C native/reference decisions and
+Current accepted sourcea48fb320 adds30 original PEM/DER parameter pairs:
+29 status agreements and1 bounded stricter native EKU xfail refusal. Actual
+current fullgate bytes have24 original native signing successes plus4 password
+supplement successes; all28 receive fresh same-output public Python verification.
+The xfail Python output is separately verified. Native historical NoRev controls
+and Python fixture fetching/revocation policies remain separate. Shared alias
+guards and three generic DSA parameters add zero IDs. See l-pemder.md.
+
+Historical accepted sourcef1cd5948 adds35original C native/reference decisions and
 30fresh same-native-output checks, plus the separately executed complete
 original Python live CLI-LTA and actual same-output native/Python trust
 controls. Two S originals assert hash relationships, not numeric Python
@@ -355,7 +377,14 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-Current bounded acceptance preserves full P12 caller configuration/runtime
+Current bounded PEM/DER acceptance preserves whole caller context, mandatory
+unknown-policy/credential refusal and output sentinels. The observed unsuitable
+EKU original is native-denied versus a pinned Python xfail success; this bounded
+difference is fail closed. Attached-context match-any still encounters the lower
+all-KU check and remains a stricter compatibility limit, not full parity. Neither
+observation establishes all divergences fail closed. See l-pemder.md.
+
+Preceding accepted scope preserves full P12 caller configuration/runtime
 and mandatory refusal, with no legacy fallback. The source-only empty-PIN
 compatibility observation has unknown provider-dependent direction; no
 actual provider verdict proves it conservative. Hash/model/encoding and
@@ -466,15 +495,16 @@ acceptance remain L-owned. No service switch follows from function totals.
 | P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review2 skips (deprecated warning, SafeNet PIN), generic provider parameters and evidence/state compatibility | Keep mandatory rejection and scoped native/oracle proofs; source-only empty-PIN direction remains unknown |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 assigned functions accepted; audit archival/POE, independent trust domains, historical fetching and registry persistence beyond accepted profiles | Retain explicit NO_POE/API-bottom-line and legacy timestamp-first boundaries; no trust/algorithm/revocation waiver |
 | S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review19 skips (PDF5/CV2/fetch12), parser/model/resource and trust-boundary coverage | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish89pending originals after scoped163: other signing/LTV/qualified, five runtime, provider and reader-state flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish79pending originals after scoped173: other signing/LTV/qualified, five runtime, provider and reader-state flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
 | L — Lead / integration | Root/tools/shared APIs/lock/central status | Assigned live functions11/11; pending0. Continue integration, parameter/skip/provenance audits, complete gates and final service-replacement decision | Keep coherent source/ELF/runtime acceptance and immutable ownership; no service restart or complete-port inference |
 
 P/V/S/C can proceed within exclusive paths while L coordinates interfaces and
 acceptance. Library1168/1147/21/0 and L11/11/0/0 do not complete the21skips,
-provider parameters or unassigned features. All89pending IDs are in C. Current
-LTA fixtures adapt expired frozen2020 signer1 to existing current signer1-long;
-this is explicit compatibility scope. The final service change still requires
-functional/trust acceptance beyond inventory totals.
+provider parameters or unassigned features. All79pending IDs are in C. The C
+unit LTA fixtures adapt expired frozen2020 signer1 to existing signer1-long.
+The true L live CLI-LTA original already uses current signer1-long and needs
+no new credential adaptation. These are distinct, explicit scopes. The final
+service change still requires functional/trust acceptance beyond inventory totals.
 
 ## Separate XML programme
 

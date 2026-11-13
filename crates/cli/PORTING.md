@@ -1,13 +1,16 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /163 passed /0 skipped /89 pending**.
-Sourcef1cd5948 accepts exactly11new PKCS12/LTA originals/35parameters after
-coherent final CLI/source/runtime and all-six-gate acceptance. The prior basic
-PEM/P12 functions remain credited once. Configuration57/plugins11/crypt23/
-fields7/stamps12/runtime-read1/ordinary39/basic2/P12-LTA11 comprise163.
-See PKCS12_SIGNING_PORTING.md and docs/lanes/round3/l-cli-lta.md.
-Other signing/LTV/qualified/provider/runtime/reader flows remain pending.
-Historical owner projections below are not acceptance of the complete CLI.
+Accepted assigned counts: **252 total /173 passed /0 skipped /79 pending**.
+Sourcea48fb320 accepts exactly10 new PEM/DER originals/30parameters after
+coherent current CLI/source/runtime, actual serial mandatory-policy proof and
+all-six-gate acceptance. Configuration57/plugins11/crypt23/fields7/stamps12/
+runtime-read1/ordinary39/basic2/P12-LTA11/PEM-DER10 comprise173.
+Prior basic/P12 functions remain credited once. Alias regressions and generic
+DSA parameter completion add zero IDs. The bounded stricter EKU xfail and
+attached-context match-any/all-KU limitation remain explicit. Other signing/
+LTV/qualified/provider/runtime/reader flows remain pending.
+See PEMDER_SIGNING_PORTING.md and docs/lanes/round3/l-pemder.md.
+Historical owner projections below do not accept the complete CLI.
 
 # Historical independently verified CLI increments
 
