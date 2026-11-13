@@ -42,7 +42,17 @@ fn settings(
     params: Option<&PkixValidationParams>,
 ) -> CertificationPathSettings {
     let mut cps = CertificationPathSettings::new();
-    cps.set_time_of_interest(time_of_interest);
+    // Every issued certificate has already passed our tolerance-aware
+    // check_validity, and the anchor's strict qualifier bounds were checked
+    // separately. certval has no tolerance setting: its duplicate single-time
+    // validity check would reject certificates inside the accepted window.
+    // Only that check consumes this setting in validate_path_rfc5280; keep
+    // ctx's real clock for algorithm policy, revocation and freshness checks.
+    cps.set_time_of_interest(if ctx.timing.time_tolerance.is_zero() {
+        time_of_interest
+    } else {
+        TimeOfInterest::disabled()
+    });
     // Revocation is handled by `revinfo`; nothing is fetched.
     cps.set_check_revocation_status(false);
     cps.set_check_ocsp_from_aia(false);
