@@ -601,3 +601,8 @@ parity claim. See [acceptance](l-s-callers.md) and [counterexample](l-mixed-cont
 ## Accepted AC capture and complete callers
 
 Source ac1bdbc passed the complete workspace gate with root P7 and Adobe CMS callers. Native AC outcome capture delegates one validation and publishes an operation-local evidence journal only after the complete batch succeeds. Full caller context/security requirements, NoCheck/OCSP-CRL rules and issuer-name guards are preserved. Root tests retain separate main/AC trust, exact typed attributes and the2028 current/stale provider controls. Adobe finalNO_POE versus PythonOK remains a separate RIA/POE consumer feature gap, not a reason to weaken status classification. No new shared dependency or layer exemption was added. Details: l-ac-stamps.md.
+
+
+## Source-correct main revalidation
+
+The current source45a8b44 and both local vendor dependencies pass the complete repeated workspace gate with content-based source checking. The two-key Cargo configuration and wrapper downgrade guard preserve the canonical target, system scheduler and sccache. Prior mtime reuse and the first retry's dependency-hash failure are preserved;391 compiler-unit observations/2411 input records/381 source files independently match Git main45. This restores the existing inventory only, with no new function credit. See l-source-freshness.md; future cache races and build-script mtime inputs are not universally proven safe.

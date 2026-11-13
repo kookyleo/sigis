@@ -51,8 +51,9 @@ exported function while restoring the old mtime; Cargo explicitly reported
 fingerprint JSON must use `content`; a mere failing command is insufficient.
 
 These are correctness controls, not new upstream functions. Historical reported
-main counts stay on verification hold until a complete source-correct main gate
-passes with fresh actual executable/runtime identity checks.
+main counts were held until the complete repeated main45 gate passed, including
+selected local library/test source and actual executable/runtime identity
+checks. Acceptance details and preserved failures are in l-source-freshness.md.
 
 Cargo's documented current limitation is that build-script rerun-if-changed
 inputs still use mtimes. There are no project-owned crate/vendor build.rs files

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "ac1bdbc404fa9ddca0a872a3bebccb0d4d2f66b4",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-c-stamp-integration/gate/gate.json",
+  "accepted_source_commit": "45a8b44262dac39e7a13942beeb1eba50a922585",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/source-freshness-rerun/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1444,5 +1444,6 @@
       "rust_test": "stamp::test_cli_stamp_style_malformed",
       "reason": "Complete original standalone stamp command assertions and source parameters over the curated accepted-prefix executable, matching fresh pinned Python exit/meaningful-error/no-exception behavior; successful real native/oracle incremental PDFs and rejected no-output controls. Uses accepted inherited reader-state APIs; optional state wrappers add no decode-function credit. Current-source ac1bdbc complete workspace gate and runtime provenance passed; historical141 owner-lower projection is not used as exact-tree acceptance proof."
     }
-  ]
+  ],
+  "source_verification_note": "Existing1431/1259/29/143 inventory renewed on45a8b44 after content-freshness controls, a complete repeated gate and independent391-unit/2411-input/381-source verification including both vendor packages; no new unique functions. Prior mtime false-green and E0463 logs remain preserved."
 }

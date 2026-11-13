@@ -1,12 +1,5 @@
 # Rust port status
 
-> Verification hold: a new cross-worktree Cargo mtime-cache counterexample
-> reused a foreign library despite a missing API in the selected source tree.
-> The previously reported 1,259/29/143 inventory and 1,760 native passes below
-> are retained historical results; their complete source identity needs a
-> content-freshness fix and a new full main gate. No new increment is accepted
-> during this hold. Evidence: round3-launch/ria-http-pdf-integration/.
-
 Updated: 2026-11-13. Baseline: **pyHanko 0.38.1** (`v0.38.1`,
 `580f49498f76`) and **pyhanko-certvalidator 0.33.0**
 (`pyhanko-certvalidator/v0.33.0`, `b48999514cb4`).
@@ -34,11 +27,15 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **ac1bdbc**. The full gate passed **1,760 native tests,
+Current accepted source: **45a8b44** (the Rust port source from ac1bdbc plus
+the permanent source-freshness repair). The full gate passed **1,760 native tests,
 4 ignored, zero failed**. The immutable inventory is **1,431 total /1,259
 passed /29 skipped /143 pending**. This adds P7, S/CMS1 and C/stamps12 once
-each. The final section records this acceptance; prior source-specific counts
-below are historical checkpoints. Complete porting and all-divergences-fail-closed
+each. The later source-freshness section records renewed acceptance after a real
+mtime-cache counterexample and an initially failed doctest. All391 selected
+compiler-unit observations,2411 emitted input checksums and381 actual source
+files match main45, including both local vendor dependencies. Earlier
+source-specific counts below are historical checkpoints. Complete porting and all-divergences-fail-closed
 claims remain unsupported.
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
@@ -1099,3 +1096,39 @@ The earlier failed/stale-response attempts and the owner projection are
 preserved separately. Native Adobe final `NO_POE` versus Python `OK` remains
 an explicit stricter status/feature gap; original API bottom-line and typed
 role assertions pass. No universal fail-closed or full-port claim follows.
+
+
+## Renewed main acceptance after the source-freshness repair
+
+Source45a8b44 passes the complete repeated build/test/clippy/strict-doc/layer/fmt
+gate with1764 discovered/1760 passed/4 ignored/0 failed across163 reports.
+The previously reported1431/1259/29/143 inventory is now renewed against this
+source; no unique function is added by the infrastructure repair. The verification
+hold is lifted for this concrete source and gate, not for arbitrary future
+worktree/cache races.
+
+The mtime false-green, initial source-correct retry's real E0463 failure and24
+metadata snapshots remain preserved. An unchanged focused doctest rebuilt the
+inconsistent dependency graph; a further unchanged build/doctest reuse cycle
+stayed content-based and passed. No cache salt proposal, cleared target,
+disabled sccache, source waiver or ignored doctest was used. The precise original
+metadata overwrite/replay event remains unproven.
+
+The successful repeated run freezes391 selected compiler-unit phase observations
+(over368 unit paths) and verifies2411 emitted BLAKE3/length records against381
+actual source files and main45 Git blobs. Both vendored path dependencies are
+included. An independent checker confirms all frozen records and Cargo events;
+no mutable vendor fingerprint exception is silently filtered.
+
+The actual private CLI is36dec5650c89dae0ce1432e70f682776551db06ec01ecc0be122429fb4d9c946
+(96308328bytes), copied byte-exact to both workers. All four actual subprocess
+selections match it. The repeated producer independently verifies7 selected
+local library units/133 source inputs. Runtime V213/S69 input reads, L18 outputs,
+eight registry profiles, S output/resource controls and P9/Adobe2 actual output
+identities also pass fresh checks. See [source-freshness acceptance](lanes/round3/l-source-freshness.md)
+and [correctness configuration](lanes/round3/cargo-freshness.md).
+
+Evidence: `/home/l/.codex/artifacts/sigis/round3-launch/source-freshness-rerun/`.
+This bounded acceptance does not prove complete porting or that all divergences
+fail closed. Native Adobe finalNO_POE versus PythonOK and the other documented
+compatibility/alias/persistence gaps remain explicit.
