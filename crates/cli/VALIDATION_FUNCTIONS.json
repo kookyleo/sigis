@@ -1,0 +1,790 @@
+{
+  "source": "b9729fff80a6189fa81e61555906418fefda1070",
+  "base": "fb56236d1001058aca28687d73041dcd330a7745",
+  "unique_functions": 39,
+  "native_original_cases": 223,
+  "functions": [
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate",
+      "source_line": 37,
+      "rust_test": "validation::test_basic_validate",
+      "rust_source_line": 309,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 339,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "57996c2ed718bd5a46011738e5ed23b8e371eab590fd370f56907b2583b08ea8",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_revinfo",
+      "source_line": 55,
+      "rust_test": "validation::test_basic_validate_fail_without_revinfo",
+      "rust_source_line": 313,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "pki_mocks_enabled=[False]"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'INTACT:UNTRUSTED' in result.output"
+      ],
+      "current_rust_source_line": 343,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "21872e13619366369cd24bd4ccf1c205d804d5d890d37b37d9f5f6eac8603cf1",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_soft_revocation",
+      "source_line": 75,
+      "rust_test": "validation::test_basic_validate_with_soft_revocation",
+      "rust_source_line": 322,
+      "source_parameter_cases": 16,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "pki_mocks_enabled=[True, False]"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 352,
+      "native_observed_cases": 16,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "76c72bda401c6d1388429d29001b6f1ad50513ca27604cf0c58d3cbf4fd4e5fa",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_required_revinfo",
+      "source_line": 95,
+      "rust_test": "validation::test_basic_validate_with_required_revinfo",
+      "rust_source_line": 331,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 361,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "d4215b862ee502278476267bfb1b5b49ee4730c3f6c5e0259159b5269a1484f1",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_fail_without_required_revinfo",
+      "source_line": 116,
+      "rust_test": "validation::test_basic_validate_fail_without_required_revinfo",
+      "rust_source_line": 335,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "pki_mocks_enabled=[False]"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'UNTRUSTED' in result.output"
+      ],
+      "current_rust_source_line": 365,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "26e944aecaa964cfc2efd586975926fb0e74c1a9983214105e921768d087d518",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_without_revinfo_check",
+      "source_line": 137,
+      "rust_test": "validation::test_basic_validate_without_revinfo_check",
+      "rust_source_line": 344,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "pki_mocks_enabled=[False]"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 374,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "5c5e767d6dfc5c4871c47412089aee8e2bae956a33619b93ecfa687a29294829",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_inconsistent_revo_settings",
+      "source_line": 158,
+      "rust_test": "validation::test_inconsistent_revo_settings",
+      "rust_source_line": 48,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "pki_mocks_enabled=[False]"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'incompatible' in result.output"
+      ],
+      "current_rust_source_line": 63,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "a62d4daafb0f8d69e5933e9988bb7a4e882ef790e81700d995968fbee3d17c98",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_password",
+      "source_line": 179,
+      "rust_test": "validation::test_validate_encrypted_wrong_password",
+      "rust_source_line": 352,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "\"Password didn't match.\" in result.output"
+      ],
+      "current_rust_source_line": 382,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "c09f4a29be3dea29e801e824c4c575c7563bc596f2438a177f5784ecc3ad80e3",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password",
+      "source_line": 201,
+      "rust_test": "validation::test_validate_encrypted_empty_user_password",
+      "rust_source_line": 366,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 396,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "e4548f8791ee76e87e26603eeadbce7bac2e7ad0a3eaac0b9373916baf3f24e2",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_empty_user_password_wrong_explicit_password",
+      "source_line": 226,
+      "rust_test": "validation::test_validate_encrypted_empty_user_password_wrong_explicit_password",
+      "rust_source_line": 372,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "\"Password didn't match.\" in result.output"
+      ],
+      "current_rust_source_line": 402,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "56edf90dc52056009b6555e2019b794afd477e8a033a686f3da05e7d17375a28",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_explicit_empty_password",
+      "source_line": 253,
+      "rust_test": "validation::test_validate_encrypted_explicit_empty_password",
+      "rust_source_line": 386,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 416,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "05d429c937da72f33ddf32e75c0663e6821c8ed254292adf0248d2275d7507b5",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_encrypted_wrong_explicit_empty_password",
+      "source_line": 280,
+      "rust_test": "validation::test_validate_encrypted_wrong_explicit_empty_password",
+      "rust_source_line": 396,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "\"Password didn't match.\" in result.output"
+      ],
+      "current_rust_source_line": 426,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "f43aefb7cc0296ca6a90456819bac7df8ca0d66e91e2b1d61457331ce088db36",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_unsupported_handler",
+      "source_line": 307,
+      "rust_test": "validation::test_validate_unsupported_handler",
+      "rust_source_line": 410,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'only password-based encryption' in result.output"
+      ],
+      "current_rust_source_line": 440,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "6b6f619ed809e93157f1ca7093ebf9c1c90b66e706fa57b27493cec6065d8eea",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_summary",
+      "source_line": 331,
+      "rust_test": "validation::test_basic_validate_summary",
+      "rust_source_line": 425,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "pattern.match(result.stdout)"
+      ],
+      "current_rust_source_line": 455,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "23e1ccddf50ca651de08e9a0ec5b91ff1b419cec7e5dcf6aaaf8b7f4039ab4fc",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validate_inconsistent_print_settings",
+      "source_line": 353,
+      "rust_test": "validation::test_validate_inconsistent_print_settings",
+      "rust_source_line": 60,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'incompatible' in result.output"
+      ],
+      "current_rust_source_line": 75,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "cf7e9cce67869e468a20f32a24a5ba8e0fd4c7694703320992996150546b85b2",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_pretty_print",
+      "source_line": 371,
+      "rust_test": "validation::test_basic_validate_pretty_print",
+      "rust_source_line": 439,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'judged VALID' in result.output"
+      ],
+      "current_rust_source_line": 469,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "545153259488774ca3bca6bb43dbb4e52640cf01405ce3a40d1fda57d3a04625",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_validation_time",
+      "source_line": 391,
+      "rust_test": "validation::test_basic_validate_with_validation_time",
+      "rust_source_line": 447,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 477,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "00a0c4278ad01597e7850f9dab6288371251b8f04597e2377554a0e153a6e0f4",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_validation_time_syntax_error",
+      "source_line": 413,
+      "rust_test": "validation::test_validation_time_syntax_error",
+      "rust_source_line": 69,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'could not be parsed' in result.output"
+      ],
+      "current_rust_source_line": 84,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "7e60c366efe0020b3c118dd6bf8282755e686fb732fc48c32c9d0e042c0fa0ce",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_claimed_time",
+      "source_line": 434,
+      "rust_test": "validation::test_basic_validate_with_claimed_time",
+      "rust_source_line": 457,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 487,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "b7d13fa82c13d593a8d1c3738857c50060fd767ea2f025f9f5eda892baeb465c",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_untrusted",
+      "source_line": 456,
+      "rust_test": "validation::test_basic_validate_untrusted",
+      "rust_source_line": 464,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "result.exit_code == 1"
+      ],
+      "current_rust_source_line": 494,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "4632be8ff26a8705be1d369085e0d3e6a7890aaa8cfc8dfea0b0d7eb32d1ee46",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_weak_hash",
+      "source_line": 476,
+      "rust_test": "validation::test_basic_validate_with_weak_hash",
+      "rust_source_line": 471,
+      "source_parameter_cases": 2,
+      "parameters": [
+        "pretty=[True, False]"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'sha1_rsa is not allowed' in result.output"
+      ],
+      "current_rust_source_line": 501,
+      "native_observed_cases": 2,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "0b8f7a3ce353ed3d8e8a3a76b5e44784e3f3a2140cc272ac4702cee6b064d5f8",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_unknown_hash",
+      "source_line": 504,
+      "rust_test": "validation::test_basic_validate_with_unknown_hash",
+      "rust_source_line": 488,
+      "source_parameter_cases": 2,
+      "parameters": [
+        "pretty=[True, False]"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'An error occurred' in result.output",
+        "'Unknown hash function' in result.output"
+      ],
+      "current_rust_source_line": 518,
+      "native_observed_cases": 2,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "f9e15ff3567d39661713b4e69a8ba41386274ccdbcc7c504f0865ab3af6524f4",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_signed_with_wrong_key",
+      "source_line": 559,
+      "rust_test": "validation::test_basic_validate_signed_with_wrong_key",
+      "rust_source_line": 506,
+      "source_parameter_cases": 3,
+      "parameters": [
+        "verbosity=['default', 'verbose', 'pretty']"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'INVALID' in result.output",
+        "'unsound' in result.output",
+        "'unsound' not in result.output",
+        "'Running with --verbose' in result.output"
+      ],
+      "current_rust_source_line": 536,
+      "native_observed_cases": 3,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "673d17e612a0443a8d83ff32a8a53fbb083fb0dd05962eb4004e7255e5532652",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_default_context",
+      "source_line": 595,
+      "rust_test": "validation::test_basic_validate_with_default_context",
+      "rust_source_line": 548,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 578,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "03a3bfc834d437a9ae97b3492775528a3e4f102421a54f337ad2917b7f3142ac",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_system_trust",
+      "source_line": 618,
+      "rust_test": "validation::test_basic_validate_with_system_trust",
+      "rust_source_line": 556,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "result.exit_code == 1"
+      ],
+      "current_rust_source_line": 586,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "a4d0d8ef9303afd2c9e50f0685518ffac9b60cb71e8af7ee83f8fba1c3a7d792",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_with_explicit_context",
+      "source_line": 633,
+      "rust_test": "validation::test_basic_validate_with_explicit_context",
+      "rust_source_line": 563,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 593,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "596653cfd57c22d782b81fab4775aad6e2968fb3adf43570db4de16aa45ab927",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate",
+      "source_line": 681,
+      "rust_test": "validation::test_basic_validate_lacking_intermediate",
+      "rust_source_line": 571,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 601,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "bb8f45e1b1e51872a65ef0d5ff3afb8de9cb4892acc55c17d8e373b89e8c767d",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_lacking_intermediate_with_trust_arg",
+      "source_line": 715,
+      "rust_test": "validation::test_basic_validate_lacking_intermediate_with_trust_arg",
+      "rust_source_line": 580,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output"
+      ],
+      "current_rust_source_line": 610,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "211562a8382fac3f42bca55bf45e6ae991b2a8fec62132bc8fd4e27c5f7d1c1a",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_wrong",
+      "source_line": 745,
+      "rust_test": "validation::test_basic_validate_context_config_wrong",
+      "rust_source_line": 122,
+      "source_parameter_cases": 2,
+      "parameters": [
+        "setup_type=['default', 'explicit']"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'validation context' in result.output"
+      ],
+      "current_rust_source_line": 137,
+      "native_observed_cases": 2,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "e5a80743168369663b2913bccfd073413f2dfa4e165050fa0dd35557e8cbb93a",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_config_nonsensical_other_certs",
+      "source_line": 770,
+      "rust_test": "validation::test_basic_validate_context_config_nonsensical_other_certs",
+      "rust_source_line": 134,
+      "source_parameter_cases": 2,
+      "parameters": [
+        "setup_type=['default', 'explicit']"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'validation context' in result.output"
+      ],
+      "current_rust_source_line": 149,
+      "native_observed_cases": 2,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "2de94dce78e6cc18cd61612fb1fbfec67ce84c69fecc1a486a987c35d785c5ee",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_trust_replace_arg_applies_to_config_context",
+      "source_line": 800,
+      "rust_test": "validation::test_trust_replace_arg_applies_to_config_context",
+      "rust_source_line": 594,
+      "source_parameter_cases": 32,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "regular/encrypted",
+        "setup_type=['default', 'explicit']",
+        "trust_replace_arg=[True, False]"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED,UNTOUCHED' in result.output",
+        "('operating system' in caplog.text) is not trust_replace_arg"
+      ],
+      "current_rust_source_line": 624,
+      "native_observed_cases": 32,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "184abdba087d99467f439f58cbf33d75fd10b6f9f2e2ff4c84e0cbeca8a4bda7",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_without_config_file",
+      "source_line": 832,
+      "rust_test": "validation::test_basic_validate_context_without_config_file",
+      "rust_source_line": 83,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'No config file' in result.output"
+      ],
+      "current_rust_source_line": 98,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "3622dae97b2ed472cae269a59e31398c133ebc20cc160cae87ac98dc0cbe7d0f",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_incompatible_args",
+      "source_line": 848,
+      "rust_test": "validation::test_basic_validate_context_incompatible_args",
+      "rust_source_line": 91,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'--validation-context is incompatible with' in result.output"
+      ],
+      "current_rust_source_line": 106,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "def5d1de2e46dc35411660d4cdcd40c8effca01b6a3489c2e59bd1c9e742e17e",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_file_not_found",
+      "source_line": 867,
+      "rust_test": "validation::test_basic_validate_context_file_not_found",
+      "rust_source_line": 106,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'I/O problem' in result.output"
+      ],
+      "current_rust_source_line": 121,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "67f89ef9162a97664e6954435f9c3852c750b32222dd15d306512b94565d7919",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_validate_context_malformed_cert",
+      "source_line": 890,
+      "rust_test": "validation::test_basic_validate_context_malformed_cert",
+      "rust_source_line": 114,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'processing problem' in result.output"
+      ],
+      "current_rust_source_line": 129,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "421ce66deb82aa25b7c654270524489dc270aa6d4f0056daddf74c57ab5a906a",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_basic_detached_validate",
+      "source_line": 932,
+      "rust_test": "validation::test_basic_detached_validate",
+      "rust_source_line": 625,
+      "source_parameter_cases": 8,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "PEM/DER"
+      ],
+      "assertions": [
+        "not result.exception",
+        "'INTACT:TRUSTED' in result.output"
+      ],
+      "current_rust_source_line": 655,
+      "native_observed_cases": 8,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "d4793f938c33eaf8e52c9fdbf253b8c43a59893e4566793933ec4c1de2ef09a9",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_fail_detached_validate",
+      "source_line": 954,
+      "rust_test": "validation::test_fail_detached_validate",
+      "rust_source_line": 646,
+      "source_parameter_cases": 4,
+      "parameters": [
+        "RSA/ECDSA/Ed25519/Ed448",
+        "detached_input_type=['der']"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'Error: INVALID' in result.output"
+      ],
+      "current_rust_source_line": 676,
+      "native_observed_cases": 4,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "11a5185f40ceaf1e61de5453674349653ffd5203aca905c7543a8df117d33fbd",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_malformed_input",
+      "source_line": 985,
+      "rust_test": "validation::test_detached_validate_malformed_input",
+      "rust_source_line": 147,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'Could not parse CMS object' in result.output"
+      ],
+      "current_rust_source_line": 162,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "3e3d701f4edd60954a24ee5424e8c4d2f3e1820873b0e43795fb827ab1709b6f",
+      "accepted": false
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_validation.py::test_detached_validate_bad_cms_type",
+      "source_line": 1005,
+      "rust_test": "validation::test_detached_validate_bad_cms_type",
+      "rust_source_line": 155,
+      "source_parameter_cases": 1,
+      "parameters": [
+        "single"
+      ],
+      "assertions": [
+        "result.exit_code == 1",
+        "'CMS content type is not signedData' in result.output"
+      ],
+      "current_rust_source_line": 170,
+      "native_observed_cases": 1,
+      "original_rust_body_unchanged_from_owner_382132f": true,
+      "rust_body_sha256": "a30be32819849ab8dd13636f6b5a09a6b50cca150ee21466c34e7c313c59c098",
+      "accepted": false
+    }
+  ],
+  "original_pytest_cases": 223,
+  "original_pytest_status": "passed; separate fresh run, not same generated input as frozen native corpus",
+  "native_original_target": "42/42 passed including3supplemental tests",
+  "helper_extra_native_cases": 78,
+  "source_closure": "No signing/qualified/LTV/PKCS11 implementation imported",
+  "accepted_C": [
+    252,
+    110,
+    0,
+    142
+  ],
+  "new_accepted_credit": 0,
+  "readiness": "Raw audit candidate held: two supplemental positive tolerance assertions remain red. Bounded candidate must explicitly reject unsupported custom timing and preserve raw tests unchanged in this ref."
+}

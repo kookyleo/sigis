@@ -1,0 +1,71 @@
+{
+  "scope": "Supplemental zero-credit signed-CRL snapshot fixture; no native trust verdict is implied.",
+  "generator": "/home/l/.codex/artifacts/sigis/round3/c/ordinary-validation-content/snapshot-audit/generate_snapshot_fixture.py",
+  "generator_sha256": "15d0e7d433a9e2dd2794ea534cbdbbe6f60840c7aae1b601c0b6bfdb1bd9f40f",
+  "python": "/tmp/pyhanko-oracle/venv/bin/python",
+  "pyhanko_version": "0.38.1",
+  "certvalidator_version": "0.33.0",
+  "cryptography_version": "50.0.2",
+  "certomancer_version": "0.16.0",
+  "signing_source": "Pinned Certomancer TESTING_CA intermediate private key loaded only in memory",
+  "signing_key_label": "interm",
+  "private_key_material_copied": false,
+  "moment": "2020-08-01T00:00:00+08:00",
+  "revocation_time": "2020-07-31T15:58:00+00:00",
+  "crl_this_update": "2020-07-31T15:59:00+00:00",
+  "crl_next_update": "2020-08-13T00:00:00+00:00",
+  "reason": "key_compromise",
+  "leaf_serial_hex": "1001",
+  "issuer_name_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+  "issuer_spki_sha256": "0800983daa72b5cdca079b755d73ffb5a8341955f272b55706d62e06d92d0314",
+  "signature_verifies": true,
+  "authority_key_identifier_preserved": true,
+  "crl_number_incremented": true,
+  "files": {
+    "regular.pdf": {
+      "length": 13409,
+      "sha256": "363cf19095b8f38649c2b7268861c0ae3ed39c93cc53dc91671d94281e6cd45c"
+    },
+    "root.der": {
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    "interm.der": {
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    "signer1.der": {
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5"
+    },
+    "crl-interm.der": {
+      "length": 553,
+      "sha256": "5a7ab0aa871506db19ef6a8dcb4b2af594a7b088c9a232f360bc06a93259dfc5"
+    },
+    "crl-root.der": {
+      "length": 542,
+      "sha256": "735c71eaedc48bab4f493e6c61f8107e0f9c64eacced9bea44993397592dba25"
+    },
+    "snapshot-revoked-leaf.crl.der": {
+      "length": 584,
+      "sha256": "d497e9726e32dd990f740210212c6fef0308be81abf347fb914e8ef20bd5d818"
+    }
+  },
+  "crl_extensions": [
+    {
+      "oid": "2.5.29.20",
+      "critical": false,
+      "der_sha256": "f03c158d5b0fbe1a8123d258910a7143228d554deb35adaa6e3f7ce6cd517cb5"
+    },
+    {
+      "oid": "2.5.29.35",
+      "critical": false,
+      "der_sha256": "b84e90615c4c31777121e1290223c54154e8301cc7f489e79b2fcddcd2b50a54"
+    },
+    {
+      "oid": "2.5.29.28",
+      "critical": true,
+      "der_sha256": "79f118c84463a02539659661282c735d52e820bf0a2f29fd113e01a5017a5df6"
+    }
+  ]
+}

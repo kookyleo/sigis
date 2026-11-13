@@ -1,0 +1,16 @@
+{
+  "source_pdf": "regular.pdf",
+  "source_pdf_sha256": "363cf19095b8f38649c2b7268861c0ae3ed39c93cc53dc91671d94281e6cd45c",
+  "byte_range": [
+    0,
+    1160,
+    12802,
+    607
+  ],
+  "signing_times": [
+    "2020-07-31T16:00:00+00:00"
+  ],
+  "der_sha256": "96cf98177c3822c88d9b8db7bba54f21a81cc5e98a3d999605228dd6a5474e4b",
+  "input_sha256": "f0ed416b41d39b279971fc7152836ce0221ff047db2adbbd5f94a2cf78fcf241",
+  "scope": "Extracted existing CMS and exact signed byte ranges from committed PDF; no new signature, attribute mutation or resigning."
+}
