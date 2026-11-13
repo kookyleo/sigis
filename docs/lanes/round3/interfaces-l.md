@@ -621,3 +621,15 @@ An invalid/nonintact signer-first main returns before timestamp/AC processing.
 Signed Adobe RIA feeds the actual validation evidence consumer; it does not
 create trust anchors, POE or policy waivers. Exact old/new Adobe finalOK parity
 and retained Full-LTA/BASIC limits are in l-ria-order.md.
+
+
+## Certificate validity tolerance through certval
+
+Source f0ed26a keeps the existing public `ValidationContextBuilder::time_tolerance`
+interface. The private certval adapter no longer repeats a strict single-time
+validity check for nonzero tolerance after checking every issued certificate
+against the selected window. Zero tolerance retains the actual certval TOI;
+actual context clocks, the existing DER-range guard, strict root qualifiers,
+all three namespace/policy runs, algorithms and native revocation are unchanged.
+No API, dependencies or layer exemptions are added. See l-time-tolerance.md.
+This shared fix is not acceptance of C's separate validation engine.

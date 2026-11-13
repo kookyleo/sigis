@@ -26,18 +26,18 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **e353d42**. Build, workspace tests, clippy with
+Current accepted source: **f0ed26a**. Build, workspace tests, clippy with
 `-D warnings`, strict documentation, layering and formatting all passed.
-Measured Rust results: **1,795 discovered /1,791 passed /4 ignored /0 failed**,
-170 reports. The immutable inventory is **1,431 total /1,263 passed /26 skipped
-/142 pending**. This increment adds only S/PDF3 and C/runtime-read1; all
-RIA/order/HTTP/old-input and Full-LTA regressions add zero IDs. Independent
-verification rehashed405 compiler-unit observations,2475 emitted input records
-and393 actual source files, including both local vendor dependencies. The
-private CLI and both worker copies match their source-specific producer and
-all five actual CLI test selections. Earlier source-specific counts below are
-historical checkpoints. Complete-port and all-divergences-fail-closed claims
-remain unsupported. See [current acceptance](lanes/round3/l-ria-order.md).
+Measured Rust results: **1,801 discovered /1,797 passed /4 ignored /0 failed**,
+171 reports. The immutable inventory remains **1,431 total /1,263 passed
+/26 skipped /142 pending**. This shared time-tolerance repair adds six
+supplemental runtime tests and zero unique upstream functions. The preceding
+e353 source completed only S/PDF3 and C/runtime-read1. Independent content
+verification and private CLI/worker/runtime provenance were renewed for this
+exact source. Earlier source-specific figures below remain historical
+checkpoints. Complete-port and all-divergences-fail-closed claims remain
+unsupported. See [tolerance acceptance](lanes/round3/l-time-tolerance.md) and
+[Adobe acceptance](lanes/round3/l-ria-order.md).
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,
@@ -1167,3 +1167,24 @@ Full evidence, limits and exact public API compatibility are documented in
 [l-ria-order.md](lanes/round3/l-ria-order.md). The two still-red supplemental
 C one-hour-tolerance cases and unaccepted validation/qualification trust fixes
 remain outside this accepted source. No universal fail-closed claim follows.
+
+
+## Accepted explicit certificate time tolerance
+
+Source f0ed26a repairs the duplicate certval single-time validity check that
+rejected issued certificates already inside the caller's configured tolerance.
+Only private certval settings change for nonzero tolerance. The actual context
+clock is unchanged, zero tolerance retains its strict check, and strict anchor
+qualifier dates, issued-certificate bounds, typed algorithm cutoffs, revocation,
+freshness and namespace restrictions remain enforced. The existing DER-time
+range guard is unchanged. Six actual-path supplemental tests pass, with29
+fresh pinned public Python path calls matching the selected boundary/policy
+matrix. They earn zero unique IDs; the inventory stays1431/1263/26/142.
+
+The complete source-specific gate and renewed compiler/executable/runtime
+evidence are in [l-time-tolerance.md](lanes/round3/l-time-tolerance.md). The
+initial unsupported1950 fixture failure and reference name-mapping error are
+retained; neither is counted as a passing comparison. Pre1970 parsing limits
+remain explicit. The ordinary C validation candidate still requires separate
+integration, a fresh producer and full acceptance. This fix alone does not
+accept its39 proposed functions, qualified validation or the last CLI-LTA flow.
