@@ -1,5 +1,23 @@
 # Lead acceptance update
 
+Accepted assigned counts: **252 total /188 passed /0 skipped /64 pending**.
+Source4d47f41c accepts exactly three identity/getpass originals/four architectures
+each (12 cases): configured identity, public programmatic callback and actual
+CLI password prompt. Real current6d20a2d3 product/private ELFs and15 actual
+PDF/native-noRoot/fresh-reference pairs precede full workspace acceptance.
+Four real PTY children retain echo-off/secret-absent proof; complete terminal
+restoration or appearance rendering is not claimed. Supported full caller
+config/property/usage guards and private identity capability preserve accepted
+ordinary/detached/auth-reader contracts; prior185 functions remain once.
+Current CLI clocks differ from fixture2020 programmatic/reference postchecks.
+See IDENTITY_GETPASS_PORTING.md and docs/lanes/round3/l-identity-getpass.md.
+Library1151/17,P296/1,S808/16,V47,L11 remain unchanged; no universal fail-closed
+or complete-port claim.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted assigned counts: **252 total /185 passed /0 skipped /67 pending**.
 Source21323f9c accepts exactly two detached PEM/DER originals/13parameters.
 Timestamp2 x RSA/ECDSA/Ed25519 x PEM/DER2 produces12 actual CMS outputs;
