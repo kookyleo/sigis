@@ -1,0 +1,219 @@
+{
+  "purpose": "same OLD producer bytes; no new native execution",
+  "native_source_reference": "42e5ba31d79b284ecb469c4861c510c23875c5b5",
+  "old_producer_source_head": "not recorded in retained p7-final-v1 receipt; not inferred",
+  "old_inputs": {
+    "requests": {
+      "cms-adobe.pdf": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/cms-adobe.pdf",
+        "length": 48340,
+        "sha256": "c61dfabab6dea0e83f924e41cb95a2ae14e530ea7d759d285c9ebfa77566f97f"
+      },
+      "root.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/root.der",
+        "length": 984,
+        "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c"
+      },
+      "root-aa.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/root-aa.der",
+        "length": 941,
+        "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06"
+      },
+      "attribute-certificate.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/attribute-certificate.der",
+        "length": 786,
+        "sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909"
+      },
+      "ac-ocsp.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/ac-ocsp.der",
+        "length": 1570,
+        "sha256": "0a2f1f902b1db9794e9df41c30c242b7be980986db21b5f33252feeb32de070d"
+      }
+    },
+    "aiohttp": {
+      "cms-adobe.pdf": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/cms-adobe.pdf",
+        "length": 48340,
+        "sha256": "fb38975943cd7c71c7ac5bbec500f33da1b827bb641795c168f75d82ff796a96"
+      },
+      "root.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/root.der",
+        "length": 984,
+        "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c"
+      },
+      "root-aa.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/root-aa.der",
+        "length": 941,
+        "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06"
+      },
+      "attribute-certificate.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/attribute-certificate.der",
+        "length": 786,
+        "sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909"
+      },
+      "ac-ocsp.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/ac-ocsp.der",
+        "length": 1570,
+        "sha256": "0a2f1f902b1db9794e9df41c30c242b7be980986db21b5f33252feeb32de070d"
+      }
+    }
+  },
+  "aa_der": {
+    "path": "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/testdata/data/lanes/d/pki/testing-ca-with-aa/leaf-aa.crt",
+    "sha256": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b",
+    "length": 1105
+  },
+  "source_before": {
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/tools/pyhanko-oracle/cms_adobe_verdict.py": "51bfc010e921d0773ee5cfc839d735833274102d877c6752e9e907fffcd7208e",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/tests/round3_cms_adobe.rs": "4c2336302d0a4684b82afcf04ff0625da841ac390d04ca83545c467f5be6bbb5",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/pades/src/ades/lta.rs": "97f6b01cee9ffcac73896ed6a45cdcc2865ec559cb86742f0c120bd6f951e30b",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/pades-sign/tests/support/services.rs": "005617e80a86a8efd0082d833e146a9f2fcd2ffd6ef2499f0b5ee87924598112",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361",
+    "/tmp/pyhanko-oracle/src/pyHanko/pkgs/pyhanko/tests/test_cms.py": "5493374d0173cca40bb8944ceac27c655236b2b74d924eec8954eaa298c5a277"
+  },
+  "oracle_helper_sha256": "51bfc010e921d0773ee5cfc839d735833274102d877c6752e9e907fffcd7208e",
+  "prior_receipts": {
+    "receipt.json": "d6ed4cce946f7c0689b9fc0065e205ebc16685391c4812daf6f464a07b84b7c4",
+    "test.log": "51120e4d7fc122154fa0a17e593fb983c3d562431fc75c14b55c9fa4abfc395f"
+  },
+  "results": [
+    {
+      "label": "requests",
+      "argv": [
+        "/tmp/pyhanko-oracle/venv/bin/python",
+        "-I",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/cms_adobe_verdict.py",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/requests/cms-adobe.pdf",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/requests/root.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/requests/root-aa.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/requests/attribute-certificate.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/requests/ac-ocsp.der",
+        "requests",
+        "2020-11-01T00:00:00Z"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "3825b1237c3b7f411db27476680254bd577baf958db9000b74d8df46110f66dc",
+      "stderr_sha256": "75d89c77d9f84d715bf2437e619d97852d747cc7bd85f1fdec55675d5452e4d1",
+      "actual": {
+        "kind": "fresh pinned public ades_lta_validation of same native Adobe AC PDF",
+        "pyhanko": "0.38.1",
+        "certvalidator": "0.33.0",
+        "backend_case": "requests",
+        "validation_backend": "original public default; no explicit backend override",
+        "validation_time": "2020-11-01T00:00:00Z",
+        "pdf_sha256": "c61dfabab6dea0e83f924e41cb95a2ae14e530ea7d759d285c9ebfa77566f97f",
+        "root_sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c",
+        "aa_root_sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06",
+        "ac_sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909",
+        "adobe_revinfo_sha256": "c928027ba88d621e89290fc1d96632a809c6de38cbfb7dad9c1dc6d88c064e75",
+        "other_certificates": 5,
+        "attribute_certificates": 1,
+        "total_certificates": 7,
+        "correct": {
+          "bottom_line": true,
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "authenticated_role": true,
+          "role_type": "RoleSyntax",
+          "role_name": "bigboss@example.com",
+          "ades_subindic": "OK",
+          "ac_validation_errors": []
+        },
+        "wrong_ac_root": {
+          "bottom_line": true,
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "authenticated_role": false,
+          "role_type": null,
+          "role_name": null,
+          "ades_subindic": "OK",
+          "ac_validation_errors": [
+            "Unable to build a validation path for the certificate \"Common Name: Leaf AA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE\" - no issuer matching \"Common Name: Root AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE\" was found"
+          ]
+        }
+      }
+    },
+    {
+      "label": "aiohttp",
+      "argv": [
+        "/tmp/pyhanko-oracle/venv/bin/python",
+        "-I",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/cms_adobe_verdict.py",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/aiohttp/cms-adobe.pdf",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/aiohttp/root.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/aiohttp/root-aa.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/aiohttp/attribute-certificate.der",
+        "/home/l/.codex/artifacts/sigis/round3-launch/adobe-old-native-next/fixtures/aiohttp/ac-ocsp.der",
+        "aiohttp",
+        "2020-11-01T00:00:00Z"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "55aa8b45d1717fcbff1a6f93480fac163438a9cd05860f97d8e211b1c84cd6c4",
+      "stderr_sha256": "75d89c77d9f84d715bf2437e619d97852d747cc7bd85f1fdec55675d5452e4d1",
+      "actual": {
+        "kind": "fresh pinned public ades_lta_validation of same native Adobe AC PDF",
+        "pyhanko": "0.38.1",
+        "certvalidator": "0.33.0",
+        "backend_case": "aiohttp",
+        "validation_backend": "original public default; no explicit backend override",
+        "validation_time": "2020-11-01T00:00:00Z",
+        "pdf_sha256": "fb38975943cd7c71c7ac5bbec500f33da1b827bb641795c168f75d82ff796a96",
+        "root_sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c",
+        "aa_root_sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06",
+        "ac_sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909",
+        "adobe_revinfo_sha256": "c928027ba88d621e89290fc1d96632a809c6de38cbfb7dad9c1dc6d88c064e75",
+        "other_certificates": 5,
+        "attribute_certificates": 1,
+        "total_certificates": 7,
+        "correct": {
+          "bottom_line": true,
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "authenticated_role": true,
+          "role_type": "RoleSyntax",
+          "role_name": "bigboss@example.com",
+          "ades_subindic": "OK",
+          "ac_validation_errors": []
+        },
+        "wrong_ac_root": {
+          "bottom_line": true,
+          "intact": true,
+          "valid": true,
+          "trusted": true,
+          "authenticated_role": false,
+          "role_type": null,
+          "role_name": null,
+          "ades_subindic": "OK",
+          "ac_validation_errors": [
+            "Unable to build a validation path for the certificate \"Common Name: Leaf AA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE\" - no issuer matching \"Common Name: Root AA CA, Organizational Unit: Testing Authority, Organization: Testing Attribute Authority, Country: BE\" was found"
+          ]
+        }
+      }
+    }
+  ],
+  "source_after": {
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/tools/pyhanko-oracle/cms_adobe_verdict.py": "51bfc010e921d0773ee5cfc839d735833274102d877c6752e9e907fffcd7208e",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/tests/round3_cms_adobe.rs": "4c2336302d0a4684b82afcf04ff0625da841ac390d04ca83545c467f5be6bbb5",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/pades/src/ades/lta.rs": "97f6b01cee9ffcac73896ed6a45cdcc2865ec559cb86742f0c120bd6f951e30b",
+    "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/pades-sign/tests/support/services.rs": "005617e80a86a8efd0082d833e146a9f2fcd2ffd6ef2499f0b5ee87924598112",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/ades.py": "86b1214299c00f4cb7d63f84afdc4c548ee5c54615cf38174aba34ab9d44f4dc",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko/sign/validation/policy_decl.py": "b130f23309c58c345d2abe926a281755e4ae43976ce608c286b8216cc3ee3f7f",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/context.py": "3d66e60ebd6dbaf932f76c4c0cc6c4dcb4e1f312876d0e74836a4796ebc15a3d",
+    "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/pyhanko_certvalidator/registry.py": "f17a075c516fafeb0b1355b183a9a86e2357f7d0a6462b298dc88a81ee964361",
+    "/tmp/pyhanko-oracle/src/pyHanko/pkgs/pyhanko/tests/test_cms.py": "5493374d0173cca40bb8944ceac27c655236b2b74d924eec8954eaa298c5a277"
+  },
+  "fresh_public_calls": 4,
+  "primary_profiles": 2,
+  "wrong_AA_controls": 2,
+  "new_native_execution": false,
+  "new_upstream_credit": 0,
+  "original_receipts_unchanged": true,
+  "profile": "original default current-online NO_HISTORICAL_FETCH; REQUIRE_REVINFO; separate main/AA roots",
+  "offline_profile_probed": false
+}

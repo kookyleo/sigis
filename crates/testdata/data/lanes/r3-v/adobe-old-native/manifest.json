@@ -1,0 +1,63 @@
+{
+  "cases": {
+    "requests": {
+      "cms-adobe.pdf": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/cms-adobe.pdf",
+        "length": 48340,
+        "sha256": "c61dfabab6dea0e83f924e41cb95a2ae14e530ea7d759d285c9ebfa77566f97f"
+      },
+      "root.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/root.der",
+        "length": 984,
+        "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c"
+      },
+      "root-aa.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/root-aa.der",
+        "length": 941,
+        "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06"
+      },
+      "attribute-certificate.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/attribute-certificate.der",
+        "length": 786,
+        "sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909"
+      },
+      "ac-ocsp.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/requests/ac-ocsp.der",
+        "length": 1570,
+        "sha256": "0a2f1f902b1db9794e9df41c30c242b7be980986db21b5f33252feeb32de070d"
+      }
+    },
+    "aiohttp": {
+      "cms-adobe.pdf": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/cms-adobe.pdf",
+        "length": 48340,
+        "sha256": "fb38975943cd7c71c7ac5bbec500f33da1b827bb641795c168f75d82ff796a96"
+      },
+      "root.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/root.der",
+        "length": 984,
+        "sha256": "8de3a2712e46d0ea6e9b5f234457aee5e9c7bed69fdf7feed0c5a98649688a3c"
+      },
+      "root-aa.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/root-aa.der",
+        "length": 941,
+        "sha256": "57b9e80c61bdb208e67f02a4949d251e0552564728c9262f6cbea66520830b06"
+      },
+      "attribute-certificate.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/attribute-certificate.der",
+        "length": 786,
+        "sha256": "b650abefb4270855a7bb3aba8879044c64d52ef1969178ed66d9073f4c150909"
+      },
+      "ac-ocsp.der": {
+        "original_path": "/home/l/.codex/artifacts/sigis/round3-launch/p-capture-integration/p7-final-v1/adobe-output/aiohttp/ac-ocsp.der",
+        "length": 1570,
+        "sha256": "0a2f1f902b1db9794e9df41c30c242b7be980986db21b5f33252feeb32de070d"
+      }
+    }
+  },
+  "aa_der": {
+    "path": "/home/l/D/kooky/sigis-wt/r3-v-integrate/crates/testdata/data/lanes/d/pki/testing-ca-with-aa/leaf-aa.crt",
+    "sha256": "f99a3526088b5fd5aec2e6cc48ced611ef77de337b11c782f0363de4359d7e8b",
+    "length": 1105
+  }
+}
