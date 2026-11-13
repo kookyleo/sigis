@@ -6,6 +6,9 @@
 #[path = "support/live_pki.rs"]
 mod live_pki;
 
+#[path = "support/live_requests.rs"]
+mod requests;
+
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
