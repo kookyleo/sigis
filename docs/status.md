@@ -26,18 +26,17 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **f0ed26a**. Build, workspace tests, clippy with
+Current accepted source: **7232e9c**. Build, workspace tests, clippy with
 `-D warnings`, strict documentation, layering and formatting all passed.
-Measured Rust results: **1,801 discovered /1,797 passed /4 ignored /0 failed**,
-171 reports. The immutable inventory remains **1,431 total /1,263 passed
-/26 skipped /142 pending**. This shared time-tolerance repair adds six
-supplemental runtime tests and zero unique upstream functions. The preceding
-e353 source completed only S/PDF3 and C/runtime-read1. Independent content
-verification and private CLI/worker/runtime provenance were renewed for this
-exact source. Earlier source-specific figures below remain historical
-checkpoints. Complete-port and all-divergences-fail-closed claims remain
-unsupported. See [tolerance acceptance](lanes/round3/l-time-tolerance.md) and
-[Adobe acceptance](lanes/round3/l-ria-order.md).
+Measured Rust results: **1,811 discovered /1,807 passed /4 ignored /0 failed**,
+172 reports. The immutable inventory is **1,431 total /1,264 passed
+/25 skipped /142 pending**. This increment accepts one deprecated TSA
+session-forwarding original, with an explicit Rust compile-time diagnostic
+adaptation. Coverage numeric/EOF guards add zero original IDs. Independent
+source-content and actual executable/runtime evidence are renewed for this
+source. Earlier figures remain historical checkpoints. See
+[current acceptance](lanes/round3/l-alias-coverage.md). Complete-port and
+all-divergences-fail-closed claims remain unsupported.
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,
@@ -186,17 +185,17 @@ integration and the lead gate; their claimed passes are not accepted early.
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
-| `sigis-pki-fetch` | 56 | 43 | 13 | 0 |
+| `sigis-pki-fetch` | 56 | 44 | 12 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 398 | 8 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 294 | 3 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,142** | **26** | **0** |
+| **Library lanes A–E** | **1,168** | **1,143** | **25** | **0** |
 | `sigis-cli`: CLI/configuration (round-3 C) | 252 | 111 | 0 | 141 |
 | Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
-| **Overall** | **1,431** | **1,263** | **26** | **142** |
+| **Overall** | **1,431** | **1,264** | **25** | **142** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -229,7 +228,7 @@ The preceding20-function increment closed the last eight pending library-owned c
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not remove the26 library skips, provider parameter gaps or unassigned
+This does not remove the25 library skips, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -237,7 +236,7 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The26 skipped functions comprise certvalidator two, fetchers13,
+The25 skipped functions comprise certvalidator two, fetchers12,
 CMS zero, PDF eight and signing three. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
@@ -245,8 +244,9 @@ owning `PORTING.md` and lane files:
   exact policy-graph functions pass using actual native graph operations;
   eight former partial adapters were replaced. All six name-predicate functions
   exercise their54 exact pinned cases. Fetchers retain12 ownership/
-  bootstrap gaps and one deprecated TSA alias; four lifecycle functions and
-  nonsensical auth rejection are accepted.
+  bootstrap gaps; the deprecated TSA forwarding original is accepted with an
+  explicit compiler-diagnostic phase adaptation. Four lifecycle functions and
+  nonsensical auth rejection were accepted previously.
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
   prevention now requires the actual MD5 signer refusal under a caller policy;
   validation replay alone does not satisfy signing assertions.
@@ -433,13 +433,13 @@ parallel with system per-host worktree locks and automatic worker placement.
 | --- | --- | --- | --- |
 | P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Original pending0; resolve3 documented skips (deprecated warning, SafeNet PIN, raw DSA) and audit provider parameters/evidence/state compatibility beyond original assertions | Preserve original/current caller policies, native negative controls and mandatory rejection; new helpers add0IDs |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 assigned functions accepted; bounded Adobe RIA/order repair integrated; audit archival/POE, historical fetch, registry alias/persistence and independent trust-domain compatibility | Verified old/new Adobe profiles now match finalOK; other NO_POE/API-bottom-line distinctions and legacy timestamp-first refusals remain; no POE/imprint/algorithm/revocation waiver |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review23skips (PDF8/CV2/fetch13), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review22skips (PDF8/CV2/fetch12), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
 | C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish141 pending unique functions, including real signing/validation/LTV, five runtime functions, provider and complete reader-state commands; scoped111 does not import full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
 | L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final1CLI live LTA function after accepted real C commands; coherent lane integration, parameter/skip/provenance audits, complete gates and final service replacement decision | Actual CLI/PFX/config/DSS/LTA flow, source-specific full gates, immutable counts; no service restart or early acceptance |
 
 P, V, S and C can work concurrently within these exclusive scopes; L owns
 cross-lane coordination and final acceptance. Library pending0 refers to the
-assigned function inventory and does not make26skips or unassigned features
+assigned function inventory and does not make25skips or unassigned features
 complete. State/HTTP/TSA infrastructure must not substitute for actual pending
 CLI commands. The service switch from `underskrift` remains a final parity
 milestone after functional/trust acceptance, not a consequence of count totals.
@@ -1188,3 +1188,30 @@ retained; neither is counted as a passing comparison. Pre1970 parsing limits
 remain explicit. The ordinary C validation candidate still requires separate
 integration, a fresh producer and full acceptance. This fix alone does not
 accept its39 proposed functions, qualified validation or the last CLI-LTA flow.
+
+
+## Accepted deprecated session forwarding and numeric coverage guards
+
+Source7232e9c accepts one exact S/fetch function,
+`test_deprecated_aiohttp_timestamper_forwards`: real supplied transport identity,
+request digest/algorithm, TimestampRequestError and caller lifetime are retained.
+Standard Rust compile-time deprecation replaces Python runtime warning as an
+explicit language-phase adaptation. The actual constructor is diagnosed under
+deny(deprecated), with separately compiling/running modern positive controls.
+This does not claim a runtime DeprecationWarning or full legacy async API.
+Caller-owned transport deadline/body configuration remains distinct from the
+client's timeout metadata; immediate error tests do not measure deadline expiry.
+
+Checked Contents length and EOF cursor arithmetic prevent three reproduced
+panic paths. Original entire-file/revision/contiguous controls remain. Numeric
+empty-input helpers are not real trusted-PDF verdicts; Python may reject huge
+stream positions earlier with OverflowError. These extra V controls earn no IDs.
+Fresh original Python1 and same-held-endpoint native2/Python2 error controls
+are separate from the measured complete workspace gate. See
+[l-alias-coverage.md](lanes/round3/l-alias-coverage.md).
+
+S is824/802/22/0, fetch56/44/12/0; overall1431/1264/25/142. C's39 ordinary
+validation proposal remains unaccepted. Its obsolete custom-tolerance refusal
+and removed positive controls were rejected; the existing accepted f0ed26a
+shared fix must be consumed without dropping assertions. Complete porting and
+universal fail-closed behavior are not established.

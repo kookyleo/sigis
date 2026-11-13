@@ -633,3 +633,16 @@ actual context clocks, the existing DER-range guard, strict root qualifiers,
 all three namespace/policy runs, algorithms and native revocation are unchanged.
 No API, dependencies or layer exemptions are added. See l-time-tolerance.md.
 This shared fix is not acceptance of C's separate validation engine.
+
+
+## Deprecated timestamp transport compatibility and coverage boundaries
+
+Accepted7232e9c adds `tsa::AioHttpTimeStamper` as a deprecated constructor
+adapter requiring caller transport/timeout, plus borrowed `HttpTimeStamper::transport`
+and `into_http` migration. Identity and caller lifetime are retained; explicit
+transports enforce their own configured deadline/body limits. Standard Rust
+compile-time diagnostic replaces Python runtime warning, documented explicitly.
+No runtime warning or full legacy async backend is implied. Existing timestamp
+validation/trust is unchanged. Checked coverage length and EOF cursor arithmetic
+retain Unclear/typed-error/contiguous fallback semantics without trust upgrades.
+See l-alias-coverage.md.

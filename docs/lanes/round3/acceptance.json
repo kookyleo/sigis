@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "f0ed26a4df08edd7d32c4f6dd9a660e1e45db279",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/tolerance-integration/gate/gate.json",
+  "accepted_source_commit": "7232e9c0d80c435cf29035053577ca87badb79a2",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/alias-coverage-integration/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1467,7 +1467,13 @@
       "status": "passed",
       "rust_test": "runtime_read::test_fail_read",
       "reason": "Exact encrypted addfields argv and MINIMAL_AES256 input; actual native exit1 and Failed to read compared with fresh pinned Python. No trust/signing success or output-file side-effect parity requirement. Sourcee353d42; Complete source-specific workspace gate, actual executable/runtime evidence and independent compiler-input verification passed."
+    },
+    {
+      "id": "pyhanko/test_tsa_fetcher.py::test_deprecated_aiohttp_timestamper_forwards",
+      "status": "passed",
+      "rust_test": "deprecated_tsa::test_deprecated_aiohttp_timestamper_forwards",
+      "reason": "Exact supplied-session identity and actual timestamp request error assertions; explicit language-phase adaptation uses standard Rust compile-time deprecated diagnostic instead of Python runtime DeprecationWarning. Constructor-level deny guard and independent modern positive controls pass. Source7232e9c full gate/content/ELF proof accepted; fresh original Python1 and actual same-held-endpoint native2/Python2 controls agree. Extra wrappers/doctests add zero IDs; supplied transport deadline/body policy and optional async legacy APIs remain documented gaps."
     }
   ],
-  "source_verification_note": "Source f0ed26a: all six gates passed; 1797 native/runtime tests passed, 4 ignored, zero failed, 171 reports. Configured certificate time tolerance survives duplicate certval validity checking; actual context clock, strict root bounds, typed algorithm and revocation policies remain intact. Six supplemental tests and29 fresh public Python path calls earn zero unique upstream IDs. Compiler-input and actual executable/runtime proof renewed; prior failures preserved. Inventory remains1431/1263/26/142."
+  "source_verification_note": "Source7232e9c: all six gates passed; 1807 runtime tests passed/4 ignored/0 failed/172 reports; content/compiler/executable/runtime proof renewed. One S/fetch original deprecated session-forwarding function accepted with explicit compile-phase diagnostic adaptation. V checked coverage numeric/EOF helpers and supplemental tests add zero IDs. Prior actual failures and all trust-profile limits retained."
 }

@@ -1,3 +1,14 @@
+# Lead acceptance update
+
+Accepted source7232e9c: **56 total /44 passed /12 skipped /0 pending**.
+One deprecated supplied-session forwarding original is accepted, with standard
+Rust compile-time deprecation as an explicit phase adaptation. Actual constructor
+deny guard, modern positive controls, caller identity/request errors and fresh
+same-endpoint/original Python controls pass the complete source-specific gate.
+Transport deadline/body configuration, optional async compatibility and backend
+lifecycle exclusions remain. Earlier counts/skip lists below are historical.
+See docs/lanes/round3/l-alias-coverage.md and acceptance.json.
+
 # Porting status: sigis-pki-fetch (crates/pki-fetch)
 
 Owner: lane A. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.
