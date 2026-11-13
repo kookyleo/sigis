@@ -1,10 +1,13 @@
 # Porting status: sigis-pdf (crates/pdf)
 
-Lead acceptance on source e353d42: **406 total /398 passed /8 skipped /0 pending**.
-The exact ordered-enum, version-enum and unbound-reference originals passed
-with the complete workspace gate. Five bound-reference controls are supplemental;
-no direct remaining-budget assertion is claimed. Earlier counts/skip lists below
-are historical. See docs/lanes/round3/l-ria-order.md and acceptance.json.
+Lead acceptance on source724d078d: **406 total /399 passed /7 skipped /0 pending**.
+The exact trailer-reference original exercises actual incremental source/trailer
+provenance and update_container. Seven native tests and six fresh same-native-
+input Python comparisons pass. COW snapshots are an explicit Rust value
+adaptation, not Python live alias/identity parity. Earlier ordered/version/
+unbound-reference and caller proofs remain accepted. Other model gaps remain.
+See docs/lanes/round3/l-signing-structure.md and acceptance.json; older counts
+and skip lists below are historical.
 
 Owner: B. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.
 Plan and test assignment: `docs/hanko-lanes.md`.

@@ -1,6 +1,12 @@
 # Current lead acceptance
 
-Accepted: **297 total /294 passed /3 skipped /0 pending** on source ac1bdbc after the complete workspace gate. Root `round3_p_ac_complete` covers the last seven exact AC signing functions over nine output cases, complete native validation assertions and fresh same-output Python. The 2028 case keeps its original time and mandatory revocation policy; a genuine current-time fixture corrects the test provider and separate stale-response controls refuse role authentication. Operation-local AC evidence capture performs one validation and publishes only after whole-batch success. SafeNet PIN, raw DSA provider integration and the deprecated warning entry point remain excluded; function completion is not full feature parity. Earlier checkpoints below are historical.
+Accepted: **297 total /295 passed /2 skipped /0 pending** on source724d078d.
+Root round3_raw_dsa covers the exact original with actual native token/PDF/full
+trust/SHA256/Sig1 and mandatory fresh same-output oracle. Default3192 rejects;
+the original local1024fixture policy trusts. Generic provider matrix parameters
+remain separately excluded pending proof; SafeNet and deprecated Python warning
+remain. Earlier complete AC and other histories below retain their real sources.
+See docs/lanes/round3/l-signing-structure.md and the central ledger.
 
 # Porting status: sigis-pades-sign (crates/pades-sign)
 

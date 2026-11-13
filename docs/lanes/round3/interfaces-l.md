@@ -672,3 +672,16 @@ helper preserves unsigned p/q/g/x and token policy using existing safe generic
 attributes; it does not enable the full DSA fixture or establish signing/trust.
 P must retain exact token/PDF/SHA256/Sig1 and fresh original Python assertions
 before the remaining raw-DSA function can be accepted. See l-dsa-capability.md.
+
+
+## Trailer provenance and bounded software entry
+
+Source724d078d adds writer::TrailerReference, ContainerReference, ContainedObject,
+IncrementalWriter::raw_trailer_object and PdfWriter::update_container. Private
+source/container snapshots retain reader state/budget and complete outer-object
+writes, with explicit COW adaptation. No existing shared field/trait/export
+shape or layer exemption changes. Basic PEM/P12 uses existing lower-layer
+signing/runtime reader state; unknown mandatory config/flags reject. Root adds
+only existing rsa/pkcs8 dev edges, no versions/features. The complete raw DSA
+original is relocated once with explicit fixture opt-in/actual token/oracle;
+generic provider parameters remain separate. See l-signing-structure.md.

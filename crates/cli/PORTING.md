@@ -1,14 +1,13 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /150 passed /0 skipped /102 pending**.
-Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 and ordinary
-validation39 are integrated after the complete source1de3105 gate. All223
-original validation parameters execute; the separate70-test focused suite
-retains explicit timing positives and revocation/roots/claimed-time guards.
-The exact immutable CLI/worker/current-source proof and fresh reference scope
-are documented in docs/lanes/round3/l-cli-validation.md. Signing, qualified/LTV,
-provider and other runtime/reader commands remain pending. Earlier owner
-whole-source projections/counts below are historical and not imported.
+Accepted assigned counts: **252 total /152 passed /0 skipped /100 pending**.
+Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1, ordinary39 and
+basic software2 are accepted. Source724d078d completes all8original software
+algorithm parameters with real current-source CLI, fresh oracle, separate native
+trust and mandatory-policy guards plus the full workspace gate. See
+SOFTWARE_SIGNING_PORTING.md and docs/lanes/round3/l-signing-structure.md.
+Other signing/LTV/qualification/provider/runtime/reader commands remain pending;
+older full-owner projections below are historical and not imported.
 
 # Independently verified CLI increments
 

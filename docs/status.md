@@ -17,29 +17,29 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped150
-includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1 and
-ordinary validation39. Complete signing, LTV, qualification and the rest of the
-CLI and port remain unfinished.
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped152
+includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
+ordinary validation39 and two basic software-signing commands. Other signing,
+LTV, qualification and the rest of the CLI and port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
 runs the full workspace gate and updates this document. The D gate and
 worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **5926ca47**. Build, workspace tests, clippy with
-`-D warnings`, strict documentation, layering and formatting all passed.
-Measured Rust results: **1,884 discovered /1,880 passed /4 ignored /0 failed**,
-178 reports. The immutable inventory remains **1,431 total /1,303 passed
-/25 skipped /103 pending**. The same-version DSA SDK mapping and native import
-controls add zero upstream functions. The full raw DSA token/PDF/oracle case
-remains skipped. The scoped CLI retains150 accepted functions/102 pending,
-including the earlier39 ordinary validation functions/223 native parameters.
-Fresh current-source executable/worker, all three vendor compiler-content,
-retained-base metadata provenance and actual-input controls were independently reviewed. Earlier figures below are
-historical checkpoints. Complete-port and all-divergences-fail-closed claims
-remain unsupported. See [DSA prerequisite](lanes/round3/l-dsa-capability.md)
-and [ordinary CLI acceptance](lanes/round3/l-cli-validation.md).
+Current accepted source: **724d078d**. Build, workspace tests, strict all-target
+clippy, strict documentation, layering and formatting all passed. Measured Rust
+results: **1,901 discovered /1,898 passed /3 ignored /0 failed**,182 reports.
+The immutable inventory is **1,431 total /1,307 passed /23 skipped /101 pending**.
+Four original functions are newly accepted: raw DSA token/PDF signing, trailer
+provenance and two software CLI functions covering eight original algorithm
+parameters. C has152accepted/100pending. Default DSA policy is unchanged;
+generic provider parameters and all other exclusions remain. Current private
+CLI/source/ELFs, three vendors and actual native/oracle inputs passed independent
+review. Earlier figures below are historical checkpoints. Complete-port and
+all-divergences-fail-closed claims remain unsupported. See
+[current acceptance](lanes/round3/l-signing-structure.md) and the
+[preceding DSA prerequisite](lanes/round3/l-dsa-capability.md).
 
 Main `940e04d` adds context-preserving historical timing/fetcher clones.
 Two native regression tests retain non-default freshness judges, assertions,
@@ -190,15 +190,15 @@ integration and the lead gate; their claimed passes are not accepted early.
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
 | `sigis-pki-fetch` | 56 | 44 | 12 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
-| `sigis-pdf` | 406 | 398 | 8 | 0 |
+| `sigis-pdf` | 406 | 399 | 7 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
-| `sigis-pades-sign` | 297 | 294 | 3 | 0 |
+| `sigis-pades-sign` | 297 | 295 | 2 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,143** | **25** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 150 | 0 | 102 |
+| **Library lanes A–E** | **1,168** | **1,145** | **23** | **0** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 152 | 0 | 100 |
 | Lead: live integration (round-3 L) | 11 | 10 | 0 | 1 |
-| **Overall** | **1,431** | **1,303** | **25** | **103** |
+| **Overall** | **1,431** | **1,307** | **23** | **101** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -223,15 +223,15 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Functions or missing flow |
 | --- | ---: | --- |
-| C / CLI and configuration | 102 | Remaining signing, LTV/qualified validation, five runtime functions, provider and reader-state commands; scoped150 includes ordinary validation39 |
+| C / CLI and configuration | 100 | Other signing, LTV/qualified validation, five runtime functions, provider and reader-state commands; scoped152 includes ordinary39 and basic software2 |
 | Lead / live integration | 1 | Actual CLI LTA after complete C signing/LTV commands; other ten live functions are accepted |
-| **Total** | **103** | |
+| **Total** | **101** | |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not remove the25 library skips, provider parameter gaps or unassigned
+This does not complete the23 remaining library skips, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -239,8 +239,8 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The25 skipped functions comprise certvalidator two, fetchers12,
-CMS zero, PDF eight and signing three. Skip reasons remain in the
+The23 skipped functions comprise certvalidator two, fetchers12,
+CMS zero, PDF seven and signing two. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
@@ -253,19 +253,20 @@ owning `PORTING.md` and lane files:
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
   prevention now requires the actual MD5 signer refusal under a caller policy;
   validation replay alone does not satisfy signing assertions.
-- PDF skips retain object-model/trailer gaps. The four layout/resource
+- PDF skips retain other object-model/writer gaps; the exact trailer-reference corner case is accepted. The four layout/resource
   functions now execute all exact upstream assertions in the P test crate;
   they are credited once to S/PDF ownership, not again to signing.
 - Both former PDF-diff skips now execute their complete native validator
   assertions and exact parameters, credited once to S/PDF-diff. No empty
   extraction wrapper or extra V function is counted.
-- Signing retains three skipped functions: the deprecated Python warning
-  entry point, SafeNet signing-PIN hardware and raw DSA token signing. Eight
+- Signing retains two skipped functions: the deprecated Python warning
+  entry point and SafeNet signing-PIN hardware. Eight
   certificate-less flows, duplicate SET values and detached-econtent rejection
-  now have complete accepted assertions. DSA binding/import work remains.
+  now have complete accepted assertions. The dedicated raw DSA original is accepted;
+  other DSA provider matrix parameters still require proof.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the103 pending
+provider behaviour and remaining validator compatibility; the101 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -436,15 +437,15 @@ parallel with system per-host worktree locks and automatic worker placement.
 
 | Lane | Exclusive file scope | Work and dependencies | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Original pending0; resolve3 documented skips (deprecated warning, SafeNet PIN, raw DSA) and audit provider parameters/evidence/state compatibility beyond original assertions | Preserve original/current caller policies, native negative controls and mandatory rejection; new helpers add0IDs |
+| P — Signing completion | `crates/pades-sign/`, D/P fixtures and owned reports | Original pending0; review2 documented exclusions (deprecated warning, SafeNet PIN) and audit provider parameters/evidence/state compatibility beyond original assertions | Preserve original/current caller policies, native negative controls and mandatory rejection; new helpers add0IDs |
 | V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures and owned reports | All47 assigned functions accepted; bounded Adobe RIA/order repair integrated; audit archival/POE, historical fetch, registry alias/persistence and independent trust-domain compatibility | Verified old/new Adobe profiles now match finalOK; other NO_POE/API-bottom-line distinctions and legacy timestamp-first refusals remain; no POE/imprint/algorithm/revocation waiver |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review22skips (PDF8/CV2/fetch12), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish102 pending unique functions: real signing, LTV/qualified validation, five runtime functions, provider and remaining reader-state flows; scoped150 does not import the full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths and fixtures | Original pending0; review21skips (PDF7/CV2/fetch12), runtime exclusions, parser/serial/issuer and trust-boundary coverage | Port exact substantive assertions before changing skip status; no empty wrappers or universal parity claim |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish100 pending unique functions: other signing, LTV/qualified validation, five runtime functions, provider and reader-state flows; scoped152 does not import the full CLI | Preserve both knownNO_POE failures and qualification trust holds; available provider wrappers do not complete18excluded parameters across6functions |
 | L — Lead / integration | Root, tools, shared APIs, lockfile, central fixtures/status | Final1CLI live LTA function after accepted real C commands; coherent lane integration, parameter/skip/provenance audits, complete gates and final service replacement decision | Actual CLI/PFX/config/DSS/LTA flow, source-specific full gates, immutable counts; no service restart or early acceptance |
 
 P, V, S and C can work concurrently within these exclusive scopes; L owns
 cross-lane coordination and final acceptance. Library pending0 refers to the
-assigned function inventory and does not make25skips or unassigned features
+assigned function inventory and does not make23skips or unassigned features
 complete. State/HTTP/TSA infrastructure must not substitute for actual pending
 CLI commands. The service switch from `underskrift` remains a final parity
 milestone after functional/trust acceptance, not a consequence of count totals.
@@ -1251,3 +1252,19 @@ universal trust parity. Rooted/empty-root and policy controls, actual snapshot
 inputs, private ELF/current workers and old/new Adobe/BASIC/Full-LTA limits
 remain explicit. C is252/150/0/102; overall1431/1303/25/103. True signing,
 LTV, qualification, provider integration and final live CLI-LTA remain pending.
+
+
+## Current four-function acceptance
+
+Source724d078d accepts rawDSA1, trailer provenance1 and basic softwareCLI2.
+P297/295/2/0, S824/803/21/0, C252/152/0/100, V47/47/0/0 and L11/10/0/1.
+Default3192-bit DSA denies the fixture; original local1024policy trusts. Native
+and fresh same-output Python agree. Six actual trailer comparisons agree;
+four encodings differ and two no-ops are byte-identical. COW is not live aliasing.
+Two basic commands execute all8original algorithm parameters;48durable process
+receipts distinguish reference calls from native historicalNoRev trust controls.
+Mandatory unsupported config/flags reject. Original collector-read errors and
+actual clippy recovery remain preserved; no cache/flags/target bypass is used.
+Nine CLI selections match08fc. Other100C originals, final actualCLI-LTA and23
+exclusions remain open. No full-port/universal fail-closed claim follows.
+See lanes/round3/l-signing-structure.md for assertions, provenance and limits.

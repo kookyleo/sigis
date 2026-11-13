@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "5926ca47fd6bb88272cc5e412702f11151d32de9",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-dsa-capability-next/gate-final/gate.json",
+  "accepted_source_commit": "724d078dadea3bffb1f4ba7203a31a19ff855c63",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/next-batch/gate/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1707,7 +1707,31 @@
       "status": "passed",
       "rust_test": "validation::test_detached_validate_bad_cms_type",
       "reason": "Complete original ordinary validation assertions and all1 pinned parameter cases; current-source native observations match the immutable mapping. Exact1de3105 ordinary CLI subset, actual single caller-selected PDF validation, rooted/distrust/config/detached/printing controls and fresh reference matrices; full workspace gate/content/current private CLI and worker/runtime evidence accepted. No obsolete custom-tolerance restriction or removed positive; no signing/LTV/qualification/provider credit."
+    },
+    {
+      "id": "pyhanko/test_pkcs11.py::test_simple_sign_with_raw_dsa",
+      "status": "passed",
+      "rust_test": "round3_raw_dsa::test_simple_sign_with_raw_dsa",
+      "reason": "Actual SoftHSM rawCKM_DSA/SHA256 token signing, pulled chain, Sig1 complete native trust/status and mandatory fresh same-native-output Python. Separate unchanged original Python reference remains distinct. Default3192 rejects/local original1024 trusts. Source724 complete workspace/source/ELF/input review; generic DSA matrix exclusions remain; one relocated function only."
+    },
+    {
+      "id": "pyhanko/test_xref.py::test_trailer_refs",
+      "status": "passed",
+      "rust_test": "trailer_provenance::test_trailer_refs",
+      "reason": "Actual incremental rawRoot TrailerReference/source/state and real update_container assertion; native7 plus six fresh actual native-buffer public-Python comparisons, source724 complete workspace/source/ELF/input review. Explicit Rust COW snapshot adaptation, not full Python live alias/identity parity. Other model gaps remain."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_pemder",
+      "status": "passed",
+      "rust_test": "software_signing::test_cli_addsig_pemder",
+      "reason": "All four original algorithms with real DER signer/PEM chain/PKCS8 key and actual current private CLI. Fresh original-argv Python CLI and same-native-output public trust validation, separate native historicalNoRev root controls. Source724 full workspace/source/ELF/input review plus password/mandatory-policy guards; no full51/LTV/qualified/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12",
+      "status": "passed",
+      "rust_test": "software_signing::test_cli_addsig_p12",
+      "reason": "All four original encrypted PFX/password algorithm parameters through actual current CLI, fresh original-argv Python CLI and same-native-output public trust validation; native root/no-root and wrong-password controls separately scoped. Source724 full workspace/source/ELF/input review; no unsupported mandatory config/flag fallback or full51/LTV/qualified/provider credit."
     }
   ],
-  "source_verification_note": "Source5926ca47 complete six-part gate: 1884 discovered/1880 passed/4 ignored/0failed/178 reports;426 compiler-unit observations/2752 input records/448 actual input paths content-verified with recorded current-code/base-metadata origins, including all three vendor dependencies and explicitly retained accepted-base metadata. Same-version safe DSA mechanism mappings and test-only DSA import controls add zero upstream IDs; original raw DSA token/PDF/oracle proof remains skipped. Current private CLI c6c6672a plus actual selection/worker/input/runtime checks independently reviewed. Inventory remains1431/1303/25/103."
+  "source_verification_note": "Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."
 }
