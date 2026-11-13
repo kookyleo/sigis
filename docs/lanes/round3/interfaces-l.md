@@ -685,3 +685,16 @@ signing/runtime reader state; unknown mandatory config/flags reject. Root adds
 only existing rsa/pkcs8 dev edges, no versions/features. The complete raw DSA
 original is relocated once with explicit fixture opt-in/actual token/oracle;
 generic provider parameters remain separate. See l-signing-structure.md.
+
+## Accepted parser Hash and complete PKCS12 context routing
+
+Sourcef1cd5948 adds Hash on existing parser Item with relational DefaultHasher
+assertions, preserving PartialEq and representation; no Eq or numeric Python
+hash equivalence/collision-free/HashMap-key promise. No existing reader/writer
+API, dependency, lockfile or vendor changes are introduced. The bounded direct
+PKCS12 route uses complete caller config/context/runtime, accepted state-aware
+reader/signing APIs and strict schema/unknown-requirement refusal; errors never
+retry through a legacy loader. The old ordinary PEM SomeCFG guard remains.
+Native full-LTA returns CMS trust status; same-PDF/signature/context diff supplies
+LTA_UPDATES separately. Current-clock signer1-long adaptation and source-only
+empty-PIN unknown provider direction remain explicit. See l-cli-lta.md.

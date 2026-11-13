@@ -1,15 +1,15 @@
 # Lead acceptance update
 
-Accepted assigned counts: **252 total /152 passed /0 skipped /100 pending**.
-Configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1, ordinary39 and
-basic software2 are accepted. Source724d078d completes all8original software
-algorithm parameters with real current-source CLI, fresh oracle, separate native
-trust and mandatory-policy guards plus the full workspace gate. See
-SOFTWARE_SIGNING_PORTING.md and docs/lanes/round3/l-signing-structure.md.
-Other signing/LTV/qualification/provider/runtime/reader commands remain pending;
-older full-owner projections below are historical and not imported.
+Accepted assigned counts: **252 total /163 passed /0 skipped /89 pending**.
+Sourcef1cd5948 accepts exactly11new PKCS12/LTA originals/35parameters after
+coherent final CLI/source/runtime and all-six-gate acceptance. The prior basic
+PEM/P12 functions remain credited once. Configuration57/plugins11/crypt23/
+fields7/stamps12/runtime-read1/ordinary39/basic2/P12-LTA11 comprise163.
+See PKCS12_SIGNING_PORTING.md and docs/lanes/round3/l-cli-lta.md.
+Other signing/LTV/qualified/provider/runtime/reader flows remain pending.
+Historical owner projections below are not acceptance of the complete CLI.
 
-# Independently verified CLI increments
+# Historical independently verified CLI increments
 
 Current projection: fields. Fixed assignment252; local proposal **252 / 98 passed / 0 skipped / 154 pending**. Accepted C remains252/0/0/252 until L review and gate. All original parameters/assertions remain in the scoped suites; supplemental wrappers add zero IDs.
 

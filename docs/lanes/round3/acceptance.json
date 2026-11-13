@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "724d078dadea3bffb1f4ba7203a31a19ff855c63",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/next-batch/gate/gate.json",
+  "accepted_source_commit": "f1cd5948cf0a487610b6b362f2b1340c113bc46f",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/l-cli-lta-acceptance/gate-final/gate.json",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -1731,7 +1731,91 @@
       "status": "passed",
       "rust_test": "software_signing::test_cli_addsig_p12",
       "reason": "All four original encrypted PFX/password algorithm parameters through actual current CLI, fresh original-argv Python CLI and same-native-output public trust validation; native root/no-root and wrong-password controls separately scoped. Source724 full workspace/source/ELF/input review; no unsupported mandatory config/flag fallback or full51/LTV/qualified/provider credit."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_unencrypted_p12",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_unencrypted_p12",
+      "reason": "Exact original function/4 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_unencrypted_p12_without_nopass",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_unencrypted_p12_without_nopass",
+      "reason": "Exact original function/4 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_with_setup",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_with_setup",
+      "reason": "Exact original function/12 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_setup_requires_config",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_setup_requires_config",
+      "reason": "Exact original function/1 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_setup_unreadable",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_setup_unreadable",
+      "reason": "Exact original function/1 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_setup_corrupted_keystore",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_setup_corrupted_keystore",
+      "reason": "Exact original function/1 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_setup_or_pfx_argument_required",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_setup_or_pfx_argument_required",
+      "reason": "Exact original function/1 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_addsig_p12_passfile",
+      "status": "passed",
+      "rust_test": "pkcs12_signing::test_cli_addsig_p12_passfile",
+      "reason": "Exact original function/4 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_pades_lta",
+      "status": "passed",
+      "rust_test": "pkcs12_lta::test_cli_pades_lta",
+      "reason": "Exact original function/3 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_pades_lta_nonstrict",
+      "status": "passed",
+      "rust_test": "pkcs12_lta::test_cli_pades_lta_nonstrict",
+      "reason": "Exact original function/3 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing.py::test_cli_pades_lta_no_timestamp_url",
+      "status": "passed",
+      "rust_test": "pkcs12_lta::test_cli_pades_lta_no_timestamp_url",
+      "reason": "Exact original function/1 source parameter cases through actual final-source CLI, fresh same-input pinned public CLI and same-native-output validation for positives; original errors, material/password identities and mandatory policy refusals preserved. Accepted after complete f1cd5948 workspace/source/runtime gate. Basic PEM/P12, supplemental tests and oracle calls counted separately."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_all_nulls_same_hash",
+      "status": "passed",
+      "rust_test": "object_hash::test_all_nulls_same_hash",
+      "reason": "Exact relational hashing assertion on the existing parser Item with DefaultHasher; substantive parser/materialized/signed-zero/dictionary/stream controls and full f1cd5948 workspace gate. No numeric Python hash equality, collision-freedom, Eq or HashMap-key claim; two original functions counted once."
+    },
+    {
+      "id": "pyhanko/test_internal_utils.py::test_operator_literal_hash",
+      "status": "passed",
+      "rust_test": "object_hash::test_operator_literal_hash",
+      "reason": "Exact relational hashing assertion on the existing parser Item with DefaultHasher; substantive parser/materialized/signed-zero/dictionary/stream controls and full f1cd5948 workspace gate. No numeric Python hash equality, collision-freedom, Eq or HashMap-key claim; two original functions counted once."
+    },
+    {
+      "id": "integration-tests/test_live_certomancer.py::test_pades_lta_live_with_cli",
+      "status": "passed",
+      "rust_test": "live_cli_lta::test_pades_lta_live_with_cli",
+      "reason": "Complete unchanged pinned Python original plus actual current native CLI original argv, automatic config and fresh downloaded PFX/root; native full-LTA CMS integrity/trust, same-PDF/signature/context StandardDiffPolicy LTA_UPDATES, exact DSS1CRL/1OCSP and mandatory same-output Python/empty-root controls. Actual HTTP metrics precede oracle traffic; complete f1cd5948 workspace/source/runtime gate. L1 retains the original current-time long-signer case; C unit credential/clock adaptations are separately explicit. CMS API does not itself return PDF modification status."
     }
   ],
-  "source_verification_note": "Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."
+  "source_verification_note": "Sourcef1cd5948 complete six-stage workspace gate1937discovered/1934passed/3ignored/0failed/188reports; independent final review and lead readiness bind actual final producer/runtime. Exactly14 IDs C11/S2/L1 accepted, C11has35original decision pairs/30fresh same-native-output checks and165durable records; 48retained basic records stay separately credited. Complete actual serial45+61 mandatory refusals supplement preserved malformed parallel raw logs. Native full-LTA CMS status plus same-output/context StandardDiffPolicy LTA_UPDATES, relational DefaultHasher/noEq and current long-signer adaptation are explicit. Overall1431/1321/21/89; no complete-port/universal fail-closed claim. Historical preceding note: Source724 complete six-stage workspace gate1901discovered/1898passed/3ignored/0failed/182reports.434phase/2788emitted records/453actual paths independently content/Git checked; AA/SDK metadata references prepared but actualaliases0. CurrentCLI08fc/13producer229selectedinputs/nine actual selections/bothVM and actualP/C testELF copies/currentP/S/C/allretained runtime verified. InitialFPJSON two readerrors retained; bounded raw-before-parse stable sampler and actual reclippy precede doc/layer/fmt. Exactlyfour IDs P1/S1/C2 accepted, no helper/parameter/oracle double-credit. Overall1431/1307/23/101. NativeC historicalNoRev controls distinct from fresh Python public trust; no full-port/universal fail-closed claim."
 }

@@ -1,12 +1,13 @@
 # Porting status: sigis-pdf (crates/pdf)
 
-Lead acceptance on source724d078d: **406 total /399 passed /7 skipped /0 pending**.
-The exact trailer-reference original exercises actual incremental source/trailer
-provenance and update_container. Seven native tests and six fresh same-native-
-input Python comparisons pass. COW snapshots are an explicit Rust value
-adaptation, not Python live alias/identity parity. Earlier ordered/version/
-unbound-reference and caller proofs remain accepted. Other model gaps remain.
-See docs/lanes/round3/l-signing-structure.md and acceptance.json; older counts
+Lead acceptance on sourcef1cd5948: **406 total /401 passed /5 skipped /0 pending**.
+Two exact relational Hash originals now exercise the existing parser Item with
+DefaultHasher, plus9supplemental controls. No Eq, numeric Python hash equality,
+stable/cryptographic hash or HashMap-key suitability is claimed; reader/writer
+interfaces, object equality and resource/trust behavior remain unchanged.
+Earlier trailer provenance/COW, enum/unbound-reference and caller assertions
+remain accepted. Five remaining object-model/writer skips are still explicit.
+See docs/lanes/round3/l-cli-lta.md and acceptance.json. Older counts/proposals
 and skip lists below are historical.
 
 Owner: B. Baseline: pyHanko 0.38.1 / pyhanko-certvalidator 0.33.0.
