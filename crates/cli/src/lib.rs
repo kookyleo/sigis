@@ -4,6 +4,7 @@ pub mod crypt;
 pub mod fields;
 pub mod plugins;
 pub mod runtime;
+pub mod software_signing;
 pub mod stamp;
 pub mod usage;
 pub mod validation;
@@ -64,7 +65,7 @@ pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) ->
 }
 
 /// Run cryptography with explicit runtime services and native plugin dispatch.
-/// Ordinary PDF/CMS validation is available; signing engines remain unavailable.
+/// Ordinary PDF/CMS validation and basic software PDF signing are available.
 pub fn run_with_runtime(
     args: &[String],
     registry: &plugins::PluginRegistry,
@@ -132,7 +133,7 @@ pub fn run_with_runtime(
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
             Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
-            Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry),
+            Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry, runtime),
             Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig (native registry help and identity validation only)\n".into()),
             Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
@@ -206,6 +207,7 @@ fn run_signing(
     args: &[String],
     config: Option<&config::CliConfig>,
     registry: &plugins::PluginRegistry,
+    runtime: &runtime::ValidationRuntime,
 ) -> Result<String, String> {
     let positions = argument_positions(args).collect::<Vec<_>>();
     let provider = positions
@@ -258,6 +260,11 @@ fn run_signing(
         let plugin = registry.resolve(&args[i]).map_err(|e| e.message)?;
         rewritten.push(plugin.handler.command().to_owned());
         rewritten.extend_from_slice(&args[i + 1..]);
+    }
+    // Keep identity and extension-provider execution unavailable. Only a
+    // directly selected built-in may enter the reviewed ordinary adapter.
+    if matches!(args[i].as_str(), "pemder" | "pkcs12") && rewritten[i] == args[i] {
+        return software_signing::run_with_runtime(&rewritten, config, runtime);
     }
     Err(format!(
         "Signing engine '{}' is not available in this increment.",
