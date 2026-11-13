@@ -338,9 +338,29 @@ pub fn with_time_validation(
     qualification: &QualificationSpec<'_>,
     signature_poe_time: Option<Moment>,
 ) -> Result<WithTimeValidationResult, sigis_pki_core::errors::HankoError> {
+    with_time_validation_with_options(
+        content_info,
+        raw_digest,
+        ctx,
+        qualification,
+        signature_poe_time,
+        &super::AdesValidationOptions::default(),
+    )
+}
+
+/// Validation with time and an opt-in exact main-signer usage predicate.
+/// Caller-provided signature POE, timestamp purpose and qualification stay intact.
+pub fn with_time_validation_with_options(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &sigis_pki_certvalidator::ValidationContext,
+    qualification: &QualificationSpec<'_>,
+    signature_poe_time: Option<Moment>,
+    options: &super::AdesValidationOptions,
+) -> Result<WithTimeValidationResult, sigis_pki_core::errors::HankoError> {
     let validation_time = ctx.timing().validation_time;
     Ok(
-        match crate::ades::basic::cms_status(content_info, raw_digest, ctx)? {
+        match crate::ades::basic::cms_status(content_info, raw_digest, ctx, options)? {
             Ok(status) => with_time_result(
                 status,
                 qualification,

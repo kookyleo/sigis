@@ -376,6 +376,27 @@ pub fn lta_validation_with_options(
     qual: &QualificationSpec<'_>,
     options: &LtaOptions<'_>,
 ) -> Result<LtaValidationResult> {
+    lta_validation_with_ades_options(
+        file,
+        signature,
+        ctx,
+        qual,
+        options,
+        &super::AdesValidationOptions::default(),
+    )
+}
+
+/// Archival validation with caller knowledge and an exact main-signer predicate.
+/// The predicate applies to initial, discovery and final historical MAIN
+/// validation only; timestamp purpose and authenticated POE processing stay fixed.
+pub fn lta_validation_with_ades_options(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+    ctx: &ValidationContext,
+    qual: &QualificationSpec<'_>,
+    options: &LtaOptions<'_>,
+    ades_options: &super::AdesValidationOptions,
+) -> Result<LtaValidationResult> {
     super::basic::check_timestamp_digests(&signature.contents)?;
     let signed = signature.signed_data(file)?;
     let ctx = super::adobe_revinfo::with_signed_adobe_revinfo(
@@ -390,10 +411,7 @@ pub fn lta_validation_with_options(
     }
     let sd = signed_data(crate::cms_from_contents(&signature.contents)?)?;
     let si = signer(&sd)?;
-    let pdf_options = CmsValidationOptions {
-        validation_order: CmsValidationOrder::SignerFirst,
-        ..Default::default()
-    };
+    let pdf_options = ades_options.main_cms_options(CmsValidationOrder::SignerFirst);
     let pdf = crate::validate_pdf_signature_with_options(
         file,
         signature,
@@ -427,9 +445,8 @@ pub fn lta_validation_with_options(
         })
         .transpose()?;
     let cms_options = CmsValidationOptions {
-        validation_order: CmsValidationOrder::SignerFirst,
         ac_validation_context: ac.as_ref(),
-        ..Default::default()
+        ..ades_options.main_cms_options(CmsValidationOrder::SignerFirst)
     };
     let mut status = sigis_cms::validate_cms_signature_with(
         &signature.contents,
@@ -663,10 +680,9 @@ pub fn lta_validation_with_options(
         }
         let historical = at(&ctx, control, best, false);
         let historical_options = CmsValidationOptions {
-            validation_order: CmsValidationOrder::SignerFirst,
             ac_validation_context: ac.as_ref(),
             ts_validation_context: Some(&historical),
-            ..Default::default()
+            ..ades_options.main_cms_options(CmsValidationOrder::SignerFirst)
         };
         status = sigis_cms::validate_cms_signature_with(
             &signature.contents,
@@ -710,12 +726,32 @@ pub fn simulate_future_lta_validation(
     qual: &QualificationSpec<'_>,
     future: Moment,
 ) -> Result<LtaValidationResult> {
+    simulate_future_lta_validation_with_ades_options(
+        file,
+        signature,
+        ctx,
+        qual,
+        future,
+        &super::AdesValidationOptions::default(),
+    )
+}
+
+/// Simulate future archival validation while preserving the exact MAIN policy.
+/// Evidence collection and caller-provided/observed POE semantics are unchanged.
+pub fn simulate_future_lta_validation_with_ades_options(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+    ctx: &ValidationContext,
+    qual: &QualificationSpec<'_>,
+    future: Moment,
+    ades_options: &super::AdesValidationOptions,
+) -> Result<LtaValidationResult> {
     if future < ctx.moment() {
         return Err(malformed("future validation precedes evidence collection"));
     }
     let mut known = PoeManager::with_current_time(future);
     register_material(file, &mut known, ctx.moment(), PoeType::Provided)?;
-    lta_validation_with_options(
+    lta_validation_with_ades_options(
         file,
         signature,
         &at(ctx, future, ctx.moment(), false),
@@ -724,6 +760,7 @@ pub fn simulate_future_lta_validation(
             known_poes: Some(&known),
             ..Default::default()
         },
+        ades_options,
     )
 }
 

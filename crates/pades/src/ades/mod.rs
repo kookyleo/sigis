@@ -26,6 +26,8 @@ pub mod adobe_revinfo;
 pub mod basic;
 pub mod etsi_report;
 pub mod lta;
+mod options;
+pub use options::AdesValidationOptions;
 pub mod policy;
 pub mod with_time;
 
@@ -91,13 +93,36 @@ pub fn validate_pdf_ades(
     level: AdesLevel,
     ctx: &ValidationContext,
 ) -> Result<AdesValidationResult> {
+    validate_pdf_ades_with_options(
+        file,
+        signature,
+        level,
+        ctx,
+        &AdesValidationOptions::default(),
+    )
+}
+
+/// Run PDF AdES validation with an opt-in exact main-signer predicate.
+///
+/// Basic/time dispatcher branches retain their timestamp-first order; detailed
+/// AdES APIs and long-term validation retain signer-first processing. PDF
+/// coverage, modification and seed constraints are unchanged.
+pub fn validate_pdf_ades_with_options(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+    level: AdesLevel,
+    ctx: &ValidationContext,
+    options: &AdesValidationOptions,
+) -> Result<AdesValidationResult> {
+    let cms_options = options.main_cms_options(sigis_cms::CmsValidationOrder::TimestampsFirst);
     match level {
         AdesLevel::Basic => {
-            let pdf = crate::validate_pdf_signature(
+            let pdf = crate::validate_pdf_signature_with_options(
                 file,
                 signature,
                 ctx,
                 Some(&sigis_pdf_diff::StandardDiffPolicy),
+                &cms_options,
             )?;
             if pdf.seed_value_constraint_error.is_some()
                 || pdf.docmdp_ok == Some(false)
@@ -112,11 +137,12 @@ pub fn validate_pdf_ades(
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
         AdesLevel::WithTimestamps => {
-            let pdf = crate::validate_pdf_signature(
+            let pdf = crate::validate_pdf_signature_with_options(
                 file,
                 signature,
                 ctx,
                 Some(&sigis_pdf_diff::StandardDiffPolicy),
+                &cms_options,
             )?;
             if pdf.seed_value_constraint_error.is_some()
                 || pdf.docmdp_ok == Some(false)
@@ -137,8 +163,14 @@ pub fn validate_pdf_ades(
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
         AdesLevel::LongTerm => {
-            let result =
-                lta::lta_validation(file, signature, ctx, &basic::QualificationSpec::default())?;
+            let result = lta::lta_validation_with_ades_options(
+                file,
+                signature,
+                ctx,
+                &basic::QualificationSpec::default(),
+                &lta::LtaOptions::default(),
+                options,
+            )?;
             Ok(AdesValidationResult::from_subindic(result.ades_subindic))
         }
     }

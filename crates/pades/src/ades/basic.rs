@@ -260,7 +260,25 @@ pub fn basic_validation(
     ctx: &ValidationContext,
     qualification: &QualificationSpec<'_>,
 ) -> Result<BasicValidationResult, HankoError> {
-    match cms_status(content_info, raw_digest, ctx)? {
+    basic_validation_with_options(
+        content_info,
+        raw_digest,
+        ctx,
+        qualification,
+        &super::AdesValidationOptions::default(),
+    )
+}
+
+/// Basic AdES validation with an opt-in complete main-signer usage predicate.
+/// Other caller policies, timestamp purpose and signer-first order are retained.
+pub fn basic_validation_with_options(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &ValidationContext,
+    qualification: &QualificationSpec<'_>,
+    options: &super::AdesValidationOptions,
+) -> Result<BasicValidationResult, HankoError> {
+    match cms_status(content_info, raw_digest, ctx, options)? {
         Ok(status) => Ok(basic_result(
             status,
             qualification,
@@ -281,6 +299,7 @@ pub(crate) fn cms_status(
     content_info: &[u8],
     raw_digest: Option<&[u8]>,
     ctx: &ValidationContext,
+    options: &super::AdesValidationOptions,
 ) -> Result<Result<StandardCmsSignatureStatus, (AdesSubIndic, String)>, HankoError> {
     check_timestamp_digests(content_info)?;
     let content = match raw_digest {
@@ -295,10 +314,7 @@ pub(crate) fn cms_status(
     // AdES basic validation registers a raw-valid, algorithm-allowed main
     // signer before processing attached timestamps. Legacy CMS/PDF entry
     // points retain their default timestamp-first ordering.
-    let options = sigis_cms::CmsValidationOptions {
-        validation_order: sigis_cms::CmsValidationOrder::SignerFirst,
-        ..Default::default()
-    };
+    let options = options.main_cms_options(sigis_cms::CmsValidationOrder::SignerFirst);
     match sigis_cms::validate_cms_signature_with(content_info, content, ctx, &options)
         .map_err(HankoError::from)
     {
