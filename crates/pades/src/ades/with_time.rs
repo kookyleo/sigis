@@ -366,27 +366,217 @@ pub fn with_time_validation_with_options(
     signature_poe_time: Option<Moment>,
     options: &super::AdesValidationOptions,
 ) -> Result<WithTimeValidationResult, sigis_pki_core::errors::HankoError> {
+    use sigis_pki_core::errors::HankoError;
+
     let validation_time = ctx.timing().validation_time;
-    Ok(
-        match crate::ades::basic::cms_status(content_info, raw_digest, ctx, options)? {
-            Ok(status) => with_time_result(
-                status,
+    crate::ades::basic::check_timestamp_digests(content_info)?;
+    let content = match raw_digest {
+        Some(digest) => {
+            // Keep the existing strict detached-digest decoding contract. A
+            // lenient CMS parse must not invent a digest for this caller.
+            use der::Decode;
+            let algorithm = (|| {
+                let ci = cms::content_info::ContentInfo::from_der(content_info).ok()?;
+                let sd: cms::signed_data::SignedData = ci.content.decode_as().ok()?;
+                let si = sd.signer_infos.0.iter().next()?;
+                sigis_pki_core::algorithms::DigestAlgorithm::from_oid(&si.digest_alg.oid)
+            })()
+            .ok_or_else(|| {
+                HankoError::Malformed("cannot read the signer's digest algorithm".into())
+            })?;
+            sigis_cms::SignedContent::Digest(algorithm, digest)
+        }
+        None => sigis_cms::SignedContent::Encapsulated,
+    };
+    let cms_options = options.main_cms_options(sigis_cms::CmsValidationOrder::SignerFirst);
+    match sigis_cms::validate::evaluate_cms_leaf_revocation(
+        content_info,
+        content,
+        ctx,
+        &cms_options,
+    )
+    .map_err(HankoError::from)
+    {
+        Ok(evaluated)
+            if !matches!(
+                evaluated
+                    .unresolved_status()
+                    .signature
+                    .trust_problem
+                    .as_ref(),
+                Some(TrustProblem::Path(ValidationError::Revoked { .. }))
+            ) || evaluated
+                .unresolved_status()
+                .signature
+                .revocation_details
+                .as_ref()
+                .is_some_and(|details| details.ca_revoked) =>
+        {
+            // Only the leaf-revoked profile has new completion authority.
+            // All ordinary success and other failure profiles retain the old
+            // reducer once, including their existing diagnostic time bounds.
+            Ok(with_time_result(
+                evaluated.into_unresolved_status(),
                 qualification,
                 signature_poe_time,
                 None,
                 validation_time,
-            ),
-            Err((sub, msg)) => WithTimeValidationResult {
-                ades_subindic: sub,
-                api_status: None,
-                failure_msg: Some(msg),
-                best_signature_time: signature_poe_time,
-                signature_not_before_time: None,
-                qualification: None,
-                timestamp_qualification: None,
+            ))
+        }
+        Ok(evaluated) => Ok(with_current_leaf_evaluation(
+            evaluated,
+            qualification,
+            signature_poe_time,
+            validation_time,
+        )),
+        Err(error @ HankoError::NotImplemented(_)) => Err(error),
+        Err(error) => Ok(WithTimeValidationResult {
+            ades_subindic: match error {
+                HankoError::Malformed(_) => AdesFailure::FORMAT_FAILURE.into(),
+                _ => AdesIndeterminate::GENERIC.into(),
             },
-        },
-    )
+            api_status: None,
+            failure_msg: Some(error.to_string()),
+            best_signature_time: signature_poe_time,
+            signature_not_before_time: None,
+            qualification: None,
+            timestamp_qualification: None,
+        }),
+    }
+}
+
+// An operation-bound completion cannot be reconstructed from a public status.
+// This helper assesses each required role once, then consumes the original
+// opaque CMS operation without supplying a clock, token or replacement status.
+fn with_current_leaf_evaluation(
+    evaluated: sigis_cms::validate::CmsLeafRevocationEvaluation<'_, '_>,
+    qualification: &QualificationSpec<'_>,
+    signature_poe_time: Option<Moment>,
+    validation_time: Moment,
+) -> WithTimeValidationResult {
+    let status = evaluated.unresolved_status();
+    let (sub, snb) = basic_with_content_ts(status, qualification, None);
+    let mut result = WithTimeValidationResult {
+        ades_subindic: sub,
+        api_status: None,
+        failure_msg: None,
+        best_signature_time: Some(signature_poe_time.unwrap_or(validation_time)),
+        signature_not_before_time: snb,
+        qualification: None,
+        timestamp_qualification: None,
+    };
+    // Every refusal moves the same frozen API payload. Qualification does not
+    // strip tokens, replace the typed current failure or alter its reference.
+    let refuse = |evaluated: sigis_cms::validate::CmsLeafRevocationEvaluation<'_, '_>,
+                  mut result: WithTimeValidationResult| {
+        result.api_status = Some(evaluated.into_unresolved_status());
+        result
+    };
+    if !processed_further(sub) {
+        return refuse(evaluated, result);
+    }
+    if qualification.requirements.is_some() && qualification.registry.is_none() {
+        result.ades_subindic = AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into();
+        result.failure_msg =
+            Some("Signer qualification requirements need a trusted-service registry".into());
+        return refuse(evaluated, result);
+    }
+    let Some(ts) = status.timestamp_validity.as_ref() else {
+        result.ades_subindic = AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into();
+        result.failure_msg = Some("No signature timestamp present".into());
+        result.best_signature_time = Some(validation_time);
+        return refuse(evaluated, result);
+    };
+    if ts.trusted() && ts.signature.validation_time.is_none() {
+        result.failure_msg = Some("Timestamp validation reference is unavailable".into());
+        return refuse(evaluated, result);
+    }
+    let ts_requirements = qualification
+        .ts_requirements
+        .as_ref()
+        .or(qualification.requirements.as_ref());
+    let (ts_sub, ts_message, ts_qualification) =
+        timestamp_assessment(ts, qualification, ts_requirements);
+    result.timestamp_qualification = ts_qualification;
+    if ts_sub != AdesPassed::OK.into() {
+        result.ades_subindic = ts_sub;
+        result.failure_msg = ts_message;
+        return refuse(evaluated, result);
+    }
+    let Some(eligible) = evaluated.eligible_signature_timestamp() else {
+        // A diagnostic trusted token is not authority after a denied imprint
+        // policy, incomplete MAIN, unsupported metadata or temporal bounds.
+        return refuse(evaluated, result);
+    };
+    let bound = eligible.timestamp;
+    if signature_poe_time.is_some_and(|external| external < bound) {
+        result.failure_msg = Some(
+            "An external earlier time cannot replace this operation's authenticated signature timestamp"
+                .into(),
+        );
+        return refuse(evaluated, result);
+    }
+    result.best_signature_time = Some(bound);
+    if snb.is_some_and(|not_before| not_before > bound) {
+        result.ades_subindic = AdesIndeterminate::TIMESTAMP_ORDER_FAILURE.into();
+        return refuse(evaluated, result);
+    }
+    if let Some(registry) = qualification.registry {
+        let Some(path) = status.signature.validation_path.as_ref() else {
+            result.failure_msg = Some("Completed MAIN path is unavailable".into());
+            return refuse(evaluated, result);
+        };
+        match qualification_analysis(registry, path, Some(bound)) {
+            Ok(assessment) => {
+                if let Some(requirements) = &qualification.requirements {
+                    if let Err(error) = enforce_requirements(requirements, &assessment, path) {
+                        result.ades_subindic = error.ades_subindication;
+                        result.failure_msg = Some(error.failure_message);
+                        result.qualification = Some(assessment);
+                        return refuse(evaluated, result);
+                    }
+                }
+                result.qualification = Some(assessment);
+            }
+            Err(message) => {
+                result.ades_subindic = AdesIndeterminate::GENERIC.into();
+                result.failure_msg = Some(message);
+                return refuse(evaluated, result);
+            }
+        }
+    }
+    // Reuse the actual frozen assessments. Never query the registry again to
+    // choose a favourable service window or qualify a token at its own genTime.
+    let outside_service_window = [
+        result.qualification.as_ref(),
+        result.timestamp_qualification.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    .any(|assessment| {
+        assessment
+            .service_definition
+            .as_ref()
+            .is_some_and(|service| {
+                let window = &service.base_info;
+                bound < window.valid_from || window.valid_until.is_some_and(|end| bound > end)
+            })
+    });
+    if outside_service_window {
+        result.ades_subindic = AdesIndeterminate::SIG_CONSTRAINTS_FAILURE.into();
+        result.failure_msg =
+            Some("The authenticated signature time is outside the assessed service window".into());
+        return refuse(evaluated, result);
+    }
+    let resolved = evaluated.resolve_signature_timestamp();
+    if resolved.signature.trusted() {
+        result.ades_subindic = AdesPassed::OK.into();
+    }
+    // On success this still reports current revocation details at the original
+    // MAIN reference. Only the signature's selected existence bound is earlier;
+    // neither this result nor the CMS resolver claims full historical LTA.
+    result.api_status = Some(resolved);
+    result
 }
 
 #[cfg(test)]

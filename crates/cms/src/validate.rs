@@ -668,11 +668,49 @@ fn cms_basic_validation_in_operation(
     validation_path: Option<&ValidationPath>,
     params: Option<&PkixValidationParams>,
 ) -> CmsResult<SignatureStatus> {
+    cms_basic_validation_with_leaf_operation(
+        sd,
+        raw_digest,
+        ctx,
+        key_usage_settings,
+        algorithm_policy,
+        MainPathInputs {
+            validation_path,
+            params,
+            completion: None,
+        },
+    )
+}
+
+struct MainPathInputs<'a> {
+    validation_path: Option<&'a ValidationPath>,
+    params: Option<&'a PkixValidationParams>,
+    completion: Option<&'a mut MainLeafCompletion>,
+}
+
+fn cms_basic_validation_with_leaf_operation(
+    sd: &SignedData,
+    raw_digest: Option<&[u8]>,
+    ctx: &mut ValidationContext,
+    key_usage_settings: &KeyUsageConstraints,
+    algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
+    inputs: MainPathInputs<'_>,
+) -> CmsResult<SignatureStatus> {
+    let MainPathInputs {
+        validation_path,
+        params,
+        mut completion,
+    } = inputs;
     let si = extract_signer_info(sd)?;
     let cert_info = extract_certs_for_validation(sd)?;
     let cert = &cert_info.signer_cert;
     let time_indic = Some(ctx.best_signature_time());
     let policy = algorithm_policy.unwrap_or_else(|| lift_policy(ctx.algorithm_policy_arc()));
+    if let Some(state) = completion.as_deref_mut() {
+        // Retain the SAME effective policy selected for this MAIN operation;
+        // the additional existence decision uses the original validation time.
+        state.policy = Some(policy.clone());
+    }
 
     let md_name = digest_name(&si.digest_algorithm.oid);
     let mechanism_name = signature_algorithm_name(&si.signature_algorithm.oid);
@@ -747,7 +785,12 @@ fn cms_basic_validation_in_operation(
         // signature with no algorithm denial reaches this block. Registration
         // precedes path trust and timestamp-imprint decisions.
         *ctx = ctx.with_registered_other_certs(&cert_info.other_certs);
-        let r = validate_cert_usage(cert, ctx, key_usage_settings, validation_path, params);
+        let r = match completion {
+            Some(state) if validation_path.is_none() => {
+                validate_current_leaf_usage(cert, ctx, key_usage_settings, params, state)
+            }
+            _ => validate_cert_usage(cert, ctx, key_usage_settings, validation_path, params),
+        };
         ades_status = r.error_subindic;
         trust_problem = r.trust_problem;
         revocation_details = r.revo_details;
@@ -902,6 +945,16 @@ fn collect_timing_info_in_operation(
     content: &dyn ContentDigester,
     algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
 ) -> CmsResult<TimingInfo> {
+    collect_timing_info_with_leaf_binding(si, ts_ctx, content, algorithm_policy, None)
+}
+
+fn collect_timing_info_with_leaf_binding(
+    si: &SignerInfo,
+    ts_ctx: &mut ValidationContext,
+    content: &dyn ContentDigester,
+    algorithm_policy: Option<Arc<dyn CmsAlgorithmUsagePolicy>>,
+    mut binding: Option<&mut CmsLeafOperation>,
+) -> CmsResult<TimingInfo> {
     let mut out = TimingInfo {
         signer_reported_dt: extract_self_reported_ts(si),
         ..TimingInfo::default()
@@ -910,7 +963,13 @@ fn collect_timing_info_in_operation(
     let imprint = move |alg: &AlgorithmIdentifierOwned| -> CmsResult<Vec<u8>> {
         Ok(digest_algorithm(alg)?.digest(&signature))
     };
-    for tst in extract_tst_data(si, false)? {
+    // Parse all candidates before validation, as the ordinary collector did.
+    // The raw bytes stay paired with exactly the existing selected status.
+    let signature_timestamps =
+        find_cms_attribute_iter(si.unsigned_attr_list(), oids::AA_SIGNATURE_TIME_STAMP_TOKEN)
+            .map(|raw| SignedData::from_content_info_der(raw).map(|sd| (raw, sd)))
+            .collect::<CmsResult<Vec<_>>>()?;
+    for (raw, tst) in signature_timestamps {
         let status = validate_tst_signed_data_in_operation(
             &tst,
             ts_ctx,
@@ -918,6 +977,14 @@ fn collect_timing_info_in_operation(
             algorithm_policy.clone(),
         )?;
         let trusted = status.trusted();
+        if let Some(state) = binding.as_deref_mut() {
+            state.selected_timestamp = Some(SelectedTimestamp::from_selected(
+                raw,
+                &tst,
+                Some(&si.signature),
+                &status,
+            ));
+        }
         out.timestamp_validity = Some(status);
         if trusted {
             break;
@@ -925,9 +992,20 @@ fn collect_timing_info_in_operation(
     }
     // pyHanko does not pass the algorithm policy for content timestamps.
     let content_imprint = |alg: &AlgorithmIdentifierOwned| content.digest(alg);
-    for tst in extract_tst_data(si, true)? {
+    let content_timestamps =
+        find_cms_attribute_iter(si.signed_attr_list(), oids::AA_CONTENT_TIMESTAMP)
+            .map(|raw| SignedData::from_content_info_der(raw).map(|sd| (raw, sd)))
+            .collect::<CmsResult<Vec<_>>>()?;
+    for (raw, tst) in content_timestamps {
         let status = validate_tst_signed_data_in_operation(&tst, ts_ctx, &content_imprint, None)?;
         let trusted = status.trusted();
+        if let Some(state) = binding.as_deref_mut() {
+            // The existing content-imprint callback above covers the actual
+            // operation content. Preserve the same selected raw token; no
+            // additional validation or policy call is made for this binding.
+            state.selected_content_timestamp =
+                Some(SelectedTimestamp::from_selected(raw, &tst, None, &status));
+        }
         out.content_timestamp_validity = Some(status);
         if trusted {
             break;
@@ -950,6 +1028,17 @@ pub fn validate_detached_cms_with(
     encapsulated: bool,
     signer_ctx: Option<&ValidationContext>,
     options: &CmsValidationOptions<'_>,
+) -> CmsResult<StandardCmsSignatureStatus> {
+    validate_detached_cms_operation(sd, content, encapsulated, signer_ctx, options, None)
+}
+
+fn validate_detached_cms_operation(
+    sd: &SignedData,
+    content: &dyn ContentDigester,
+    encapsulated: bool,
+    signer_ctx: Option<&ValidationContext>,
+    options: &CmsValidationOptions<'_>,
+    mut completion: Option<&mut CmsLeafOperation>,
 ) -> CmsResult<StandardCmsSignatureStatus> {
     if options.key_usage_settings.is_some() && options.exact_key_usage_settings.is_some() {
         return Err(CmsError::Malformed(
@@ -975,22 +1064,25 @@ pub fn validate_detached_cms_with(
     };
     let si = extract_signer_info(sd)?;
     let digest_bytes = content.digest(&si.digest_algorithm)?;
-    let validate_signer = |ctx: &mut ValidationContext| {
-        cms_basic_validation_in_operation(
+    let validate_signer = |ctx: &mut ValidationContext, state: Option<&mut CmsLeafOperation>| {
+        cms_basic_validation_with_leaf_operation(
             sd,
             (!encapsulated).then_some(digest_bytes.as_slice()),
             ctx,
             &ku,
             options.algorithm_policy.clone(),
-            options.validation_path.as_ref(),
-            options.pkix_validation_params.as_ref(),
+            MainPathInputs {
+                validation_path: options.validation_path.as_ref(),
+                params: options.pkix_validation_params.as_ref(),
+                completion: state.map(|state| &mut state.main),
+            },
         )
     };
     let signature_before_timing = match options.validation_order {
         CmsValidationOrder::SignerFirst => {
             // This is the same validation/registration operation, not a
             // candidate preseed or a second validation with weaker policy.
-            let signature = validate_signer(&mut signer_operation_ctx)?;
+            let signature = validate_signer(&mut signer_operation_ctx, completion.as_deref_mut())?;
             if !signature.intact || !signature.valid {
                 // AdES basic integrity failures do not visit timestamps or
                 // expose signer attributes from an unauthenticated message.
@@ -1004,27 +1096,29 @@ pub fn validate_detached_cms_with(
         CmsValidationOrder::TimestampsFirst => None,
     };
     let timing = if shared_roles {
-        collect_timing_info_in_operation(
+        collect_timing_info_with_leaf_binding(
             si,
             &mut signer_operation_ctx,
             content,
             options.algorithm_policy.clone(),
+            completion.as_deref_mut(),
         )?
     } else {
         let mut timestamp_operation_ctx = options
             .ts_validation_context
             .ok_or_else(|| CmsError::Malformed("independent timestamp context is missing".into()))?
             .clone();
-        collect_timing_info_in_operation(
+        collect_timing_info_with_leaf_binding(
             si,
             &mut timestamp_operation_ctx,
             content,
             options.algorithm_policy.clone(),
+            completion.as_deref_mut(),
         )?
     };
     let signature = match signature_before_timing {
         Some(signature) => signature,
-        None => validate_signer(&mut signer_operation_ctx)?,
+        None => validate_signer(&mut signer_operation_ctx, completion)?,
     };
     let cert_info = extract_certificate_info(sd)?;
     let SignerAttrStatus {
@@ -1061,6 +1155,13 @@ pub fn validate_timestamp_token_with(
     let expected = expected_imprint.to_vec();
     validate_tst_signed_data(&sd, ctx, &move |_| Ok(expected.clone()), algorithm_policy)
 }
+
+#[path = "leaf_revocation.rs"]
+mod leaf_revocation;
+pub use leaf_revocation::{evaluate_cms_leaf_revocation, CmsLeafRevocationEvaluation};
+use leaf_revocation::{
+    validate_current_leaf_usage, CmsLeafOperation, MainLeafCompletion, SelectedTimestamp,
+};
 
 // Supplemental typed-algorithm regressions, not additional upstream ports.
 // Tests were added before the consumer implementation.

@@ -286,6 +286,23 @@ pub(crate) enum CheckOutcome {
     FetchFailed(String),
 }
 
+/// A selected authenticated revoked leaf stays distinct from a Good outcome.
+pub(crate) enum SelectedOutcome {
+    Checked(CheckOutcome),
+    LeafRevoked,
+}
+
+impl SelectedOutcome {
+    fn ordinary(self) -> Result<CheckOutcome, ValidationError> {
+        match self {
+            Self::Checked(outcome) => Ok(outcome),
+            Self::LeafRevoked => Err(ValidationError::PathValidation(
+                "leaf completion escaped ordinary validation".into(),
+            )),
+        }
+    }
+}
+
 /// The object whose revocation status is checked: a public-key certificate
 /// or an attribute certificate (`x509.Certificate | cms.AttributeCertificateV2`).
 #[derive(Clone, Debug)]
@@ -414,6 +431,15 @@ pub(crate) fn check_path_revocation_detailed(
     path: &ValidationPath,
     stack: &[Cert],
 ) -> Result<(), Box<crate::validate::PathFailure>> {
+    check_path_revocation_with_completion(ctx, path, stack, None)
+}
+
+pub(crate) fn check_path_revocation_with_completion(
+    ctx: &ValidationContext,
+    path: &ValidationPath,
+    stack: &[Cert],
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<(), Box<crate::validate::PathFailure>> {
     let issued = path.issued_certs();
     let total = issued.len();
     for (index, (cert, issuer)) in issued.into_iter().enumerate() {
@@ -428,23 +454,25 @@ pub(crate) fn check_path_revocation_detailed(
             is_ee,
             stack,
         };
-        check_revocation(ctx, &subject).map_err(|error| {
-            let time_horizon = match &error {
-                ValidationError::Revoked {
-                    revocation_time, ..
-                } => *revocation_time,
-                ValidationError::StaleRevinfo { time_cutoff, .. } => *time_cutoff,
-                _ => None,
-            };
-            Box::new(crate::validate::PathFailure {
-                error,
-                path: Some(path.clone()),
-                is_ee_cert: is_ee,
-                is_side_validation: false,
-                time_horizon,
-                invalid_certificate: false,
-            })
-        })?;
+        check_revocation_with_completion(ctx, &subject, completion.as_deref_mut()).map_err(
+            |error| {
+                let time_horizon = match &error {
+                    ValidationError::Revoked {
+                        revocation_time, ..
+                    } => *revocation_time,
+                    ValidationError::StaleRevinfo { time_cutoff, .. } => *time_cutoff,
+                    _ => None,
+                };
+                Box::new(crate::validate::PathFailure {
+                    error,
+                    path: Some(path.clone()),
+                    is_ee_cert: is_ee,
+                    is_side_validation: false,
+                    time_horizon,
+                    invalid_certificate: false,
+                })
+            },
+        )?;
     }
     Ok(())
 }
@@ -453,6 +481,14 @@ pub(crate) fn check_path_revocation_detailed(
 pub(crate) fn check_revocation(
     ctx: &ValidationContext,
     subject: &Subject<'_>,
+) -> Result<(), ValidationError> {
+    check_revocation_with_completion(ctx, subject, None)
+}
+
+fn check_revocation_with_completion(
+    ctx: &ValidationContext,
+    subject: &Subject<'_>,
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
 ) -> Result<(), ValidationError> {
     let policy = &ctx.revinfo_policy.revocation_checking_policy;
     let rule = if subject.is_ee {
@@ -487,6 +523,7 @@ pub(crate) fn check_revocation(
     let mut soft_fail = false;
     let mut revocation_check_failed = false;
     let mut ocsp_status_good = false;
+    let mut ocsp_leaf_revoked = false;
     let mut ocsp_matched = false;
     let mut crl_matched = false;
     let mut ocsp_suspect_stale = None;
@@ -494,22 +531,26 @@ pub(crate) fn check_revocation(
 
     // OCSP is only consulted if the certificate names a responder.
     if rule.ocsp_relevant() && cert_has_ocsp {
-        match ocsp::verify_ocsp(ctx, subject)? {
-            CheckOutcome::Good => {
+        match ocsp::verify_ocsp_with_completion(ctx, subject, completion.as_deref_mut())? {
+            SelectedOutcome::LeafRevoked => {
+                ocsp_leaf_revoked = true;
+                ocsp_matched = true;
+            }
+            SelectedOutcome::Checked(CheckOutcome::Good) => {
                 ocsp_status_good = true;
                 ocsp_matched = true;
             }
-            CheckOutcome::Indeterminate {
+            SelectedOutcome::Checked(CheckOutcome::Indeterminate {
                 failures: f,
                 suspect_stale,
-            } => {
+            }) => {
                 failures.extend(f);
                 revocation_check_failed = true;
                 ocsp_matched = true;
                 ocsp_suspect_stale = suspect_stale;
             }
-            CheckOutcome::NoMatches => {}
-            CheckOutcome::FetchFailed(msg) => {
+            SelectedOutcome::Checked(CheckOutcome::NoMatches) => {}
+            SelectedOutcome::Checked(CheckOutcome::FetchFailed(msg)) => {
                 if rule.tolerant() {
                     soft_fail = true;
                 } else {
@@ -519,7 +560,7 @@ pub(crate) fn check_revocation(
             }
         }
     }
-    if !ocsp_status_good && rule.ocsp_mandatory() {
+    if !ocsp_status_good && !ocsp_leaf_revoked && rule.ocsp_mandatory() {
         let err = if failures.is_empty() {
             "an applicable OCSP response could not be found".to_owned()
         } else {
@@ -530,32 +571,39 @@ pub(crate) fn check_revocation(
         );
         return Err(stale_or_insufficient(msg, ocsp_suspect_stale));
     }
-    let status_good = ocsp_status_good && rule != RevocationCheckingRule::CrlAndOcspRequired;
+    let selected_ocsp_complete = ocsp_status_good || ocsp_leaf_revoked;
+    let status_good = selected_ocsp_complete && rule != RevocationCheckingRule::CrlAndOcspRequired;
 
     // CRLs are not consulted (even when supplied) if the certificate has no
     // distribution points, unless the policy demands it.
     let mut crl_status_good = false;
+    let mut crl_leaf_revoked = false;
     let crl_required_by_policy =
         rule.crl_mandatory() || (!status_good && rule == RevocationCheckingRule::CrlOrOcspRequired);
     let crl_fetchable = rule.crl_relevant() && cert_has_crl;
     if crl_required_by_policy || (crl_fetchable && !status_good) {
-        match crl::verify_crl(ctx, subject)? {
-            CheckOutcome::Good => {
+        match crl::verify_crl_with_completion(ctx, subject, completion)? {
+            SelectedOutcome::LeafRevoked => {
+                crl_leaf_revoked = true;
+                crl_matched = true;
+                revocation_check_failed = false;
+            }
+            SelectedOutcome::Checked(CheckOutcome::Good) => {
                 revocation_check_failed = false;
                 crl_status_good = true;
                 crl_matched = true;
             }
-            CheckOutcome::Indeterminate {
+            SelectedOutcome::Checked(CheckOutcome::Indeterminate {
                 failures: f,
                 suspect_stale,
-            } => {
+            }) => {
                 failures.extend(f);
                 revocation_check_failed = true;
                 crl_matched = true;
                 crl_suspect_stale = suspect_stale;
             }
-            CheckOutcome::NoMatches => {}
-            CheckOutcome::FetchFailed(msg) => {
+            SelectedOutcome::Checked(CheckOutcome::NoMatches) => {}
+            SelectedOutcome::Checked(CheckOutcome::FetchFailed(msg)) => {
                 if rule.tolerant() {
                     soft_fail = true;
                 } else {
@@ -565,7 +613,7 @@ pub(crate) fn check_revocation(
             }
         }
     }
-    if !crl_status_good && rule.crl_mandatory() {
+    if !crl_status_good && !crl_leaf_revoked && rule.crl_mandatory() {
         let err = if failures.is_empty() {
             "an applicable CRL could not be found".to_owned()
         } else {
@@ -577,7 +625,7 @@ pub(crate) fn check_revocation(
         return Err(stale_or_insufficient(msg, crl_suspect_stale));
     }
 
-    let status_good = status_good || crl_status_good;
+    let status_good = status_good || crl_status_good || crl_leaf_revoked;
     let expected_revinfo =
         rule.strict() || (revinfo_declared && rule == RevocationCheckingRule::CheckIfDeclared);
     let matched = crl_matched || ocsp_matched;

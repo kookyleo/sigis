@@ -14,8 +14,8 @@ use x509_cert::ext::pkix::CrlReason;
 use x509_cert::ext::Extension;
 use x509_cert::name::{Name, RdnSequence};
 
-use super::freshness::RevinfoUsabilityRating;
-use super::{revoked_error, CheckOutcome, CrlContainer, Failures, Subject};
+use super::freshness::{RevinfoUsability, RevinfoUsabilityRating};
+use super::{revoked_error, CheckOutcome, CrlContainer, Failures, SelectedOutcome, Subject};
 use crate::authority::Cert;
 use crate::context::ValidationContext;
 use crate::path::ValidationPath;
@@ -111,6 +111,15 @@ fn fresh(
     prefix: &str,
     failures: &mut Failures,
 ) -> bool {
+    fresh_outcome(ctx, crl, prefix, failures).is_some()
+}
+
+fn fresh_outcome(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    prefix: &str,
+    failures: &mut Failures,
+) -> Option<RevinfoUsability> {
     let usability = ctx.freshness_judge.judge(
         Some(crl.this_update()),
         crl.next_update(),
@@ -118,7 +127,7 @@ fn fresh(
         &ctx.timing,
     );
     match usability.rating {
-        RevinfoUsabilityRating::Ok => return true,
+        RevinfoUsabilityRating::Ok => return Some(usability),
         RevinfoUsabilityRating::Stale => {
             failures.push_freshness(
                 format!("{prefix} is not recent enough"),
@@ -132,7 +141,7 @@ fn fresh(
             failures.push_freshness(format!("{prefix} freshness could not be established"), None);
         }
     }
-    false
+    None
 }
 
 /// Every revocation reason (`VALID_REVOCATION_REASONS`) as `ReasonFlags`
@@ -288,6 +297,7 @@ fn find_crl_issuer(
     crl: &CrlContainer,
     subject: &Subject<'_>,
     indirect: bool,
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
 ) -> IssuerSearch {
     let (paths, counts) = candidate_crl_paths(ctx, crl, subject, indirect);
     let n = counts.total;
@@ -296,22 +306,46 @@ fn find_crl_issuer(
     let mut sig_failures = 0;
     let mut explicit: Vec<String> = Vec::new();
     for (cand, path) in paths {
+        let mut checkpoint = completion
+            .as_deref()
+            .map(|collector| collector.checkpoint());
         // A certificate of the path being validated is checked by that
         // validation (from the anchor down); others need their own path.
         let in_main_path = subject.path.authorities().contains(&&cand);
         // Recursion exempts only issuer certificate path validation. The
         // current CRL still requires its own signature check below.
         if !subject.stack.contains(&cand) && !in_main_path {
-            if let Err(e) = crate::validate::validate_path_at_depth(ctx, &path, None, subject.stack)
-            {
+            let outcome = if let Some(completion) = completion.as_deref_mut() {
+                crate::validate::validate_path_in_stack_with_completion(
+                    ctx,
+                    &path,
+                    None,
+                    subject.stack,
+                    Some(completion),
+                )
+                .map(|_| ())
+                .map_err(|f| f.error)
+            } else {
+                crate::validate::validate_path_at_depth(ctx, &path, None, subject.stack)
+            };
+            if let Err(e) = outcome {
                 explicit.push(format!(
                     "The CRL issuer certificate path could not be validated. {e}"
                 ));
+                if let (Some(collector), Some(checkpoint)) =
+                    (completion.as_deref_mut(), checkpoint.take())
+                {
+                    collector.rollback(checkpoint);
+                }
                 continue;
             }
         }
         if signed_by(crl, &cand) {
             return IssuerSearch::Found(cand);
+        }
+        if let (Some(collector), Some(checkpoint)) = (completion.as_deref_mut(), checkpoint.take())
+        {
+            collector.rollback(checkpoint);
         }
         sig_failures += 1;
     }
@@ -556,15 +590,42 @@ pub(crate) fn maybe_get_delta<'a>(
 
 /// `_handle_single_crl`: the reasons covered, `None` if the CRL is not
 /// usable, or a revocation error.
+struct SelectedCrl {
+    reasons: u16,
+    leaf_revoked: bool,
+}
+
 fn handle_single_crl(
     ctx: &ValidationContext,
     crl: &CrlContainer,
     subject: &Subject<'_>,
     deltas: &[&CrlContainer],
     errs: &mut CrlErrs,
-) -> Result<Option<u16>, ValidationError> {
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<Option<SelectedCrl>, ValidationError> {
+    let checkpoint = completion
+        .as_deref()
+        .map(|collector| collector.checkpoint());
+    let result =
+        handle_single_crl_inner(ctx, crl, subject, deltas, errs, completion.as_deref_mut());
+    if matches!(&result, Ok(None)) {
+        if let (Some(collector), Some(checkpoint)) = (completion, checkpoint) {
+            collector.rollback(checkpoint);
+        }
+    }
+    result
+}
+
+fn handle_single_crl_inner(
+    ctx: &ValidationContext,
+    crl: &CrlContainer,
+    subject: &Subject<'_>,
+    deltas: &[&CrlContainer],
+    errs: &mut CrlErrs,
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<Option<SelectedCrl>, ValidationError> {
     let indirect = is_indirect(crl)?;
-    let crl_issuer = match find_crl_issuer(ctx, crl, subject, indirect) {
+    let crl_issuer = match find_crl_issuer(ctx, crl, subject, indirect, completion.as_deref_mut()) {
         IssuerSearch::Found(c) => c,
         IssuerSearch::NoMatches => {
             errs.issuer_failures += 1;
@@ -578,9 +639,9 @@ fn handle_single_crl(
     let Some(reasons) = crl_scope(crl, &crl_issuer, subject, indirect, errs)? else {
         return Ok(None);
     };
-    if !fresh(ctx, crl, "CRL", &mut errs.failures) {
+    let Some(freshness) = fresh_outcome(ctx, crl, "CRL", &mut errs.failures) else {
         return Ok(None);
-    }
+    };
     let delta = match maybe_get_delta(Some(ctx), crl, &crl_issuer, deltas, errs)? {
         Ok(d) => d,
         Err(msg) => {
@@ -604,6 +665,39 @@ fn handle_single_crl(
             return Ok(None);
         }
     };
+    if let Some(completion) = completion {
+        let active_hit = hit.filter(|(at, _)| {
+            !ctx.timing.point_in_time_validation || *at < ctx.timing.validation_time
+        });
+        if let Some((at, reason)) = active_hit {
+            if !completion.is_main(subject)
+                || reason != CrlReason::KeyCompromise
+                || at > ctx.timing.validation_time
+            {
+                return Err(revoked_error("CRL", &subject.description, at, reason));
+            }
+        }
+        if indirect {
+            completion.mark_unsupported("indirect CRLs are outside the initial completion profile");
+            if active_hit.is_some() {
+                return Err(crate::validate::leaf_revocation::unsupported(
+                    "indirect CRLs are outside the initial completion profile",
+                ));
+            }
+        }
+        let leaf_revoked = completion.crl_checked(
+            ctx,
+            crl,
+            subject,
+            &crl_issuer,
+            (freshness, reasons),
+            active_hit,
+        )?;
+        return Ok(Some(SelectedCrl {
+            reasons,
+            leaf_revoked,
+        }));
+    }
     if let Some((revoked_at, reason)) = hit {
         let timing = &ctx.timing;
         if !timing.point_in_time_validation || revoked_at < timing.validation_time {
@@ -615,7 +709,10 @@ fn handle_single_crl(
             ));
         }
     }
-    Ok(Some(reasons))
+    Ok(Some(SelectedCrl {
+        reasons,
+        leaf_revoked: false,
+    }))
 }
 
 /// `_process_crl_completeness`: `None` if every reason is covered.
@@ -643,32 +740,84 @@ pub(crate) fn verify_crl(
     ctx: &ValidationContext,
     subject: &Subject<'_>,
 ) -> Result<CheckOutcome, ValidationError> {
+    verify_crl_with_completion(ctx, subject, None)?.ordinary()
+}
+
+/// Discard facts from a channel that did not complete. A real authenticated
+/// revoked entry remains the ordinary hard failure, never a tolerated fetch
+/// failure or an eligible event with incomplete reason coverage.
+fn incomplete_selected_channel(
+    completion: Option<&mut crate::validate::LeafRevocationCollector>,
+    checkpoint: Option<crate::validate::leaf_revocation::CollectorCheckpoint>,
+    subject: &Subject<'_>,
+    outcome: CheckOutcome,
+) -> Result<SelectedOutcome, ValidationError> {
+    if let (Some(collector), Some(checkpoint)) = (completion, checkpoint) {
+        if let Some(error) = collector.incomplete_crl_error(&checkpoint, subject) {
+            return Err(error);
+        }
+        collector.rollback(checkpoint);
+    }
+    Ok(SelectedOutcome::Checked(outcome))
+}
+
+pub(crate) fn verify_crl_with_completion(
+    ctx: &ValidationContext,
+    subject: &Subject<'_>,
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<SelectedOutcome, ValidationError> {
+    let checkpoint = completion
+        .as_deref()
+        .map(|collector| collector.checkpoint());
     let mut errs = CrlErrs::default();
     let (complete, deltas): (Vec<&CrlContainer>, Vec<&CrlContainer>) =
         ctx.crls.iter().partition(|c| !is_delta(c));
     let mut total = complete.len();
     let mut checked: u16 = 0;
+    let mut leaf_revoked = false;
     for crl in &complete {
-        if let Some(r) = handle_single_crl(ctx, crl, subject, &deltas, &mut errs)? {
-            checked |= r;
+        if let Some(r) = handle_single_crl(
+            ctx,
+            crl,
+            subject,
+            &deltas,
+            &mut errs,
+            completion.as_deref_mut(),
+        )? {
+            checked |= r.reasons;
+            leaf_revoked |= r.leaf_revoked;
         }
     }
     let Some(outcome) = completeness(checked, total, &mut errs) else {
-        return Ok(CheckOutcome::Good);
+        if let Some(collector) = completion.as_deref_mut() {
+            collector.complete_crl(ctx, subject, checked);
+        }
+        return Ok(if leaf_revoked {
+            SelectedOutcome::LeafRevoked
+        } else {
+            SelectedOutcome::Checked(CheckOutcome::Good)
+        });
     };
     let Some(fetcher) = ctx.fetchers.crl.as_ref() else {
-        return Ok(outcome);
+        return incomplete_selected_channel(completion, checkpoint, subject, outcome);
     };
     let fetched = if subject.cert.is_ac {
         fetcher.fetch_ac_crls(&subject.cert.der)
     } else if let Some(x509) = subject.cert.x509.as_ref() {
         fetcher.fetch_crls(x509)
     } else {
-        return Ok(outcome);
+        return incomplete_selected_channel(completion, checkpoint, subject, outcome);
     };
     let fetched = match fetched {
         Ok(f) => f,
-        Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
+        Err(e) => {
+            return incomplete_selected_channel(
+                completion,
+                checkpoint,
+                subject,
+                CheckOutcome::FetchFailed(e.message),
+            )
+        }
     };
     let fetched: Vec<CrlContainer> = fetched
         .iter()
@@ -690,12 +839,32 @@ pub(crate) fn verify_crl(
         .collect();
     to_process.extend(extra_complete.iter().copied());
     for crl in &to_process {
-        if let Some(r) = handle_single_crl(ctx, crl, subject, &all_deltas, &mut errs)? {
-            checked |= r;
+        if let Some(r) = handle_single_crl(
+            ctx,
+            crl,
+            subject,
+            &all_deltas,
+            &mut errs,
+            completion.as_deref_mut(),
+        )? {
+            checked |= r.reasons;
+            leaf_revoked |= r.leaf_revoked;
         }
     }
     total += to_process.len();
-    Ok(completeness(checked, total, &mut errs).unwrap_or(CheckOutcome::Good))
+    match completeness(checked, total, &mut errs) {
+        Some(outcome) => incomplete_selected_channel(completion, checkpoint, subject, outcome),
+        None => {
+            if let Some(collector) = completion {
+                collector.complete_crl(ctx, subject, checked);
+            }
+            Ok(if leaf_revoked {
+                SelectedOutcome::LeafRevoked
+            } else {
+                SelectedOutcome::Checked(CheckOutcome::Good)
+            })
+        }
+    }
 }
 
 #[cfg(test)]

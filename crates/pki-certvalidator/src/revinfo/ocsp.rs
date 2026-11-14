@@ -7,7 +7,7 @@ use x509_cert::ext::pkix::CrlReason;
 use x509_ocsp::{CertStatus, ResponderId};
 
 use super::freshness::RevinfoUsabilityRating;
-use super::{revoked_error, CheckOutcome, Failures, OcspContainer, Subject};
+use super::{revoked_error, CheckOutcome, Failures, OcspContainer, SelectedOutcome, Subject};
 use crate::authority::Cert;
 use crate::context::ValidationContext;
 use sigis_pki_core::algorithms::{validate_signature, DigestAlgorithm, SignatureValidationContext};
@@ -111,6 +111,7 @@ fn check_authorization(
     responder: &Cert,
     subject: &Subject<'_>,
     failures: &mut Failures,
+    completion: Option<&mut crate::validate::LeafRevocationCollector>,
 ) -> bool {
     let issuer = subject.issuer;
     // The issuer itself signed the response.
@@ -142,7 +143,7 @@ fn check_authorization(
             .is_ok()
         })
         && responder.valid_at(ctx.timing.validation_time, ctx.timing.time_tolerance)
-        && responder_chain_ok(ctx, responder, subject);
+        && responder_chain_ok(ctx, responder, subject, completion);
     if !provenance_ok {
         failures.push(PROVENANCE_ERR);
         failures.push("Unable to verify OCSP response since response was signed by an unauthorized certificate");
@@ -154,7 +155,12 @@ fn check_authorization(
 /// `_validate_delegated_ocsp_provenance`: a delegated responder without
 /// `id-pkix-ocsp-nocheck` needs a valid path, including its own revocation
 /// status, through the certificate's issuer.
-fn responder_chain_ok(ctx: &ValidationContext, responder: &Cert, subject: &Subject<'_>) -> bool {
+fn responder_chain_ok(
+    ctx: &ValidationContext,
+    responder: &Cert,
+    subject: &Subject<'_>,
+    completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> bool {
     if responder.has_extension(&oids::OCSP_NOCHECK) {
         // Signature and validity were checked against the issuer above.
         // NOCHECK exempts revocation, not the signature algorithm policy.
@@ -176,19 +182,37 @@ fn responder_chain_ok(ctx: &ValidationContext, responder: &Cert, subject: &Subje
     let Some(chain) = subject.path.truncate_to_issuer_and_append(responder) else {
         return false;
     };
-    crate::validate::validate_path_at_depth(ctx, &chain, None, subject.stack).is_ok()
+    if let Some(completion) = completion {
+        crate::validate::validate_path_in_stack_with_completion(
+            ctx,
+            &chain,
+            None,
+            subject.stack,
+            Some(completion),
+        )
+        .is_ok()
+    } else {
+        crate::validate::validate_path_at_depth(ctx, &chain, None, subject.stack).is_ok()
+    }
 }
 
-/// Handle one response; `Ok(true)` means the status is good.
+enum SingleStatus {
+    Rejected,
+    Good,
+    LeafRevoked,
+}
+
+/// Handle one response, preserving authenticated unresolved events as distinct.
 fn handle_single(
     ctx: &ValidationContext,
     container: &OcspContainer,
     subject: &Subject<'_>,
     failures: &mut Failures,
-) -> Result<bool, ValidationError> {
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<SingleStatus, ValidationError> {
     let Some(responder) = identify_responder(ctx, container, subject) else {
         failures.push("Unable to verify OCSP response since response signing certificate could not be located");
-        return Ok(false);
+        return Ok(SingleStatus::Rejected);
     };
 
     let usability = ctx.freshness_judge.judge(
@@ -205,15 +229,15 @@ fn handle_single(
                 _ => "OCSP response is not recent enough".to_owned(),
             };
             failures.push_freshness(msg, usability.last_usable_at);
-            return Ok(false);
+            return Ok(SingleStatus::Rejected);
         }
         RevinfoUsabilityRating::TooNew => {
             failures.push_freshness("OCSP response is too recent", None);
-            return Ok(false);
+            return Ok(SingleStatus::Rejected);
         }
         RevinfoUsabilityRating::Unclear => {
             failures.push_freshness("OCSP response freshness could not be established", None);
-            return Ok(false);
+            return Ok(SingleStatus::Rejected);
         }
     }
 
@@ -228,27 +252,54 @@ fn handle_single(
         Ok(()) => {}
         Err(sigis_pki_core::errors::SignatureError::PssParameterMismatch) => {
             failures.push("The signature parameters on the OCSP response do not match the constraints on the public key");
-            return Ok(false);
+            return Ok(SingleStatus::Rejected);
         }
         Err(_) => {
             failures.push("Unable to verify OCSP response signature");
-            return Ok(false);
+            return Ok(SingleStatus::Rejected);
         }
     }
 
-    if !check_authorization(ctx, &responder, subject, failures) {
-        return Ok(false);
+    if !check_authorization(
+        ctx,
+        &responder,
+        subject,
+        failures,
+        completion.as_deref_mut(),
+    ) {
+        return Ok(SingleStatus::Rejected);
     }
 
     let Some(single) = container.single() else {
-        return Ok(false);
+        return Ok(SingleStatus::Rejected);
     };
     match &single.cert_status {
-        CertStatus::Good(_) => Ok(true),
+        CertStatus::Good(_) => {
+            if let Some(completion) = completion {
+                completion.ocsp_good(ctx, container, subject, &responder, usability)?;
+            }
+            Ok(SingleStatus::Good)
+        }
         CertStatus::Revoked(info) => {
             let revoked_at = Moment::from(info.revocation_time.0.to_date_time());
             let timing = &ctx.timing;
             if !timing.point_in_time_validation || revoked_at <= timing.validation_time {
+                if let Some(completion) = completion {
+                    if completion.is_main(subject)
+                        && info.revocation_reason == Some(CrlReason::KeyCompromise)
+                        && revoked_at <= timing.validation_time
+                    {
+                        completion.ocsp_revoked(
+                            ctx,
+                            container,
+                            subject,
+                            &responder,
+                            usability,
+                            (revoked_at, info.revocation_reason),
+                        )?;
+                        return Ok(SingleStatus::LeafRevoked);
+                    }
+                }
                 let reason = info.revocation_reason.unwrap_or(CrlReason::Unspecified);
                 return Err(revoked_error(
                     "OCSP response",
@@ -257,9 +308,9 @@ fn handle_single(
                     reason,
                 ));
             }
-            Ok(false)
+            Ok(SingleStatus::Rejected)
         }
-        CertStatus::Unknown(_) => Ok(false),
+        CertStatus::Unknown(_) => Ok(SingleStatus::Rejected),
     }
 }
 
@@ -269,6 +320,14 @@ pub(crate) fn verify_ocsp(
     ctx: &ValidationContext,
     subject: &Subject<'_>,
 ) -> Result<CheckOutcome, ValidationError> {
+    verify_ocsp_with_completion(ctx, subject, None)?.ordinary()
+}
+
+pub(crate) fn verify_ocsp_with_completion(
+    ctx: &ValidationContext,
+    subject: &Subject<'_>,
+    mut completion: Option<&mut crate::validate::LeafRevocationCollector>,
+) -> Result<SelectedOutcome, ValidationError> {
     // With an OCSP fetcher, the responses for a certificate that names a
     // responder come from the fetcher (`async_retrieve_ocsps`).
     let fetched;
@@ -279,14 +338,18 @@ pub(crate) fn verify_ocsp(
             } else if let Some(x509) = subject.cert.x509.as_ref() {
                 fetcher.fetch_ocsp(x509, subject.issuer)
             } else {
-                return Ok(CheckOutcome::NoMatches);
+                return Ok(SelectedOutcome::Checked(CheckOutcome::NoMatches));
             };
             match response {
                 Ok(der) => {
                     fetched = OcspContainer::load(&der).unwrap_or_default();
                     fetched.iter().collect()
                 }
-                Err(e) => return Ok(CheckOutcome::FetchFailed(e.message)),
+                Err(e) => {
+                    return Ok(SelectedOutcome::Checked(CheckOutcome::FetchFailed(
+                        e.message,
+                    )))
+                }
             }
         }
         _ => ctx.ocsps.iter().collect(),
@@ -308,17 +371,33 @@ pub(crate) fn verify_ocsp(
             }
             CertIdMatch::Match => {}
         }
-        if handle_single(ctx, container, subject, &mut failures)? {
-            return Ok(CheckOutcome::Good);
+        let checkpoint = completion
+            .as_deref()
+            .map(|collector| collector.checkpoint());
+        match handle_single(
+            ctx,
+            container,
+            subject,
+            &mut failures,
+            completion.as_deref_mut(),
+        )? {
+            SingleStatus::Good => return Ok(SelectedOutcome::Checked(CheckOutcome::Good)),
+            SingleStatus::LeafRevoked => return Ok(SelectedOutcome::LeafRevoked),
+            SingleStatus::Rejected => {
+                if let (Some(collector), Some(checkpoint)) = (completion.as_deref_mut(), checkpoint)
+                {
+                    collector.rollback(checkpoint);
+                }
+            }
         }
     }
     if unrelated == responses.len() {
-        return Ok(CheckOutcome::NoMatches);
+        return Ok(SelectedOutcome::Checked(CheckOutcome::NoMatches));
     }
-    Ok(CheckOutcome::Indeterminate {
+    Ok(SelectedOutcome::Checked(CheckOutcome::Indeterminate {
         suspect_stale: failures.suspect_stale(),
         failures: failures.messages,
-    })
+    }))
 }
 
 #[cfg(test)]

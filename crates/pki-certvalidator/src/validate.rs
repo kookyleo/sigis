@@ -10,6 +10,14 @@
 //! the algorithm usage policy, and offline revocation checking under the
 //! configured revocation and freshness policies.
 
+#[path = "leaf_revocation.rs"]
+pub(crate) mod leaf_revocation;
+pub(crate) use leaf_revocation::Collector as LeafRevocationCollector;
+pub use leaf_revocation::{
+    AuthenticatedLeafRevocation, CurrentLeafRevocationEvaluation, CurrentLeafRevocationFacts,
+    LeafRevocationChannel,
+};
+
 mod name_constraints;
 #[cfg(test)]
 mod name_constraints_tests;
@@ -559,6 +567,104 @@ pub fn find_valid_path(
     }))
 }
 
+/// Complete current PKIX checking while retaining only authenticated MAIN
+/// key-compromise events as unresolved temporal obligations.
+///
+/// This entry does not validate a currently revoked certificate as trusted.
+/// Its opaque result is created only after all other current checks complete.
+/// Ordinary path validation and its failure mapping are unchanged.
+pub fn find_current_leaf_revocation_evaluation<'ctx>(
+    ctx: &'ctx ValidationContext,
+    cert: &Cert,
+    params: Option<&PkixValidationParams>,
+) -> Result<CurrentLeafRevocationEvaluation<'ctx>, Box<PathFailure>> {
+    // Capture only the actual plain reference inputs, never the context's
+    // backend ownership or policy objects. Conversion later only moves them.
+    let reference_timing = *ctx.timing();
+    for name in [cert.subject(), cert.issuer()] {
+        crate::names::check_name(name)
+            .map_err(|e| Box::new(PathFailure::plain(ValidationError::Malformed(e), None)))?;
+    }
+    let paths = match build_paths(ctx, cert) {
+        Ok(paths) => paths,
+        Err(error) => {
+            if cert.is_self_issued() {
+                let mut failure = PathFailure::plain(
+                    ValidationError::PathValidation(format!(
+                        "The X.509 certificate provided is self-signed - \"{}\"",
+                        certval::name_to_string(cert.subject())
+                    )),
+                    None,
+                );
+                failure.invalid_certificate = true;
+                return Err(Box::new(failure));
+            }
+            return Err(Box::new(PathFailure::plain(error, None)));
+        }
+    };
+    let mut distinct = Vec::new();
+    for path in paths {
+        if !distinct.contains(&path) {
+            distinct.push(path);
+        }
+    }
+    // Multiple candidate authority is not temporal recovery authority. Keep
+    // normal current-valid selection, without a second discovery invocation.
+    if distinct.len() != 1 {
+        let mut failures = Vec::new();
+        for path in distinct {
+            match validate_path_qualified(ctx, &path, params) {
+                Ok(path) => {
+                    return Ok(CurrentLeafRevocationEvaluation {
+                        _context: ctx,
+                        path,
+                        failure: None,
+                        events: Vec::new(),
+                        _selected_evidence: Vec::new(),
+                        _caller_params: params.cloned(),
+                        _completed_channels: Vec::new(),
+                        _reference_timing: reference_timing,
+                    })
+                }
+                Err(failure) => failures.push(failure),
+            }
+        }
+        if failures.len() > 1 {
+            if let Some(pos) = failures
+                .iter()
+                .rposition(|f| !f.error.to_string().contains("signature"))
+            {
+                return Err(failures.swap_remove(pos));
+            }
+        }
+        return Err(failures.into_iter().next().unwrap_or_else(|| {
+            Box::new(PathFailure::plain(
+                leaf_revocation::unsupported("no unique candidate path"),
+                None,
+            ))
+        }));
+    }
+    let mut path = distinct.remove(0);
+    let mut collector = LeafRevocationCollector::new(cert);
+    let policies =
+        validate_path_in_stack_with_completion(ctx, &path, params, &[], Some(&mut collector))?;
+    path.set_qualified_policies(policies);
+    collector
+        .finish()
+        .map_err(|error| Box::new(PathFailure::plain(error, Some(path.clone()))))?;
+    let failure = collector.original_failure(&path);
+    Ok(CurrentLeafRevocationEvaluation {
+        _context: ctx,
+        path,
+        failure,
+        events: collector.events,
+        _selected_evidence: collector.selected_evidence,
+        _caller_params: params.cloned(),
+        _completed_channels: collector.completed_channels,
+        _reference_timing: reference_timing,
+    })
+}
+
 /// Validate `path` at the context's time of interest (port of `validate_path`).
 ///
 /// This covers RFC 5280 validation, the algorithm usage policy, and revocation
@@ -635,6 +741,16 @@ fn validate_path_in_stack(
     path: &ValidationPath,
     params: Option<&PkixValidationParams>,
     outer: &[Cert],
+) -> Result<Vec<crate::path::QualifiedPolicy>, Box<PathFailure>> {
+    validate_path_in_stack_with_completion(ctx, path, params, outer, None)
+}
+
+pub(crate) fn validate_path_in_stack_with_completion(
+    ctx: &ValidationContext,
+    path: &ValidationPath,
+    params: Option<&PkixValidationParams>,
+    outer: &[Cert],
+    completion: Option<&mut LeafRevocationCollector>,
 ) -> Result<Vec<crate::path::QualifiedPolicy>, Box<PathFailure>> {
     let fail = |error: ValidationError| Box::new(PathFailure::plain(error, Some(path.clone())));
     let anchor: &TrustAnchor = path.trust_anchor();
@@ -864,7 +980,11 @@ fn validate_path_in_stack(
     }
     let mut stack = outer.to_vec();
     stack.push(path.leaf().unwrap_or(anchor.cert()).clone());
-    revinfo::check_path_revocation_detailed(ctx, path, &stack)?;
+    if let Some(completion) = completion {
+        revinfo::check_path_revocation_with_completion(ctx, path, &stack, Some(completion))?;
+    } else {
+        revinfo::check_path_revocation_detailed(ctx, path, &stack)?;
+    }
     Ok(qualified)
 }
 
