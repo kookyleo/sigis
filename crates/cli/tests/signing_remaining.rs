@@ -36,6 +36,7 @@ impl Case {
             fetchers: Fetchers::none(),
             password: Some("secret".into()),
             trusted_list_transport: None,
+            pkcs11_user_pin_prompt: None,
         };
         sigis_cli::run_with_runtime(&args, &PluginRegistry::default(), &runtime)
     }

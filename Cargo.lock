@@ -3352,6 +3352,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sigis-cms",
+ "sigis-eutl",
  "sigis-pades",
  "sigis-pades-sign",
  "sigis-pdf",
