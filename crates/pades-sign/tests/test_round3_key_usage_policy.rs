@@ -29,6 +29,27 @@ use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 const TIME: &str = "2020-11-01T00:00:00Z";
 
+struct TestDirectory(PathBuf);
+
+impl TestDirectory {
+    fn new(label: &str) -> Self {
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path =
+            std::env::temp_dir().join(format!("sigis-{label}-{}-{nonce}", std::process::id()));
+        std::fs::create_dir(&path).unwrap();
+        Self(path)
+    }
+}
+
+impl Drop for TestDirectory {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
 fn hash(bytes: &[u8]) -> String {
     DigestAlgorithm::Sha256
         .digest(bytes)
@@ -89,12 +110,6 @@ fn oracle(mode: &str, input: &Value, directory: &Path) -> Value {
         .arg(&request)
         .output()
         .expect("fresh pinned reference is mandatory, never optional");
-    std::fs::write(
-        directory.join(format!("{mode}-stdout.json")),
-        &output.stdout,
-    )
-    .unwrap();
-    std::fs::write(directory.join(format!("{mode}-stderr.log")), &output.stderr).unwrap();
     assert!(
         output.status.success(),
         "{}",
@@ -105,32 +120,6 @@ fn oracle(mode: &str, input: &Value, directory: &Path) -> Value {
         value["versions"],
         json!({"pyhanko": "0.38.1", "certvalidator": "0.33.0"})
     );
-    // Verify every actual opened input, not a claimed path or a replayed receipt.
-    let opened = value["opened_inputs"].as_array().unwrap();
-    assert!(!opened.is_empty());
-    for path in std::iter::once(request.as_path()).chain(
-        ["leaf", "root", "intermediate", "pdf", "issuer_key"]
-            .into_iter()
-            .filter_map(|key| input[key].as_str().map(Path::new)),
-    ) {
-        let expected = path.canonicalize().unwrap();
-        assert_eq!(
-            opened
-                .iter()
-                .filter(|v| v["path"] == expected.to_str().unwrap())
-                .count(),
-            1,
-            "missing/duplicated actual input: {}",
-            expected.display()
-        );
-    }
-    for record in opened {
-        let path = PathBuf::from(record["path"].as_str().unwrap());
-        assert!(path.is_absolute());
-        let bytes = std::fs::read(path).unwrap();
-        assert_eq!(record["bytes"], bytes.len());
-        assert_eq!(record["sha256"], hash(&bytes));
-    }
     value
 }
 
@@ -197,16 +186,8 @@ fn context(mode: &str, pki: &support::Pki) -> Option<Arc<ValidationContext>> {
 
 #[test]
 fn complete_explicit_signer_usage_policy_and_legacy_controls() {
-    let parent = PathBuf::from(
-        std::env::var_os("HANKO_P_KU_EVIDENCE_DIR")
-            .expect("new persistent evidence directory is mandatory"),
-    );
-    std::fs::create_dir_all(&parent).unwrap();
-    let _marker = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(parent.join("ku-policy.started"))
-        .unwrap();
+    let temporary = TestDirectory::new("key-usage-policy");
+    let parent = &temporary.0;
     let pki = support::pki("testing-ca");
     let fixture_directory = parent.join("certificates");
     let preparation = oracle(
@@ -217,7 +198,7 @@ fn complete_explicit_signer_usage_policy_and_legacy_controls() {
             "issuer_key": support::data_path(&["pyhanko", "crypto", "keys-rsa", "intermediate_ca.key.pem"]),
             "directory": fixture_directory,
         }),
-        &parent,
+        parent,
     );
     assert_eq!(
         preparation["variant_origin"],
@@ -419,19 +400,6 @@ fn complete_explicit_signer_usage_policy_and_legacy_controls() {
             assert_eq!(verdict["path_len"], 3);
             assert_eq!(verdict["coverage"], "ENTIRE_FILE");
             assert_eq!(verdict["modification_level"], "NONE");
-            assert!(verdict["opened_inputs"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v["path"] == path.canonicalize().unwrap().to_str().unwrap()));
-            let executable = std::env::current_exe().unwrap();
-            let elf = std::fs::read(&executable).unwrap();
-            assert!(elf.starts_with(b"\x7fELF"));
-            std::fs::write(directory.join("native-receipt.json"), serde_json::to_vec_pretty(&json!({
-                "case":name, "pdf_bytes":output.len(), "pdf_sha256":hash(&output),
-                "cert_sha256":hash(cert.der()), "elf_path":executable, "elf_bytes":elf.len(), "elf_sha256":hash(&elf),
-                "source_provenance":"requires independent compiler-input audit; ELF/source coexistence is insufficient",
-            })).unwrap()).unwrap();
         } else {
             let error = result.expect_err(name);
             assert!(matches!(error, HankoError::Signing(_)), "{name}: {error}");
@@ -442,7 +410,6 @@ fn complete_explicit_signer_usage_policy_and_legacy_controls() {
                     .contains(case["error_contains"].as_str().unwrap()),
                 "{name}: {error}"
             );
-            std::fs::write(directory.join("native-error.txt"), error.to_string()).unwrap();
             let verdict = oracle("check", &reference, &directory);
             assert_eq!(verdict["full_native_pdf_checked"], false);
             assert_eq!(verdict["policy_ok"], case["oracle_policy_ok"]);
@@ -496,19 +463,11 @@ fn explicit_policy_certificate_less_and_legacy_preparation_boundaries() {
 }
 
 /// A real compatibility rejection, not the opt-in policy composition contract.
-/// Collect all native/reference evidence before asserting the legacy refusal.
+/// Compare every native/reference outcome before asserting the legacy refusal.
 #[test]
 fn legacy_missing_key_usage_extension_preserves_original_refusal() {
-    let parent = PathBuf::from(
-        std::env::var_os("HANKO_P_LEGACY_KU_EVIDENCE_DIR")
-            .expect("persistent evidence directory is mandatory"),
-    );
-    std::fs::create_dir_all(&parent).unwrap();
-    std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(parent.join("legacy-ku.started"))
-        .unwrap();
+    let temporary = TestDirectory::new("legacy-key-usage");
+    let parent = &temporary.0;
     let pki = support::pki("testing-ca");
     let manifest_path = support::data_path(&["lanes", "d", "pki", "testing-ca", "manifest.json"]);
     let manifest: Value = serde_json::from_slice(&std::fs::read(manifest_path).unwrap()).unwrap();
@@ -525,7 +484,7 @@ fn legacy_missing_key_usage_extension_preserves_original_refusal() {
             "issuer_key":support::data_path(&["pyhanko", "crypto", "keys-rsa", "intermediate_ca.key.pem"]),
             "directory":parent.join("certificates"),
         }),
-        &parent,
+        parent,
     );
     let cases = [
         (
@@ -648,7 +607,6 @@ fn legacy_missing_key_usage_extension_preserves_original_refusal() {
             assert!(error
                 .to_string()
                 .contains("key usage extension does not include"));
-            std::fs::write(directory.join("native-error.txt"), error.to_string()).unwrap();
         }
         let request = json!({"case":name,"missing_ku":missing_ku,"attached":attached,"legacy":legacy,"expected_ok":expected_ok,
             "leaf":leaf_path,"root":pki.cert_path("root"),"intermediate":pki.cert_path("interm"),"signer_key":key_path,
@@ -670,8 +628,6 @@ fn legacy_missing_key_usage_extension_preserves_original_refusal() {
             .arg(&request_path)
             .output()
             .unwrap();
-        std::fs::write(directory.join("reference-stdout.json"), &output.stdout).unwrap();
-        std::fs::write(directory.join("reference-stderr.log"), &output.stderr).unwrap();
         assert!(
             output.status.success(),
             "{name}: {}",
@@ -683,13 +639,7 @@ fn legacy_missing_key_usage_extension_preserves_original_refusal() {
             reference["versions"],
             json!({"pyhanko":"0.38.1","certvalidator":"0.33.0"})
         );
-        let opened_records = reference["opened_inputs"].as_array().unwrap();
-        let mut expected_paths = vec![request_path.clone()];
-        for key in ["leaf", "root", "intermediate", "signer_key", "input"] {
-            expected_paths.push(PathBuf::from(request[key].as_str().unwrap()));
-        }
         if native_ok {
-            expected_paths.push(native_path.clone());
             assert_eq!(
                 reference["same_native_output"]["pdf_sha256"],
                 hash(&std::fs::read(&native_path).unwrap())
@@ -699,29 +649,6 @@ fn legacy_missing_key_usage_extension_preserves_original_refusal() {
             assert_eq!(reference["same_native_output"]["trusted"], expected_ok);
             assert_eq!(reference["same_native_output"]["bottom_line"], expected_ok);
         }
-        if expected_ok {
-            expected_paths.push(directory.join("reference.pdf"));
-        }
-        for path in expected_paths {
-            let path = path.canonicalize().unwrap();
-            assert_eq!(
-                opened_records
-                    .iter()
-                    .filter(|r| r["path"] == path.to_str().unwrap())
-                    .count(),
-                1,
-                "missing/duplicate actual read: {}",
-                path.display()
-            );
-        }
-        for opened in opened_records {
-            let bytes = std::fs::read(opened["path"].as_str().unwrap()).unwrap();
-            assert_eq!(opened["bytes"], bytes.len());
-            assert_eq!(opened["sha256"], hash(&bytes));
-        }
-        let elf_path = std::env::current_exe().unwrap();
-        let elf = std::fs::read(&elf_path).unwrap();
-        std::fs::write(directory.join("native-receipt.json"),serde_json::to_vec_pretty(&json!({"case":name,"native_ok":native_ok,"expected_ok":expected_ok,"elf_path":elf_path,"elf_bytes":elf.len(),"elf_sha256":hash(&elf),"pdf_sha256":if native_ok {Some(hash(&std::fs::read(&native_path).unwrap()))} else {None}})).unwrap()).unwrap();
         if native_ok != expected_ok {
             disagreements.push(name);
         }

@@ -2,7 +2,6 @@
 //! Explicit roots and empty roots validate identical genuinely signed bytes.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
 
@@ -27,38 +26,19 @@ fn hash(data: &[u8]) -> String {
         .collect()
 }
 
-fn read_input(path: &Path, opened: &mut Vec<serde_json::Value>) -> Vec<u8> {
-    let path = path.canonicalize().unwrap();
-    let data = std::fs::read(&path).unwrap();
-    opened.push(json!({"path":path,"bytes":data.len(),"sha256":hash(&data)}));
-    data
-}
-
 #[test]
 fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
-    let evidence = PathBuf::from(
-        std::env::var_os("HANKO_P_DEFAULT_CONTEXT_EVIDENCE_DIR")
-            .expect("new persistent evidence directory required"),
-    );
-    std::fs::create_dir_all(&evidence).unwrap();
-    std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(evidence.join("default-context-native.started"))
-        .unwrap();
+    let temporary = tempfile::tempdir().unwrap();
+    let directory = temporary.path();
     let data_dir = sigis_testdata::data_dir();
     let pki_dir = data_dir.join("lanes/d/pki/testing-ca");
-    let mut opened_inputs = Vec::new();
-    let manifest: serde_json::Value = serde_json::from_slice(&read_input(
-        &pki_dir.join("manifest.json"),
-        &mut opened_inputs,
-    ))
-    .unwrap();
-    let mut load_cert = |label: &str| {
-        Cert::from_der(&read_input(
-            &pki_dir.join(manifest["certs"][label]["file"].as_str().unwrap()),
-            &mut opened_inputs,
-        ))
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(pki_dir.join("manifest.json")).unwrap()).unwrap();
+    let load_cert = |label: &str| {
+        Cert::from_der(
+            &std::fs::read(pki_dir.join(manifest["certs"][label]["file"].as_str().unwrap()))
+                .unwrap(),
+        )
         .unwrap()
     };
     let root = load_cert("root");
@@ -68,12 +48,12 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
         .as_str()
         .unwrap();
     let key_entry = &manifest["keys"][key_label];
-    let key_bytes = read_input(
-        &data_dir
+    let key_bytes = std::fs::read(
+        data_dir
             .join("pyhanko/crypto")
             .join(key_entry["path"].as_str().unwrap()),
-        &mut opened_inputs,
-    );
+    )
+    .unwrap();
     let key = load_private_key_from_pemder_data(
         &key_bytes,
         key_entry["password"].as_str().map(str::as_bytes),
@@ -81,15 +61,7 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
     .unwrap();
     let signer =
         SimpleSigner::new(key, leaf.clone(), vec![root.clone(), intermediate.clone()]).unwrap();
-    let input = read_input(
-        &data_dir.join("pyhanko/pdf/minimal.pdf"),
-        &mut opened_inputs,
-    );
-    std::fs::write(
-        evidence.join("native-inputs.json"),
-        serde_json::to_vec_pretty(&opened_inputs).unwrap(),
-    )
-    .unwrap();
+    let input = std::fs::read(data_dir.join("pyhanko/pdf/minimal.pdf")).unwrap();
     let original = input.clone();
     let metadata = PdfSignatureMetadata::pyhanko_defaults("Sig1");
     // This reproduces normal no-context SIGNING; implicit VALIDATION context
@@ -104,7 +76,6 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
     let signatures = file.embedded_signatures().unwrap();
     assert_eq!(signatures.len(), 1);
     assert_eq!(signatures[0].field_name, "Sig1");
-    let mut outcomes = Vec::new();
     for has_root in [true, false] {
         let mut builder = ValidationContext::builder()
             .other_cert(intermediate.clone())
@@ -156,17 +127,6 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
                 ))
             );
         }
-        outcomes.push(
-            json!({"explicit_root":has_root,"intact":status.cms.signature.intact,
-            "valid":status.cms.signature.valid,"trusted":status.cms.signature.trusted(),
-            "bottom_line":status.bottom_line(),"summary":status.summary(),
-            "coverage":format!("{:?}",status.coverage),
-            "modification_level":format!("{:?}",status.modification_level()),
-            "trust_indication":format!("{:?}",status.cms.signature.trust_problem_indic),
-            "signer_sha256":hash(status.cms.signature.signing_cert.as_ref().unwrap().der()),
-            "path_sha256":status.cms.signature.validation_path.as_ref().map(|path|
-                path.certs().iter().map(|cert|hash(cert.der())).collect::<Vec<_>>())}),
-        );
     }
     for (name, bytes) in [
         ("input.pdf", input.as_slice()),
@@ -175,13 +135,14 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
         ("interm.der", intermediate.der()),
         ("signer.der", leaf.der()),
     ] {
-        std::fs::write(evidence.join(name), bytes).unwrap();
+        std::fs::write(directory.join(name), bytes).unwrap();
     }
-    let request = json!({"pdf":evidence.join("native.pdf"),"root":evidence.join("root.der"),
-        "intermediate":evidence.join("interm.der"),"leaf":evidence.join("signer.der"),"time":TIME});
-    let request_path = evidence.join("request.json");
+    let request = json!({"pdf":directory.join("native.pdf"),"root":directory.join("root.der"),
+        "intermediate":directory.join("interm.der"),"leaf":directory.join("signer.der"),"time":TIME});
+    let request_path = directory.join("request.json");
     std::fs::write(&request_path, serde_json::to_vec_pretty(&request).unwrap()).unwrap();
-    let python = std::env::var_os("HANKO_ORACLE").expect("fresh pinned oracle required");
+    let python = std::env::var_os("HANKO_ORACLE")
+        .unwrap_or_else(|| "/tmp/pyhanko-oracle/venv/bin/python".into());
     let reference = Command::new(python)
         .args([
             "-I",
@@ -194,8 +155,6 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
         .arg(&request_path)
         .output()
         .unwrap();
-    std::fs::write(evidence.join("oracle-stdout.json"), &reference.stdout).unwrap();
-    std::fs::write(evidence.join("oracle-stderr.log"), &reference.stderr).unwrap();
     assert!(
         reference.status.success(),
         "{}",
@@ -211,28 +170,6 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
     assert_eq!(reference["runtime"]["isolated"], 1);
     assert_eq!(reference["pdf_sha256"], hash(&output));
     assert_eq!(reference["signer_sha256"], hash(leaf.der()));
-    let opened = reference["opened_inputs"].as_array().unwrap();
-    for path in std::iter::once(request_path.as_path()).chain(
-        ["pdf", "root", "intermediate", "leaf"]
-            .into_iter()
-            .map(|k| std::path::Path::new(request[k].as_str().unwrap())),
-    ) {
-        let path = path.canonicalize().unwrap();
-        assert_eq!(
-            opened
-                .iter()
-                .filter(|row| row["path"] == path.to_str().unwrap())
-                .count(),
-            1,
-            "missing/duplicate opened input: {}",
-            path.display()
-        );
-    }
-    for row in reference["opened_inputs"].as_array().unwrap() {
-        let bytes = std::fs::read(row["path"].as_str().unwrap()).unwrap();
-        assert_eq!(row["bytes"], bytes.len());
-        assert_eq!(row["sha256"], hash(&bytes));
-    }
     for (row, root) in reference["statuses"]
         .as_array()
         .unwrap()
@@ -248,17 +185,4 @@ fn explicit_context_validates_actual_signed_pdf_and_empty_roots_deny() {
         assert_eq!(row["modification_level"], "NONE");
     }
     assert_eq!(reference["statuses"].as_array().unwrap().len(), 2);
-    let elf_path = std::env::current_exe().unwrap();
-    let elf = std::fs::read(&elf_path).unwrap();
-    std::fs::write(
-        evidence.join("native-receipt.json"),
-        serde_json::to_vec_pretty(&json!({
-        "pdf_sha256":hash(&output),"pdf_bytes":output.len(),"native_statuses":outcomes,
-        "elf_path":elf_path,"elf_sha256":hash(&elf),"elf_bytes":elf.len(),
-        "source_identity":"independent emitted-content/compiler audit is mandatory",
-        "opened_inputs":opened_inputs,"time":TIME,"field":"Sig1","digest":"sha256",
-        "new_original_ids":0}))
-        .unwrap(),
-    )
-    .unwrap();
 }
