@@ -32,7 +32,7 @@ for source, names in [(cv_tests, ['test_system_trust_fallback_deprecated',
 from asn1crypto import pem, x509
 from pyhanko.pdf_utils import generic, misc
 from pyhanko_certvalidator import CertificateValidator, ValidationContext
-from pyhanko_certvalidator.errors import PathBuildingError
+from pyhanko_certvalidator.errors import PathBuildingError, PathValidationError
 
 
 def cert(directory, filename):
@@ -45,7 +45,7 @@ def cert(directory, filename):
 root = cert('testing-ca-ed25519', 'root.cert.pem')
 intermediate = cert('testing-ca-ed25519', 'interm.cert.pem')
 leaf = cert('testing-ca-ed25519', 'signer.cert.pem')
-unrelated = cert('testing-ca', 'root.cert.pem')
+unrelated = cert('testing-ca-ed448', 'root.cert.pem')
 
 
 async def real_path_cases():
@@ -67,6 +67,21 @@ async def real_path_cases():
             assert expected, label
             assert [c.dump() for c in path] == [root.dump(), intermediate.dump(), leaf.dump()]
             print('REGISTRY_PEER', label, 'VALID')
+
+    changed = bytearray(leaf.dump())
+    changed[-1] ^= 1
+    forged = x509.Certificate.load(bytes(changed))
+    context = ValidationContext(
+        trust_roots=[unrelated, root], other_certs=[intermediate],
+        moment=datetime(2020, 11, 1, tzinfo=timezone.utc),
+        allow_fetching=False, revocation_mode='soft-fail')
+    try:
+        await CertificateValidator(forged, validation_context=context).async_validate_usage(set())
+    except PathValidationError as error:
+        assert 'signature' in str(error).lower()
+        print('REGISTRY_PEER forged_signature DENY')
+    else:
+        raise AssertionError('A trusted issuer must not rescue a forged leaf signature')
 
 
 asyncio.run(real_path_cases())
@@ -109,4 +124,4 @@ dictionary['/A'] = generic.NumberObject(1)
 assert dictionary.setdefault(generic.pdf_name('/A'), generic.NumberObject(2)) == 1
 assert dictionary['/A'] == 1
 print('PDF_PEER explicit_object_default=PRESERVE_EXISTING')
-print('SUMMARY originals=5 passed; PKI peers=4 matched; PDF differences=explicit; new_original_credit=0')
+print('SUMMARY originals=5 passed; PKI peers=5 matched; PDF differences=explicit; new_original_credit=0')

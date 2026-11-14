@@ -7,7 +7,7 @@
 mod common;
 
 use common::{load_cert, moment};
-use sigis_pki_certvalidator::{find_valid_path, ValidationContext};
+use sigis_pki_certvalidator::{build_paths, find_valid_path, Cert, ValidationContext};
 
 #[test]
 fn default_registry_does_not_turn_an_untrusted_chain_into_anchors() {
@@ -45,7 +45,7 @@ fn default_registry_does_not_turn_an_untrusted_chain_into_anchors() {
 #[test]
 fn adding_an_explicit_root_changes_membership_and_the_validated_path() {
     let root = load_cert(&["testing-ca-ed25519", "root.cert.pem"]);
-    let unrelated = load_cert(&["testing-ca", "root.cert.pem"]);
+    let unrelated = load_cert(&["testing-ca-ed448", "root.cert.pem"]);
     let intermediate = load_cert(&["testing-ca-ed25519", "interm.cert.pem"]);
     let leaf = load_cert(&["testing-ca-ed25519", "signer.cert.pem"]);
     let original = ValidationContext::builder()
@@ -79,5 +79,14 @@ fn adding_an_explicit_root_changes_membership_and_the_validated_path() {
     let path = find_valid_path(&extended, &leaf, None).unwrap();
     assert_eq!(path.certs(), vec![&root, &intermediate, &leaf]);
     assert!(!original.is_trust_anchor(&root));
-    println!("REGISTRY_BOUNDARY unrelated_root=DENY added_root=VALID");
+
+    // A valid anchor and buildable path cannot rescue a forged leaf signature.
+    let mut changed = leaf.der().to_vec();
+    *changed.last_mut().unwrap() ^= 1;
+    let forged = Cert::from_der(&changed).unwrap();
+    assert_eq!(forged.subject(), leaf.subject());
+    assert!(build_paths(&extended, &forged).is_ok());
+    let error = find_valid_path(&extended, &forged, None).unwrap_err();
+    assert!(error.error.to_string().to_lowercase().contains("signature"));
+    println!("REGISTRY_BOUNDARY unrelated_root=DENY added_root=VALID forged_signature=DENY");
 }

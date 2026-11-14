@@ -23,7 +23,9 @@ fn name_normalization_keeps_writer_and_reader_contracts_distinct() {
     // Reader rejection is real, but cannot replace Python's writer refusal.
     let error = generic::read_name(&mut Cursor::new(b"NoSlashHere")).unwrap_err();
     assert!(error.is_read_error());
-    assert!(error.to_string().contains("Name object should start with /"));
+    assert!(error
+        .to_string()
+        .contains("Name object should start with /"));
     println!("OBJECT_BOUNDARY bare_name_writer=ACCEPT bare_name_reader=REJECT");
 }
 

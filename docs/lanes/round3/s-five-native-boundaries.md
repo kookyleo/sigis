@@ -25,5 +25,29 @@ files. Its PDF probes preserve Python's refusals and the disclosed native
 representation/conversion differences. Typed-object positive controls remain.
 It writes plain output, without hash/ELF/JSON evidence collection.
 
-Validation results will be recorded after execution. Central accepted counts
-remain S824/819/5/0, CV133/131/2/0 and PDF406/403/3/0.
+## Actual validation
+
+Base main1ce1fae1. Native changed-package tests: **726passed,0failed,0ignored**,
+including all five new controls and the forged-leaf signature refusal. The
+five unchanged pinned originals pass; five same-input PKI outcomes match
+(empty/unrelated root deny, explicit/added root validate, forged signature deny).
+The PDF probes preserve the expected Python/native differences explicitly.
+
+All-target workspace clippy with -Dwarnings and formatting checks pass. An
+initial unrelated-root fixture path was corrected to the existing Ed448 root;
+that missing-file preparation failure is not a product behavioral RED.
+
+The normal workspace command was executed and returned101: Root
+`tests/round3_generic_dsa.rs:55` has two failures because PKCS11_TEST_MODULE is
+unset. This shared fixture-configuration failure is outside S's files, not a
+failure of the new native controls. L/P coordination is requested for ordinary
+SoftHSM setup and removal of obsolete mandatory proof variables. Workspace
+acceptance is **blocked**, never reported as zero-failure. No other-lane file,
+provider, shared venv, ignore or production API was changed.
+
+Plain command logs are under
+`~/.codex/artifacts/sigis/round3/s/five-native-boundaries/`. No hash/ELF/JSON
+proof pipeline or independent review was added. The initial preparation/fmt
+failures remain in the plain logs. Central accepted counts stay
+S824/819/5/0, CV133/131/2/0 and PDF406/403/3/0; these related controls add no
+original passing credit.
