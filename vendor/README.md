@@ -10,7 +10,7 @@ The first commit that adds this directory contains the unmodified crate. Later
 commits that touch `vendor/underskrift/` hold the Sigis patch, so `git diff`
 against that commit shows exactly what to upstream.
 
-Patch (three changes, all in `vendor/underskrift/src/`):
+Patch (four changes, all in `vendor/underskrift/src/`):
 
 1. `signer.rs`, `cms/builder.rs`: `PdfSigner::sign` uses
    `SigningOptions::tsa_url`. When it is set, the signer requests an RFC 3161
@@ -25,6 +25,10 @@ Patch (three changes, all in `vendor/underskrift/src/`):
    at a trust anchor, also try shorter prefixes of that chain. DigiCert tokens
    embed a "DigiCert Trusted Root G4" cross-certificate issued by an older root;
    before the patch, a trust store with only the G4 root rejected the chain.
+4. `core/parser.rs`, `verify/extractor.rs`: use the DER SEQUENCE length to
+   remove PDF `/Contents` padding. Trimming every trailing zero truncated valid
+   CMS signatures and timestamp tokens whose final byte was zero. Malformed
+   framing and nonzero suffixes remain visible to the verifier for rejection.
 
 Remove this directory and the `[patch.crates-io]` entry when upstream ships an
 equivalent change.

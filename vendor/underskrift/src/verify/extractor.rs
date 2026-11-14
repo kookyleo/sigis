@@ -155,16 +155,9 @@ pub fn extract_signatures_from_doc(doc: &Document) -> Result<Vec<ExtractedSignat
 
         // Extract Contents (the CMS/PKCS#7 bytes)
         // lopdf parses the hex string into raw bytes for us.
-        // We strip trailing zero padding to get the actual DER.
+        // Preserve zero bytes inside the DER object, including its final byte.
         let cms_bytes = match sig_dict.get(b"Contents").and_then(Object::as_str) {
-            Ok(bytes) => {
-                let mut data = bytes.to_vec();
-                // Trim trailing zeros (padding from the hex placeholder)
-                while data.last() == Some(&0) {
-                    data.pop();
-                }
-                data
-            }
+            Ok(bytes) => crate::core::parser::unpad_signature_contents(bytes).to_vec(),
             Err(_) => continue,
         };
 

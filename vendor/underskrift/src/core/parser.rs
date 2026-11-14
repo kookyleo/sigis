@@ -8,6 +8,32 @@ use lopdf::{Document, Object, ObjectId};
 
 use crate::error::CoreError;
 
+/// Remove only PDF padding outside the complete DER SEQUENCE.
+///
+/// A CMS signature or timestamp may itself end in zero. Malformed framing or
+/// nonzero trailing data is retained for the CMS verifier to reject.
+pub(crate) fn unpad_signature_contents(bytes: &[u8]) -> &[u8] {
+    use der::{Decode, Header, Reader, SliceReader, Tag};
+
+    if bytes.iter().all(|byte| *byte == 0) {
+        return &[];
+    }
+    let end = (|| {
+        let mut reader = SliceReader::new(bytes).ok()?;
+        let header = Header::decode(&mut reader).ok()?;
+        if header.tag != Tag::Sequence {
+            return None;
+        }
+        usize::try_from(reader.position())
+            .ok()?
+            .checked_add(usize::try_from(header.length).ok()?)
+    })();
+    match end {
+        Some(end) if end <= bytes.len() && bytes[end..].iter().all(|byte| *byte == 0) => &bytes[..end],
+        _ => bytes,
+    }
+}
+
 /// Structural metadata extracted from a parsed PDF, needed to initialize
 /// the [`IncrementalWriter`](super::incremental::IncrementalWriter).
 #[derive(Debug, Clone)]
@@ -152,17 +178,9 @@ pub fn extract_signatures(doc: &Document) -> Result<Vec<ExistingSignature>, Core
         };
 
         // Extract Contents (hex-decoded CMS/PKCS#7 bytes)
-        // The Contents value is zero-padded to fill the reserved space,
-        // so we trim trailing zero bytes to get the actual DER-encoded CMS.
+        // The Contents value may have zero padding outside the DER object.
         let contents = match sig_dict.get(b"Contents").and_then(Object::as_str) {
-            Ok(bytes) => {
-                let mut data = bytes.to_vec();
-                // Trim trailing zeros (padding)
-                while data.last() == Some(&0) {
-                    data.pop();
-                }
-                data
-            }
+            Ok(bytes) => unpad_signature_contents(bytes).to_vec(),
             Err(_) => continue,
         };
 
