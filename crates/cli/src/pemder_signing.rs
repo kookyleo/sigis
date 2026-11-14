@@ -59,7 +59,7 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
 fn config_scope(
     config: Option<&CliConfig>,
     identity: bool,
-    named_style: bool,
+    visible_style: bool,
 ) -> Result<(), String> {
     let Some(config) = config else { return Ok(()) };
     let allowed = [
@@ -84,14 +84,16 @@ fn config_scope(
         }
         if !allowed.contains(&normalized.as_str())
             && !(identity && normalized == "identities")
-            && !(named_style && normalized == "stamp-styles")
+            && !(visible_style
+                && ["stamp-styles", "default-stamp-style"].contains(&normalized.as_str()))
         {
             return Err(extended(&format!("Configuration setting '{key}'")));
         }
     }
     let defaults = CliConfig::parse("")?;
-    if config.default_stamp_style != defaults.default_stamp_style
-        || (!named_style && config.stamp_styles != defaults.stamp_styles)
+    if !visible_style
+        && (config.default_stamp_style != defaults.default_stamp_style
+            || config.stamp_styles != defaults.stamp_styles)
     {
         return Err(extended("Configured signature appearance"));
     }
@@ -112,18 +114,23 @@ fn appearance_style(
 ) -> Result<sigis_pades_sign::stamp::StampStyle, String> {
     use sigis_pades_sign::stamp::StampStyle;
     let style = if visible {
-        if let Some(name) = opts.get("style-name") {
-            let config = config.ok_or("Using named styles requires a configuration file.")?;
-            let raw = CliConfig::parse(&config.raw_config.to_string())?;
-            if raw.stamp_styles.contains_key(name) {
-                raw.stamp_style(Some(name))?;
+        match config {
+            Some(config) => {
+                // Schema-check the raw selected style; the borrowed effective
+                // config still supplies the appearance and complete context.
+                let name = opts
+                    .get("style-name")
+                    .unwrap_or(&config.default_stamp_style);
+                let raw = CliConfig::parse(&config.raw_config.to_string())?;
+                if raw.stamp_styles.contains_key(name) {
+                    raw.stamp_style(Some(name))?;
+                }
+                config.stamp_style(opts.get("style-name"))?
             }
-            config.stamp_style(Some(name))?
-        } else {
-            match config {
-                Some(config) => config.stamp_style(None)?,
-                None => CliConfig::parse("")?.stamp_style(None)?,
+            None if opts.get("style-name").is_some() => {
+                return Err("Using named styles requires a configuration file.".into());
             }
+            None => CliConfig::parse("")?.stamp_style(None)?,
         }
     } else {
         CliConfig::parse("")?.stamp_style(None)?
@@ -341,11 +348,7 @@ fn run_with_input_policy(
         None
     };
     option_scope(&opts, visible)?;
-    config_scope(
-        config,
-        identity,
-        visible && opts.get("style-name").is_some(),
-    )?;
+    config_scope(config, identity, visible)?;
     if visible {
         crate::signature_appearance::check_raw_schema(config, opts.get("validation-context"))?;
     }
