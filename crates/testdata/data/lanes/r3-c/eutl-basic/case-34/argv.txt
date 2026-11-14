@@ -1,0 +1,5 @@
+sign
+validate
+--pretty-print
+--eutl-all
+to-validate.pdf

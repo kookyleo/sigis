@@ -1,0 +1,4 @@
+sign
+validate
+--pretty-print
+to-validate.pdf

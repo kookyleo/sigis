@@ -1,0 +1,6 @@
+sign
+validate
+--pretty-print
+--eutl-all
+--no-revocation-check
+to-validate.pdf

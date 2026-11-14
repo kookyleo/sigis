@@ -1,0 +1,6 @@
+cache-dir: ./cache
+validation-contexts:
+  default:
+    eutl-lotl-url: http://pyhanko.tests/testing-ca-qualified/lotl.xml
+    eutl-territories: []
+    lotl-tlso-certs: tlso.cert.pem

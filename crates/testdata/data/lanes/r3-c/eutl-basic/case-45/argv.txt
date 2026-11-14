@@ -1,0 +1,6 @@
+sign
+validate
+--pretty-print
+--eutl-territories
+de,fr
+to-validate.pdf

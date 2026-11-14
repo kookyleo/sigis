@@ -2,6 +2,7 @@
 pub mod config;
 pub mod crypt;
 pub mod detached_signing;
+mod eutl_validation;
 pub mod fields;
 pub mod identity_signing;
 pub mod ltv;
@@ -156,6 +157,7 @@ fn run_with_runtime_mode(
         }
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
+            Some("validate") if eutl_validation::handles(&values[1..], config.as_ref()) => eutl_validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
             Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
             Some("adesverify") => qualified_validation::run(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime, injected_runtime),
             Some("ltaupdate" | "ltvfix") => ltv::run_with_runtime(&values, config.as_ref(), runtime),

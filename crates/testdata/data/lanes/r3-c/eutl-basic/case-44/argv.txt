@@ -1,0 +1,7 @@
+sign
+validate
+--pretty-print
+--eutl-all
+--eutl-territories
+be
+file.pdf
