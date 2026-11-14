@@ -657,3 +657,293 @@ fn backend_clone_timing_and_replacement_preserve_owner_and_all_security_fields()
     original.close().unwrap();
     assert_eq!(backend_count(&backend.closes), 4);
 }
+
+// Additive tests-first contract for the explicitly fetching-enabled L2 adapter.
+#[derive(Debug)]
+struct FallbackBackend {
+    issued: Fetchers,
+    retrievals: std::sync::atomic::AtomicUsize,
+    closes: std::sync::atomic::AtomicUsize,
+    close_error: Option<FetchError>,
+}
+impl FallbackBackend {
+    fn new() -> Arc<Self> {
+        Arc::new(Self {
+            issued: marker_fetchers(),
+            retrievals: std::sync::atomic::AtomicUsize::new(0),
+            closes: std::sync::atomic::AtomicUsize::new(0),
+            close_error: None,
+        })
+    }
+}
+impl FetcherBackend for FallbackBackend {
+    fn get_fetchers(&self) -> Fetchers {
+        self.retrievals
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.issued.clone()
+    }
+    fn close(&self) -> Result<(), FetchError> {
+        self.closes
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.close_error.clone().map_or(Ok(()), Err)
+    }
+}
+fn same_fallback_components(left: &Fetchers, right: &Fetchers) {
+    assert_eq!(left.cert.is_some(), right.cert.is_some());
+    if let (Some(left), Some(right)) = (&left.cert, &right.cert) {
+        assert!(Arc::ptr_eq(left, right));
+    }
+    assert_eq!(left.crl.is_some(), right.crl.is_some());
+    if let (Some(left), Some(right)) = (&left.crl, &right.crl) {
+        assert!(Arc::ptr_eq(left, right));
+    }
+    assert_eq!(left.ocsp.is_some(), right.ocsp.is_some());
+    if let (Some(left), Some(right)) = (&left.ocsp, &right.ocsp) {
+        assert!(Arc::ptr_eq(left, right));
+    }
+}
+
+#[test]
+fn fallback_builder_preserves_all_selection_states_and_setter_orders() {
+    backend_execution_identity();
+    let mut cases = 0;
+    for fetcher_choice in 0..3 {
+        for backend_choice in 0..3 {
+            for components_first in [false, true] {
+                let implicit = FallbackBackend::new();
+                let explicit = FallbackBackend::new();
+                let explicit_identity: Arc<dyn FetcherBackend> = explicit.clone();
+                let implicit_identity: Arc<dyn FetcherBackend> = implicit.clone();
+                let supplied = if fetcher_choice == 1 {
+                    Fetchers::none()
+                } else {
+                    marker_fetchers()
+                };
+                let apply_components = |builder: ValidationContextBuilder| {
+                    if fetcher_choice == 0 {
+                        builder
+                    } else {
+                        builder.fetchers(supplied.clone())
+                    }
+                };
+                let mut builder = ValidationContext::builder();
+                if components_first {
+                    builder = apply_components(builder);
+                }
+                builder = match backend_choice {
+                    1 => builder.fetcher_backend(explicit_identity.clone()),
+                    2 => builder.owned_fetcher_backend(explicit_identity.clone()),
+                    _ => builder,
+                };
+                if !components_first {
+                    builder = apply_components(builder);
+                }
+                // Rc and a borrowed Cell intentionally prove no Send/Sync/'static bound.
+                let creations = std::rc::Rc::new(std::cell::Cell::new(0));
+                let context = builder
+                    .build_with_backend_fallback(|| {
+                        creations.set(creations.get() + 1);
+                        implicit_identity.clone()
+                    })
+                    .unwrap();
+                let needs_default = fetcher_choice == 0 && backend_choice == 0;
+                assert_eq!(creations.get(), usize::from(needs_default));
+                assert_eq!(
+                    backend_count(&implicit.retrievals),
+                    usize::from(needs_default)
+                );
+                assert_eq!(
+                    backend_count(&explicit.retrievals),
+                    usize::from(fetcher_choice == 0 && backend_choice != 0)
+                );
+                same_fallback_components(
+                    context.fetchers(),
+                    if fetcher_choice != 0 {
+                        &supplied
+                    } else if needs_default {
+                        &implicit.issued
+                    } else {
+                        &explicit.issued
+                    },
+                );
+                let expected_owner = if needs_default {
+                    Some(&implicit_identity)
+                } else if backend_choice == 2 {
+                    Some(&explicit_identity)
+                } else {
+                    None
+                };
+                assert_eq!(
+                    context.owned_fetcher_backend.is_some(),
+                    expected_owner.is_some()
+                );
+                if let Some(owner) = expected_owner {
+                    assert!(Arc::ptr_eq(
+                        context.owned_fetcher_backend.as_ref().unwrap(),
+                        owner
+                    ));
+                }
+                context.close().unwrap();
+                context.close().unwrap();
+                assert_eq!(
+                    backend_count(&implicit.closes),
+                    if needs_default { 2 } else { 0 }
+                );
+                assert_eq!(
+                    backend_count(&explicit.closes),
+                    if backend_choice == 2 { 2 } else { 0 }
+                );
+                drop(context);
+                assert_eq!(
+                    backend_count(&implicit.closes),
+                    if needs_default { 2 } else { 0 }
+                );
+                cases += 1;
+            }
+        }
+    }
+    assert_eq!(cases, 18);
+    eprintln!("CONTEXT_DEFAULT_PRIVATE_MATRIX cases={cases}");
+}
+
+#[test]
+fn fallback_builder_validates_before_any_default_or_selected_factory() {
+    backend_execution_identity();
+    for invalid in 0..3 {
+        for explicit in [false, true] {
+            let build = || match invalid {
+                0 => ValidationContext::builder().revocation_mode("invalid-mode"),
+                1 => ValidationContext::builder().crl(vec![0x30, 0x00]),
+                _ => ValidationContext::builder().ocsp_response(vec![0x30, 0x00]),
+            };
+            let expected = build().build().unwrap_err();
+            let backend = FallbackBackend::new();
+            let mut builder = build();
+            if explicit {
+                builder = builder.owned_fetcher_backend(backend.clone());
+            }
+            let called = std::cell::Cell::new(0);
+            let error = builder
+                .build_with_backend_fallback(|| {
+                    called.set(called.get() + 1);
+                    backend.clone()
+                })
+                .unwrap_err();
+            assert!(matches!(error, ValidationError::Malformed(_)));
+            assert_eq!(format!("{error:?}"), format!("{expected:?}"));
+            assert_eq!(called.get(), 0);
+            assert_eq!(backend_count(&backend.retrievals), 0);
+            assert_eq!(backend_count(&backend.closes), 0);
+        }
+    }
+    let ordinary = ValidationContext::builder().build().unwrap();
+    assert!(ordinary.fetchers().is_empty());
+    assert!(ordinary.owned_fetcher_backend.is_none());
+    ordinary.close().unwrap();
+}
+
+#[test]
+fn fallback_last_backend_setter_and_full_context_capabilities_survive() {
+    backend_execution_identity();
+    for last_owned in [false, true] {
+        let first = FallbackBackend::new();
+        let last = FallbackBackend::new();
+        let called = std::cell::Cell::new(0);
+        let builder = ValidationContext::builder().owned_fetcher_backend(first.clone());
+        let builder = if last_owned {
+            builder.owned_fetcher_backend(last.clone())
+        } else {
+            builder.fetcher_backend(last.clone())
+        };
+        let context = builder
+            .build_with_backend_fallback(|| {
+                called.set(called.get() + 1);
+                first.clone()
+            })
+            .unwrap();
+        assert_eq!(called.get(), 0);
+        assert_eq!(backend_count(&first.retrievals), 0);
+        assert_eq!(backend_count(&last.retrievals), 1);
+        context.close().unwrap();
+        assert_eq!(backend_count(&last.closes), usize::from(last_owned));
+    }
+    let mut original = original_context();
+    let mut qualifiers = original.trust_anchors[0].qualifiers().clone();
+    qualifiers.standard_parameters = Some(crate::policy::PkixValidationParams {
+        user_initial_policy_set: vec!["1.2.3.4".parse().unwrap()],
+        user_initial_policy_constraint: Some(std::collections::BTreeSet::new()),
+        initial_explicit_policy: true,
+        initial_policy_mapping_inhibit: true,
+        initial_any_policy_inhibit: true,
+        max_policy_graph_nodes: Some(11),
+        ..Default::default()
+    });
+    original.trust_anchors[0] =
+        TrustAnchor::with_qualifiers(original.trust_anchors[0].cert().clone(), qualifiers);
+    // Private test fixture copies every builder field explicitly. Production
+    // must keep its common field-moving path, never reconstruct public contexts.
+    let builder = ValidationContextBuilder {
+        trust_anchors: original.trust_anchors.clone(),
+        other_certs: original.other_certs.clone(),
+        crls: original.crls().map(<[u8]>::to_vec).collect(),
+        ocsps: original.ocsps().map(<[u8]>::to_vec).collect(),
+        moment: Some(original.timing.validation_time),
+        point_in_time_validation: Some(original.timing.point_in_time_validation),
+        best_signature_time: Some(original.timing.best_signature_time),
+        time_tolerance: Some(original.timing.time_tolerance),
+        revinfo_policy: Some(original.revinfo_policy),
+        revocation_mode: Some("ignored-because-policy-is-explicit".into()),
+        algorithm_policy: Some(original.algorithm_policy.clone()),
+        freshness_judge: Some(original.freshness_judge.clone()),
+        assertions: original.assertions.clone(),
+        fetchers: None,
+        fetcher_backend: None,
+        acceptable_ac_targets: original.acceptable_ac_targets.clone(),
+        trust_manager: original.trust_manager.clone(),
+    };
+    let error = FetchError::new(
+        sigis_pki_core::errors::FetchErrorKind::Timeout,
+        "retained explicit close failure",
+    );
+    let owner = Arc::new(FallbackBackend {
+        close_error: Some(error.clone()),
+        ..Arc::try_unwrap(FallbackBackend::new()).unwrap()
+    });
+    let identity: Arc<dyn FetcherBackend> = owner.clone();
+    let called = std::cell::Cell::new(0);
+    let result = builder
+        .build_with_backend_fallback(|| {
+            called.set(called.get() + 1);
+            identity.clone()
+        })
+        .unwrap();
+    assert_eq!(called.get(), 1);
+    assert_eq!(backend_count(&owner.retrievals), 1);
+    assert_security_configuration_preserved(&original, &result);
+    assert_timing_equal(original.timing(), result.timing());
+    same_fallback_components(result.fetchers(), &owner.issued);
+    let mut timing = *result.timing();
+    timing.time_tolerance = Duration::from_secs(19);
+    for (count, copy) in [
+        result.clone(),
+        result.with_timing(timing),
+        result.with_fetchers(Fetchers::none()),
+    ]
+    .iter()
+    .enumerate()
+    {
+        assert!(Arc::ptr_eq(
+            copy.owned_fetcher_backend.as_ref().unwrap(),
+            &identity
+        ));
+        assert_security_configuration_preserved(&original, copy);
+        assert_eq!(copy.close(), Err(error.clone()));
+        assert_eq!(backend_count(&owner.closes), count + 1);
+    }
+    assert_eq!(result.close(), Err(error));
+    assert_eq!(backend_count(&owner.closes), 4);
+    assert_eq!(called.get(), 1);
+    assert_eq!(backend_count(&owner.retrievals), 1);
+    drop(result);
+    assert_eq!(backend_count(&owner.closes), 4);
+}
