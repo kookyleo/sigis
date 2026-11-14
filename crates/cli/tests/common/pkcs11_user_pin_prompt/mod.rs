@@ -1,5 +1,4 @@
 //! Dedicated test-client authority and fresh provider processes, never fixture login in the body.
-use der::Encode;
 use serde_json::{json, Value};
 use sigis_cli::{
     plugins::PluginRegistry,
@@ -62,11 +61,7 @@ fn sha(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn file(path: &Path) -> Value {
-    let data = fs::read(path).unwrap();
-    json!({"path":path.canonicalize().unwrap(),"length":data.len(),"sha256":sha(&data)})
-}
-fn save(path: &Path, value: &Value) {
+fn write_oracle_request(path: &Path, value: &Value) {
     fs::write(path, serde_json::to_vec_pretty(value).unwrap()).unwrap();
 }
 fn names(dir: &Path) -> Vec<String> {
@@ -99,7 +94,7 @@ struct RecordedCrlSource {
     interm_der: Vec<u8>,
     root_crl: Vec<u8>,
     interm_crl: Vec<u8>,
-    requests: Mutex<Vec<Value>>,
+    requests: Mutex<Vec<Vec<u8>>>,
 }
 
 impl RecordedCrlSource {
@@ -128,20 +123,16 @@ impl RecordedCrlSource {
 
 impl CrlFetcher for RecordedCrlSource {
     fn fetch_crls(&self, cert: &Cert) -> Result<Vec<Vec<u8>>, FetchError> {
-        let (returned, issuer_role) = if cert.der() == self.leaf_der {
-            (Some(&self.interm_crl), "actual intermediate issuer")
+        let returned = if cert.der() == self.leaf_der {
+            Some(&self.interm_crl)
         } else if cert.der() == self.interm_der {
-            (Some(&self.root_crl), "actual root issuer")
+            Some(&self.root_crl)
         } else {
-            (None, "unsupported exact certificate")
+            None
         };
-        self.requests.lock().unwrap().push(json!({
-            "certificate_sha256":sha(cert.der()),
-            "certificate_issuer_Name_DER_sha256":sha(&cert.issuer().to_der().expect("Original certificate issuer DER")),
-            "selected_crl_issuer_role":issuer_role,
-            "returned_sha256":returned.map(|bytes|sha(bytes)),
-            "returned_lengths":returned.map(|bytes|bytes.len()),
-        }));
+        // Functional request assertion only: retain the actual requested DER,
+        // without a transport/provenance record or issuer/file fingerprints.
+        self.requests.lock().unwrap().push(cert.der().to_vec());
         returned.map(|bytes| vec![bytes.clone()]).ok_or_else(|| {
             FetchError::new(
                 FetchErrorKind::NotFound,
@@ -508,10 +499,16 @@ fn body(selected: &str) {
     }
     let config_path = cwd.join("pyhanko.yml");
     fs::write(&config_path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
-    let input_before = file(&input);
-    let config_before = file(&config_path);
-    let interm_before = file(&interm);
-    let sentinel_before = file(&unrelated);
+    let input_before = (input.canonicalize().unwrap(), fs::read(&input).unwrap());
+    let config_before = (
+        config_path.canonicalize().unwrap(),
+        fs::read(&config_path).unwrap(),
+    );
+    let interm_before = (interm.canonicalize().unwrap(), fs::read(&interm).unwrap());
+    let sentinel_before = (
+        unrelated.canonicalize().unwrap(),
+        fs::read(&unrelated).unwrap(),
+    );
     let entries_before = names(&cwd);
     let callbacks = Arc::new(AtomicUsize::new(0));
     let labels = Arc::new(Mutex::new(Vec::<String>::new()));
@@ -603,9 +600,7 @@ fn body(selected: &str) {
         let requests = source.requests.lock().unwrap();
         for target in [&source.leaf_der, &source.interm_der] {
             assert!(
-                requests
-                    .iter()
-                    .any(|request| request["certificate_sha256"] == sha(target)),
+                requests.iter().any(|request| request == target),
                 "The actual complete policy path must consume recorded revocation evidence"
             );
         }
@@ -639,7 +634,7 @@ fn body(selected: &str) {
         (&unrelated, sentinel_before),
     ] {
         assert_eq!(
-            file(path),
+            (path.canonicalize().unwrap(), fs::read(path).unwrap()),
             before,
             "The CLI must preserve caller input/config/sentinel"
         );
@@ -1013,7 +1008,7 @@ fn verify_output(
     modified[7] = if modified[7] == b'7' { b'6' } else { b'7' };
     fs::write(case.join("modified-signed-byte.pdf"), &modified).unwrap();
     let mutation = mutation_record(&modified, password, &trusted);
-    json!({"original_clock":status_record(&result),"original_clock_moment":moment.unix_secs(),"original_clock_empty_roots":status_record(&empty),"actual_NOW_moment":now.unix_secs(),"actual_NOW":status_record(&actual_now),"actual_NOW_empty_roots":status_record(&now_empty),"modified_signed_byte":mutation,"modified_file":file(&case.join("modified-signed-byte.pdf")),"cms_embedded_certificate_count":cms.certificates.len(),"full_validation_path_required_length":3,"output_pdf_mac":output_mac,"clock_scope":"Original fixture2020-11-01 and actual native CLI NOW are separate; NOW denial is preserved, never retimed away"})
+    json!({"original_clock":status_record(&result),"original_clock_moment":moment.unix_secs(),"original_clock_empty_roots":status_record(&empty),"actual_NOW_moment":now.unix_secs(),"actual_NOW":status_record(&actual_now),"actual_NOW_empty_roots":status_record(&now_empty),"modified_signed_byte":mutation,"cms_embedded_certificate_count":cms.certificates.len(),"full_validation_path_required_length":3,"output_pdf_mac":output_mac,"clock_scope":"Original fixture2020-11-01 and actual native CLI NOW are separate; NOW denial is preserved, never retimed away"})
 }
 
 /// Every successful real native output must pass a fresh pinned Python peer.
@@ -1026,7 +1021,7 @@ fn differential_output(
     native: &Value,
 ) {
     let request = case.join("validation-request.json");
-    save(
+    write_oracle_request(
         &request,
         &json!({
             "cases":[{"label":"output","pdf":case.join("cli-cwd/output.pdf"),
@@ -1062,8 +1057,10 @@ fn differential_output(
         8,
         "Both clocks, root selections and original/changed bytes are mandatory"
     );
-    let output_sha = file(&case.join("cli-cwd/output.pdf"))["sha256"].clone();
-    let modified_sha = file(&case.join("modified-signed-byte.pdf"))["sha256"].clone();
+    let output_sha = Value::String(sha(&fs::read(case.join("cli-cwd/output.pdf")).unwrap()));
+    let modified_sha = Value::String(sha(
+        &fs::read(case.join("modified-signed-byte.pdf")).unwrap()
+    ));
     for (index, row) in rows.iter().enumerate() {
         assert_eq!(row["label"], "output");
         assert_eq!(row["modified"], index % 4 >= 2);
