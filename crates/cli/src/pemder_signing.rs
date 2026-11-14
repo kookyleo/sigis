@@ -27,6 +27,9 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
             "passfile",
             "pemder-setup",
             "validation-context",
+            "reason",
+            "location",
+            "contact-info",
         ]
         .contains(&key.as_str())
             || (visible && ["style-name", "stamp-url"].contains(&key.as_str()));
@@ -35,7 +38,14 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
         }
     }
     for flag in &opts.flags {
-        if !["no-pass", "with-validation-info"].contains(&flag.as_str()) {
+        if ![
+            "no-pass",
+            "with-validation-info",
+            "existing-only",
+            "no-strict-syntax",
+        ]
+        .contains(&flag.as_str())
+        {
             return Err(extended(&format!("--{flag}")));
         }
     }
@@ -52,7 +62,6 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
         Some(field) if field.is_empty() || (!visible && field.contains('/')) => {
             return Err(extended("A visible or empty field specification"));
         }
-        None if !visible => return Err(extended("An implicit field")),
         _ => {}
     }
     Ok(())
@@ -377,8 +386,15 @@ fn run_with_input_policy(
     let context =
         crate::validation::context_from_config(config, opts.get("validation-context"), runtime)?;
     let input = read(&opts.paths[0])?;
-    let reader = crate::read_for_update(&input, sigis_pdf::ReaderOptions::default())
-        .map_err(|e| e.to_string())?;
+    let strict = !opts.flag("no-strict-syntax");
+    let reader = crate::read_for_update(
+        &input,
+        sigis_pdf::ReaderOptions {
+            strict,
+            ..Default::default()
+        },
+    )
+    .map_err(|e| e.to_string())?;
     if reader.encrypted() && !authenticated_input {
         return Err(extended("Encrypted PDF input"));
     }
@@ -393,8 +409,10 @@ fn run_with_input_policy(
     let (signer, warn) = material(&opts, config, runtime)?;
     enforce_usage(&signer, &policy)?;
     let settings = SignOptions {
-        strict: true,
-        existing_fields_only: discover_existing,
+        strict,
+        existing_fields_only: discover_existing
+            || opts.flag("existing-only")
+            || opts.get("field").is_none(),
         password,
         reopen_state: Some(PdfReopenState::from_reader(reader)),
         ..Default::default()
@@ -404,6 +422,9 @@ fn run_with_input_policy(
         .map(|spec| spec.sig_field_name.as_str())
         .unwrap_or_else(|| opts.get("field").unwrap_or(""));
     let mut metadata = PdfSignatureMetadata::pyhanko_defaults(name);
+    metadata.reason = opts.get("reason").map(str::to_owned);
+    metadata.location = opts.get("location").map(str::to_owned);
+    metadata.contact_info = opts.get("contact-info").map(str::to_owned);
     metadata.signer_key_usage = policy
         .key_usage
         .clone()

@@ -114,7 +114,6 @@ fn unsupported_requirements_refuse_before_key_or_network_io() {
         vec!["--use-pades-lta"],
         vec!["--use-pades"],
         vec!["--timestamp-url", &url],
-        vec!["--reason", "mandatory reason"],
         vec!["--stamp-url", &url],
         vec!["--password", "document password"],
         vec!["--trust", "missing.pem"],
@@ -122,7 +121,6 @@ fn unsupported_requirements_refuse_before_key_or_network_io() {
         vec!["--no-revocation-check"],
         vec!["--soft-revocation-check"],
         vec!["--no-decode-limits"],
-        vec!["--no-strict-syntax"],
     ] {
         c.rejects(
             &c.args(&extra),
