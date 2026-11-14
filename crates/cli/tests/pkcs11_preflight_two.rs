@@ -1,10 +1,8 @@
-//! Two complete PKCS11 preflight originals with a genuine certificate-only fixture.
-//! Each provider fixture runs in its own process before the real CLI command.
+//! Two exact PKCS11 frontend originals through the actual top-level runtime.
+//! No provider initialization is needed for missing-argument/configuration errors.
 
 #[path = "common/pkcs11_preflight_two/mod.rs"]
 mod cases;
-#[path = "common/mod.rs"]
-mod common;
 
 /// pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_pkcs11_args_required.
 #[test]

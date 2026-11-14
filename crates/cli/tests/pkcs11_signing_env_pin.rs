@@ -3,8 +3,6 @@
 
 #[path = "common/pkcs11_signing_env_pin/mod.rs"]
 mod cases;
-#[path = "common/mod.rs"]
-mod common;
 
 /// pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_pin; root_cert_data label rsa.
 #[test]
