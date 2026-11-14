@@ -1,0 +1,141 @@
+{
+  "scope": "Byte-identical minimal L-owned ordinary public-CV regression inputs; tests first; no new execution or upstream credit",
+  "base_commit": "3f1d190c4c39fdd4fc10edcbbdbfd996884faff1",
+  "current_time": "2020-12-25T00:00:00Z",
+  "files": [
+    {
+      "file": "cert-root.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/cert-root.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "cert-interm.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/cert-interm.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "cert-signer1.der",
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/cert-signer1.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "root-good.crl.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/root-good.crl.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "fake-issuer-copied-signature.der",
+      "length": 987,
+      "sha256": "d007ef09a56f26992e5bd8f6bdcf8d4fd3a2630d6fd8caea6f17b1af668fbbf5",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/fake-issuer-copied-signature.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "fake-issuer-signed-good.ocsp.der",
+      "length": 1521,
+      "sha256": "0fb99ca22290cad9dee7f27a836a3cba06fb6b532620bf432c3cf4eb8d67c3a6",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/fake-issuer-signed-good.ocsp.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "fake-issuer-bad-raw-signature.ocsp.der",
+      "length": 1521,
+      "sha256": "09c42dc3561eaf6c0cba14b37545fc37c05504a4a1dcdb5cf5a2487d78889aff",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/fake-issuer-bad-raw-signature.ocsp.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "real-delegated-good.ocsp.der",
+      "length": 1407,
+      "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/real-delegated-good.ocsp.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json"
+    },
+    {
+      "file": "actual-direct-issuer-good.ocsp.der",
+      "length": 1521,
+      "sha256": "29a4fde76ae82b52f83a9c99417a06dc9a8d1e9aac5664d7edcdd9cb6f4e8f39",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/actual-direct-issuer-good.ocsp.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/manifest.json"
+    },
+    {
+      "file": "actual-direct-issuer-bad-raw-signature.ocsp.der",
+      "length": 1521,
+      "sha256": "75305ffe85b85df85734f96f3ed1c33f63867eeeb0f43662f654b5fc2dec27a6",
+      "immutable_origin": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/actual-direct-issuer-bad-raw-signature.ocsp.der",
+      "origin_manifest": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/manifest.json"
+    }
+  ],
+  "origin_receipts": [
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/manifest.json",
+      "length": 3948,
+      "sha256": "8a0282f0b54e0ef0923799629dac4863c8962dbaad9aa86b66b5c946c2d59c22"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/staged/generate.py",
+      "length": 17331,
+      "sha256": "f2ab8989a8a1034e4d21ca63612b39105e01e7fc61713f2e232149e80dd4df3d"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-authority-tests/generation-and-reference.json",
+      "length": 10016,
+      "sha256": "a3b535b46d263f2258e182d1a2481733a33dd84fcd6af655f6aa9b91686b598f"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/manifest.json",
+      "length": 2260,
+      "sha256": "d9ef4ddf2c251ae90407329d0fcbea03e04cd0dd7cadb38883650ac68fbb94e6"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/staged/generate.py",
+      "length": 7923,
+      "sha256": "885c274358706546d30e8cae2024f0e28ddf51a075428a734f50a3e980ccbfb4"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/metadata-direct-issuer-tests/generation-and-reference.json",
+      "length": 3391,
+      "sha256": "8fca216db2b7ad4de5d930fdb8bf8e8f629c216437e5bd9d04e6908c708a8c5c"
+    }
+  ],
+  "native_source_receipts": [
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/cv-authority-red/source-pin.json",
+      "length": 555161,
+      "sha256": "529a62b0773a9538c9b7c66d617ed119ee9184990d596ffc5d1da049cd427673"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/cv-authority-red/verified.json",
+      "length": 1568,
+      "sha256": "29bbc3afe864359ac03ab54a1b277ce1042d22aa029a2940193fb59ef88c5231"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/cv-current-component/source-pin.json",
+      "length": 558701,
+      "sha256": "1839321a3d463a6f0e301a800c0ce2def41b5ad13b64f0af00e523a40559666e"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/cv-current-component/verified.json",
+      "length": 11162,
+      "sha256": "744645b7c4a7cf16e7f1bbefdacb5f4da4db29bc037a4ce1af34a05215a6081f"
+    }
+  ],
+  "reference_versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0"
+  },
+  "oracle_fake_issuer_verdict": "accepted; intentional security-hardening divergence",
+  "private_keys_copied": false,
+  "new_cargo_invocations": 0,
+  "new_native_executions": 0,
+  "new_oracle_calls": 0,
+  "upstream_unique_function_credit": 0
+}
