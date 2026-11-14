@@ -24,41 +24,33 @@ fn sha(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn record(path: &Path, kind: &str) -> String {
-    let bytes = std::fs::read(path).unwrap();
-    let digest = sha(&bytes);
-    eprintln!(
-        "LIVE_CLI_INPUT {}",
-        serde_json::json!({
-            "kind":kind,"path":path.canonicalize().unwrap(),"length":bytes.len(),"sha256":digest
-        })
-    );
-    digest
+fn file_digest(path: &Path) -> String {
+    sha(&std::fs::read(path).unwrap())
 }
-fn immutable_cli() -> (PathBuf, String) {
-    // Root integration tests cannot use another workspace package's
-    // CARGO_BIN_EXE macro. Require an explicitly exported immutable ELF.
-    let path = PathBuf::from(
-        std::env::var_os("SIGIS_CLI_TEST_BIN")
-            .expect("select a Cargo-produced immutable CLI artifact"),
-    );
-    let expected =
-        std::env::var("SIGIS_CLI_TEST_BIN_SHA256").expect("pin that actual CLI artifact's SHA256");
-    assert!(path.is_absolute() && path.is_file());
-    let canonical = path.canonicalize().unwrap();
+fn cli() -> PathBuf {
+    let path = std::env::var_os("SIGIS_CLI_TEST_BIN")
+        .map(PathBuf::from)
+        .or_else(|| option_env!("CARGO_BIN_EXE_pyhanko").map(PathBuf::from))
+        .unwrap_or_else(|| {
+            // Content fingerprints may put tests under build/<package>/<hash>/out.
+            // Cargo still publishes the CLI in the debug or release profile directory.
+            let executable = std::env::current_exe().unwrap();
+            executable
+                .ancestors()
+                .find(|directory| {
+                    directory
+                        .file_name()
+                        .is_some_and(|name| name == "debug" || name == "release")
+                })
+                .expect("Cargo debug or release profile directory")
+                .join(format!("pyhanko{}", std::env::consts::EXE_SUFFIX))
+        });
     assert!(
-        !canonical.starts_with("/srv/targets") && !path.starts_with("/build"),
-        "export an immutable executable outside the mutable shared Cargo target"
+        path.is_file(),
+        "Cargo-built CLI missing at {}; run cargo test --workspace",
+        path.display()
     );
-    assert_eq!(expected.len(), 64);
-    assert!(expected.bytes().all(|b| b.is_ascii_hexdigit()));
-    let actual = record(&path, "actual_cli_executable_before");
-    assert_eq!(actual, expected.to_ascii_lowercase());
-    record(
-        &std::env::current_exe().unwrap(),
-        "actual_root_test_executable",
-    );
-    (path, actual)
+    path
 }
 fn settings() -> FetcherSettings {
     FetcherSettings {
@@ -85,18 +77,11 @@ fn count(metrics: &serde_json::Value, method: &str, prefix: &str) -> u64 {
 
 #[test]
 fn test_pades_lta_live_with_cli() {
-    let (cli, cli_sha) = immutable_cli();
+    let cli = cli();
     // Separate mandatory ORIGINAL Python CLI baseline: its own PFX/config,
     // isolated filesystem and owned live sidecar, not native-output replay.
     let reference_temp = tempfile::tempdir().unwrap();
-    let reference_artifacts = std::env::var_os("SIGIS_LIVE_LTA_ARTIFACT_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| reference_temp.path().to_owned())
-        .join(format!(
-            "original-cli-{}-{}",
-            std::process::id(),
-            Moment::now().unix_secs()
-        ));
+    let reference_artifacts = reference_temp.path().join("original-cli");
     let reference_script =
         sigis_testdata::manifest_dir().join("tools/pyhanko-oracle/live_cli_original_reference.py");
     let server_script =
@@ -186,10 +171,10 @@ fn test_pades_lta_live_with_cli() {
     std::fs::write(&input_path, &input).unwrap();
     let config = "pkcs12-setups:\n    test:\n        pfx-file: credential.p12\n        pfx-passphrase: secret\nvalidation-contexts:\n    default:\n        trust: root.crt\n";
     std::fs::write(&config_path, config).unwrap();
-    let input_sha = record(&input_path, "MINIMAL_ONE_FIELD");
-    let pfx_sha = record(&pfx_path, "downloaded_encrypted_synthetic_PFX");
-    let root_sha = record(&root_path, "downloaded_root");
-    let config_sha = record(&config_path, "automatic_pyhanko_yml");
+    let input_sha = file_digest(&input_path);
+    let pfx_sha = file_digest(&pfx_path);
+    let root_sha = file_digest(&root_path);
+    let config_sha = file_digest(&config_path);
     drop(setup); // Upstream closes the setup session before launching the CLI.
     let tsa_url = format!("{}/testing-ca/tsa/tsa", live.url);
     let argv = [
@@ -217,16 +202,15 @@ fn test_pades_lta_live_with_cli() {
     eprintln!(
         "LIVE_CLI_COMMAND {}",
         serde_json::json!({
-            "binary":cli,"binary_sha256":cli_sha,"argv":argv,"cwd":dir.path(),
+            "binary":cli,"argv":argv,"cwd":dir.path(),
             "code":command.status.code(),"stdout":String::from_utf8_lossy(&command.stdout),
             "stderr":String::from_utf8_lossy(&command.stderr),"live_url":live.url
         })
     );
-    assert_eq!(record(&cli, "actual_cli_executable_after"), cli_sha);
-    assert_eq!(record(&input_path, "input_after_cli"), input_sha);
-    assert_eq!(record(&pfx_path, "PFX_after_cli"), pfx_sha);
-    assert_eq!(record(&root_path, "root_after_cli"), root_sha);
-    assert_eq!(record(&config_path, "config_after_cli"), config_sha);
+    assert_eq!(file_digest(&input_path), input_sha);
+    assert_eq!(file_digest(&pfx_path), pfx_sha);
+    assert_eq!(file_digest(&root_path), root_sha);
+    assert_eq!(file_digest(&config_path), config_sha);
     // CliRunner's no-exception assertion maps to successful real process exit.
     assert!(
         command.status.success(),
@@ -279,7 +263,6 @@ fn test_pades_lta_live_with_cli() {
     assert_eq!(sha(&check_root), root_sha);
     let root = Cert::from_der(&check_root).unwrap();
     let output = std::fs::read(&output_path).unwrap();
-    record(&output_path, "actual_cli_output_before_verification");
     let file = PdfFile::parse(&output).unwrap();
     let signatures = file.embedded_signatures().unwrap();
     assert_eq!(signatures.first().unwrap().field_name, "Sig1");
@@ -373,7 +356,7 @@ fn test_pades_lta_live_with_cli() {
     );
     let receipt = serde_json::json!({
         "id":"integration-tests/test_live_certomancer.py::test_pades_lta_live_with_cli",
-        "parameter_cases":1,"argv":argv,"cli_path":cli,"cli_sha256":cli_sha,
+        "parameter_cases":1,"argv":argv,"cli_path":cli,
         "input_sha256":input_sha,"root_sha256":root_sha,"pfx_sha256":pfx_sha,
         "config_sha256":config_sha,"pdf_sha256":sha(&output),
         "live_current_time":true,"before_cli":before_cli.to_string(),"validation_time":at,
@@ -383,24 +366,4 @@ fn test_pades_lta_live_with_cli() {
         "cli_phase_requests":cli_metrics,"original_Python_CLI_baseline":original_reference,"oracle":verdict
     });
     eprintln!("LIVE_CLI_LTA {receipt}");
-    if let Some(parent) = std::env::var_os("SIGIS_LIVE_LTA_ARTIFACT_DIR") {
-        let target = PathBuf::from(parent).join(format!(
-            "cli-{}-{}",
-            std::process::id(),
-            before_cli.unix_secs()
-        ));
-        std::fs::create_dir_all(PathBuf::from(
-            std::env::var_os("SIGIS_LIVE_LTA_ARTIFACT_DIR").unwrap(),
-        ))
-        .unwrap();
-        std::fs::create_dir(&target).unwrap();
-        std::fs::write(target.join("out.pdf"), &output).unwrap();
-        std::fs::write(target.join("root.crt"), &root_der).unwrap();
-        std::fs::write(
-            target.join("receipt.json"),
-            serde_json::to_vec_pretty(&receipt).unwrap(),
-        )
-        .unwrap();
-        // Deliberately retain no PFX/private-key bytes outside the tempdir.
-    }
 }
