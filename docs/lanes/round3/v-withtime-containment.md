@@ -33,8 +33,19 @@ POE/source framework is authorized.
 Retain actual signature/path-length/name/critical/purpose adversarial cases,
 current+best clones, no roots/mutations, denied TSA purpose/imprint/clock, complete
 current positive and genuine LTA positives. Changed old expectations require
-explicit contract/ID impact review; do not ignore/remove failing originals. If
-LTA positives fail, report raw outcomes instead of broadening the repair.
+explicit contract/ID impact review. L has reviewed the actual0acc3eee regression:
+156native tests passed and2failed, one original plus one supplemental assertion.
+A bounded exception is now approved: retain the complete unchanged assertion body
+of test_embedded_cades_pre_revoke_with_poe with one explicit pending ignore
+annotation naming incomplete same-policy MAIN validation. It must be reported as
+pending, never passed or a provider skip. Root will change its existing accepted
+ledger entry only after the hardening source and full gate pass. No other
+original may be ignored or removed. Replace/rename the old supplemental
+pre_revocation_poe_restores_api_trust expectation with the intentional fail-closed
+contract, preserving the actual before/after proof; it earns no original ID.
+This temporary pending status does not complete historical recovery. Implementing
+safe positive completion remains required future work. If genuine full LTA
+positives fail, report raw outcomes instead of broadening the repair.
 
 Artifacts: round3/v/withtime-containment/. L approves shared architecture,
 integrates the minimal packet and makes any central count decision.
