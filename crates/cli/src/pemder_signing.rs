@@ -48,11 +48,12 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
             "Raw key/cert/chain options alongside a selected PEM/DER setup",
         ));
     }
-    let field = opts
-        .get("field")
-        .ok_or_else(|| extended("An implicit field"))?;
-    if field.is_empty() || (!visible && field.contains('/')) {
-        return Err(extended("A visible or empty field specification"));
+    match opts.get("field") {
+        Some(field) if field.is_empty() || (!visible && field.contains('/')) => {
+            return Err(extended("A visible or empty field specification"));
+        }
+        None if !visible => return Err(extended("An implicit field")),
+        _ => {}
     }
     Ok(())
 }
@@ -342,7 +343,14 @@ fn run_with_input_policy(
     let mut combined = args[..at].to_vec();
     combined.extend_from_slice(&args[at + 1..]);
     let opts = options(&combined)?;
-    let field_spec = if visible {
+    // A named style also requests a visible existing field when coordinates
+    // are omitted. Resolve it on the continuing authenticated reader below;
+    // this does not create a field or alter implicit signing selection.
+    let discover_existing = !identity
+        && opts.get("style-name").is_some()
+        && !opts.get("field").is_some_and(|field| field.contains('/'));
+    let visible = visible || discover_existing;
+    let field_spec = if visible && !discover_existing {
         Some(crate::signature_appearance::field_spec(&opts)?)
     } else {
         None
@@ -379,11 +387,14 @@ fn run_with_input_policy(
     let password = crate::software_signing::authenticate_document(&reader, &opts, runtime)?;
     if let Some(spec) = &field_spec {
         crate::signature_appearance::ensure_visible(&reader, spec)?;
+    } else if discover_existing {
+        crate::signature_appearance::ensure_visible_field(&reader, opts.get("field"), false)?;
     }
     let (signer, warn) = material(&opts, config, runtime)?;
     enforce_usage(&signer, &policy)?;
     let settings = SignOptions {
         strict: true,
+        existing_fields_only: discover_existing,
         password,
         reopen_state: Some(PdfReopenState::from_reader(reader)),
         ..Default::default()
@@ -391,7 +402,7 @@ fn run_with_input_policy(
     let name = field_spec
         .as_ref()
         .map(|spec| spec.sig_field_name.as_str())
-        .unwrap_or_else(|| opts.get("field").expect("validated field"));
+        .unwrap_or_else(|| opts.get("field").unwrap_or(""));
     let mut metadata = PdfSignatureMetadata::pyhanko_defaults(name);
     metadata.signer_key_usage = policy
         .key_usage
