@@ -297,6 +297,7 @@ impl Case {
         args.extend(self.args);
         args.push(self.infile.to_str().unwrap().into());
         let runtime = ValidationRuntime {
+            pkcs11_user_pin_prompt: None,
             trusted_list_transport: None,
             now: self.now,
             fetchers: fetchers(&self.arch, self.mocks),

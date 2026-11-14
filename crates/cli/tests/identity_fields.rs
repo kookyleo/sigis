@@ -60,6 +60,7 @@ fn invoke(case: &cases::Case) -> sigis_cli::Output {
         case.path("signer.p12").display().to_string(),
     ];
     let runtime = sigis_cli::runtime::ValidationRuntime {
+        pkcs11_user_pin_prompt: None,
         now: sigis_pki_core::time::Moment::parse_rfc3339("2020-08-01T00:00:00+08:00").unwrap(),
         password: Some("secret".into()),
         fetchers: sigis_pki_core::fetch::Fetchers::none(),

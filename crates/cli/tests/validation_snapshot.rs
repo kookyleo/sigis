@@ -122,6 +122,7 @@ fn native_at_time(evidence: Evidence, claimed: bool) -> Output {
         args.splice(end..end, ["--validation-time".into(), "claimed".into()]);
     }
     let runtime = ValidationRuntime {
+        pkcs11_user_pin_prompt: None,
         now: Moment::parse_rfc3339(metadata["moment"].as_str().unwrap()).unwrap(),
         fetchers: Fetchers {
             crl: Some(crls.clone()),
