@@ -947,3 +947,316 @@ fn fallback_last_backend_setter_and_full_context_capabilities_survive() {
     drop(result);
     assert_eq!(backend_count(&owner.closes), 4);
 }
+
+// Policy-to-context ownership: the generic CV layer of the approved mapping.
+// The matching public L2 HTTP producer/consumer is exercised in the root suite.
+#[test]
+fn policy_handoff_private_wrapper_and_one_close_match_original() {
+    backend_execution_identity();
+    let backend = Arc::new(RecordingBackend::default());
+    let identity: Arc<dyn FetcherBackend> = backend.clone();
+    assert_eq!(backend_count(&backend.closes), 0);
+    let context = ValidationContext::builder()
+        .build_with_fetcher_handoff(Fetchers::none(), Some(identity.clone()))
+        .unwrap();
+    // Native equivalent of the original OwnedFetcherBackend wrapper assertion:
+    // the actual returned context holds this exact generic close capability.
+    assert!(Arc::ptr_eq(
+        context.owned_fetcher_backend.as_ref().unwrap(),
+        &identity
+    ));
+    assert!(context.fetchers().is_empty());
+    assert_eq!(backend_count(&backend.retrievals), 0);
+    context.close().unwrap();
+    // The second original assertion is exactly one delegated close.
+    assert_eq!(backend_count(&backend.closes), 1);
+    assert_eq!(backend_count(&backend.retrievals), 0);
+    drop(context);
+    // This supplementary observation distinguishes explicit close from Drop.
+    assert_eq!(backend_count(&backend.closes), 1);
+}
+
+#[test]
+fn policy_handoff_keeps_exact_issued_components_and_optional_owner() {
+    backend_execution_identity();
+    for with_owner in [false, true] {
+        for empty in [false, true] {
+            let backend = Arc::new(RecordingBackend::default());
+            let identity: Arc<dyn FetcherBackend> = backend.clone();
+            let issued = if empty {
+                Fetchers::none()
+            } else {
+                marker_fetchers()
+            };
+            let owner = with_owner.then(|| identity.clone());
+            let context = ValidationContext::builder()
+                .build_with_fetcher_handoff(issued.clone(), owner)
+                .unwrap();
+            same_fallback_components(context.fetchers(), &issued);
+            assert_eq!(context.owned_fetcher_backend.is_some(), with_owner);
+            if with_owner {
+                assert!(Arc::ptr_eq(
+                    context.owned_fetcher_backend.as_ref().unwrap(),
+                    &identity
+                ));
+            }
+            assert_eq!(backend_count(&backend.retrievals), 0);
+            context.close().unwrap();
+            context.close().unwrap();
+            assert_eq!(backend_count(&backend.closes), usize::from(with_owner) * 2);
+            same_fallback_components(context.fetchers(), &issued);
+            drop(context);
+            assert_eq!(backend_count(&backend.closes), usize::from(with_owner) * 2);
+        }
+    }
+}
+
+#[test]
+fn policy_handoff_rejects_every_explicit_choice_without_factory_or_close() {
+    backend_execution_identity();
+    let mut conflicts = 0;
+    for fetcher_choice in 0..3 {
+        for backend_choice in 0..3 {
+            for components_first in [false, true] {
+                for incoming_owner_choice in 0..3 {
+                    if fetcher_choice == 0 && backend_choice == 0 {
+                        continue;
+                    }
+                    let selected = Arc::new(RecordingBackend::default());
+                    let incoming = Arc::new(RecordingBackend::default());
+                    let selected_identity: Arc<dyn FetcherBackend> = selected.clone();
+                    let incoming_identity: Option<Arc<dyn FetcherBackend>> =
+                        match incoming_owner_choice {
+                            0 => None,
+                            1 => Some(incoming.clone()),
+                            _ => Some(selected_identity.clone()),
+                        };
+                    let components = if fetcher_choice == 1 {
+                        Fetchers::none()
+                    } else {
+                        marker_fetchers()
+                    };
+                    let apply_components = |builder: ValidationContextBuilder| {
+                        if fetcher_choice == 0 {
+                            builder
+                        } else {
+                            builder.fetchers(components.clone())
+                        }
+                    };
+                    let mut builder = ValidationContext::builder();
+                    if components_first {
+                        builder = apply_components(builder);
+                    }
+                    builder = match backend_choice {
+                        1 => builder.fetcher_backend(selected_identity.clone()),
+                        2 => builder.owned_fetcher_backend(selected_identity.clone()),
+                        _ => builder,
+                    };
+                    if !components_first {
+                        builder = apply_components(builder);
+                    }
+                    // Equal component Arcs and the same selected backend are
+                    // conflicts too; equality must never erase caller intent.
+                    let error = builder
+                        .build_with_fetcher_handoff(components.clone(), incoming_identity)
+                        .unwrap_err();
+                    assert!(matches!(
+                        error,
+                        ValidationError::Malformed(ref message)
+                            if message == "handler handoff conflicts with an explicit fetcher or backend selection"
+                    ));
+                    assert_eq!(backend_count(&selected.retrievals), 0);
+                    assert_eq!(backend_count(&selected.closes), 0);
+                    assert_eq!(backend_count(&incoming.retrievals), 0);
+                    assert_eq!(backend_count(&incoming.closes), 0);
+                    // Construction failure does not revoke a caller's handle.
+                    selected.close().unwrap();
+                    assert_eq!(backend_count(&selected.closes), 1);
+                    conflicts += 1;
+                }
+            }
+        }
+    }
+    assert_eq!(conflicts, 48);
+    eprintln!("POLICY_HANDOFF_PRIVATE_CONFLICTS cases={conflicts}");
+}
+
+#[test]
+fn policy_handoff_preserves_validation_error_precedence_before_conflict() {
+    backend_execution_identity();
+    let invalid_builder = |invalid| match invalid {
+        0 => ValidationContext::builder()
+            .revocation_mode("invalid-mode")
+            .crl(vec![0x30, 0x00])
+            .ocsp_response(vec![0x30, 0x00]),
+        1 => ValidationContext::builder()
+            .crl(vec![0x30, 0x00])
+            .ocsp_response(vec![0x30, 0x00]),
+        _ => ValidationContext::builder().ocsp_response(vec![0x30, 0x00]),
+    };
+    for invalid in 0..3 {
+        for explicit in [false, true] {
+            let expected = invalid_builder(invalid).build().unwrap_err();
+            let selected = Arc::new(RecordingBackend::default());
+            let incoming = Arc::new(RecordingBackend::default());
+            let mut builder = invalid_builder(invalid);
+            if explicit {
+                builder = builder
+                    .fetchers(Fetchers::none())
+                    .owned_fetcher_backend(selected.clone());
+            }
+            let error = builder
+                .build_with_fetcher_handoff(marker_fetchers(), Some(incoming.clone()))
+                .unwrap_err();
+            assert_eq!(format!("{error:?}"), format!("{expected:?}"));
+            assert!(matches!(error, ValidationError::Malformed(_)));
+            assert_eq!(backend_count(&selected.retrievals), 0);
+            assert_eq!(backend_count(&selected.closes), 0);
+            assert_eq!(backend_count(&incoming.retrievals), 0);
+            assert_eq!(backend_count(&incoming.closes), 0);
+            incoming.close().unwrap();
+            assert_eq!(backend_count(&incoming.closes), 1);
+        }
+    }
+}
+
+#[derive(Debug)]
+struct HandoffTimedDenial(Moment);
+
+impl AlgorithmUsagePolicy for HandoffTimedDenial {
+    fn digest_algorithm_allowed(
+        &self,
+        _algorithm: &const_oid::ObjectIdentifier,
+        _moment: Option<Moment>,
+    ) -> sigis_pki_core::algorithms::AlgorithmUsageConstraint {
+        sigis_pki_core::algorithms::AlgorithmUsageConstraint {
+            allowed: false,
+            failure_reason: Some("retained handoff algorithm denial".into()),
+            not_allowed_after: Some(self.0),
+        }
+    }
+
+    fn signature_algorithm_allowed(
+        &self,
+        _algorithm: &spki::AlgorithmIdentifierOwned,
+        _moment: Option<Moment>,
+        _public_key: Option<&spki::SubjectPublicKeyInfoOwned>,
+    ) -> sigis_pki_core::algorithms::AlgorithmUsageConstraint {
+        self.digest_algorithm_allowed(&sigis_pki_core::asn1::oids::SHA256, None)
+    }
+
+    fn min_rsa_key_size(&self) -> usize {
+        4096
+    }
+}
+
+#[test]
+fn policy_handoff_preserves_all_context_fields_clones_and_typed_close_errors() {
+    backend_execution_identity();
+    let mut original = original_context();
+    let cutoff = moment("2020-10-15T00:00:00Z");
+    original.algorithm_policy = Arc::new(HandoffTimedDenial(cutoff));
+    let mut qualifiers = original.trust_anchors[0].qualifiers().clone();
+    qualifiers.standard_parameters = Some(crate::policy::PkixValidationParams {
+        user_initial_policy_set: vec!["1.2.3.4".parse().unwrap()],
+        user_initial_policy_constraint: Some(std::collections::BTreeSet::new()),
+        initial_explicit_policy: true,
+        initial_policy_mapping_inhibit: true,
+        initial_any_policy_inhibit: true,
+        max_policy_graph_nodes: Some(11),
+        ..Default::default()
+    });
+    original.trust_anchors[0] =
+        TrustAnchor::with_qualifiers(original.trust_anchors[0].cert().clone(), qualifiers);
+    // Copy all seventeen builder fields in this private fixture only. The
+    // product implementation must retain its single validated field-moving path.
+    let builder = ValidationContextBuilder {
+        trust_anchors: original.trust_anchors.clone(),
+        other_certs: original.other_certs.clone(),
+        crls: original.crls().map(<[u8]>::to_vec).collect(),
+        ocsps: original.ocsps().map(<[u8]>::to_vec).collect(),
+        moment: Some(original.timing.validation_time),
+        point_in_time_validation: Some(original.timing.point_in_time_validation),
+        best_signature_time: Some(original.timing.best_signature_time),
+        time_tolerance: Some(original.timing.time_tolerance),
+        revinfo_policy: Some(original.revinfo_policy),
+        revocation_mode: Some("ignored-because-policy-is-explicit".into()),
+        algorithm_policy: Some(original.algorithm_policy.clone()),
+        freshness_judge: Some(original.freshness_judge.clone()),
+        assertions: original.assertions.clone(),
+        fetchers: None,
+        fetcher_backend: None,
+        acceptable_ac_targets: original.acceptable_ac_targets.clone(),
+        trust_manager: original.trust_manager.clone(),
+    };
+    let error = FetchError::new(
+        sigis_pki_core::errors::FetchErrorKind::Timeout,
+        "typed handoff close error retained",
+    );
+    let owner = Arc::new(RecordingBackend {
+        close_error: Some(error.clone()),
+        ..Default::default()
+    });
+    let identity: Arc<dyn FetcherBackend> = owner.clone();
+    let issued = marker_fetchers();
+    let result = builder
+        .build_with_fetcher_handoff(issued.clone(), Some(identity.clone()))
+        .unwrap();
+    assert_security_configuration_preserved(&original, &result);
+    assert_timing_equal(original.timing(), result.timing());
+    same_fallback_components(result.fetchers(), &issued);
+    assert_eq!(backend_count(&owner.retrievals), 0);
+    let params = result.trust_anchors[0]
+        .qualifiers()
+        .standard_parameters
+        .as_ref()
+        .unwrap();
+    assert!(params
+        .effective_user_initial_policy_set()
+        .unwrap()
+        .is_empty());
+    assert_eq!(params.max_policy_graph_nodes, Some(11));
+    let denied = result.algorithm_policy.digest_algorithm_allowed(
+        &sigis_pki_core::asn1::oids::SHA256,
+        Some(result.timing.validation_time),
+    );
+    assert!(!denied.allowed);
+    assert_eq!(denied.not_allowed_after, Some(cutoff));
+    assert_eq!(
+        denied.failure_reason.as_deref(),
+        Some("retained handoff algorithm denial")
+    );
+    let mut timing = *result.timing();
+    timing.time_tolerance = Duration::from_secs(19);
+    let copies = [
+        result.clone(),
+        result.with_timing(timing),
+        result.with_fetchers(Fetchers::none()),
+    ];
+    for (index, copy) in copies.iter().enumerate() {
+        assert_security_configuration_preserved(&original, copy);
+        assert!(Arc::ptr_eq(
+            copy.owned_fetcher_backend.as_ref().unwrap(),
+            &identity
+        ));
+        assert_eq!(copy.close(), Err(error.clone()));
+        assert_eq!(backend_count(&owner.closes), index + 1);
+    }
+    same_fallback_components(copies[0].fetchers(), &issued);
+    same_fallback_components(copies[1].fetchers(), &issued);
+    assert!(copies[2].fetchers().is_empty());
+    assert_timing_equal(copies[0].timing(), result.timing());
+    assert_timing_equal(copies[1].timing(), &timing);
+    assert_timing_equal(copies[2].timing(), result.timing());
+    drop(copies);
+    assert_eq!(backend_count(&owner.closes), 3);
+    assert_eq!(result.close(), Err(error.clone()));
+    assert_eq!(backend_count(&owner.closes), 4);
+    drop(result);
+    assert_eq!(backend_count(&owner.closes), 4);
+    assert_eq!(backend_count(&owner.retrievals), 0);
+    // The independent caller still holds the original capability after all
+    // contexts are gone, and observes the same typed error on another close.
+    assert_eq!(identity.close(), Err(error));
+    assert_eq!(backend_count(&owner.closes), 5);
+}
