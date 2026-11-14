@@ -1,0 +1,112 @@
+{
+  "original_id": "pyhanko/test_internal_utils.py::test_bool_dunders",
+  "pinned_source": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/tests/test_internal_utils.py",
+  "pinned_source_length": 71860,
+  "pinned_source_sha256": "99503f89318c1c0ae32a4bb0a5909a46f44595bff8503088507b17ffb58feef0",
+  "full_function_sha256": "3cb06319a4783870a8c847e68a62bf11d65d30f12d2fdd7eeefc684f87accb2c",
+  "line": 1005,
+  "end_line": 1017,
+  "parameters": [],
+  "original_fixture_arguments": [],
+  "native_profile": "explicitly L-approved finite language/diagnostic adaptation; no literal dual-object formatting parity",
+  "mapping": [
+    {
+      "id": "B1",
+      "original": "assert bool_true != bool_false",
+      "native_assertions": [
+        "assert_ne!(bool_true, bool_false)"
+      ]
+    },
+    {
+      "id": "B2",
+      "original": "assert bool_true != ''",
+      "native_assertions": [
+        "assert_ne!(bool_true, empty_string)"
+      ]
+    },
+    {
+      "id": "B3",
+      "original": "assert bool_false != ''",
+      "native_assertions": [
+        "assert_ne!(bool_false, empty_string)"
+      ]
+    },
+    {
+      "id": "B4",
+      "original": "assert bool_true",
+      "native_assertions": [
+        "assert!(bool_true.as_bool().unwrap())"
+      ]
+    },
+    {
+      "id": "B5",
+      "original": "assert not bool_false",
+      "native_assertions": [
+        "assert!(!bool_false.as_bool().unwrap())"
+      ]
+    },
+    {
+      "id": "B6",
+      "original": "assert bool_true == bool(bool_true)",
+      "native_assertions": [
+        "assert_eq!(bool_true, Object::from(bool_true.as_bool().unwrap()))"
+      ]
+    },
+    {
+      "id": "B7",
+      "original": "assert bool_false == bool(bool_false)",
+      "native_assertions": [
+        "assert_eq!(bool_false, Object::from(bool_false.as_bool().unwrap()))"
+      ]
+    },
+    {
+      "id": "B8",
+      "original": "assert repr(bool_true) == str(bool_true) == 'True'",
+      "native_assertions": [
+        "assert_eq!(true_debug, true_display)",
+        "assert_eq!(true_display, \"true\")"
+      ]
+    },
+    {
+      "id": "B9",
+      "original": "assert repr(bool_false) == str(bool_false) == 'False'",
+      "native_assertions": [
+        "assert_eq!(false_debug, false_display)",
+        "assert_eq!(false_display, \"false\")"
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "true.pdfobj",
+      "length": 4,
+      "sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "path": "false.pdfobj",
+      "length": 5,
+      "sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "path": "empty-string.pdfobj",
+      "length": 2,
+      "sha256": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+    }
+  ],
+  "native_execution": "NOT AUTHORIZED/NOT RUN",
+  "counts_unchanged": {
+    "S": [
+      824,
+      818,
+      6,
+      0
+    ],
+    "sigis-pdf": [
+      406,
+      402,
+      4,
+      0
+    ]
+  },
+  "other_five_skips": "unchanged and unassigned"
+}
