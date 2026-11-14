@@ -1,0 +1,27 @@
+{
+  "profile": "issued-ca-qualified",
+  "anchors": {
+    "main-ca": {
+      "der_path": "pki/main-ca.der",
+      "sha256": "034944f4953e8209e28f7a8f766fe0c4b951898494af274267e996b52da0bd2c"
+    },
+    "content-ca": {
+      "der_path": "pki/content-ca.der",
+      "sha256": "a9863ff6312bdf94de386ba26bc370a18d28d17083f449467fa3b476bce73be9"
+    },
+    "signature-ca": {
+      "der_path": "pki/signature-ca.der",
+      "sha256": "22d3f9bac248a36a904afdfa0db09851c4b82672438a0edb471f659a026d191e"
+    }
+  },
+  "untrusted_chain_material": [],
+  "tl_authentication": {
+    "explicit_tlso_der": "pki/tlso.der",
+    "sha256": "5fbf5f0d0245897ab790879b0c52b855e6d2e84b7c1d19f55bc653c99c64a3b2",
+    "valid_from": "2019-01-01T00:00:00Z",
+    "valid_until": "2030-01-01T00:00:00Z"
+  },
+  "same_cms_for_all_window_variants": "cms/distinct-role.der",
+  "cms_sha256": "dbe20f96ae8e37deef7e40438e1bc54aa604730b8e8b05186b7f4018fec3a424",
+  "meaning": "TEST input declaration only. No path trust, qualification or completion verdict was measured."
+}

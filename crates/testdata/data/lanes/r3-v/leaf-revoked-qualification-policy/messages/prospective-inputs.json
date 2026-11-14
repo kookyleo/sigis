@@ -1,0 +1,336 @@
+[
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "direct_leaf_ocsp_discriminator",
+    "notes": "Direct AA signer is issuing CA. Potential r>t event; no completion verdict.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha512.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "CRL",
+    "name": "direct_leaf_crl_discriminator",
+    "notes": "Direct complete base CRL only.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha512.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "Both",
+    "name": "both_agreeing_event_sha256",
+    "notes": "Both peers encode same revocation time/reason; required selection remains unmeasured.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha256.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha256.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "Both",
+    "name": "both_agreeing_event_sha512",
+    "notes": "Both peers encode same revocation time/reason; required selection remains unmeasured.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha512.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "Either",
+    "name": "either_optional_crl_exclusion",
+    "notes": "Store/order alone does not prove that optional CRL is unselected. Needs actual producer receipt.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha256.der",
+        "proposed_role": "selected candidate",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha512.der",
+        "proposed_role": "optional candidate",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "Either",
+    "name": "either_optional_ocsp_exclusion",
+    "notes": "Store/order alone does not prove that optional OCSP is unselected. Needs actual producer receipt.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha256.der",
+        "proposed_role": "selected candidate",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha512.der",
+        "proposed_role": "optional candidate",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "Both",
+    "name": "no_event",
+    "notes": "Good encodings/serial absence only, no authenticated status verdict.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-good-sha256.der",
+        "target": "main"
+      },
+      {
+        "index": null,
+        "message": "crl/leaf-good-sha256.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "NoCheck",
+    "name": "no_check_unselected_store",
+    "notes": "Configured NoCheck is a prospective rule, not the responder OCSPNoCheck extension.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha512.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "delegated_responder",
+    "notes": "Leaf message actual signer differs from issuing CA. Side-path Good is genuinely signed candidate data, not a side-path validation proof. NoCheck extension may remove responder-revocation requirement.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-delegated-revoked-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/delegated-responder-good-sha256.der",
+        "target": "responder_delegated"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/ancestor-good-sha256.der",
+        "target": "issuing"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "nocheck_responder",
+    "notes": "Leaf message actual signer differs from issuing CA. Side-path Good is genuinely signed candidate data, not a side-path validation proof. NoCheck extension may remove responder-revocation requirement.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-nocheck-revoked-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/nocheck-responder-good-sha256.der",
+        "target": "responder_nocheck"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/ancestor-good-sha256.der",
+        "target": "issuing"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "ancestor_good_discriminator",
+    "notes": "Ancestor Good message SHA512 discriminator signed by root; actual selected ancestor receipt unmeasured.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha256.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/ancestor-good-sha512.der",
+        "target": "issuing"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "responder_side_good_discriminator",
+    "notes": "Ordinary delegated responder has no NoCheck. Actual side-path selection and policy callback order unmeasured.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-delegated-revoked-sha256.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/delegated-responder-good-sha512.der",
+        "target": "responder_delegated"
+      },
+      {
+        "index": 0,
+        "message": "ocsp/ancestor-good-sha256.der",
+        "target": "issuing"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "duplicate_message_different_indices",
+    "notes": "One real signed message has three SingleResponse entries. Third repeats exact main CertID/status. Collector may select only first; dedup behavior is not proven.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/multientry-main-other-duplicate-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 1,
+        "message": "ocsp/multientry-main-other-duplicate-sha512.der",
+        "target": "other_main"
+      },
+      {
+        "index": 2,
+        "message": "ocsp/multientry-main-other-duplicate-sha512.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "CRL",
+    "name": "duplicate_crl_different_indices",
+    "notes": "Two real revoked serial entries. Single MAIN path cannot prove selection of both leaves.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "crl/multientry-main-other-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 1,
+        "message": "crl/multientry-main-other-sha512.der",
+        "target": "other_main"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP",
+    "name": "direct_message_main_and_responder_entries",
+    "notes": "Genuine revoked-main/Good-responder entries signed by issuing CA; duplicate-obligation selection across leaf and side path requires actual producer execution.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/multientry-main-responder-sha512.der",
+        "target": "main"
+      },
+      {
+        "index": 1,
+        "message": "ocsp/multientry-main-responder-sha512.der",
+        "target": "responder_delegated"
+      }
+    ],
+    "trust_verdict": null
+  },
+  {
+    "actual_producer_order": null,
+    "actual_producer_selection": null,
+    "intended_rule": "OCSP/CRL",
+    "name": "signature_only_tamper",
+    "notes": "One signature octet changed; original signed payload, alg, certs and lengths preserved. Both raw signature checks fail as expected.",
+    "store_candidates": [
+      {
+        "index": 0,
+        "message": "ocsp/leaf-direct-revoked-sha512-signature-tamper.der",
+        "target": "main"
+      },
+      {
+        "index": 0,
+        "message": "crl/leaf-revoked-sha512-signature-tamper.der",
+        "target": "main"
+      }
+    ],
+    "trust_verdict": null
+  }
+]

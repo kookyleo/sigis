@@ -1,0 +1,675 @@
+{
+  "schema": "finite signed TEST payload inventory; construction/raw-selfcheck only",
+  "candidate_parent": "73af0876",
+  "imported_observed_utc": "2026-11-14T15:57:37.068944+00:00",
+  "accepted_V": [
+    47,
+    46,
+    0,
+    1
+  ],
+  "new_ids": 0,
+  "trust_native_oracle_runs": 0,
+  "private_keys_included": false,
+  "construction_scope": "Two independent PKIs; never mix content and messages evidence/trust. New TEST inputs do not prove historical observation/POE.",
+  "messages_bytecode_limit": "Initial messages construction imports did not capture bytecode suppression/prepostpyc; incidental writes unmeasured. No install/intentional package-source edits.",
+  "content_clocks": {
+    "c": "2020-10-31T23:59:59Z",
+    "t": "2020-11-01T00:00:00Z",
+    "r": "2020-12-01T00:00:00Z",
+    "v": "2020-12-25T00:00:00Z",
+    "tl_issue": "2020-12-26T00:00:00Z",
+    "authentication_reference": "2026-11-14T14:02:28Z",
+    "actual_observation_not_historical": true,
+    "authentication_observed_raw": "2026-11-14T14:02:27.868929+00:00",
+    "authentication_reference_meaning": "Conservative whole-second ceiling of actual post-construction observation for TL authentication only; MAIN c/t/r/v unchanged; no earlier observation or POE."
+  },
+  "message_clocks": {
+    "c": "2020-10-15T00:00:00Z",
+    "t": "2020-11-01T00:00:00Z",
+    "r": "2020-12-01T00:00:00Z",
+    "v": "2020-12-25T00:00:00Z",
+    "actual_construction_finished": "2026-11-14T13:57:26.641018+00:00",
+    "conservative_observation_reference": "2026-11-14T13:57:27Z",
+    "observation_reference_meaning": "Ceiling of actual construction-finished clock for conservative no-earlier-knowledge negative only; NOT logical2020 observation or authenticated earlier POE."
+  },
+  "source_indexes": [
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/ARTIFACTS.json",
+      "length": 75313,
+      "sha256": "cc2dabe3547f4bbed0297c5f7aee7552493e7e2114dc02dd9d47fc0dc0f2b45d"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/manifest.json",
+      "length": 23426,
+      "sha256": "8e9f5166d82ef25dfaf543732042a8487767f283db8a781e0fc90611463f1acd"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/manifest.json",
+      "length": 12181,
+      "sha256": "e0473cdbd4746f646a9022cd1f1ae57cc2100ee59d23cd445c40a1e9dfb064fd"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/manifest.json",
+      "length": 49163,
+      "sha256": "445ba8eb9a113c8f0df837a0f774695264463f42108af34e50c1c355962ef3ad"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/message-tsa-addendum/manifest.json",
+      "length": 7742,
+      "sha256": "eb7c40043812f6a9c7e7f3e4f872eb3ce4b6a45a9641edfb7c922f7570ee9843"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/packaging/manifest.json",
+      "length": 10012,
+      "sha256": "25bd991c76a8f388c0945927d0ceb67f23dee839958bb23d222a76cbb20c2134"
+    },
+    {
+      "path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/l-contract.snapshot.md",
+      "length": 10947,
+      "sha256": "b4555eb1a510b30691234b82ec6f194ccefdcfcb8e0f8f758494959c92bb347f"
+    }
+  ],
+  "files": [
+    {
+      "path": "content/pki/content-ca.der",
+      "length": 1069,
+      "sha256": "a9863ff6312bdf94de386ba26bc370a18d28d17083f449467fa3b476bce73be9",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/content-ca.der"
+    },
+    {
+      "path": "content/pki/content-ca.spki.der",
+      "length": 422,
+      "sha256": "c1cd0f8bdc421682f584d1d9b9bafcbdea63f9bbc249fd470d4d4f1aa1c58453",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/content-ca.spki.der"
+    },
+    {
+      "path": "content/pki/content-tsa.der",
+      "length": 1116,
+      "sha256": "50ba06938b4445a3515fe5f2502e6b7a7a363f8eb3928c96f9b7081a65f90e75",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/content-tsa.der"
+    },
+    {
+      "path": "content/pki/content-tsa.spki.der",
+      "length": 422,
+      "sha256": "8a67cbc538dea8bd76bec42fec590764d29f22cc2ee421d7c651b071ff83d313",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/content-tsa.spki.der"
+    },
+    {
+      "path": "content/pki/main-ca.der",
+      "length": 1063,
+      "sha256": "034944f4953e8209e28f7a8f766fe0c4b951898494af274267e996b52da0bd2c",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/main-ca.der"
+    },
+    {
+      "path": "content/pki/main-ca.spki.der",
+      "length": 422,
+      "sha256": "6364e428fd2b89220eb9da6804b4eb4ef26f29b256c67f98a024ae511f1004ad",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/main-ca.spki.der"
+    },
+    {
+      "path": "content/pki/main.der",
+      "length": 1080,
+      "sha256": "7e862014d2a35cef12cbd10624f9cf9015bb84d3a5676d190b0bb57879c92b34",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/main.der"
+    },
+    {
+      "path": "content/pki/main.spki.der",
+      "length": 422,
+      "sha256": "98cae9611dcd20b08aad84b3637b3105d3419de672759d3bb23eeba6b67d50c7",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/main.spki.der"
+    },
+    {
+      "path": "content/pki/signature-ca.der",
+      "length": 1073,
+      "sha256": "22d3f9bac248a36a904afdfa0db09851c4b82672438a0edb471f659a026d191e",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/signature-ca.der"
+    },
+    {
+      "path": "content/pki/signature-ca.spki.der",
+      "length": 422,
+      "sha256": "7629b7cfd8edc1c26d06ac709d3a9a50512f40c0510254672b321847f433ca56",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/signature-ca.spki.der"
+    },
+    {
+      "path": "content/pki/signature-tsa.der",
+      "length": 1120,
+      "sha256": "b6f72c292f67febf740ce36b1eed8cc43ab27770e443e929a81648077605b121",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/signature-tsa.der"
+    },
+    {
+      "path": "content/pki/signature-tsa.spki.der",
+      "length": 422,
+      "sha256": "ed1d83f14281575c42fbc56e2a697eef793ebf6f86b5bdefab165b2a2d94b1b7",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/signature-tsa.spki.der"
+    },
+    {
+      "path": "content/pki/tlso.der",
+      "length": 1051,
+      "sha256": "5fbf5f0d0245897ab790879b0c52b855e6d2e84b7c1d19f55bc653c99c64a3b2",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/tlso.der"
+    },
+    {
+      "path": "content/pki/tlso.spki.der",
+      "length": 422,
+      "sha256": "25664b4ac6e201489ff33085a96f97d455a427fcde05cc15170407cbcb3daeef",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/pki/tlso.spki.der"
+    },
+    {
+      "path": "content/cms/distinct-role.der",
+      "length": 5779,
+      "sha256": "dbe20f96ae8e37deef7e40438e1bc54aa604730b8e8b05186b7f4018fec3a424",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/distinct-role.der"
+    },
+    {
+      "path": "content/cms/equal-content-time.der",
+      "length": 5779,
+      "sha256": "54601ceff1385291da3e0ed997fae7991d15a04c025f0c149f118d94e2ef3fe9",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/equal-content-time.der"
+    },
+    {
+      "path": "content/cms/no-content.der",
+      "length": 3831,
+      "sha256": "f776e3a54d983464db773471abe4ccb598aa1bb66ce91205fff87349584ed19a",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/no-content.der"
+    },
+    {
+      "path": "content/cms/bad-content-signature.der",
+      "length": 5779,
+      "sha256": "3300fe6061b9f070e1b99a999c0fbed316c1b071ef9ed3d5301e66733379b58d",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/bad-content-signature.der"
+    },
+    {
+      "path": "content/cms/wrong-content-imprint.der",
+      "length": 5779,
+      "sha256": "00d642315f15e102491fe51ec9ea3a969b8be2efcf98fca39eacb7aea7728a07",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/wrong-content-imprint.der"
+    },
+    {
+      "path": "content/cms/wrong-content-purpose.der",
+      "length": 5737,
+      "sha256": "214eefefbf6bd5b80c50b709af905eaaf860d672c7753515a9a4d3a6b5bb5706",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/cms/wrong-content-purpose.der"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/after-t-before-v.xml",
+      "length": 10815,
+      "sha256": "44a1b91b9147e784f10aacdafd9c5515c808b19c854d9695f8eefa0f375dca31",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/after-t-before-v.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/between-c-and-t.xml",
+      "length": 10822,
+      "sha256": "0498d72e75977c3b872de48a712587010f8d7fa876765f5cc96c83c09bafca17",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/between-c-and-t.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/broad.xml",
+      "length": 10816,
+      "sha256": "dcb83e97901ce9daa334940de9ea397ffec86d1b577dfdd6a137ec14ab5d4540",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/broad.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/finite-end-at-v.xml",
+      "length": 12809,
+      "sha256": "12481275a12c04ee44c5a4fa857a8b3474cc7605d438f61aefd2daa9987ba36a",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/finite-end-at-v.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/multiple-conflicting.xml",
+      "length": 13270,
+      "sha256": "13a3920446093dca9c659850d0f40bec5386009bf976be5e96c4e09d14d9cdf1",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-conflicting.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/multiple-first-late-second-favorable.xml",
+      "length": 14826,
+      "sha256": "1c7d49c71df355e56b30ab9da6c2fd4f0304313cab63377f71d043c1d7ddd770",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-first-late-second-favorable.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/outside-current-end.xml",
+      "length": 12807,
+      "sha256": "0aaee76be069a1a191118db3326ea2389caaed3b41c61c185f851165224726c8",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/outside-current-end.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/start-at-c.xml",
+      "length": 10822,
+      "sha256": "1c367a830934393a839688922524ee2abd56132ed06e351da5c1327df5f8da3c",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-c.xml"
+    },
+    {
+      "path": "content/tls/direct-qtst-anchor/start-at-v.xml",
+      "length": 10822,
+      "sha256": "a1011940c4495ae70bae9e34724e355bcc2027375ade023a99bf52fe55e8dd7b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-v.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/after-t-before-v.xml",
+      "length": 10685,
+      "sha256": "d2979b35c1155863e5101ac84452f69258204fe28cc09ef9a686de60300d0f03",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/after-t-before-v.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/between-c-and-t.xml",
+      "length": 10692,
+      "sha256": "8baebecf607e2b025f10a9af262b79e76e35141bd9c6c0abf3eff5d78fb64a9f",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/between-c-and-t.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/broad.xml",
+      "length": 10686,
+      "sha256": "b3711597bd1c2b37643d58cb6e3e9bf8f2bd6a19459a98fa63d076efeb258965",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/broad.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/finite-end-at-v.xml",
+      "length": 12616,
+      "sha256": "0f1ab426b7f80ca220aaa7abd42696771f20843fd8c77d261f3226fb0c32cec8",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/finite-end-at-v.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/multiple-conflicting.xml",
+      "length": 13077,
+      "sha256": "90419dcbd57c189f5211cbdf3cec747916b94f0e31920f93ccfc57370aa070c3",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-conflicting.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/multiple-first-late-second-favorable.xml",
+      "length": 14570,
+      "sha256": "a3854dfc3c275bb89d011fbb9ae229b02a81b856fd923409f187dd220228b2d2",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-first-late-second-favorable.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/outside-current-end.xml",
+      "length": 12614,
+      "sha256": "d1dba5094d9b8313fd7aab006e61566b46bc60b26d789abc79ea61ca53d79b49",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/outside-current-end.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/start-at-c.xml",
+      "length": 10692,
+      "sha256": "7b4862ffe68eb66f23325d7a734589ec12149572edbd7debf0c1a06e25ec41cf",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-c.xml"
+    },
+    {
+      "path": "content/tls/issued-ca-qualified/start-at-v.xml",
+      "length": 10692,
+      "sha256": "4c2b2babd1cafd850db81c2a52f36fe6bb3b3fefca66c37cc64b5430e09fb584",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-v.xml"
+    },
+    {
+      "path": "content/trust/direct-qtst-anchor.json",
+      "length": 1037,
+      "sha256": "edbcfe9b7874be1c163e2252bc05566f7d53208a11d3b8d480fcac365e3f6ddf",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/trust/direct-qtst-anchor.json"
+    },
+    {
+      "path": "content/trust/issued-ca-qualified.json",
+      "length": 1034,
+      "sha256": "e79994c62a26021480f3a381c24f239cb947881cb9cc0e795d08a4e0fa6443f4",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/trust/issued-ca-qualified.json"
+    },
+    {
+      "path": "content/revinfo/content-tsa-current-good.ocsp.der",
+      "length": 1706,
+      "sha256": "c10a42ab69433a2b665addf6fa3197381f3cce4712e6dba76f9fadac25776904",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/content-tsa-current-good.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/content-tsa-signature-bound-good.ocsp.der",
+      "length": 1706,
+      "sha256": "f2fb16c9d9be47641f7475572cbe850b434d697e8b8d23612f99d702c15a5c55",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/content-tsa-signature-bound-good.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/main-current-revoked.ocsp.der",
+      "length": 1720,
+      "sha256": "1979f879b986ecf73778f67ccba24dedb4e5883ddc36dc6808f807aee8765af0",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/main-current-revoked.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/main-signature-bound-good.ocsp.der",
+      "length": 1697,
+      "sha256": "dfb88d9a289322927e798e6e38516b372f8b5b25047e68c0e6fcfb5e731af8dd",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/main-signature-bound-good.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/signature-tsa-current-good.ocsp.der",
+      "length": 1712,
+      "sha256": "d6f07673968918ad3707e1f282a7455a48fade81fe9aa471acdca10ccad4134d",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/signature-tsa-current-good.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/signature-tsa-signature-bound-good.ocsp.der",
+      "length": 1712,
+      "sha256": "a7d0958beb775d33dc51c8f6d163ddba17913daaaf79624d77274c96245e0493",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/signature-tsa-signature-bound-good.ocsp.der"
+    },
+    {
+      "path": "content/revinfo/content-tsa-current-good.crl.der",
+      "length": 549,
+      "sha256": "e023eb9519f6619967c6af1380d9e921a85d268678419378039ed5405bbbdb1d",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/content-tsa-current-good.crl.der"
+    },
+    {
+      "path": "content/revinfo/content-tsa-signature-bound-good.crl.der",
+      "length": 549,
+      "sha256": "02720574c21e2c87d0361ca3aac1d8c360d706d0c5557c317a6a4aee7dbb41e3",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/content-tsa-signature-bound-good.crl.der"
+    },
+    {
+      "path": "content/revinfo/main-current-revoked.crl.der",
+      "length": 582,
+      "sha256": "1e68408edf33cda2ce99fc9e8fcba302f0d56ebbe2452aa9eaac3988a5867917",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/main-current-revoked.crl.der"
+    },
+    {
+      "path": "content/revinfo/main-signature-bound-good.crl.der",
+      "length": 546,
+      "sha256": "085ef0a279f1f5cde4972e9d7be8d0d1b35156d86720896646273097a4a87047",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/main-signature-bound-good.crl.der"
+    },
+    {
+      "path": "content/revinfo/signature-tsa-current-good.crl.der",
+      "length": 551,
+      "sha256": "9d204730ef6950a7023e1fd2f583bae303f96c3cbd8605938482e05d8d4487e6",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/signature-tsa-current-good.crl.der"
+    },
+    {
+      "path": "content/revinfo/signature-tsa-signature-bound-good.crl.der",
+      "length": 551,
+      "sha256": "8b144e8233dff61edde33923e916c4049b106e462e55ccbb81baa46c7c353b36",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/revinfo-attempt-002/signature-tsa-signature-bound-good.crl.der"
+    },
+    {
+      "path": "messages/certs/content_tsa.cert.der",
+      "length": 1195,
+      "sha256": "4a2ce605d2312ffabba6e1814b4973d0cb26aecd15e431161eefc15e780a4384",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/content_tsa.cert.der"
+    },
+    {
+      "path": "messages/certs/content_tsa.spki.der",
+      "length": 422,
+      "sha256": "b18367aac2de0cdcad5573dde399af3e26e6006cb8928dc3c725fdfe517388d0",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/content_tsa.spki.der"
+    },
+    {
+      "path": "messages/certs/issuing.cert.der",
+      "length": 1164,
+      "sha256": "9517511ea90cb88252b16617939a9cdaa38a90602279f3892607c8e9d505591a",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/issuing.cert.der"
+    },
+    {
+      "path": "messages/certs/issuing.spki.der",
+      "length": 422,
+      "sha256": "270e248d871d07e4d183d2ec4526d7424a11591abe63c9464a6baeb070465700",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/issuing.spki.der"
+    },
+    {
+      "path": "messages/certs/main.cert.der",
+      "length": 1164,
+      "sha256": "a94f7a23df19be0feb95445c0b173b384af50f0e1c089814d91e2684cc29d06c",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/main.cert.der"
+    },
+    {
+      "path": "messages/certs/main.spki.der",
+      "length": 422,
+      "sha256": "595e7226e37c471ee1cbb1979cb05620126410902c8d6080fb9b51a627b3619f",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/main.spki.der"
+    },
+    {
+      "path": "messages/certs/other_main.cert.der",
+      "length": 1170,
+      "sha256": "82119d40e8ede46eb78979385baa6c513b3e0c7890cca2683a31649571428b7b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/other_main.cert.der"
+    },
+    {
+      "path": "messages/certs/other_main.spki.der",
+      "length": 422,
+      "sha256": "7192a48e0af8ee8e496fcb9a7981f7a0990b1236a57dff320930c04e8cd08e82",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/other_main.spki.der"
+    },
+    {
+      "path": "messages/certs/responder_delegated.cert.der",
+      "length": 1203,
+      "sha256": "72a2aa690530084bca00399234100e773339d72def4bc6a04cab9290b27ca345",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/responder_delegated.cert.der"
+    },
+    {
+      "path": "messages/certs/responder_delegated.spki.der",
+      "length": 422,
+      "sha256": "09ee79c8af1db7208a073fd982ae2d8a1fa838d7cb359f1f912bdf102e61fdbf",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/responder_delegated.spki.der"
+    },
+    {
+      "path": "messages/certs/responder_nocheck.cert.der",
+      "length": 1220,
+      "sha256": "498c87e5fc7fcc68f215bda26509ae0b2d2e0edabaccf9360a78fc8d0e6f992e",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/responder_nocheck.cert.der"
+    },
+    {
+      "path": "messages/certs/responder_nocheck.spki.der",
+      "length": 422,
+      "sha256": "07d9b4e850a68c0760fa13103fb38b0b577e6f027bbf001ced99ac5aafdc769a",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/responder_nocheck.spki.der"
+    },
+    {
+      "path": "messages/certs/root.cert.der",
+      "length": 1042,
+      "sha256": "0080a56d190913474d4476fa8a3d1320ebc1964565a14811eff0ed0588649f21",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/root.cert.der"
+    },
+    {
+      "path": "messages/certs/root.spki.der",
+      "length": 422,
+      "sha256": "1b481cea8376aa455a4f900b640726b09b127059630e62ff19f3f9faf1b757ac",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/root.spki.der"
+    },
+    {
+      "path": "messages/certs/signature_tsa.cert.der",
+      "length": 1197,
+      "sha256": "4b62684b84f324b5ffa025facd5c34cf8e7447cea18a81aa208ca708cd33cf54",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/signature_tsa.cert.der"
+    },
+    {
+      "path": "messages/certs/signature_tsa.spki.der",
+      "length": 422,
+      "sha256": "109d46a816dba3b226ea293cca41325e89775fa6f8264903b559753e6f127cdd",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/certs/signature_tsa.spki.der"
+    },
+    {
+      "path": "messages/ocsp/ancestor-good-sha256.der",
+      "length": 1703,
+      "sha256": "a85882e1055493248abe91b52b2aec867d3a6b89e5f4ebfce87eff637deb5d3e",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/ancestor-good-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/ancestor-good-sha512.der",
+      "length": 1703,
+      "sha256": "c2a6a1fefa0e8891d57a7456923eb5b910422a734c94e9d7975cce45bed61471",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/ancestor-good-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/delegated-responder-good-sha256.der",
+      "length": 1828,
+      "sha256": "2ce2afc7629ada9623abb7faecf1d3ff4817762cd202abf040c3d90762acd2ab",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/delegated-responder-good-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/delegated-responder-good-sha512.der",
+      "length": 1828,
+      "sha256": "733f0404681bab16482ed320a30af6303e6ff68e2dffa9728df72855992aace7",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/delegated-responder-good-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-delegated-revoked-sha256.der",
+      "length": 1902,
+      "sha256": "9668836762a397b1229498edaf3fab9efac8215b2b10aa6989e0c0dc5dc38d0b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-delegated-revoked-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-delegated-revoked-sha512.der",
+      "length": 1902,
+      "sha256": "b2804e1ba044856d03c48af26f495b70d21ba6b60443c976dd2c6677a78011e5",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-delegated-revoked-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-direct-good-sha256.der",
+      "length": 1828,
+      "sha256": "2aa29fd5073c233cb7495567d54a1572ae32eaf6a8bd23b75eea9b61bcd0e91b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-direct-good-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-direct-revoked-sha256.der",
+      "length": 1851,
+      "sha256": "cd419621269f9554e672eaaaa00447c9c0ee00087a924a271a5205ef6c77017e",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-direct-revoked-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-direct-revoked-sha512-signature-tamper.der",
+      "length": 1851,
+      "sha256": "188c38136f6a484626101a0ebd7432c1803cf84a3be1597943c3809f3cefc318",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-direct-revoked-sha512-signature-tamper.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-direct-revoked-sha512.der",
+      "length": 1851,
+      "sha256": "4c4c01009848fdd96631a454554addea4788127fd75d1831766d45eccec83a62",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-direct-revoked-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-nocheck-revoked-sha256.der",
+      "length": 1917,
+      "sha256": "ae0eb8c6023f4e39565b2691643d4cd64329529e313b87710a1d1f5b41ab1450",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-nocheck-revoked-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/leaf-nocheck-revoked-sha512.der",
+      "length": 1917,
+      "sha256": "b13bac580d04b629d88a00dbdf9f9a2d3598caba3ac675b4d7e9968d084dbd6d",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/leaf-nocheck-revoked-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/multientry-main-other-duplicate-sha512.der",
+      "length": 2157,
+      "sha256": "938863bc7e3c62cf6ab7f432fd039b8dfdd6174c5f99202eddd6b0539d22501c",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/multientry-main-other-duplicate-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/multientry-main-responder-sha512.der",
+      "length": 1982,
+      "sha256": "68bd546272b235a305f6ff837c255f60ef7b765af337d31613da3fb0527302ae",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/multientry-main-responder-sha512.der"
+    },
+    {
+      "path": "messages/ocsp/nocheck-responder-good-sha256.der",
+      "length": 1828,
+      "sha256": "333f0b9fb0f27be8ddd8db2b07cabe402a22b8821f1d9c048b3d60dfe23fdbe6",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/nocheck-responder-good-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/nocheck-responder-good-sha512.der",
+      "length": 1828,
+      "sha256": "40fa26ab73c99f0be75d56559e485b695ccd7cff16ce703a35c9a204c2f8f4d4",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/ocsp/nocheck-responder-good-sha512.der"
+    },
+    {
+      "path": "messages/crl/ancestor-good-sha256.der",
+      "length": 531,
+      "sha256": "c9d8e287acee427669d240bb58d6f02c4b7cbc287357084d49877dbbcc7f631e",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/ancestor-good-sha256.der"
+    },
+    {
+      "path": "messages/crl/delegated-responder-good-sha256.der",
+      "length": 534,
+      "sha256": "4ef9ec30326994d7fa8f4f0c6623d0f0bb37ba53e266a5aaa4cbefe5f2fbfb39",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/delegated-responder-good-sha256.der"
+    },
+    {
+      "path": "messages/crl/leaf-good-sha256.der",
+      "length": 534,
+      "sha256": "ed12a414118f7918bd8386f56fada10742ce8caf897619c0aeeec90624ba0fc0",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/leaf-good-sha256.der"
+    },
+    {
+      "path": "messages/crl/leaf-revoked-sha256.der",
+      "length": 572,
+      "sha256": "03ea6cf866fb51d3de354a66d69e3f0511e81a405776c5076a08142d7873105b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/leaf-revoked-sha256.der"
+    },
+    {
+      "path": "messages/crl/leaf-revoked-sha512-signature-tamper.der",
+      "length": 572,
+      "sha256": "97488e12c5d3dca24e82e424a5b625b07f8b2897101d1486541301f0550a1287",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/leaf-revoked-sha512-signature-tamper.der"
+    },
+    {
+      "path": "messages/crl/leaf-revoked-sha512.der",
+      "length": 572,
+      "sha256": "41bc55f7a4a1b87d2b529a8b70d77dd39b53729d1cb8ed5a53a185fbb56034c1",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/leaf-revoked-sha512.der"
+    },
+    {
+      "path": "messages/crl/multientry-main-other-sha512.der",
+      "length": 608,
+      "sha256": "1eebe0864ffaf5ecb68f194978eb4448a94b1bbffbd11f40cb95c80f17df18eb",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/crl/multientry-main-other-sha512.der"
+    },
+    {
+      "path": "messages/cms/main.cms.der",
+      "length": 12620,
+      "sha256": "3f1fee84a872435920ddb232200e1998ec0cb5c2845f38ac63ccf01194f7c852",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/cms/main-with-content-and-signature-timestamps.cms.der"
+    },
+    {
+      "path": "messages/ocsp/content-tsa-good-sha256.der",
+      "length": 1828,
+      "sha256": "ecad365ca1dbcc9f2b771d0b73c13cd3333acf57e6762f578351f8c5a5c12b7b",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/message-tsa-addendum/content-tsa-good-sha256.der"
+    },
+    {
+      "path": "messages/ocsp/signature-tsa-good-sha256.der",
+      "length": 1828,
+      "sha256": "1f00ac92e862e6148304028e29ba8b72f28712dde88abbdbfd161b3c194a0e59",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/message-tsa-addendum/signature-tsa-good-sha256.der"
+    },
+    {
+      "path": "messages/packaging/actual-signer-only.der",
+      "length": 1851,
+      "sha256": "4c4c01009848fdd96631a454554addea4788127fd75d1831766d45eccec83a62",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/packaging/actual-signer-only.der"
+    },
+    {
+      "path": "messages/packaging/actual-signer-root.der",
+      "length": 2893,
+      "sha256": "8aa0fe80c9ea65baa2dc3dd7bc2fd6cfb91cfbc9505a69e2115f49d71fae5406",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/packaging/actual-signer-root.der"
+    },
+    {
+      "path": "messages/packaging/no-embedded-certs.der",
+      "length": 679,
+      "sha256": "d1e8101645336e406a17ecb3ae1540df0ed2ee8b5ed41ca3564eaa7771f710d5",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/packaging/no-embedded-certs.der"
+    },
+    {
+      "path": "messages/packaging/root-actual-signer.der",
+      "length": 2893,
+      "sha256": "2f7c82107cc7f66862b70835670e4b1b7d691121c7e516fc1ad6d6a7c340dcec",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/packaging/root-actual-signer.der"
+    },
+    {
+      "path": "messages/prospective-inputs.json",
+      "length": 9815,
+      "sha256": "783e06e69272e2d1b537449efca95c89481bc64ce15dc8bc3fba96725844a11f",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/prospective-compositions.json"
+    },
+    {
+      "path": "messages/expected-bindings-input-only.json",
+      "length": 12557,
+      "sha256": "800dc4f5dfe81431c2883cd95a3b492534b1d30755387692a463c2bd248492fe",
+      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/messages/expected-policy-bindings-input-only.json"
+    }
+  ]
+}
