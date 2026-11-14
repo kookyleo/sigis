@@ -390,67 +390,7 @@ impl Case {
         );
         self.read_revinfo(&directory)
     }
-    pub fn programmatic(
-        &self,
-        cfg: &sigis_cli::config::CliConfig,
-        runtime: &sigis_cli::runtime::ValidationRuntime,
-        contextual: bool,
-    ) -> Result<String, String> {
-        let mut args = self.args()[2..].to_vec();
-        for arg in &mut args {
-            if [
-                "signer.crt",
-                "cert.pem",
-                "interm.cert.pem",
-                "signer.key.pem",
-                "input.pdf",
-                "output.pdf",
-            ]
-            .contains(&arg.as_str())
-            {
-                *arg = self.path(arg).display().to_string();
-            }
-        }
-        if contextual {
-            args.splice(0..0, ["--validation-context".into(), "default".into()]);
-        }
-        common::record_test_executable();
-        let before = signing_record::before(&self.inputs());
-        let config = || {
-            json!({
-                "complete_fixture_config_debug":format!("{cfg:?}"),
-                "raw_config":cfg.raw_config,
-                "effective_validation_contexts":cfg.validation_contexts,
-                "effective_default_validation_context":cfg.default_validation_context,
-                "effective_stamp_styles":cfg.stamp_styles,
-                "effective_default_stamp_style":cfg.default_stamp_style,
-                "effective_time_tolerance":cfg.time_tolerance,
-                "effective_retroactive_revinfo":cfg.retroactive_revinfo,
-            })
-        };
-        let config_before = config();
-        fs::write(self.path("programmatic-before.json"), serde_json::to_vec_pretty(&json!({
-            "kind":"same public visible PEM callback as canonical CLI; supplemental only",
-            "argv":args,"config":config_before,"inputs":before,"runtime_now":runtime.now.to_string(),
-        })).unwrap()).unwrap();
-        let result = sigis_cli::signature_appearance::run_with_runtime(&args, Some(cfg), runtime);
-        assert_eq!(config_before, config());
-        for row in &before {
-            let bytes = fs::read(row["path"].as_str().unwrap()).unwrap();
-            assert_eq!(row["sha256"], sha(&bytes));
-            assert_eq!(row["length"], bytes.len());
-        }
-        fs::write(
-            self.path("programmatic-result.json"),
-            serde_json::to_vec_pretty(&json!({
-                "kind":"supplemental public visible PEM callback; zero original-function credit",
-                "result":result,"output_sha256":sha(&fs::read(self.path("output.pdf")).unwrap()),
-            }))
-            .unwrap(),
-        )
-        .unwrap();
-        result
-    }
+
 }
 impl Drop for Case {
     fn drop(&mut self) {
