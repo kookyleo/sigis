@@ -73,27 +73,82 @@ pub(crate) fn run(
     config: Option<&CliConfig>,
     runtime: &crate::runtime::ValidationRuntime,
 ) -> Result<String, String> {
-    let options = parse_options(args)?;
+    let mut options = parse_options(args)?;
     if options.paths.len() != 2 {
         return Err("PKCS#11 signing requires an input and output file.".into());
     }
-    let setup: Option<Pkcs11Setup> = match options.get("p11-setup").filter(|name| !name.is_empty())
-    {
-        Some(name) => {
-            let config = config.ok_or("The --p11-setup option requires a configuration file")?;
-            Some(
-                config
-                    .pkcs11_setup(name)
-                    .map_err(|_| format!("Error while reading PKCS#11 config {name}"))?,
-            )
-        }
-        None => None,
-    };
+    let mut setup: Option<Pkcs11Setup> =
+        match options.get("p11-setup").filter(|name| !name.is_empty()) {
+            Some(name) => {
+                let config =
+                    config.ok_or("The --p11-setup option requires a configuration file")?;
+                Some(
+                    config
+                        .pkcs11_setup(name)
+                        .map_err(|_| format!("Error while reading PKCS#11 config {name}"))?,
+                )
+            }
+            None => None,
+        };
     if setup.is_none()
         && (options.get("lib").is_none_or(str::is_empty)
             || options.get("cert-label").is_none_or(str::is_empty))
     {
         return Err("The parameters --lib and --cert-label are required.".into());
     }
+    if setup.is_none() {
+        setup = Some(direct_setup(&mut options)?);
+    }
     crate::pkcs11_signing::run(&options, setup.as_ref(), config, runtime)
+}
+
+/// Translate direct provider options through the same typed setup parser used
+/// by named profiles. The caller's actual configuration and runtime continue
+/// separately into signing; this temporary object supplies provider settings.
+fn direct_setup(options: &mut Options) -> Result<Pkcs11Setup, String> {
+    use serde_json::{json, Map, Value};
+    let mut settings = Map::new();
+    for (argument, setting) in [
+        ("lib", "module-path"),
+        ("cert-label", "cert-label"),
+        ("key-label", "key-label"),
+    ] {
+        if let Some(values) = options.values.remove(argument) {
+            if values.len() != 1 {
+                return Err(format!("Option --{argument} must occur exactly once."));
+            }
+            settings.insert(setting.into(), json!(values[0]));
+        }
+    }
+    if let Some(values) = options.values.remove("token-label") {
+        if values.len() != 1 {
+            return Err("Option --token-label must occur exactly once.".into());
+        }
+        settings.insert("token-criteria".into(), json!({"label": values[0]}));
+    }
+    if let Some(values) = options.values.remove("slot-no") {
+        if values.len() != 1 {
+            return Err("Option --slot-no must occur exactly once.".into());
+        }
+        let slot: u64 = values[0]
+            .parse()
+            .map_err(|_| "PKCS#11 slot number must be a nonnegative integer.".to_owned())?;
+        settings.insert("slot-no".into(), json!(slot));
+    }
+    for (argument, setting) in [
+        ("other-cert", "other-certs-to-pull"),
+        ("other-cert-file", "other-certs"),
+    ] {
+        if let Some(values) = options.values.remove(argument) {
+            settings.insert(setting.into(), json!(values));
+        }
+    }
+    if options.flags.remove("raw-mechanism") {
+        settings.insert("raw-mechanism".into(), Value::Bool(true));
+    }
+    if options.flags.remove("skip-user-pin") {
+        settings.insert("prompt-pin".into(), json!("skip"));
+    }
+    let temporary = json!({"pkcs11-setups": {"direct": settings}});
+    CliConfig::parse(&temporary.to_string())?.pkcs11_setup("direct")
 }
