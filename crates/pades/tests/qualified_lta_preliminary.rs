@@ -33,6 +33,16 @@ fn registry() -> Arc<TspRegistry> {
     Arc::new(registry)
 }
 #[derive(Debug)]
+struct Stale;
+impl sigis_pki_certvalidator::revinfo::freshness::FreshnessJudge for Stale {
+    fn judge(&self, _: Option<Moment>, _: Option<Moment>, _: &CertRevTrustPolicy,
+        _: &sigis_pki_certvalidator::policy::ValidationTimingParams)
+        -> sigis_pki_certvalidator::revinfo::freshness::RevinfoUsability {
+        use sigis_pki_certvalidator::revinfo::freshness::*;
+        RevinfoUsability { rating: RevinfoUsabilityRating::Stale, last_usable_at: None, compared_to: None }
+    }
+}
+#[derive(Debug)]
 struct Registry(Arc<TspRegistry>);
 impl TrustManager for Registry {
     fn as_trust_anchor(&self, cert: &Cert) -> Option<TrustAnchor> {
@@ -59,6 +69,7 @@ fn run(usage: KeyUsageConstraints, roots: bool, revinfo: bool) -> sigis_pades::a
         .moment(at("2025-03-01T22:00:00Z"))
         .point_in_time_validation(true)
         .revinfo_policy(CertRevTrustPolicy::new(if revinfo { REQUIRE_REVINFO } else { NO_REVOCATION }));
+    if revinfo { builder = builder.freshness_judge(Arc::new(Stale)); }
     if roots { builder = builder.trust_manager(Arc::new(Registry(registry.clone()))); }
     let ctx = builder.build().unwrap();
     let before = format!("{ctx:?}");
@@ -73,7 +84,7 @@ fn run(usage: KeyUsageConstraints, roots: bool, revinfo: bool) -> sigis_pades::a
     if let Some(path) = &status.signature.validation_path {
         for cert in path.certs() { eprintln!("certificate validity {}..{}; actual POE {:?}", cert.not_before(), cert.not_after(), result.poe.get(cert.der())); }
     }
-    eprintln!("final={} best={:?} status={:?} q={:?} failure={:?}", result.ades_subindic.standard_name(), result.best_signature_time, status.signature, result.qualification, result.failure_msg);
+    eprintln!("final={} best={:?} trusted={} time={:?} failure={:?}", result.ades_subindic.standard_name(), result.best_signature_time, status.signature.trusted(), status.signature.validation_time, result.failure_msg);
     result
 }
 #[test]
@@ -88,6 +99,9 @@ fn no_revinfo_past_failure_retains_a_fully_checked_qualified_preliminary_main() 
     assert_eq!(timestamp.signature.validation_time, Some(at("2025-03-01T22:00:00Z")), "do not retime TSA");
     assert_eq!(result.best_signature_time, Some(at("2020-08-01T07:00:00Z")));
     assert!(status.signature.trusted(), "MAIN must actually pass full historical validation");
+    assert!(status.signature.validation_path.as_ref().unwrap().certs().into_iter().skip(1)
+        .all(|cert| result.poe.get(cert.der()).is_some_and(|(time, _)| Some(time) <= result.best_signature_time)),
+        "each historical MAIN certificate has actual authenticated POE");
     assert_eq!(status.signature.validation_time, result.best_signature_time);
     assert!(result.qualification.unwrap().status.qualified);
 }
