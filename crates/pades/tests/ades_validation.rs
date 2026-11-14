@@ -259,7 +259,6 @@ fn test_embedded_cades_with_time_sig_tampered_timestamp() {
 }
 
 #[test]
-#[ignore = "Pending complete same-policy MAIN validation after fail-closed WithTime hardening"]
 fn test_embedded_cades_pre_revoke_with_poe() {
     run_with_time(
         "test_embedded_cades_pre_revoke_with_poe",

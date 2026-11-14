@@ -105,10 +105,9 @@ fn status(s: &StandardCmsSignatureStatus) -> Value {
     json!({"intact":s.signature.intact,"valid":s.signature.valid,"trusted":s.signature.trusted(),"bottom_line":s.bottom_line(),"problem":format!("{:?}",s.signature.trust_problem),"subindic":s.signature.trust_problem_indic.map(|s|s.standard_name()),"validation_time":s.signature.validation_time.map(|t|t.to_string()),"horizon":s.signature.error_time_horizon.map(|t|t.to_string()),"path":s.signature.validation_path.as_ref().map(|p|p.certs().iter().map(|c|hash(c.der())).collect::<Vec<_>>()),"timestamp":s.timestamp_validity.as_ref().map(|t|json!({"trusted":t.trusted(),"intact":t.signature.intact,"valid":t.signature.valid,"time":t.timestamp.to_string(),"validation_time":t.signature.validation_time.map(|t|t.to_string()),"problem":format!("{:?}",t.signature.trust_problem)}))})
 }
 fn emit(label: &str, row: Value) {
-    let b = std::fs::read("/proc/self/exe").unwrap();
     eprintln!(
         "COMPLETION_DIAGNOSTIC {}",
-        json!({"label":label,"data":row,"elf_sha256":hash(&b),"elf_length":b.len(),"host":std::fs::read_to_string("/etc/hostname").unwrap().trim(),"slot":std::env::var("RUST_SLOTS_HELD").ok()})
+        json!({"label": label, "data": row})
     );
 }
 #[test]

@@ -113,24 +113,49 @@ fn revocation_date(status: &StandardCmsSignatureStatus) -> Option<Moment> {
 pub fn basic_with_content_ts(
     status: &StandardCmsSignatureStatus,
     qualification: &QualificationSpec<'_>,
-    mut signature_not_before: Option<Moment>,
+    signature_not_before: Option<Moment>,
 ) -> (AdesSubIndic, Option<Moment>) {
+    let (sub, lower_bound, _) =
+        basic_with_content_assessment(status, qualification, signature_not_before);
+    (sub, lower_bound)
+}
+
+// Keep the actual reached result; token presence or a later registry lookup
+// cannot replace this assessment or select a more favorable service.
+struct ContentAssessment {
+    subindication: AdesSubIndic,
+    message: Option<String>,
+    qualification: Option<QualificationResult>,
+    bound: Moment,
+}
+
+fn basic_with_content_assessment(
+    status: &StandardCmsSignatureStatus,
+    qualification: &QualificationSpec<'_>,
+    mut signature_not_before: Option<Moment>,
+) -> (AdesSubIndic, Option<Moment>, Option<ContentAssessment>) {
     let mut sub = basic_subindication(&status.signature);
     let revoked = sub == AdesSubIndic::Indeterminate(AdesIndeterminate::REVOKED_NO_POE);
     let expired = sub == AdesSubIndic::Indeterminate(AdesIndeterminate::OUT_OF_BOUNDS_NO_POE);
     if !(revoked || expired) {
-        return (sub, signature_not_before);
+        return (sub, signature_not_before, None);
     }
     let Some(ct) = &status.content_timestamp_validity else {
-        return (sub, signature_not_before);
+        return (sub, signature_not_before, None);
     };
     let ts_req = qualification
         .ts_requirements
         .as_ref()
         .or(qualification.requirements.as_ref());
-    if timestamp_subindication(ct, qualification, ts_req).0 != AdesSubIndic::Passed(AdesPassed::OK)
-    {
-        return (sub, signature_not_before);
+    let (content_sub, message, assessment) = timestamp_assessment(ct, qualification, ts_req);
+    let reached = ContentAssessment {
+        subindication: content_sub,
+        message,
+        qualification: assessment,
+        bound: ct.timestamp,
+    };
+    if content_sub != AdesSubIndic::Passed(AdesPassed::OK) {
+        return (sub, signature_not_before, Some(reached));
     }
     let snb = signature_not_before.map_or(ct.timestamp, |t| t.max(ct.timestamp));
     signature_not_before = Some(snb);
@@ -152,7 +177,7 @@ pub fn basic_with_content_ts(
             sub = perm;
         }
     }
-    (sub, signature_not_before)
+    (sub, signature_not_before, Some(reached))
 }
 
 /// Validation with time on top of a CMS validation status
@@ -398,19 +423,21 @@ pub fn with_time_validation_with_options(
     .map_err(HankoError::from)
     {
         Ok(evaluated)
-            if !matches!(
-                evaluated
+            if ctx.best_signature_time() != validation_time
+                || !matches!(
+                    evaluated
+                        .unresolved_status()
+                        .signature
+                        .trust_problem
+                        .as_ref(),
+                    Some(TrustProblem::Path(ValidationError::Revoked { .. }))
+                )
+                || evaluated
                     .unresolved_status()
                     .signature
-                    .trust_problem
-                    .as_ref(),
-                Some(TrustProblem::Path(ValidationError::Revoked { .. }))
-            ) || evaluated
-                .unresolved_status()
-                .signature
-                .revocation_details
-                .as_ref()
-                .is_some_and(|details| details.ca_revoked) =>
+                    .revocation_details
+                    .as_ref()
+                    .is_some_and(|details| details.ca_revoked) =>
         {
             // Only the leaf-revoked profile has new completion authority.
             // All ordinary success and other failure profiles retain the old
@@ -455,7 +482,7 @@ fn with_current_leaf_evaluation(
     validation_time: Moment,
 ) -> WithTimeValidationResult {
     let status = evaluated.unresolved_status();
-    let (sub, snb) = basic_with_content_ts(status, qualification, None);
+    let (sub, snb, content_assessment) = basic_with_content_assessment(status, qualification, None);
     let mut result = WithTimeValidationResult {
         ades_subindic: sub,
         api_status: None,
@@ -567,6 +594,31 @@ fn with_current_leaf_evaluation(
         result.failure_msg =
             Some("The authenticated signature time is outside the assessed service window".into());
         return refuse(evaluated, result);
+    }
+    // Only this narrow completion profile adds content-service admission.
+    // Earlier signer/TSA/window failures retain their original precedence.
+    if let Some(content) = content_assessment {
+        let outside_content_window = content
+            .qualification
+            .as_ref()
+            .and_then(|assessment| assessment.service_definition.as_ref())
+            .is_some_and(|service| {
+                let window = &service.base_info;
+                [content.bound, bound].into_iter().any(|time| {
+                    time < window.valid_from || window.valid_until.is_some_and(|end| time > end)
+                })
+            });
+        if content.subindication != AdesPassed::OK.into() || outside_content_window {
+            if result.failure_msg.is_none() {
+                result.failure_msg = content.message.or_else(|| {
+                    Some(
+                        "The reached content timestamp assessment does not authorize completion"
+                            .into(),
+                    )
+                });
+            }
+            return refuse(evaluated, result);
+        }
     }
     let resolved = evaluated.resolve_signature_timestamp();
     if resolved.signature.trusted() {

@@ -347,6 +347,9 @@ pub fn evaluate_cms_leaf_revocation<'operation, 'roles>(
     }
     let sd = SignedData::from_der(signed_data)?;
     let mut operation = CmsLeafOperation::default();
+    // A caller's separate best-time reference is outside this CURRENT profile.
+    // Preserve ordinary checks and their original failure payload verbatim.
+    let completion_enabled = ctx.best_signature_time() == ctx.timing().validation_time;
     let status = match content {
         crate::SignedContent::Data(data) => validate_detached_cms_operation(
             &sd,
@@ -354,7 +357,7 @@ pub fn evaluate_cms_leaf_revocation<'operation, 'roles>(
             false,
             Some(ctx),
             options,
-            Some(&mut operation),
+            completion_enabled.then_some(&mut operation),
         )?,
         crate::SignedContent::Digest(algorithm, digest) => validate_detached_cms_operation(
             &sd,
@@ -365,7 +368,7 @@ pub fn evaluate_cms_leaf_revocation<'operation, 'roles>(
             false,
             Some(ctx),
             options,
-            Some(&mut operation),
+            completion_enabled.then_some(&mut operation),
         )?,
         crate::SignedContent::Encapsulated => {
             let data = sd.econtent.as_deref().unwrap_or_default();
@@ -375,7 +378,7 @@ pub fn evaluate_cms_leaf_revocation<'operation, 'roles>(
                 true,
                 Some(ctx),
                 options,
-                Some(&mut operation),
+                completion_enabled.then_some(&mut operation),
             )?
         }
     };

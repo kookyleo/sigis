@@ -105,11 +105,7 @@ fn status(s: &StandardCmsSignatureStatus) -> Value {
     json!({"intact":s.signature.intact,"valid":s.signature.valid,"trusted":s.signature.trusted(),"bottom_line":s.bottom_line(),"problem":format!("{:?}",s.signature.trust_problem),"subindic":s.signature.trust_problem_indic.map(|s|s.standard_name()),"validation_time":s.signature.validation_time.map(|t|t.to_string()),"horizon":s.signature.error_time_horizon.map(|t|t.to_string()),"path":s.signature.validation_path.as_ref().map(|p|p.certs().iter().map(|c|hash(c.der())).collect::<Vec<_>>()),"timestamp":s.timestamp_validity.as_ref().map(|t|json!({"trusted":t.trusted(),"intact":t.signature.intact,"valid":t.signature.valid,"time":t.timestamp.to_string(),"validation_time":t.signature.validation_time.map(|t|t.to_string()),"problem":format!("{:?}",t.signature.trust_problem)}))})
 }
 fn emit(label: &str, row: Value) {
-    let b = std::fs::read("/proc/self/exe").unwrap();
-    eprintln!(
-        "CONTAINMENT_CASE {}",
-        json!({"label":label,"data":row,"elf_sha256":hash(&b),"elf_length":b.len(),"host":std::fs::read_to_string("/etc/hostname").unwrap().trim(),"slot":std::env::var("RUST_SLOTS_HELD").ok()})
-    );
+    eprintln!("CONTAINMENT_CASE {}", json!({"label": label, "data": row}));
 }
 
 fn require_contained(
@@ -187,24 +183,37 @@ fn require_current_key_compromise_completion(
     // This diagnostic CMS operation creates its OWN opaque CV facts and
     // consumes its OWN selected token. Its value is never supplied to the
     // independently measured WithTime operation or constructed from `before`.
-    let operation = evaluate_cms_leaf_revocation(
-        bytes,
-        SignedContent::Data(content),
-        ctx,
-        &selected_options,
-    )
-    .unwrap();
+    let operation =
+        evaluate_cms_leaf_revocation(bytes, SignedContent::Data(content), ctx, &selected_options)
+            .unwrap();
     let frozen = operation.unresolved_status().clone();
     assert!(frozen.signature.intact && frozen.signature.valid);
     assert!(!frozen.signature.trusted());
     assert!(frozen.signature.revoked());
+    let completed_path = frozen.signature.validation_path.as_ref().unwrap();
+    let diagnostic_path = before.signature.validation_path.as_ref().unwrap();
+    assert_eq!(completed_path.certs(), diagnostic_path.certs());
+    assert_eq!(
+        completed_path.trust_anchor(),
+        diagnostic_path.trust_anchor()
+    );
+    assert!(
+        completed_path.qualified_policies().is_some(),
+        "the new operation completed the PKIX policy wrap-up after leaf revocation"
+    );
+    let mut expected_current = before.signature.clone();
+    expected_current.validation_path = Some(completed_path.clone());
     assert_eq!(
         format!("{:?}", frozen.signature),
-        format!("{:?}", before.signature),
-        "the fully checked eligible row retains the original current failure"
+        format!("{expected_current:?}"),
+        "retain every current failure field; only completed policy metadata is additional"
     );
     assert_eq!(
-        frozen.signature.trust_problem_indic.unwrap().standard_name(),
+        frozen
+            .signature
+            .trust_problem_indic
+            .unwrap()
+            .standard_name(),
         "REVOKED_NO_POE"
     );
     assert_eq!(frozen.signature.validation_time, Some(expected_v));
@@ -243,10 +252,16 @@ fn require_current_key_compromise_completion(
     assert_eq!(format!("{resolved:?}"), format!("{expected:?}"));
     assert!(resolved.signature.trusted() && resolved.bottom_line());
     assert!(resolved.signature.revoked());
-    assert_eq!(resolved.signature.revocation_details, frozen.signature.revocation_details);
+    assert_eq!(
+        resolved.signature.revocation_details,
+        frozen.signature.revocation_details
+    );
     assert_eq!(resolved.signature.validation_time, Some(expected_v));
     assert_eq!(resolved.signature.error_time_horizon, Some(expected_r));
-    assert_eq!(resolved.signature.validation_path, frozen.signature.validation_path);
+    assert_eq!(
+        resolved.signature.validation_path,
+        frozen.signature.validation_path
+    );
     assert_eq!(result.ades_subindic.standard_name(), "OK");
     assert_eq!(result.best_signature_time, Some(expected_t));
     assert!(result.signature_not_before_time.is_none());
@@ -259,7 +274,60 @@ fn require_current_key_compromise_completion(
         "WithTime must independently consume its own complete operation"
     );
     assert_eq!(format!("{ctx:?}"), source_context);
-    assert!(std::sync::Arc::ptr_eq(&algorithm_policy, &ctx.algorithm_policy_arc()));
+    assert!(std::sync::Arc::ptr_eq(
+        &algorithm_policy,
+        &ctx.algorithm_policy_arc()
+    ));
+}
+
+// A currently valid DS-only signer now reaches the mandatory MAIN KU check
+// after full PKIX completion. Its typed refusal is stronger than the old early
+// Revoked result; neither producer nor pure failed-status reduction may trust it.
+fn require_current_usage_refusal(
+    bytes: &[u8],
+    content: &[u8],
+    ctx: &ValidationContext,
+    before: &StandardCmsSignatureStatus,
+    result: &sigis_pades::ades::with_time::WithTimeValidationResult,
+    entry: &str,
+) {
+    let selected = CmsValidationOptions {
+        validation_order: CmsValidationOrder::SignerFirst,
+        exact_key_usage_settings: (entry == "exact_cms").then(predicate),
+        ..Default::default()
+    };
+    let operation = sigis_cms::validate::evaluate_cms_leaf_revocation(
+        bytes,
+        SignedContent::Data(content),
+        ctx,
+        &selected,
+    )
+    .unwrap();
+    assert!(operation.eligible_signature_timestamp().is_none());
+    let frozen = operation.unresolved_status().clone();
+    assert!(matches!(
+        frozen.signature.trust_problem,
+        Some(sigis_cms::TrustProblem::KeyUsage(_))
+    ));
+    assert!(frozen.signature.intact && frozen.signature.valid);
+    assert!(!frozen.signature.trusted() && !frozen.bottom_line());
+    assert_eq!(frozen.signature.signing_cert, before.signature.signing_cert);
+    assert_eq!(frozen.signature.validation_time, Some(ctx.moment()));
+    assert!(
+        frozen.signature.validation_path.is_none(),
+        "failed mandatory purpose is not a trusted path"
+    );
+    assert_eq!(
+        format!("{:?}", operation.resolve_signature_timestamp()),
+        format!("{frozen:?}")
+    );
+    assert_ne!(result.ades_subindic.standard_name(), "OK");
+    assert_eq!(
+        format!("{:?}", result.api_status.as_ref().unwrap()),
+        format!("{frozen:?}")
+    );
+    assert_eq!(result.best_signature_time, Some(ctx.moment()));
+    assert!(result.qualification.is_none());
 }
 
 #[test]
@@ -339,6 +407,13 @@ fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
                     && matches!(entry, "exact_cms" | "ordinary_cms")
                 {
                     require_current_key_compromise_completion(
+                        &bytes, &content, current, &initial, &result, entry,
+                    );
+                } else if row["id"] == "revoked_ds"
+                    && stage == "current"
+                    && matches!(entry, "exact_cms" | "ordinary_cms")
+                {
+                    require_current_usage_refusal(
                         &bytes, &content, current, &initial, &result, entry,
                     );
                 } else {

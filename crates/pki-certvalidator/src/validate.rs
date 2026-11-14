@@ -652,6 +652,7 @@ pub fn find_current_leaf_revocation_evaluation<'ctx>(
     collector
         .finish()
         .map_err(|error| Box::new(PathFailure::plain(error, Some(path.clone()))))?;
+    collector.check_message_policy(ctx)?;
     let failure = collector.original_failure(&path);
     Ok(CurrentLeafRevocationEvaluation {
         _context: ctx,

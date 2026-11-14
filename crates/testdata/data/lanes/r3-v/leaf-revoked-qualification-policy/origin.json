@@ -193,111 +193,129 @@
     },
     {
       "path": "content/tls/direct-qtst-anchor/after-t-before-v.xml",
-      "length": 10815,
-      "sha256": "44a1b91b9147e784f10aacdafd9c5515c808b19c854d9695f8eefa0f375dca31",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/after-t-before-v.xml"
+      "length": 11011,
+      "sha256": "9b08af31d6925468cefb3c2af7ca15eeb9508eb6cb41b708d1b54a9f24db6dae",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/after-t-before-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/between-c-and-t.xml",
-      "length": 10822,
-      "sha256": "0498d72e75977c3b872de48a712587010f8d7fa876765f5cc96c83c09bafca17",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/between-c-and-t.xml"
+      "length": 11018,
+      "sha256": "91a93a006c1f769019765c1ddac9495e57775aff11b1ad44618fa8378e9d746c",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/between-c-and-t.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/broad.xml",
-      "length": 10816,
-      "sha256": "dcb83e97901ce9daa334940de9ea397ffec86d1b577dfdd6a137ec14ab5d4540",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/broad.xml"
+      "length": 11012,
+      "sha256": "4aa995f2391e50b94b9adc48e2b90abc22cca2abc2b32aa3ddafcf264abafe72",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/broad.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/finite-end-at-v.xml",
-      "length": 12809,
-      "sha256": "12481275a12c04ee44c5a4fa857a8b3474cc7605d438f61aefd2daa9987ba36a",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/finite-end-at-v.xml"
+      "length": 13005,
+      "sha256": "0a8c942a1c6c95a1a128d64ed569c7bbb047c8d2b1edfede6bab391700f6fe5d",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/finite-end-at-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/multiple-conflicting.xml",
-      "length": 13270,
-      "sha256": "13a3920446093dca9c659850d0f40bec5386009bf976be5e96c4e09d14d9cdf1",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-conflicting.xml"
+      "length": 13466,
+      "sha256": "bca3ead11bf9aad86981af2bf091875af802a53427dba304b772601a72f4fb6f",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-conflicting.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/multiple-first-late-second-favorable.xml",
-      "length": 14826,
-      "sha256": "1c7d49c71df355e56b30ab9da6c2fd4f0304313cab63377f71d043c1d7ddd770",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-first-late-second-favorable.xml"
+      "length": 15022,
+      "sha256": "03c6a4cd3fcb8d021bdeefc1a3c3ad23994e35a4858826fa84411513c5afff58",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/multiple-first-late-second-favorable.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/outside-current-end.xml",
-      "length": 12807,
-      "sha256": "0aaee76be069a1a191118db3326ea2389caaed3b41c61c185f851165224726c8",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/outside-current-end.xml"
+      "length": 13003,
+      "sha256": "07e0b7b79c07aacab025b1c0a258ed0e0c8a5af69d61299b10f45b938ef54a51",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/outside-current-end.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/start-at-c.xml",
-      "length": 10822,
-      "sha256": "1c367a830934393a839688922524ee2abd56132ed06e351da5c1327df5f8da3c",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-c.xml"
+      "length": 11018,
+      "sha256": "25204eb60a5d289761515b205af8e402256fa32d59ea3670fc7b3b113003f1be",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-c.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/direct-qtst-anchor/start-at-v.xml",
-      "length": 10822,
-      "sha256": "a1011940c4495ae70bae9e34724e355bcc2027375ade023a99bf52fe55e8dd7b",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-v.xml"
+      "length": 11018,
+      "sha256": "b377a52e0bcfa4f36ffbaacd40c8125a60484754c7652e6028662df64c6cb513",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/direct-qtst-anchor/start-at-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/after-t-before-v.xml",
-      "length": 10685,
-      "sha256": "d2979b35c1155863e5101ac84452f69258204fe28cc09ef9a686de60300d0f03",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/after-t-before-v.xml"
+      "length": 10881,
+      "sha256": "0cb91c56be964207ac1b60efcbe69775003108b308afcc559db3bd485ef2dba3",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/after-t-before-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/between-c-and-t.xml",
-      "length": 10692,
-      "sha256": "8baebecf607e2b025f10a9af262b79e76e35141bd9c6c0abf3eff5d78fb64a9f",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/between-c-and-t.xml"
+      "length": 10888,
+      "sha256": "3283e5a66080a72a7abd9cfded7ea07b2909ff067013eee6dff867052663a95a",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/between-c-and-t.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/broad.xml",
-      "length": 10686,
-      "sha256": "b3711597bd1c2b37643d58cb6e3e9bf8f2bd6a19459a98fa63d076efeb258965",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/broad.xml"
+      "length": 10882,
+      "sha256": "1d899c5312870f693acb8a8bcdb5e243e38178ca11ffe03ea25117cd66374cb7",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/broad.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/finite-end-at-v.xml",
-      "length": 12616,
-      "sha256": "0f1ab426b7f80ca220aaa7abd42696771f20843fd8c77d261f3226fb0c32cec8",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/finite-end-at-v.xml"
+      "length": 12812,
+      "sha256": "9c63f31db8bce60216cd03043a9c03884bd9f9224b6255cdca43ece523b2d03b",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/finite-end-at-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/multiple-conflicting.xml",
-      "length": 13077,
-      "sha256": "90419dcbd57c189f5211cbdf3cec747916b94f0e31920f93ccfc57370aa070c3",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-conflicting.xml"
+      "length": 13273,
+      "sha256": "1eedd4096c1d0f8fbd9b4224f6635d4e2bbef9dd2539d4ab26e92e2a15ded267",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-conflicting.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/multiple-first-late-second-favorable.xml",
-      "length": 14570,
-      "sha256": "a3854dfc3c275bb89d011fbb9ae229b02a81b856fd923409f187dd220228b2d2",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-first-late-second-favorable.xml"
+      "length": 14766,
+      "sha256": "c66efcfcd99bd034b7816a16583cf6a73aeb79827122dd28aecddc75ca534bc9",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/multiple-first-late-second-favorable.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/outside-current-end.xml",
-      "length": 12614,
-      "sha256": "d1dba5094d9b8313fd7aab006e61566b46bc60b26d789abc79ea61ca53d79b49",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/outside-current-end.xml"
+      "length": 12810,
+      "sha256": "b380d78b5b392063227fb0522ec11d1b1a71bcf814c2931843de2c2d91eba246",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/outside-current-end.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/start-at-c.xml",
-      "length": 10692,
-      "sha256": "7b4862ffe68eb66f23325d7a734589ec12149572edbd7debf0c1a06e25ec41cf",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-c.xml"
+      "length": 10888,
+      "sha256": "21102b57eb1fee5bf53ba0340c1eca9ae17ef010e08c8cb2be67659fcbf1de3f",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-c.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/tls/issued-ca-qualified/start-at-v.xml",
-      "length": 10692,
-      "sha256": "4c2b2babd1cafd850db81c2a52f36fe6bb3b3fefca66c37cc64b5430e09fb584",
-      "origin_path": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-v.xml"
+      "length": 10888,
+      "sha256": "fc28042f81ae95ed2e39af00229abb663fcc6e0bb90abc3f71e439b10275ff6d",
+      "derived_from": "/home/l/.codex/artifacts/sigis/round3/v/leaf-revoked-completion/qualification-message-fixture-preparation/content/attempt-004/tls/issued-ca-qualified/start-at-v.xml",
+      "derivation": "Explicit exclusive canonicalization on XAdES SignedProperties/KeyInfo references; SignedInfo re-signed with unchanged TEST TLSO key. Service/CMS/trust inputs unchanged."
     },
     {
       "path": "content/trust/direct-qtst-anchor.json",

@@ -231,6 +231,9 @@ pub(crate) struct CheckedEvidence {
     _reason_coverage: Option<u16>,
     _timing: crate::policy::ValidationTimingParams,
     _revocation_policy: crate::policy::CertRevTrustPolicy,
+    origin_path: ValidationPath,
+    is_ee: bool,
+    is_side: bool,
 }
 
 #[derive(Debug)]
@@ -358,6 +361,76 @@ impl Collector {
             if let Some(error) = &self.proof_ineligible {
                 return Err(error.clone());
             }
+        }
+        Ok(())
+    }
+
+    /// Check only actually committed messages, after all selected channels and
+    /// their metadata have completed. Ordinary validation never invokes this.
+    pub(crate) fn check_message_policy(
+        &self,
+        ctx: &ValidationContext,
+    ) -> Result<(), Box<PathFailure>> {
+        if self.events.is_empty() {
+            return Ok(());
+        }
+        let mut queried = Vec::new();
+        for receipt in &self.selected_evidence {
+            let failure = |error: ValidationError, horizon| {
+                Box::new(PathFailure {
+                    error,
+                    path: Some(receipt.origin_path.clone()),
+                    is_ee_cert: receipt.is_ee,
+                    is_side_validation: receipt.is_side,
+                    time_horizon: horizon,
+                    invalid_certificate: false,
+                })
+            };
+            let algorithm = match receipt._channel {
+                "ocsp" => OcspResponse::from_der(&receipt._raw_evidence)
+                    .and_then(|response| {
+                        let body = response
+                            .response_bytes
+                            .ok_or_else(|| der::Tag::Sequence.value_error())?;
+                        BasicOcspResponse::from_der(body.response.as_bytes())
+                    })
+                    .map(|basic| basic.signature_algorithm),
+                "crl" => CertificateList::<Raw>::from_der(&receipt._raw_evidence)
+                    .map(|crl| crl.signature_algorithm),
+                _ => unreachable!("only authenticated OCSP/CRL receipts are collected"),
+            }
+            .map_err(|error| failure(ValidationError::Malformed(error.to_string()), None))?;
+            let key = receipt._signer.public_key();
+            let encode_error =
+                |error: der::Error| failure(ValidationError::Malformed(error.to_string()), None);
+            let identity = (
+                receipt._channel,
+                receipt._raw_evidence.as_slice(),
+                algorithm.to_der().map_err(encode_error)?,
+                key.to_der().map_err(encode_error)?,
+                receipt._timing.validation_time,
+            );
+            if queried.contains(&identity) {
+                continue;
+            }
+            let constraint = ctx.algorithm_policy.signature_algorithm_allowed(
+                &algorithm,
+                Some(receipt._timing.validation_time),
+                Some(&key),
+            );
+            if !constraint.allowed {
+                let banned_since = constraint.not_allowed_after;
+                return Err(failure(
+                    ValidationError::DisallowedAlgorithm {
+                        msg: constraint.failure_reason.unwrap_or_else(|| {
+                            "The selected revocation message algorithm is disallowed".into()
+                        }),
+                        banned_since,
+                    },
+                    banned_since,
+                ));
+            }
+            queried.push(identity);
         }
         Ok(())
     }
@@ -489,6 +562,9 @@ impl Collector {
             _reason_coverage: None,
             _timing: ctx.timing,
             _revocation_policy: ctx.revinfo_policy,
+            origin_path: subject.path.clone(),
+            is_ee: subject.is_ee,
+            is_side: subject.stack.len() > 1,
         }
     }
     pub(crate) fn crl_checked(
@@ -526,6 +602,9 @@ impl Collector {
             _reason_coverage: Some(reasons),
             _timing: ctx.timing,
             _revocation_policy: ctx.revinfo_policy,
+            origin_path: subject.path.clone(),
+            is_ee: subject.is_ee,
+            is_side: subject.stack.len() > 1,
         };
         self.selected_evidence.push(receipt.clone());
         if let Some((at, reason)) = hit {
