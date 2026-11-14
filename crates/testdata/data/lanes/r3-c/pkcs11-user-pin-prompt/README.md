@@ -33,6 +33,18 @@ Real high-level sign calls are observed; native FFI C_Sign counts remain unknown
 The verified python-pkcs11 0.9.5 candidate-refresh receipts are recorded separately
 from stale historical 0.9.3 metadata.
 
+`run_five_fresh_originals.py ABSOLUTE_NEW_RECORD_DIRECTORY` separately fulfills
+the original-process isolation contract: each of the five exact node IDs gets a
+new private store, a completed separate provisioning/readback process and then a
+fresh pytest process with its unchanged real fixtures/body/full teardown. Both
+production PIN environment variables are absent before either child initializes
+the provider. `fresh_original_oracle_plugin.py` reuses the transparent observer
+but accepts exactly one real collected item. Its fresh-cache/config/DER-count
+checks are explicitly supplemental observation checks, not upstream assertions.
+The historical `run_original_reference.sh` five-item single-process run and its
+shared-cache observations remain separate evidence; they do not establish five
+fresh original processes. Neither driver changes an upstream body or fixture.
+
 `validate_outputs.py REQUEST.json` reads actual native outputs and validates them
 at the supplied 2020 and actual NOW clocks. It uses explicit root-only or empty
 trust, no issuer preload, no fetching, soft-fail revocation and one-second
