@@ -5,12 +5,7 @@ The coordinator's simplified gate replaces provenance/capture/review pipelines.
 All Cargo uses tools/cargo-locked.sh; logs are plain text under
 `~/.codex/artifacts/sigis/round3/c/remaining-20261115/`.
 
-The36 operational C originals are now active test ports:34 passed in focused
-native suites and2 explicitly ignored with their full assertions retained.
-Their94 original parameter rows all pass the fresh pinned Python reference.
-The nine remaining provider originals are delegated to P; no provider credit
-is claimed here. Local CLI inventory after these batches is252/241/2/9, pending
-the complete workspace gate/integration. The central accepted ledger is L-owned.
+The 34 completed originals in this batch are accepted after the simple current-main gate. The two ignored historical-validation implementation gaps remain Pending, not Skipped. Current CLI inventory is252/242/0/10: eight provider originals are delegated to P and the two historical-validation cases to S/V. Executed original parameter rows pass the pinned Python reference; helper tests and parameters add no IDs.
 
 ## Batch1: field/hybrid/dictionary signing, seven originals /16 rows
 
@@ -45,9 +40,9 @@ empty-root denial; unchanged original bodies supply the separate reference.
 | pyhanko-cli/test_cli_decode_limits.py::test_ltaupdate | ltv::test_ltaupdate | default/trusted flag pair, pass|
 | pyhanko-cli/test_cli_decode_limits.py::test_ltvfix | ltv::test_ltvfix | default/trusted flag pair, pass|
 | pyhanko-cli/test_cli_decode_limits.py::test_addsig | decode_limits_signing::test_addsig | PAdES/PAdES-LTA, pass|
-| pyhanko-cli/test_cli_decode_limits.py::test_validate | decode_limits_signing::test_validate | validate/adesverify, skipped|
+| pyhanko-cli/test_cli_decode_limits.py::test_validate | decode_limits_signing::test_validate | validate/adesverify, Pending (native test ignored)|
 
-Skip reason: native full-LTA requires historical revocation proof absent from
+Pending implementation gap: native full-LTA requires historical revocation proof absent from
 the upstream B-T API-only acceptance case. Both original parameter bodies remain;
 a separate ordinary_validate_decode_control exercises the supported parameter
 without awarding partial original-function credit.
@@ -73,9 +68,9 @@ the genuine original PKI retrieval fixture; acquisition traces are not identical
 | test_validate_eutl_ades_qualified_summary |1row, pass|
 | test_validate_eutl_ades_not_qualified_required |1row, pass; genuine positive contrasts run first|
 | test_validate_eutl_ades_tsa_not_qualified |1row, pass|
-| test_validate_eutl_ades_point_in_time_no_revinfo |1row, skipped|
+| test_validate_eutl_ades_point_in_time_no_revinfo |1row, Pending (native test ignored)|
 
-Skip reason: native full-LTA lacks historical control-time proof for the expired
+Pending implementation gap: native full-LTA lacks historical control-time proof for the expired
 2025leaf, whereas the original CLI accepts its API status projection. The native
 NO_POE verdict is preserved; no whitelist, invented POE or clock waiver is used.
 
@@ -112,8 +107,7 @@ two archival display differences are not universal compatibility claims.
 ## Verification
 
 The combined new-target run passed35 native tests with2 explicit ignores; the
-extra ordinary-only decode control adds no upstream ID. All94 pinned original
-Python parameter rows passed. Workspace all-target Clippy with-Dwarnings and
+extra ordinary-only decode control adds no upstream ID. Pinned original Python parameter checks passed. Workspace all-target Clippy with-Dwarnings and
 formatting passed. The simplified CLI preflight and real EnvPIN targets also
 passed all8 retained native tests, including actual token signing on all five
 fixture labels; these previously accepted IDs add no new credit.
@@ -135,3 +129,7 @@ tools/cargo-locked.sh test -p sigis-cli --test signing_remaining --test ltv --te
 tools/cargo-locked.sh clippy --workspace --all-targets -- -D warnings
 tools/cargo-locked.sh fmt --all -- --check
 ```
+
+## Accepted integration
+
+Current-main source `e2a0ef837a767e36fc3b9e63846f2f88ca168d4b` passed the normal-wrapper workspace gate:2283passed/0failed/6ignored. Workspace all-target clippy-Dwarnings and fmt check passed. The two newly ignored tests are still Pending originals. Root fixed the obsolete proof selectors and provider setup prerequisites; no immutable ELF, source provenance pipeline or independent final review was required.
