@@ -534,7 +534,20 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-Current accepted source3a7737ec adds zero original IDs.
+Accepted source134be605 preserves actual C default-appearance outcomes,
+full caller requirements, authenticated reader state and equal-evidence empty-root
+refusals. CLI NOW and fixture2020 reference/callback clocks remain distinct.
+S direct-bootstrap focus and full-runtime comparisons each have26 exact profiles:
+25agree and one native forbidden-only refusal is stricter. Their ordinary
+facades have23agreements/3differences with different effective predicates and
+bidirectional trust flags; these are not all same-profile final trust decisions.
+Explicit handler close is not context adoption or automatic operation cleanup.
+Remaining raw-policy, provider/empty-PIN, historical-POE,13skips and62pending
+originals prevent a universal all-divergences-fail-closed or full-port claim.
+The actual additional full-run52-call sidecar is recorded in
+[l-appearance-bootstrap.md](lanes/round3/l-appearance-bootstrap.md).
+
+Historical accepted source3a7737ec adds zero original IDs.
 Among68 matched Some-exact profiles,56 final results agree and12 native
 refusals are stricter. One legacy-None native ordinary-NR versus unrestricted
 Python-AdES control compares different defaults; it accounts for the thirteenth
@@ -543,7 +556,7 @@ aggregate is56agreements/13differences. Exact low-level MAIN has15 component
 flag differences (native trust higher13/lower2); ordinary normalizing CMS has33
 (higher27/lower6). Those stage/time/predicate scopes differ from final public
 AdES. Best signature times agree, while21 returned API-status clocks differ.
-These are bounded current Root observations, not universal fail-closed/parity
+These are bounded observations from that source, not universal fail-closed/parity
 or complete-port proof. Optional/raw policy, provider and historical POE/profile
 limits remain open; full workspace gate and final current-source/runtime review
 are recorded separately in the source-specific acceptance. See l-ades-exact.md.
@@ -714,14 +727,14 @@ acceptance remain L-owned. No service switch follows from function totals.
 | Lane | Exclusive file scope | Remaining work | Acceptance |
 | --- | --- | --- | --- |
 | P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review1 skip (SafeNet PIN); retain explicit required-context type-phase boundary, audit repaired legacy-KU beyond the measured profiles, generic provider parameters and evidence/state compatibility | Keep mandatory rejection and scoped native/oracle proofs; source-only empty-PIN direction remains unknown |
-| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 assigned functions accepted; audit archival/POE, independent trust domains, historical fetching and registry persistence beyond accepted profiles | Retain explicit NO_POE/API-bottom-line and legacy timestamp-first boundaries; no trust/algorithm/revocation waiver |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review16 skips (PDF4/CV2/fetch10), parser/model/resource and trust-boundary coverage | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish64pending originals after scoped188: other signing/LTV/qualified, provider and reader-state flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
+| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 assigned functions accepted; first test failed-past preliminary status/qualification retention; audit archival/POE and independent trust domains without weakening mandatory decisions | Retain explicit NO_POE/API-bottom-line and legacy timestamp-first boundaries; no trust/algorithm/revocation waiver |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review12 skips (PDF4/CV2/fetch6); first port the disabled-bootstrap original, then actual reachability/context ownership and parser/model boundaries | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish62pending originals after scoped190: first the three decode-limit originals and reader continuity, then remaining signing/LTV/qualified/provider flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
 | L — Lead / integration | Root/tools/shared APIs/lock/central status | Assigned live functions11/11; pending0. Continue integration, parameter/skip/provenance audits, complete gates and final service-replacement decision | Keep coherent source/ELF/runtime acceptance and immutable ownership; no service restart or complete-port inference |
 
 P/V/S/C can proceed within exclusive paths while L coordinates interfaces and
-acceptance. Library1168/1151/17/0 and L11/11/0/0 do not complete the17skips,
-provider parameters or unassigned features. All64pending IDs are in C. The C
+acceptance. Library1168/1155/13/0 and L11/11/0/0 do not complete the13skips,
+provider parameters or unassigned features. All62pending IDs are in C. The C
 unit LTA fixtures adapt expired frozen2020 signer1 to existing signer1-long.
 The true L live CLI-LTA original already uses current signer1-long and needs
 no new credential adaptation. These are distinct, explicit scopes. The final
