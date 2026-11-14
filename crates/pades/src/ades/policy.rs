@@ -2,7 +2,17 @@
 
 //! Online material gathering policy for AdES validation.
 
-use sigis_pki_core::fetch::Fetchers;
+use std::sync::Arc;
+
+use super::{
+    basic::{basic_validation_with_options, BasicValidationResult, QualificationSpec},
+    AdesValidationOptions,
+};
+use sigis_pki_certvalidator::ValidationContext;
+use sigis_pki_core::{
+    errors::{FetchError, HankoError},
+    fetch::{FetcherBackend, Fetchers},
+};
 use sigis_pki_fetch::HttpFetchers;
 
 /// When online revocation information may be retrieved.
@@ -39,6 +49,23 @@ pub struct RevocationInfoGatheringSpec {
     pub fetcher_backend: Option<HttpFetchers>,
 }
 
+/// Explicit provider selection for a direct validation operation.
+///
+/// This does not change the gathering-policy helper's shared cache/budget
+/// semantics or provision a backend in an existing validation context.
+#[derive(Clone, Debug, Default)]
+pub enum HandlerFetchSelection {
+    /// Disable online retrieval, including any context's previous fetchers.
+    Disabled,
+    /// Provision a real HTTP backend and issue one fresh fetcher set.
+    #[default]
+    DefaultHttp,
+    /// Issue one set from a backend whose caller retains close authority.
+    Borrowed(Arc<dyn FetcherBackend>),
+    /// Use these exact components, including an explicitly empty set.
+    Supplied(Fetchers),
+}
+
 /// Fetchers prepared for one validation operation.
 #[derive(Clone, Debug)]
 pub struct ValidationDataHandlers {
@@ -50,10 +77,87 @@ pub struct ValidationDataHandlers {
 }
 
 impl ValidationDataHandlers {
+    /// Select the actual fetchers for one direct validation operation.
+    ///
+    /// Factories are called exactly once for default and borrowed backends.
+    /// Supplied and disabled selections never fall back to another backend.
+    pub fn from_fetch_selection(selection: HandlerFetchSelection) -> Self {
+        match selection {
+            HandlerFetchSelection::Disabled => Self {
+                fetchers: Fetchers::none(),
+                owned_fetcher_backend: None,
+            },
+            HandlerFetchSelection::DefaultHttp => {
+                let backend = HttpFetchers::default();
+                let fetchers = backend.get_fetchers();
+                Self {
+                    fetchers,
+                    owned_fetcher_backend: Some(backend),
+                }
+            }
+            HandlerFetchSelection::Borrowed(backend) => Self {
+                fetchers: backend.get_fetchers(),
+                owned_fetcher_backend: None,
+            },
+            HandlerFetchSelection::Supplied(fetchers) => Self {
+                fetchers,
+                owned_fetcher_backend: None,
+            },
+        }
+    }
+
+    /// Close only this handler's retained owned HTTP backend.
+    ///
+    /// Every explicit call delegates without clearing ownership or resetting
+    /// issued caches/budgets. Borrowed and supplied providers remain external.
+    pub fn close(&self) -> Result<(), FetchError> {
+        match &self.owned_fetcher_backend {
+            Some(backend) => backend.close(),
+            None => Ok(()),
+        }
+    }
+
     /// Whether this operation may retrieve revocation information online.
     pub fn fetching_allowed(&self) -> bool {
         self.fetchers.ocsp.is_some() || self.fetchers.crl.is_some()
     }
+}
+
+/// Run basic AdES validation with this handler's exact fetcher components.
+///
+/// The complete caller context is cloned; local evidence, trust, policies and
+/// close authority are preserved. This does not adopt or close any backend.
+pub fn basic_validation_with_handlers(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &ValidationContext,
+    qualification: &QualificationSpec<'_>,
+    handlers: &ValidationDataHandlers,
+) -> Result<BasicValidationResult, HankoError> {
+    basic_validation_with_handlers_and_options(
+        content_info,
+        raw_digest,
+        ctx,
+        qualification,
+        handlers,
+        &AdesValidationOptions::default(),
+    )
+}
+
+/// Run basic AdES validation with selected fetchers and exact main options.
+///
+/// Only retrieval components change. All caller requirements, signer-first
+/// order and fixed timestamp purpose remain those of the existing validator.
+pub fn basic_validation_with_handlers_and_options(
+    content_info: &[u8],
+    raw_digest: Option<&[u8]>,
+    ctx: &ValidationContext,
+    qualification: &QualificationSpec<'_>,
+    handlers: &ValidationDataHandlers,
+    options: &AdesValidationOptions,
+) -> Result<BasicValidationResult, HankoError> {
+    let context = ctx.with_fetchers(handlers.fetchers.clone());
+    basic_validation_with_options(content_info, raw_digest, &context, qualification, options)
 }
 
 /// Prepare validation fetchers, applying the historical and certificate rules.
