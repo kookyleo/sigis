@@ -335,6 +335,7 @@ fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
     use sigis_pades::ades::with_time::{with_time_result, with_time_validation};
     let (dir, m) = fixtures();
     let content = read_fixture(dir.join(m["content"].as_str().unwrap()));
+    let mut checked_slots = 0;
     for row in m["cases"]
         .as_array()
         .unwrap()
@@ -424,10 +425,12 @@ fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
                         "retain genuine bound"
                     );
                 }
+                checked_slots += 1;
             }
         }
         assert_eq!(format!("{ctx:?}"), source, "source context is immutable");
     }
+    assert_eq!(checked_slots, 48, "exercise every original containment slot");
 }
 
 #[test]
