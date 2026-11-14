@@ -421,6 +421,145 @@ fn test_bootstrap_leaves_supplied_fetchers_alone() {
     assert_eq!(backend.closes.load(Ordering::SeqCst), 0);
     assert_eq!(backend.factories.load(Ordering::SeqCst), 1);
 }
+// Exact original: test_fetcher_lifecycle.py::test_bootstrap_without_fetching_owns_nothing.
+// Scoped language mapping: Python fetchers=None has no CRL/OCSP components,
+// represented by Disabled. Supplied(empty) presence semantics are NOT mapped here.
+#[test]
+fn test_bootstrap_without_fetching_owns_nothing() {
+    let handlers = ValidationDataHandlers::from_fetch_selection(HandlerFetchSelection::Disabled);
+    assert!(handlers.owned_fetcher_backend.is_none());
+    assert!(handlers.fetchers.cert.is_none());
+    assert!(handlers.fetchers.crl.is_none());
+    assert!(handlers.fetchers.ocsp.is_none());
+    assert!(!handlers.fetching_allowed());
+    handlers.close().unwrap();
+    handlers.clone().close().unwrap();
+
+    real_default_http::disabled_cannot_reuse_reachable_http(&handlers);
+
+    let pki = Pki::new();
+    let bytes = pki.cms("signer1", None);
+    let digest = DigestAlgorithm::Sha256.digest(CONTENT);
+
+    // A genuine positive demonstrates that these legacy components are reachable.
+    let reachable = Evidence::new(&pki, "signer1", "2020-11-20");
+    let reachable_ctx = builder(&pki, true, "require", TIME)
+        .fetchers(reachable.fetchers())
+        .build()
+        .unwrap();
+    let reachable_components = reachable_ctx.fetchers().clone();
+    let reachable_policy = reachable_ctx.algorithm_policy_arc();
+    let direct = basic_validation(
+        &bytes,
+        Some(&digest),
+        &reachable_ctx,
+        &QualificationSpec::default(),
+    )
+    .unwrap();
+    assert!(trusted(&direct), "{direct:?}");
+    // Interior provider counters are expected to change on this positive path.
+    // Context configuration and exact component identity remain unchanged.
+    assert_eq!(reachable_ctx.moment(), at(TIME));
+    assert_eq!(reachable_ctx.trust_anchors().len(), 1);
+    assert_eq!(reachable_ctx.trust_anchors()[0].cert(), &pki.cert("root"));
+    assert!(Arc::ptr_eq(
+        &reachable_policy,
+        &reachable_ctx.algorithm_policy_arc()
+    ));
+    assert!(Arc::ptr_eq(
+        reachable_ctx.fetchers().cert.as_ref().unwrap(),
+        reachable_components.cert.as_ref().unwrap()
+    ));
+    assert!(Arc::ptr_eq(
+        reachable_ctx.fetchers().crl.as_ref().unwrap(),
+        reachable_components.crl.as_ref().unwrap()
+    ));
+    assert!(Arc::ptr_eq(
+        reachable_ctx.fetchers().ocsp.as_ref().unwrap(),
+        reachable_components.ocsp.as_ref().unwrap()
+    ));
+    assert!(reachable.cert_calls.load(Ordering::SeqCst) > 0);
+    assert!(reachable.crl_calls.load(Ordering::SeqCst) > 0);
+    assert!(reachable.ocsp_calls.load(Ordering::SeqCst) > 0);
+    export(
+        "disabled-original-reachable-legacy-control",
+        &bytes,
+        &reachable_ctx,
+        None,
+        Some(&reachable),
+        &direct,
+    );
+
+    // Exact replacement must not use any old context component. The intermediate
+    // is local so this refusal specifically reaches mandatory revocation checking.
+    let legacy = Evidence::new(&pki, "signer1", "2020-11-20");
+    let supplied = legacy.fetchers();
+    let ctx = builder(&pki, true, "require", TIME)
+        .other_cert(pki.cert("interm"))
+        .fetchers(supplied.clone())
+        .build()
+        .unwrap();
+    let assert_caller_components = |context: &ValidationContext| {
+        assert!(Arc::ptr_eq(
+            context.fetchers().cert.as_ref().unwrap(),
+            supplied.cert.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            context.fetchers().crl.as_ref().unwrap(),
+            supplied.crl.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            context.fetchers().ocsp.as_ref().unwrap(),
+            supplied.ocsp.as_ref().unwrap()
+        ));
+    };
+    assert_caller_components(&ctx);
+    let denied = check(
+        "disabled-original-missing-required-evidence",
+        &bytes,
+        &ctx,
+        &handlers,
+        None,
+    );
+    intact_valid(&denied);
+    assert!(!trusted(&denied));
+    assert!(matches!(
+        denied.api_status.as_ref().unwrap().signature.trust_problem,
+        Some(TrustProblem::Path(ValidationError::InsufficientRevinfo(_)))
+    ));
+    assert_caller_components(&ctx);
+    assert_eq!(legacy.calls(), 0);
+
+    let local_ctx = local(
+        builder(&pki, true, "require", TIME),
+        &pki,
+        "2020-11-20",
+        "signer1",
+    )
+    .fetchers(supplied)
+    .build()
+    .unwrap();
+    let accepted = check(
+        "disabled-original-signed-local-positive",
+        &bytes,
+        &local_ctx,
+        &handlers,
+        None,
+    );
+    intact_valid(&accepted);
+    assert!(trusted(&accepted), "{accepted:?}");
+    assert_eq!(legacy.calls(), 0);
+    assert_eq!(DigestAlgorithm::Sha256.digest(CONTENT), digest);
+    assert!(handlers.owned_fetcher_backend.is_none());
+    assert!(handlers.fetchers.is_empty());
+    assert!(!handlers.fetching_allowed());
+    handlers.close().unwrap();
+    eprintln!(
+        "DIRECT_BOOTSTRAP_DISABLED {}",
+        serde_json::json!({"owner_none":true,"cert_none":true,"crl_none":true,"ocsp_none":true,"fetching_allowed":false,"legacy_component_calls":legacy.calls(),"reachable_control_calls":{"cert":reachable.cert_calls.load(Ordering::SeqCst),"crl":reachable.crl_calls.load(Ordering::SeqCst),"ocsp":reachable.ocsp_calls.load(Ordering::SeqCst)},"explicit_close_calls":3,"missing_required_evidence_refused":true,"signed_local_evidence_trusted":true,"cms_sha256":sha(&bytes),"content_sha256":sha(CONTENT)})
+    );
+}
+
 #[test]
 fn empty_and_disabled_override_legacy_fetchers_but_keep_signed_local_evidence() {
     let pki = Pki::new();
@@ -1177,6 +1316,61 @@ mod real_default_http {
             self.stopped.store(true, Ordering::SeqCst);
             self.worker.take().unwrap().join().unwrap();
         }
+    }
+
+    // Supplemental to the named Disabled original: use the real existing
+    // loopback transport so no-I/O also covers reachable/cached HTTP providers.
+    pub(super) fn disabled_cannot_reuse_reachable_http(handlers: &ValidationDataHandlers) {
+        let server = KeepAlive::new();
+        let leaf = leaf(&server.url("disabled-original"), 8301);
+        let bytes = signed(&leaf);
+        let digest = DigestAlgorithm::Sha256.digest(HTTP_CONTENT);
+        let backend = HttpFetchers::default();
+        let components = backend.get_fetchers();
+        let context = ctx().with_fetchers(components.clone());
+        let deny = || {
+            let result = basic_validation_with_handlers(
+                &bytes,
+                Some(&digest),
+                &context,
+                &QualificationSpec::default(),
+                handlers,
+            )
+            .unwrap();
+            intact_valid(&result);
+            assert!(!trusted(&result));
+            assert!(matches!(
+                result.api_status.as_ref().unwrap().signature.trust_problem,
+                Some(TrustProblem::Path(ValidationError::PathBuilding(_)))
+            ));
+        };
+        deny();
+        assert!(server.requests.lock().unwrap().is_empty());
+        assert_eq!(server.connections.load(Ordering::SeqCst), 0);
+        let direct = basic_validation(
+            &bytes,
+            Some(&digest),
+            &context,
+            &QualificationSpec::default(),
+        )
+        .unwrap();
+        assert!(trusted(&direct), "{direct:?}");
+        assert_eq!(server.requests.lock().unwrap().len(), 1);
+        assert_eq!(server.connections.load(Ordering::SeqCst), 1);
+        // The old provider is now cached; Disabled still cannot consume it.
+        deny();
+        assert_eq!(server.requests.lock().unwrap().len(), 1);
+        assert!(Arc::ptr_eq(
+            context.fetchers().cert.as_ref().unwrap(),
+            components.cert.as_ref().unwrap()
+        ));
+        assert!(handlers.owned_fetcher_backend.is_none());
+        eprintln!(
+            "DIRECT_BOOTSTRAP_DISABLED_HTTP {}",
+            serde_json::json!({"disabled_before_requests":0,"disabled_before_connections":0,"legacy_positive_requests":1,"disabled_after_requests":server.requests.lock().unwrap().len(),"connections":server.connections.load(Ordering::SeqCst),"cms_sha256":sha(&bytes),"leaf_sha256":sha(leaf.der()),"content_sha256":sha(HTTP_CONTENT)})
+        );
+        // Explicitly release the caller-managed real pool, never through handlers.
+        backend.close().unwrap();
     }
 
     #[test]
