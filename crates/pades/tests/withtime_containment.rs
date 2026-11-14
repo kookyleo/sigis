@@ -430,7 +430,10 @@ fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
         }
         assert_eq!(format!("{ctx:?}"), source, "source context is immutable");
     }
-    assert_eq!(checked_slots, 48, "exercise every original containment slot");
+    assert_eq!(
+        checked_slots, 48,
+        "exercise every original containment slot"
+    );
 }
 
 #[test]
