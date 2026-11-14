@@ -136,6 +136,31 @@ pub fn bootstrap_validation_context(
     builder.build_with_backend_fallback(|| Arc::new(HttpFetchers::default()))
 }
 
+/// Build a context with a handler's exact issued components and close capability.
+///
+/// Handlers remain borrowed and retain their own explicit close authority. A
+/// concrete HTTP owner clone shares the same pool; its new outer Arc is not a
+/// generic backend identity supplied by the caller. No issued set is recreated.
+/// Existing explicit builder retrieval/backend choices conflict rather than
+/// being overwritten. With no handlers, ordinary build preserves those choices
+/// and adds no default backend. The caller retains the resulting context through
+/// validation, errors and repeated explicit close; construction performs no cleanup.
+pub fn build_validation_context_with_handlers(
+    builder: ValidationContextBuilder,
+    handlers: Option<&ValidationDataHandlers>,
+) -> Result<ValidationContext, ValidationError> {
+    match handlers {
+        Some(handlers) => builder.build_with_fetcher_handoff(
+            handlers.fetchers.clone(),
+            handlers
+                .owned_fetcher_backend
+                .as_ref()
+                .map(|backend| Arc::new(backend.clone()) as Arc<dyn FetcherBackend>),
+        ),
+        None => builder.build(),
+    }
+}
+
 /// Run basic AdES validation with this handler's exact fetcher components.
 ///
 /// The complete caller context is cloned; local evidence, trust, policies and

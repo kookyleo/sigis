@@ -458,7 +458,7 @@ impl ValidationContextBuilder {
     ///
     /// No default backend is provisioned by this ordinary construction path.
     pub fn build(self) -> Result<ValidationContext, ValidationError> {
-        self.build_with_optional_backend_fallback(None::<fn() -> Arc<dyn FetcherBackend>>)
+        self.build_with_optional_backend_fallback(None::<fn() -> Arc<dyn FetcherBackend>>, None)
     }
 
     /// Build with a default backend only when neither retrieval choice was set.
@@ -475,12 +475,31 @@ impl ValidationContextBuilder {
     where
         F: FnOnce() -> Arc<dyn FetcherBackend>,
     {
-        self.build_with_optional_backend_fallback(Some(fallback))
+        self.build_with_optional_backend_fallback(Some(fallback), None)
+    }
+
+    /// Build with an exact issued fetcher set and its optional close authority.
+    ///
+    /// Existing policy and evidence validation runs first. Any explicit fetcher
+    /// or backend choice already on this builder then conflicts, even an empty
+    /// or identical choice. No backend factory or close is called by handoff;
+    /// the issued component caches and remaining budget are retained. The exact
+    /// owner handle is retained for repeated explicit close, without Drop cleanup.
+    pub fn build_with_fetcher_handoff(
+        self,
+        fetchers: Fetchers,
+        owner: Option<Arc<dyn FetcherBackend>>,
+    ) -> Result<ValidationContext, ValidationError> {
+        self.build_with_optional_backend_fallback(
+            None::<fn() -> Arc<dyn FetcherBackend>>,
+            Some((fetchers, owner)),
+        )
     }
 
     fn build_with_optional_backend_fallback<F>(
         mut self,
         fallback: Option<F>,
+        handoff: Option<(Fetchers, Option<Arc<dyn FetcherBackend>>)>,
     ) -> Result<ValidationContext, ValidationError>
     where
         F: FnOnce() -> Arc<dyn FetcherBackend>,
@@ -503,6 +522,16 @@ impl ValidationContextBuilder {
         let mut ocsps = Vec::new();
         for der in &self.ocsps {
             ocsps.extend(OcspContainer::load(der)?);
+        }
+        if let Some((fetchers, owner)) = handoff {
+            if self.fetchers.is_some() || self.fetcher_backend.is_some() {
+                return Err(ValidationError::Malformed(
+                    "handler handoff conflicts with an explicit fetcher or backend selection"
+                        .into(),
+                ));
+            }
+            self.fetchers = Some(fetchers);
+            self.fetcher_backend = owner.map(|backend| (backend, true));
         }
         // Factories may allocate transport resources: resolve the selection
         // only after all fallible builder validation above has succeeded.
