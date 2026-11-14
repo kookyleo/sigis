@@ -15,13 +15,12 @@ use sigis_pki_core::{
     time::Moment,
 };
 use std::{
-    collections::BTreeSet,
     fs,
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc, Mutex,
+        Arc, Mutex, OnceLock,
     },
     time::Duration,
 };
@@ -29,8 +28,27 @@ use std::{
 const USER_PIN: &str = "1234";
 const WRONG_USER_PIN: &str = "not-the-token-user-pin";
 const USER_LABEL: &str = "PKCS#11 user PIN: ";
-const ORIGINAL: &str =
-    "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_pin_prompt";
+const PROVIDER_RUNTIME: &str =
+    "/home/l/.codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime";
+const ORACLE_OVERLAY: &str =
+    "/home/l/.codex/artifacts/sigis/round3/p/raw-dsa-overlay/overlay-0.9.5";
+
+fn selected_path(name: &str, default: impl Into<PathBuf>) -> PathBuf {
+    std::env::var_os(name)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| default.into())
+}
+fn module_path() -> PathBuf {
+    selected_path(
+        "SIGIS_PKCS11_SIGNING_MODULE",
+        Path::new(PROVIDER_RUNTIME).join("libsofthsm2.so"),
+    )
+    .canonicalize()
+    .expect("The real SoftHSM module is required")
+}
+fn oracle_python() -> PathBuf {
+    selected_path("HANKO_ORACLE", "/tmp/pyhanko-oracle/venv/bin/python")
+}
 const SENTINEL: &[u8] = b"Preserve the existing output on every refusal.\n";
 const UNRELATED: &[u8] = b"Do not alter unrelated test-client files.\n";
 
@@ -51,12 +69,6 @@ fn file(path: &Path) -> Value {
 fn save(path: &Path, value: &Value) {
     fs::write(path, serde_json::to_vec_pretty(value).unwrap()).unwrap();
 }
-fn running_executable() -> Value {
-    use std::os::unix::fs::MetadataExt;
-    let data = fs::read("/proc/self/exe").unwrap();
-    let metadata = fs::metadata("/proc/self/exe").unwrap();
-    json!({"read_path":"/proc/self/exe","declared_path":std::env::current_exe().unwrap(),"kernel_link":fs::read_link("/proc/self/exe").unwrap(),"device":metadata.dev(),"inode":metadata.ino(),"length":data.len(),"sha256":sha(&data),"pid":std::process::id()})
-}
 fn names(dir: &Path) -> Vec<String> {
     let mut result: Vec<_> = fs::read_dir(dir)
         .unwrap()
@@ -66,7 +78,14 @@ fn names(dir: &Path) -> Vec<String> {
     result
 }
 fn fixture_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../testdata/data/lanes/r3-c/pkcs11-user-pin-prompt")
+    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            sigis_testdata::path(&["lanes", "r3-c", "pkcs11-user-pin-prompt"])
+                .canonicalize()
+                .unwrap()
+        })
+        .clone()
 }
 fn frozen_moment() -> Moment {
     Moment::parse_rfc3339("2020-11-01T00:00:00Z").unwrap()
@@ -80,60 +99,30 @@ struct RecordedCrlSource {
     interm_der: Vec<u8>,
     root_crl: Vec<u8>,
     interm_crl: Vec<u8>,
-    evidence: Value,
     requests: Mutex<Vec<Value>>,
 }
 
 impl RecordedCrlSource {
-    fn new(case: &Path, tampered: bool) -> Self {
-        let mut evidence = Vec::new();
-        let mut load = |filename: &str| {
-            let path = fixture_dir().join(filename);
-            let original = fs::read(&path).unwrap();
-            let mut returned = original.clone();
-            let last = returned
-                .len()
-                .checked_sub(1)
-                .expect("Recorded CRL must not be empty");
+    fn new(tampered: bool) -> Self {
+        let load = |filename: &str| {
+            let mut bytes = fs::read(fixture_dir().join(filename)).unwrap();
             if tampered {
-                // Preserve DER/TBS/algorithm bytes; flip one bit of the final
-                // signature octet, without re-encoding or supplying any fallback.
-                returned[last] ^= 1;
-                fs::write(case.join(format!("tampered-{filename}")), &returned).unwrap();
+                let last = bytes
+                    .len()
+                    .checked_sub(1)
+                    .expect("Recorded CRL must not be empty");
+                // Change only the final signature octet, preserving TBS and DER.
+                bytes[last] ^= 1;
             }
-            evidence.push(json!({
-                "source":file(&path),"original_sha256":sha(&original),
-                "returned_sha256":sha(&returned),"returned_length":returned.len(),
-                "signature_last_byte_bit_flipped":tampered,
-                "mutated_byte_offset":tampered.then_some(last),
-                "mutation_xor_mask":tampered.then_some(1),
-            }));
-            returned
+            bytes
         };
-        let root_crl = load("policy-root.crl.der");
-        let interm_crl = load("policy-interm.crl.der");
         Self {
             leaf_der: fs::read(fixture_dir().join("signer1.der")).unwrap(),
             interm_der: fs::read(fixture_dir().join("interm.der")).unwrap(),
-            root_crl,
-            interm_crl,
-            evidence: json!({
-                "manifest":file(&fixture_dir().join("policy-revinfo-manifest.json")),
-                "CRLs":evidence,"tampered":tampered,
-                "authority":"retrieval only; unchanged native CV checks signatures, scope and freshness",
-            }),
+            root_crl: load("policy-root.crl.der"),
+            interm_crl: load("policy-interm.crl.der"),
             requests: Mutex::new(Vec::new()),
         }
-    }
-
-    fn record(&self) -> Value {
-        let requests = self.requests.lock().unwrap();
-        json!({
-            "evidence":self.evidence,"request_count":requests.len(),"requests":*requests,
-            "expected_leaf_sha256":sha(&self.leaf_der),
-            "expected_intermediate_sha256":sha(&self.interm_der),
-            "no_issuer_certificates_or_anchors_added":true,
-        })
     }
 }
 
@@ -172,30 +161,29 @@ pub fn run(test_name: &str, selections: &[&str]) {
         body(&selected_case);
         return;
     }
-    let archive = PathBuf::from(required("SIGIS_PKCS11_PROMPT_RECORD_DIR"));
-    fs::create_dir_all(&archive).unwrap();
-    let parent_elf = running_executable();
     for selected in selections {
         let case = tempfile::Builder::new()
-            .prefix(&format!("{selected}-"))
-            .tempdir_in(&archive)
-            .unwrap()
-            .keep();
-        let cwd = case.join("cli-cwd");
+            .prefix(&format!("pkcs11-prompt-{selected}-"))
+            .tempdir()
+            .unwrap();
+        let cwd = case.path().join("cli-cwd");
         fs::create_dir(&cwd).unwrap();
-        provision(&case);
-        let mut command = Command::new("/proc/self/exe");
+        provision(case.path());
+        // Reexec isolates provider sessions; it is not a source/ELF audit.
+        let executable = if cfg!(target_os = "linux") {
+            PathBuf::from("/proc/self/exe")
+        } else {
+            std::env::current_exe().unwrap()
+        };
+        let mut command = Command::new(executable);
         command
             .args(["--exact", test_name, "--nocapture", "--test-threads=1"])
             .current_dir(&cwd)
             .env("SIGIS_PKCS11_PROMPT_CHILD", test_name)
             .env("SIGIS_PKCS11_PROMPT_CASE", selected)
-            .env("SIGIS_PKCS11_PROMPT_CASE_DIR", &case)
-            .env(
-                "SIGIS_PKCS11_PROMPT_PARENT_ELF_SHA256",
-                parent_elf["sha256"].as_str().unwrap(),
-            )
-            .env("SOFTHSM2_CONF", case.join("provider/softhsm2.conf"))
+            .env("SIGIS_PKCS11_PROMPT_CASE_DIR", case.path())
+            .env("SIGIS_PKCS11_SIGNING_MODULE", module_path())
+            .env("SOFTHSM2_CONF", case.path().join("provider/softhsm2.conf"))
             .env_remove("PKCS11_CONFIG")
             .env_remove("PYHANKO_PKCS11_PIN")
             .env_remove("PYHANKO_PKCS11_SIGNING_PIN")
@@ -213,63 +201,140 @@ pub fn run(test_name: &str, selections: &[&str]) {
             command.env("PYHANKO_PKCS11_PIN", WRONG_USER_PIN);
         }
         let output = command.output().unwrap();
-        let stdout = case.join("child.stdout.bin");
-        let stderr = case.join("child.stderr.bin");
-        fs::write(&stdout, &output.stdout).unwrap();
-        fs::write(&stderr, &output.stderr).unwrap();
-        let receipt = case.join("receipt.json");
-        let record = json!({"original":ORIGINAL,"case":selected,"effective_algorithm":"ed25519","parent_running_elf":parent_elf,"child_exit_code":output.status.code(),"child_stdout":file(&stdout),"child_stderr":file(&stderr),"child_receipt":receipt.exists().then(||file(&receipt)),"fixture_provisioning_completed_before_body_exec":true,"nested_summary_not_emitted":true});
-        save(&case.join("parent-receipt.json"), &record);
-        // Only paths/hashes/metadata; never nested captured libtest output.
-        eprintln!("PKCS11_USER_PROMPT_CHILD {record}");
         assert!(
             output.status.success(),
-            "Prompt case {selected} failed; inspect {}",
-            case.display()
+            "Prompt case {selected} failed:\n{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
         );
-        let receipt: Value = serde_json::from_slice(&fs::read(receipt).unwrap()).unwrap();
+        let completed = format!("PKCS11 prompt case completed: {selected}");
         assert_eq!(
-            receipt["actual_running_elf"]["sha256"],
-            parent_elf["sha256"]
+            String::from_utf8_lossy(&output.stderr)
+                .lines()
+                .filter(|line| *line == completed)
+                .count(),
+            1,
+            "An empty child filter must not count as a completed prompt case"
         );
-        assert_eq!(receipt["case"], *selected);
+        // Drop only after the real provider child and its sessions have exited.
+        drop(case);
     }
 }
 
+const IMPORT_FIXTURE: &str = r#"
+import importlib.metadata, os, sys
+from pathlib import Path
+assert __debug__ and sys.flags.optimize == 0
+import pkcs11
+from pkcs11 import Attribute, KeyType, Mechanism, ObjectClass
+from pkcs11.util.x509 import decode_x509_certificate
+from asn1crypto import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+module, fixture, overlay = sys.argv[1:]
+fixture, overlay = Path(fixture), Path(overlay).resolve()
+assert Path(pkcs11.__file__).resolve().is_relative_to(overlay), 'The real requested PKCS11 binding is required'
+assert importlib.metadata.version('python-pkcs11') == '0.9.5'
+key = serialization.load_pem_private_key((fixture / 'signer.key.pem').read_bytes(), password=None)
+assert isinstance(key, Ed25519PrivateKey)
+raw_signer = (fixture / 'signer1.der').read_bytes()
+signer = x509.Certificate.load(raw_signer, strict=True)
+public = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+assert public == signer.public_key['public_key'].native
+seed = key.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
+lib = pkcs11.lib(module)
+token = lib.get_token(token_label='tested25519')
+assert Mechanism.EDDSA in token.slot.get_mechanisms()
+with token.open(rw=True, user_pin='1234') as session:
+    for label in ['root', 'interm', 'signer1']:
+        raw = (fixture / (label + '.der')).read_bytes()
+        x509.Certificate.load(raw, strict=True)
+        attrs = decode_x509_certificate(raw)
+        attrs.update({Attribute.TOKEN:True, Attribute.LABEL:label, Attribute.ID:label.encode('ascii')})
+        cert = session.create_object(attrs)
+        assert cert[Attribute.VALUE] == raw and cert[Attribute.TOKEN]
+    attrs = {Attribute.CLASS:ObjectClass.PRIVATE_KEY, Attribute.KEY_TYPE:KeyType.EC_EDWARDS,
+             Attribute.TOKEN:True, Attribute.PRIVATE:True, Attribute.SENSITIVE:True,
+             Attribute.EXTRACTABLE:False, Attribute.SIGN:True, Attribute.LABEL:'signer1',
+             Attribute.ID:b'signer1', Attribute.EC_PARAMS:bytes.fromhex('06032b6570'), Attribute.VALUE:seed}
+    key_object = session.create_object(attrs)
+    assert key_object[Attribute.CLASS] == ObjectClass.PRIVATE_KEY
+    assert key_object[Attribute.KEY_TYPE] == KeyType.EC_EDWARDS and key_object[Attribute.SIGN]
+    assert key_object[Attribute.TOKEN] and key_object[Attribute.PRIVATE]
+    assert not key_object[Attribute.EXTRACTABLE] and key_object[Attribute.SENSITIVE]
+    inventory = list(session.get_objects())
+    classes = [obj[Attribute.CLASS] for obj in inventory]
+    assert len(inventory) == 4 and classes.count(ObjectClass.CERTIFICATE) == 3 and classes.count(ObjectClass.PRIVATE_KEY) == 1
+    for label in ['root', 'interm', 'signer1']:
+        certs = list(session.get_objects({Attribute.CLASS:ObjectClass.CERTIFICATE, Attribute.LABEL:label}))
+        assert len(certs) == 1 and certs[0][Attribute.TOKEN]
+        assert certs[0][Attribute.VALUE] == (fixture / (label + '.der')).read_bytes()
+    keys = list(session.get_objects({Attribute.CLASS:ObjectClass.PRIVATE_KEY, Attribute.SIGN:True, Attribute.LABEL:'signer1'}))
+    assert len(keys) == 1
+"#;
+
 fn provision(case: &Path) {
     let provider = case.join("provider");
+    assert!(!provider.exists(), "Never reuse a provider store");
+    fs::create_dir(&provider).unwrap();
+    let tokens = provider.join("tokens");
+    fs::create_dir(&tokens).unwrap();
+    let conf = provider.join("softhsm2.conf");
+    fs::write(&conf, format!("directories.tokendir = {}\nobjectstore.backend = file\nlog.level = ERROR\nslots.removable = false\n", tokens.display())).unwrap();
+    let module = module_path();
+    let utility = selected_path(
+        "SIGIS_PKCS11_SIGNING_UTILITY",
+        Path::new(PROVIDER_RUNTIME).join("softhsm2-util"),
+    )
+    .canonicalize()
+    .expect("The real SoftHSM utility is required");
+    let overlay = selected_path("SIGIS_PKCS11_ORACLE_OVERLAY", ORACLE_OVERLAY)
+        .canonicalize()
+        .expect("The real PKCS11 Python overlay is required");
+    let initialized = Command::new(utility)
+        .arg("--module")
+        .arg(&module)
+        .args([
+            "--init-token",
+            "--free",
+            "--label",
+            "tested25519",
+            "--pin",
+            USER_PIN,
+            "--so-pin",
+            "5678",
+        ])
+        .env("SOFTHSM2_CONF", &conf)
+        .output()
+        .unwrap();
     assert!(
-        !provider.exists(),
-        "A prompt case must never reuse a token store"
+        initialized.status.success(),
+        "Real token initialization failed: {}",
+        String::from_utf8_lossy(&initialized.stderr)
     );
-    let script = fixture_dir().join("provision_signing.py");
-    let result = Command::new(required("HANKO_ORACLE"))
-        .args(["-B", "-s", "-P"])
-        .arg(&script)
-        .arg(&provider)
-        .env("PYTHONPATH", required("SIGIS_PKCS11_ORACLE_OVERLAY"))
+    // Import and read back in a separate process; no fixture login is inherited
+    // by the production signing body, and no keys are generated or exported.
+    let imported = Command::new(oracle_python())
+        .args(["-B", "-s", "-P", "-c", IMPORT_FIXTURE])
+        .arg(&module)
+        .arg(fixture_dir())
+        .arg(&overlay)
+        .env("SOFTHSM2_CONF", &conf)
+        .env("PYTHONPATH", &overlay)
         .env("PYTHONDONTWRITEBYTECODE", "1")
         .env("PYTHONNOUSERSITE", "1")
-        .env_remove("SOFTHSM2_CONF")
         .env_remove("PKCS11_CONFIG")
         .env_remove("PYHANKO_PKCS11_PIN")
         .env_remove("PYHANKO_PKCS11_SIGNING_PIN")
         .stdin(Stdio::null())
         .output()
         .unwrap();
-    fs::write(case.join("provision.stdout.bin"), &result.stdout).unwrap();
-    fs::write(case.join("provision.stderr.bin"), &result.stderr).unwrap();
-    save(
-        &case.join("provision-process.json"),
-        &json!({"script":file(&script),"exit_code":result.status.code(),"stdout":file(&case.join("provision.stdout.bin")),"stderr":file(&case.join("provision.stderr.bin")),"readback_process_completed":true,"receipt":provider.join("receipt.json")}),
-    );
     assert!(
-        result.status.success(),
-        "Separate real provider provisioning/readback failed; inspect {}",
-        case.display()
+        imported.status.success(),
+        "Real Ed25519 provisioning/readback failed:\n{}\n{}",
+        String::from_utf8_lossy(&imported.stdout),
+        String::from_utf8_lossy(&imported.stderr)
     );
-    assert!(provider.join("receipt.json").is_file());
-    assert!(provider.join("softhsm2.conf").is_file());
 }
 
 fn earlier_refusal(selected: &str) -> bool {
@@ -329,11 +394,6 @@ fn credential_override(selected: &str) -> bool {
 }
 
 fn body(selected: &str) {
-    let elf = running_executable();
-    assert_eq!(
-        elf["sha256"].as_str(),
-        Some(required("SIGIS_PKCS11_PROMPT_PARENT_ELF_SHA256").as_str())
-    );
     let environment_user_pin = matches!(
         selected,
         "environment-pin-correct" | "environment-pin-wrong" | "configured-pin-env-ignored"
@@ -348,24 +408,14 @@ fn body(selected: &str) {
     let case = PathBuf::from(required("SIGIS_PKCS11_PROMPT_CASE_DIR"));
     let cwd = case.join("cli-cwd");
     assert_eq!(std::env::current_dir().unwrap(), cwd);
-    let module = PathBuf::from(required("SIGIS_PKCS11_SIGNING_MODULE"))
-        .canonicalize()
-        .unwrap();
-    let utility = PathBuf::from(required("SIGIS_PKCS11_SIGNING_UTILITY"))
-        .canonicalize()
-        .unwrap();
-    let module_before = file(&module);
-    let utility_before = file(&utility);
+    let module = module_path();
     let conf = case.join("provider/softhsm2.conf");
     assert_eq!(PathBuf::from(required("SOFTHSM2_CONF")), conf);
-    let fixture: Value =
-        serde_json::from_slice(&fs::read(case.join("provider/receipt.json")).unwrap()).unwrap();
     let initial_maps = fs::read_to_string("/proc/self/maps").unwrap();
     assert!(
         !initial_maps.contains(module.to_str().unwrap()),
         "Fresh body must not inherit fixture module/login state"
     );
-    fs::write(case.join("body-initial-maps.txt"), &initial_maps).unwrap();
     let input = cwd.join("input.pdf");
     let encrypted = selected.starts_with("pdf-");
     let expected_mac = selected == "pdf-mac-correct";
@@ -383,10 +433,10 @@ fn body(selected: &str) {
         sigis_testdata::pyhanko(&["pdf", "minimal.pdf"])
     };
     fs::copy(&input_source, &input).unwrap();
-    let input_mac = expected_mac.then(|| {
+    if expected_mac {
         let pdf = sigis_pdf::PdfFile::parse(&fs::read(&input).unwrap()).unwrap();
-        assert_mac_good(&pdf, "ownersecret")
-    });
+        assert_mac_good(&pdf, "ownersecret");
+    }
     let interm = cwd.join("interm.crt");
     fs::copy(fixture_dir().join("interm.der"), &interm).unwrap();
     let output_path = cwd.join("output.pdf");
@@ -463,7 +513,6 @@ fn body(selected: &str) {
     let interm_before = file(&interm);
     let sentinel_before = file(&unrelated);
     let entries_before = names(&cwd);
-    let output_before = output_path.exists().then(|| file(&output_path));
     let callbacks = Arc::new(AtomicUsize::new(0));
     let labels = Arc::new(Mutex::new(Vec::<String>::new()));
     let count = callbacks.clone();
@@ -502,7 +551,7 @@ fn body(selected: &str) {
     // authenticated recorded retrieval instead of weakening that requirement.
     // The missing-evidence case deliberately preserves the measured prior RED.
     let policy_crls = (policy_case(selected) && selected != "policy-missing-revinfo")
-        .then(|| Arc::new(RecordedCrlSource::new(&case, selected == "policy-bad-crl")));
+        .then(|| Arc::new(RecordedCrlSource::new(selected == "policy-bad-crl")));
     let fetchers = match &policy_crls {
         Some(source) => Fetchers {
             crl: Some(source.clone()),
@@ -540,65 +589,14 @@ fn body(selected: &str) {
         input.to_str().unwrap().into(),
         output_path.to_str().unwrap().into(),
     ]);
-    // Test-client phase markers delimit actual production reads for an
-    // independent syscall trace; they are not a product hook or FFI counter.
-    fs::write(
-        case.join("product-entry.begin"),
-        b"production run_with_runtime begins\n",
-    )
-    .unwrap();
     let result = sigis_cli::run_with_runtime(&argv, &PluginRegistry::default(), &runtime);
-    fs::write(
-        case.join("product-entry.end"),
-        b"production run_with_runtime returned\n",
-    )
-    .unwrap();
-    fs::write(case.join("cli.stdout.bin"), result.stdout.as_bytes()).unwrap();
-    fs::write(case.join("cli.stderr.bin"), result.stderr.as_bytes()).unwrap();
     let after_maps = fs::read_to_string("/proc/self/maps").unwrap();
-    fs::write(case.join("body-final-maps.txt"), &after_maps).unwrap();
-    let dsos: Vec<_> = after_maps
-        .lines()
-        .filter_map(|line| line.split_whitespace().last())
-        .filter(|p| p.starts_with('/') && p.contains(".so"))
-        .map(PathBuf::from)
-        .collect::<BTreeSet<_>>()
-        .iter()
-        .filter(|p| p.is_file())
-        .map(|p| file(p))
-        .collect();
     let expected_requests = if missing || earlier_refusal(selected) || credential_override(selected)
     {
         0
     } else {
         1
     };
-    let native_cli = json!({"entry":"real sigis_cli::run_with_runtime in actual test-host ELF","argv":argv,"exit_code":result.code,"stdout":file(&case.join("cli.stdout.bin")),"stderr":file(&case.join("cli.stderr.bin")),
-        "input_source":file(&input_source),"input_before":input_before,"input_after":file(&input),"config_before":config_before,"config_after":file(&config_path),"file_intermediate_before":interm_before,"file_intermediate_after":file(&interm),
-        "sentinel_before":sentinel_before,"sentinel_after":file(&unrelated),"output_before":output_before,"output_after":output_path.exists().then(||file(&output_path)),"entries_before":entries_before,"entries_after":names(&cwd)});
-    let mut record = json!({
-        "original":ORIGINAL,"original_credit_scope":if selected.starts_with("positive-") { "one original; one of five labels" } else { "supplemental zero-ID" },
-        "case":selected,"fixture_label":selected.strip_prefix("positive-"),"effective_algorithm":"ed25519","actual_running_elf":elf,
-        "source_commit":required("SIGIS_PKCS11_PROMPT_SOURCE_COMMIT"),"host":fs::read_to_string("/proc/sys/kernel/hostname").unwrap().trim(),"slot":std::env::var_os("RUST_SLOTS_HELD"),
-        "provider_fixture_receipt":file(&case.join("provider/receipt.json")),"provider_fixture":fixture,"provision_process":file(&case.join("provision-process.json")),
-        "private_conf":file(&conf),"module_before":module_before,"module_after":file(&module),"utility_before":utility_before,"utility_after":file(&utility),
-    });
-    let operation_record = json!({
-        "loaded_dsos":dsos,"initial_module_mapped":false,"final_module_mapped":after_maps.contains(module.to_str().unwrap()),
-        "credential_source":if credential_override(selected) { "explicit configured/environment precedence supplemental; callback must not run" } else { "typed test-client USER-PIN callback; returned credential deliberately omitted" },"user_pin_env_present":environment_user_pin,
-        "signing_pin_env_present":std::env::var_os("PYHANKO_PKCS11_SIGNING_PIN").is_some(),"callback_count":callbacks.load(Ordering::SeqCst),"callback_labels":*labels.lock().unwrap(),
-        "native_cli":native_cli,
-        "runtime_clock":runtime_now.unix_secs(),"actual_wall_NOW":wall_now.unix_secs(),"clock_scope":if policy_case(selected) { "supplemental historical policy control ONLY; not original NOW output" } else { "actual native wall NOW; original2020 validation separate" },
-        "C_Sign_FFI_count":null,"body_fixture_login_performed":false,"input_pdf_mac":input_mac,"expected_output_pdf_mac":expected_mac,
-        "policy_crl_fetcher":policy_crls.as_ref().map(|source|source.record()),
-        "product_entry_begin":file(&case.join("product-entry.begin")),
-        "product_entry_end":file(&case.join("product-entry.end")),
-    });
-    record
-        .as_object_mut()
-        .unwrap()
-        .extend(operation_record.as_object().unwrap().clone());
-    save(&case.join("receipt.json"), &record);
     if matches!(selected, "policy-positive" | "policy-match-any") {
         let source = policy_crls.as_ref().unwrap();
         let requests = source.requests.lock().unwrap();
@@ -626,19 +624,23 @@ fn body(selected: &str) {
     assert_eq!(
         callbacks.load(Ordering::SeqCst),
         expected_requests,
-        "Unexpected prompt role/phase; inspect receipt"
+        "Unexpected prompt role/phase for {selected}"
     );
     assert!(labels
         .lock()
         .unwrap()
         .iter()
         .all(|label| label == USER_LABEL));
-    assert_eq!(record["module_before"], record["module_after"]);
-    assert_eq!(record["utility_before"], record["utility_after"]);
-    for prefix in ["input", "config", "file_intermediate", "sentinel"] {
+    for (path, before) in [
+        (&input, input_before),
+        (&config_path, config_before),
+        (&interm, interm_before),
+        (&unrelated, sentinel_before),
+    ] {
         assert_eq!(
-            record["native_cli"][format!("{prefix}_before")],
-            record["native_cli"][format!("{prefix}_after")]
+            file(path),
+            before,
+            "The CLI must preserve caller input/config/sentinel"
         );
     }
     for secret in [
@@ -672,15 +674,20 @@ fn body(selected: &str) {
         expected_entries.sort();
         assert_eq!(names(&cwd), expected_entries);
         let signed = fs::read(&output_path).unwrap();
-        record["native_cli"]["output"] = file(&output_path);
-        record["validation"] = verify_output(
+        let validation = verify_output(
             &case,
             &signed,
             wall_now,
             encrypted.then_some("ownersecret"),
             expected_mac,
         );
-        save(&case.join("receipt.json"), &record);
+        differential_output(
+            &case,
+            wall_now,
+            encrypted.then_some("ownersecret"),
+            expected_mac,
+            &validation,
+        );
     } else {
         assert_eq!(
             result.code,
@@ -723,6 +730,7 @@ fn body(selected: &str) {
             );
         }
     }
+    eprintln!("PKCS11 prompt case completed: {selected}");
 }
 
 fn assert_component(selected: &str, message: &str) {
@@ -768,7 +776,7 @@ fn assert_component(selected: &str, message: &str) {
     for component in components {
         assert!(
             lower.contains(component),
-            "Wrong refusal phase for {selected}; required {component}; inspect captured diagnostic"
+            "Wrong refusal phase for {selected}; required {component}; got {message}"
         );
     }
 }
@@ -1005,4 +1013,99 @@ fn verify_output(
     fs::write(case.join("modified-signed-byte.pdf"), &modified).unwrap();
     let mutation = mutation_record(&modified, password, &trusted);
     json!({"original_clock":status_record(&result),"original_clock_moment":moment.unix_secs(),"original_clock_empty_roots":status_record(&empty),"actual_NOW_moment":now.unix_secs(),"actual_NOW":status_record(&actual_now),"actual_NOW_empty_roots":status_record(&now_empty),"modified_signed_byte":mutation,"modified_file":file(&case.join("modified-signed-byte.pdf")),"cms_embedded_certificate_count":cms.certificates.len(),"full_validation_path_required_length":3,"output_pdf_mac":output_mac,"clock_scope":"Original fixture2020-11-01 and actual native CLI NOW are separate; NOW denial is preserved, never retimed away"})
+}
+
+/// Every successful real native output must pass a fresh pinned Python peer.
+/// JSON is temporary test IPC and is removed with the private case directory.
+fn differential_output(
+    case: &Path,
+    now: Moment,
+    password: Option<&str>,
+    expect_mac: bool,
+    native: &Value,
+) {
+    let request = case.join("validation-request.json");
+    save(
+        &request,
+        &json!({
+            "cases":[{"label":"output","pdf":case.join("cli-cwd/output.pdf"),
+                "modified_pdf":case.join("modified-signed-byte.pdf"),"password":password,"expect_mac":expect_mac}],
+            "moments":[frozen_moment().to_string(),now.to_string()],"assert_frozen_positive":true
+        }),
+    );
+    let output = Command::new(oracle_python())
+        .args(["-B", "-s", "-P"])
+        .arg(fixture_dir().join("validate_outputs.py"))
+        .arg(&request)
+        .env("PYTHONDONTWRITEBYTECODE", "1")
+        .env("PYTHONNOUSERSITE", "1")
+        .env_remove("PYTHONPATH")
+        .env_remove("PYHANKO_PKCS11_PIN")
+        .env_remove("PYHANKO_PKCS11_SIGNING_PIN")
+        .stdin(Stdio::null())
+        .output()
+        .expect("The pinned pyHanko oracle is mandatory");
+    assert!(
+        output.status.success(),
+        "Fresh same-output pyHanko validation failed:\n{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let peer: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(peer["runtime"]["packages"]["pyhanko"], "0.38.1");
+    assert_eq!(peer["runtime"]["assertions_enabled"], true);
+    assert_eq!(peer["runtime"]["optimize"], 0);
+    let rows = peer["statuses"].as_array().unwrap();
+    assert_eq!(
+        rows.len(),
+        8,
+        "Both clocks, root selections and original/changed bytes are mandatory"
+    );
+    let output_sha = file(&case.join("cli-cwd/output.pdf"))["sha256"].clone();
+    let modified_sha = file(&case.join("modified-signed-byte.pdf"))["sha256"].clone();
+    for (index, row) in rows.iter().enumerate() {
+        assert_eq!(row["label"], "output");
+        assert_eq!(row["modified"], index % 4 >= 2);
+        assert_eq!(row["explicit_root"], index % 2 == 0);
+        assert_eq!(
+            Moment::parse_rfc3339(row["moment"].as_str().unwrap()).unwrap(),
+            if index < 4 { frozen_moment() } else { now }
+        );
+        assert_eq!(
+            &row["pdf_sha256"],
+            if index % 4 >= 2 {
+                &modified_sha
+            } else {
+                &output_sha
+            }
+        );
+        // Python-only changed-byte/NOW/empty-root rows remain refusals too.
+        if !matches!(index, 0 | 4) {
+            assert_ne!(row["status"]["bottom_line"], true);
+        }
+    }
+    for (profile, index) in [
+        ("original_clock", 0),
+        ("original_clock_empty_roots", 1),
+        ("actual_NOW", 4),
+        ("actual_NOW_empty_roots", 5),
+        ("modified_signed_byte", 2),
+    ] {
+        let value = &native[profile];
+        let value = value.get("validation").unwrap_or(value);
+        let status = &rows[index]["status"];
+        assert_eq!(
+            value["bottom_line"].as_bool().unwrap_or(false),
+            status["bottom_line"].as_bool().unwrap_or(false),
+            "Acceptance differs for {profile}"
+        );
+        for field in ["intact", "valid", "trusted", "bottom_line", "signer_sha256"] {
+            if let (Some(actual), Some(expected)) = (value.get(field), status.get(field)) {
+                assert_eq!(actual, expected, "Available {field} differs for {profile}");
+            }
+        }
+        if profile == "original_clock" {
+            assert_eq!(value["path_sha256"], status["path_sha256"]);
+        }
+    }
 }
