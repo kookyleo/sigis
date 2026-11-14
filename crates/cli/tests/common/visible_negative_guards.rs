@@ -39,7 +39,9 @@ fn write_config(c: &base::Case) {
     )
     .unwrap();
 }
-fn add_fields(c: &base::Case, specs: &[(&str, Option<(f64, f64, f64, f64)>)]) {
+type BoxCoordinates = (f64, f64, f64, f64);
+
+fn add_fields(c: &base::Case, specs: &[(&str, Option<BoxCoordinates>)]) {
     let input = fs::read(c.path("input.pdf")).unwrap();
     let mut update = PdfUpdate::new(&input).unwrap();
     for (name, bbox) in specs {

@@ -114,7 +114,6 @@ fn unsupported_requirements_refuse_before_key_or_network_io() {
         vec!["--use-pades"],
         vec!["--timestamp-url", &url],
         vec!["--reason", "mandatory reason"],
-        vec!["--style-name", "default"],
         vec!["--stamp-url", &url],
         vec!["--password", "document password"],
         vec!["--trust", "missing.pem"],
@@ -130,6 +129,12 @@ fn unsupported_requirements_refuse_before_key_or_network_io() {
             &["requires extended PEM/DER signing"],
         );
     }
+    // Named styles require configuration before any key or network I/O.
+    c.rejects(
+        &c.args(&["--style-name", "default"]),
+        None,
+        &["Using named styles requires a configuration file."],
+    );
     for field in ["", "1/0,0,100,100/Sig1"] {
         let mut args = c.args(&[]);
         args[1] = field.into();
