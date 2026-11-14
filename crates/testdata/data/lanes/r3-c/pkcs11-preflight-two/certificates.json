@@ -1,0 +1,21 @@
+{
+  "scope": "Original RSA root/interm certificate bytes only; no private key or signing",
+  "certificates": [
+    {
+      "label": "root",
+      "source": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/testing-ca/root/root.cert.pem",
+      "source_sha256": "d531f2c4aeb6ef4ce044b43c1eb2b11e3e239e8bc88b873dff396440e2e553a2",
+      "der": "root.der",
+      "der_length": 905,
+      "der_sha256": "e42003f6ac276f7467336fa8c37c1756e4eea370f7c3a6e89bfa086b0e15c1e1"
+    },
+    {
+      "label": "interm",
+      "source": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/testing-ca/root/interm.cert.pem",
+      "source_sha256": "e1f4a43b892bd2a7bd946ee36209d77954d2ce35a621acc753d9e68d794ba64f",
+      "der": "interm.der",
+      "der_length": 989,
+      "der_sha256": "aa3f18f35f11c6fa41c1e38f2df2782191a44860613a634b3e8795113fe8179e"
+    }
+  ]
+}
