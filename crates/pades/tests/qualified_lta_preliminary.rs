@@ -312,7 +312,12 @@ fn no_revinfo_past_failure_retains_a_fully_checked_qualified_preliminary_main() 
         "each historical MAIN certificate has actual authenticated POE"
     );
     assert_eq!(status.signature.validation_time, result.best_signature_time);
-    assert!(result.qualification.unwrap().status.qualified);
+    let qualification = result.qualification.unwrap();
+    assert!(qualification.status.qualified);
+    assert_eq!(
+        qualification.status.qc_type,
+        sigis_eutl::tsp::QcCertType::QcEsign
+    );
 }
 #[test]
 fn historical_preliminary_never_waives_roots_required_revinfo_or_main_predicates() {
