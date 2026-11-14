@@ -384,3 +384,86 @@ fn historical_payload_preserves_current_crypto_and_both_qualification_requiremen
         assert!(result.qualification.is_none());
     }
 }
+
+// S364f61b9: the same direct producer call, without CLI or EUTL setup.
+#[test]
+fn expired_leaf_lta_api_status_direct_reproducer() {
+    use sigis_cms::signed_data::{extract_certificate_info, find_unique_cms_attribute};
+    use sigis_pades::ades::{
+        basic::QualificationSpec,
+        lta::{lta_validation_with_ades_options, LtaOptions},
+        AdesValidationOptions,
+    };
+    use sigis_pki_certvalidator::{
+        policy::{CertRevTrustPolicy, NO_REVOCATION},
+        ValidationContext,
+    };
+    use sigis_pki_core::{asn1::oids, cert::Cert, key_usage::KeyUsageConstraints};
+
+    let directory = sigis_testdata::path(&["lanes", "r3-c", "qualified-ades", "case-10"]);
+    let file =
+        sigis_pdf::PdfFile::parse(&std::fs::read(directory.join("to-validate.pdf")).unwrap())
+            .unwrap();
+    let signature = file.embedded_signatures().unwrap().remove(0);
+    let cms = sigis_cms::SignedData::from_der(
+        sigis_pades::cms_from_contents(&signature.contents).unwrap(),
+    )
+    .unwrap();
+    let token = find_unique_cms_attribute(
+        cms.signer_infos[0].unsigned_attr_list(),
+        oids::AA_SIGNATURE_TIME_STAMP_TOKEN,
+    )
+    .unwrap();
+    let tsa = extract_certificate_info(&sigis_cms::SignedData::from_der(token).unwrap())
+        .unwrap()
+        .signer_cert;
+    let ca =
+        Cert::from_pem_or_der(&std::fs::read(directory.join("root.cert.pem")).unwrap()).unwrap();
+    let context = ValidationContext::builder()
+        .trust_root(ca)
+        .trust_root(tsa)
+        .moment(Moment::parse_rfc3339("2025-03-01T22:00:00Z").unwrap())
+        .point_in_time_validation(true)
+        .revinfo_policy(CertRevTrustPolicy::new(NO_REVOCATION))
+        .build()
+        .unwrap();
+    let mut options = AdesValidationOptions::default();
+    options.exact_key_usage_settings = Some(KeyUsageConstraints::default());
+    let result = lta_validation_with_ades_options(
+        &file,
+        &signature,
+        &context,
+        &QualificationSpec::default(),
+        &LtaOptions::default(),
+        &options,
+    )
+    .unwrap();
+    let status = result.api_status.as_ref().unwrap();
+    assert!(status.signature.intact && status.signature.valid);
+    assert!(status.timestamp_validity.as_ref().unwrap().trusted());
+    assert!(
+        status.bottom_line(),
+        "sub={:?}; MAIN={:?}; typed_error={:?}; best={:?}; diagnostic={:?}",
+        result.ades_subindic,
+        status.signature.trust_problem_indic,
+        status.signature.trust_problem,
+        result.best_signature_time,
+        result.failure_msg
+    );
+    assert_eq!(result.ades_subindic.standard_name(), "NO_POE");
+    assert_eq!(result.best_signature_time, Some(at("2020-08-01T07:00:00Z")));
+    assert_eq!(status.signature.validation_time, result.best_signature_time);
+    assert_eq!(
+        status
+            .timestamp_validity
+            .as_ref()
+            .unwrap()
+            .signature
+            .validation_time,
+        Some(at("2025-03-01T22:00:00Z"))
+    );
+    assert!(
+        result.qualification.is_none(),
+        "explicit anchors do not manufacture qualification"
+    );
+}
