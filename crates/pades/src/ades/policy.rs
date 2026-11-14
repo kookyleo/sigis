@@ -91,3 +91,131 @@ pub fn bootstrap_validation_data_handlers(
         owned_fetcher_backend,
     }
 }
+
+#[cfg(test)]
+mod direct_selection_tests {
+    use super::*;
+    use sigis_pki_core::errors::{FetchError, FetchErrorKind};
+    use sigis_pki_core::fetch::FetcherBackend;
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
+
+    #[derive(Debug)]
+    struct RecordingBackend {
+        issued: Fetchers,
+        factories: AtomicUsize,
+        closes: AtomicUsize,
+    }
+
+    impl RecordingBackend {
+        fn new() -> Self {
+            Self {
+                issued: HttpFetchers::default().get_fetchers(),
+                factories: AtomicUsize::new(0),
+                closes: AtomicUsize::new(0),
+            }
+        }
+    }
+
+    impl FetcherBackend for RecordingBackend {
+        fn get_fetchers(&self) -> Fetchers {
+            self.factories.fetch_add(1, Ordering::SeqCst);
+            self.issued.clone()
+        }
+
+        fn close(&self) -> Result<(), FetchError> {
+            self.closes.fetch_add(1, Ordering::SeqCst);
+            Err(FetchError::new(
+                FetchErrorKind::Timeout,
+                "caller-owned backend must not be closed by handlers",
+            ))
+        }
+    }
+
+    fn assert_same_components(actual: &Fetchers, expected: &Fetchers) {
+        assert!(Arc::ptr_eq(
+            actual.cert.as_ref().unwrap(),
+            expected.cert.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            actual.crl.as_ref().unwrap(),
+            expected.crl.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            actual.ocsp.as_ref().unwrap(),
+            expected.ocsp.as_ref().unwrap()
+        ));
+    }
+
+    #[test]
+    fn default_and_explicit_default_keep_a_real_owned_http_backend() {
+        for selection in [
+            HandlerFetchSelection::default(),
+            HandlerFetchSelection::DefaultHttp,
+        ] {
+            let handlers = ValidationDataHandlers::from_fetch_selection(selection);
+            let owner: &HttpFetchers = handlers.owned_fetcher_backend.as_ref().unwrap();
+            assert!(handlers.fetchers.cert.is_some());
+            assert!(handlers.fetchers.crl.is_some());
+            assert!(handlers.fetchers.ocsp.is_some());
+            let old_view = owner.as_fetchers();
+            assert!(!Arc::ptr_eq(
+                old_view.crl.as_ref().unwrap(),
+                handlers.fetchers.crl.as_ref().unwrap()
+            ));
+            let before = owner.settings().clone();
+            handlers.close().unwrap();
+            handlers.close().unwrap();
+            assert_eq!(
+                handlers.owned_fetcher_backend.as_ref().unwrap().settings(),
+                &before
+            );
+            assert!(handlers.fetching_allowed());
+        }
+    }
+
+    #[test]
+    fn borrowed_backend_factory_runs_once_and_close_authority_stays_with_caller() {
+        let backend = Arc::new(RecordingBackend::new());
+        let handlers = ValidationDataHandlers::from_fetch_selection(
+            HandlerFetchSelection::Borrowed(backend.clone()),
+        );
+        assert!(handlers.owned_fetcher_backend.is_none());
+        assert_same_components(&handlers.fetchers, &backend.issued);
+        handlers.close().unwrap();
+        handlers.clone().close().unwrap();
+        assert_eq!(backend.factories.load(Ordering::SeqCst), 1);
+        assert_eq!(backend.closes.load(Ordering::SeqCst), 0);
+        // This error is a REAL caller operation, never an invented owned-HTTP
+        // close failure. Handlers did not consume it or call this method.
+        assert_eq!(backend.close().unwrap_err().kind, FetchErrorKind::Timeout);
+        assert_eq!(backend.closes.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn supplied_exact_components_and_disabled_empty_never_provision_a_backend() {
+        let backend = RecordingBackend::new();
+        let set = backend.get_fetchers();
+        let handlers = ValidationDataHandlers::from_fetch_selection(
+            HandlerFetchSelection::Supplied(set.clone()),
+        );
+        assert_same_components(&handlers.fetchers, &set);
+        assert!(handlers.owned_fetcher_backend.is_none());
+        handlers.close().unwrap();
+        assert_eq!(backend.factories.load(Ordering::SeqCst), 1);
+        assert_eq!(backend.closes.load(Ordering::SeqCst), 0);
+        for selection in [
+            HandlerFetchSelection::Disabled,
+            HandlerFetchSelection::Supplied(Fetchers::none()),
+        ] {
+            let empty = ValidationDataHandlers::from_fetch_selection(selection);
+            assert!(empty.fetchers.is_empty());
+            assert!(empty.owned_fetcher_backend.is_none());
+            assert!(!empty.fetching_allowed());
+            empty.close().unwrap();
+            empty.close().unwrap();
+        }
+    }
+}

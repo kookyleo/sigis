@@ -7,7 +7,10 @@ use serde_json::Value;
 use sigis_pades::ades::{
     basic::{basic_validation, QualificationSpec},
     lta::lta_validation,
-    policy::{bootstrap_validation_data_handlers, RevocationInfoGatheringSpec},
+    policy::{
+        basic_validation_with_handlers, bootstrap_validation_data_handlers, HandlerFetchSelection,
+        RevocationInfoGatheringSpec, ValidationDataHandlers,
+    },
 };
 use sigis_pdf::PdfFile;
 use sigis_pki_certvalidator::ValidationContext;
@@ -352,12 +355,23 @@ fn test_pades_basic_happy_path_requests() {
         "the PDF digest is supplied explicitly"
     );
     let server = Server::new(http(call), false);
-    let ctx = context(&rec, call, &server);
-    let result = basic_validation(
+    let handlers = ValidationDataHandlers::from_fetch_selection(HandlerFetchSelection::Borrowed(
+        Arc::new(server.backend()),
+    ));
+    assert!(handlers.owned_fetcher_backend.is_none());
+    assert!(handlers.fetching_allowed());
+    let ctx = ValidationContext::builder()
+        .trust_root(rec.cert("testing-ca", "root"))
+        .moment(call.time())
+        .revinfo_policy(default_revinfo_policy())
+        .build()
+        .unwrap();
+    let result = basic_validation_with_handlers(
         &call.content_info(),
         call.raw_digest().as_deref(),
         &ctx,
         &QualificationSpec::default(),
+        &handlers,
     )
     .unwrap();
     assert_eq!(result.ades_subindic.standard_name(), "OK");
