@@ -1,3 +1,9 @@
+# Current bounded continuation authority
+
+The [post-Env-PIN continuation brief](l-post-envpin-continuation.md) now assigns P one opt-in USER-PIN prompt original for tests-first implementation, V new contract tests and Root-owned complete48 measurement preparation, and C new guard/loader tests plus isolated raw-crypto fixture preparation. All use new current-main worktrees and preserve frozen candidates. L owns shared factory/API integration, actual gates and counts. P has the sole newly assigned Cargo packet; C/V add no native execution authority. This metadata update adds no acceptance: **1431/1378/7/46**, C252/207/0/45, P297/296/1/0 and V47/46/0/1 remain unchanged.
+
+The complete preceding accepted report is retained below verbatim; its source and gates keep their named provenance.
+
 # Current Env PIN acceptance and bounded next scopes
 
 Root accepted this bounded one-original packet after the actual gates and final proof listed below.
