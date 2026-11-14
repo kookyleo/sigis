@@ -19,7 +19,7 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
         return Err(extended(&format!("Repeated --{flag}")));
     }
     for (key, values) in &opts.values {
-        if ![
+        let supported = [
             "field",
             "key",
             "cert",
@@ -29,8 +29,8 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
             "validation-context",
         ]
         .contains(&key.as_str())
-            || (key != "chain" && values.len() != 1)
-        {
+            || (visible && ["style-name", "stamp-url"].contains(&key.as_str()));
+        if !supported || (key != "chain" && values.len() != 1) {
             return Err(extended(&format!("--{key}")));
         }
     }
@@ -56,7 +56,11 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
     }
     Ok(())
 }
-fn config_scope(config: Option<&CliConfig>, identity: bool) -> Result<(), String> {
+fn config_scope(
+    config: Option<&CliConfig>,
+    identity: bool,
+    named_style: bool,
+) -> Result<(), String> {
     let Some(config) = config else { return Ok(()) };
     let allowed = [
         "pemder-setups",
@@ -78,13 +82,16 @@ fn config_scope(config: Option<&CliConfig>, identity: bool) -> Result<(), String
                 "Conflicting aliases in PEM/DER configuration: {normalized}."
             ));
         }
-        if !allowed.contains(&normalized.as_str()) && !(identity && normalized == "identities") {
+        if !allowed.contains(&normalized.as_str())
+            && !(identity && normalized == "identities")
+            && !(named_style && normalized == "stamp-styles")
+        {
             return Err(extended(&format!("Configuration setting '{key}'")));
         }
     }
     let defaults = CliConfig::parse("")?;
     if config.default_stamp_style != defaults.default_stamp_style
-        || config.stamp_styles != defaults.stamp_styles
+        || (!named_style && config.stamp_styles != defaults.stamp_styles)
     {
         return Err(extended("Configured signature appearance"));
     }
@@ -96,6 +103,44 @@ fn config_scope(config: Option<&CliConfig>, identity: bool) -> Result<(), String
     }
     Ok(())
 }
+// Resolve only the selected visible appearance, retaining the original config.
+// Raw settings are checked as schema; the effective style remains authoritative.
+fn appearance_style(
+    opts: &Options,
+    config: Option<&CliConfig>,
+    visible: bool,
+) -> Result<sigis_pades_sign::stamp::StampStyle, String> {
+    use sigis_pades_sign::stamp::StampStyle;
+    let style = if visible {
+        if let Some(name) = opts.get("style-name") {
+            let config = config.ok_or("Using named styles requires a configuration file.")?;
+            let raw = CliConfig::parse(&config.raw_config.to_string())?;
+            if raw.stamp_styles.contains_key(name) {
+                raw.stamp_style(Some(name))?;
+            }
+            config.stamp_style(Some(name))?
+        } else {
+            match config {
+                Some(config) => config.stamp_style(None)?,
+                None => CliConfig::parse("")?.stamp_style(None)?,
+            }
+        }
+    } else {
+        CliConfig::parse("")?.stamp_style(None)?
+    };
+    match (&style, opts.get("stamp-url")) {
+        (StampStyle::Qr(_), None) => {
+            return Err("QR stamp styles require the --stamp-url option.".into())
+        }
+        (StampStyle::Qr(_), Some(_)) => {}
+        (_, Some(_)) => {
+            return Err("The --stamp-url parameter is only meaningful for QR stamp styles.".into())
+        }
+        _ => {}
+    }
+    Ok(style)
+}
+
 pub(crate) fn setup_schema(config: &CliConfig, name: &str) -> Result<(), String> {
     let selected = config
         .raw_config
@@ -296,10 +341,15 @@ fn run_with_input_policy(
         None
     };
     option_scope(&opts, visible)?;
-    config_scope(config, identity)?;
+    config_scope(
+        config,
+        identity,
+        visible && opts.get("style-name").is_some(),
+    )?;
     if visible {
         crate::signature_appearance::check_raw_schema(config, opts.get("validation-context"))?;
     }
+    let stamp_style = appearance_style(&opts, config, visible)?;
     if opts.paths.len() != 2 {
         return Err("Input and output file arguments are required.".into());
     }
@@ -362,14 +412,12 @@ fn run_with_input_policy(
         pdf_signer = pdf_signer.with_signer_key_usage_policy(complete);
     }
     pdf_signer.signing_time = Some(runtime.now);
-    pdf_signer.stamp_style = Some(if visible {
-        match config {
-            Some(config) => config.stamp_style(None)?,
-            None => CliConfig::parse("")?.stamp_style(None)?,
-        }
-    } else {
-        CliConfig::parse("")?.stamp_style(None)?
-    });
+    pdf_signer.stamp_style = Some(stamp_style);
+    if let Some(url) = opts.get("stamp-url") {
+        pdf_signer
+            .appearance_text_params
+            .insert("url".into(), url.into());
+    }
     crate::software_signing::sign_pdf_and_write(&pdf_signer, &input, &settings, &opts.paths[1])?;
     Ok(if warn {
         "WARNING: passphrase is empty. If you intended to use an unencrypted private key, use --no-pass instead.\n".into()
