@@ -1,3 +1,37 @@
+# Current shared ownership and next bounded assignments
+
+Accepted compiled source: `d5e93ec9348f19d3bdf0c1e1b7920f16d8a157d6`.
+
+Exactly three S-owned fetch lifecycle originals move from skipped to passed. The two shared ordinary OCSP/EUTL repairs add zero upstream function IDs. Accepted inventory is **1431 total /1377 passed /7 skipped /47 pending**; library **1168/1160/7/1**; S **824/818/6/0**; fetch **56/56/0/0**. P **297/296/1/0**, C **252/206/0/46**, V **47/46/0/1** and L **11/11/0/0** are unchanged. Immutable ownership remains1431. All357old raw ledger objects and their order are retained; exactly3passed rows are appended, yielding360. Function IDs, parameters, native wrappers, supplemental controls, API calls and oracle executions remain separate counts.
+
+## Remaining work and immediate authority
+
+**54functions remain unfinished:47Pending (46CLI+1V) and7skipped (6S+1P SafeNet).** Operational work allocation P11/C36/V1/S6/Lintegration is not another inventory: Ptemporarily delivers10still C-owned CLI provider originals plus its own SafeNet1; immutable CLI252/C46 and signing297/P1 remain separate. Lhas0unfinished assigned original IDs and owns shared coordination/integration.
+
+- P: ONE EnvPIN original only. Frozen90af source/evidence precuration is complete but integration/code/function acceptance remains pending. Lwill curate14tests/fixtures plus exact two-file supplemental migration, measure actual current-source baseline RED, then apply3production postimages and run new-source focused/original/same-output/provider/inherited/producer/bin/full gates. No whole legacy branch transplant. The other9provider originals remain SOURCE ONLY and SafeNet remains skipped. CLIlib reservation is released from P to L; Cgets no lib edit.
+- C: ONE qualified-required original remains TESTS/FIXTURE PREPARATION ONLY. Genuine qualified+required VALID and nonqualified+not-required VALID precede the same actual nonqualified+required negative. Explicit independent TSA Uri(QTST_URI), unambiguous authenticated history/identity and trust/input controls remain. No production/lib/lower/manifest edit.
+- V: ONE later-revoked leaf retains existing bounded tests-first implementation under status5314/ownedfacts5444 and consumes accepted ordinary shared fixes. Its Pending annotation/count remains until its own accepted proof; failed-MAIN reduction stays closed.
+- S: Root separately grants SOURCE AUDIT ONLY for the remaining2deprecated CV and4PDFtype/language originals in the new S6brief. No runtime/native/oracle execution, implementation, ignore removal or credit without later explicit Root approval. This authority is a separate Root assignment accompanying acceptance, not automatically acquired from the three-fetch credit.
+- L: owns exact source/shared APIs, CLIlib, sequential integrations, actual gates/final proof, metadata/ledger and local acceptance transactions.
+
+Pnative C_Sign count stays unknown/null: dynamic call counts are supplemental and not an assertion of the original. No fictitious equal counts or intrusive probe is required; actual provider/source/producer/session/mechanism/credentials/DSO and signed-output integrity remain mandatory. Preserve the future Pprovenance addendum: frozen report mislinks old0.9.3receipts, while the actual0.9.5distribution/binding/wheel/sdist/RECORD/25overlay/runtime-extension chain is independently verified. These next-packet dispositions add0IDs here.
+
+## Retained limits
+
+General independently supplied mutable CertificateRegistry/RevinfoManager graphs, nonempty/custom source reachability, shared-registry aliasing, mutation visibility, source ownership and POE graph parity remain unrepresented. Immutable DER/Arc payload sharing and copied collections do not establish mutable-container identity. No implicit Drop cleanup, context reconstruction, weaker retry, OS roots or new API/framework follows. Allfive MAIN predicates, independent TSA requirements, timing/PKIX/freshness/AC/algorithm, authenticated reader/strict decode/MAC and WithTime containment remain. Broader trust/clock, rendering/scanner, finite serialization, provider and compatibility limits remain explicit. Complete porting and universal parity/all-divergences-fail-closed are not established.
+
+## Preserved failed gate and post-merge scheduling
+
+The old35a full gate remains failed test101/E0460 after three Root compile-fail doctests saw foreign CMS dependency metadata. Exact unchanged three-doctest retry0/9.281s is focused recovery, not acceptance of that failed full gate. Frozen independent diagnosis SHA256 `a74a874280919c3460bd5b7da0f77a33fad0ba29221147b29f33f7f8ddfa5229` binds actual source/artifact replacement and retains unproven last-writer/PID/lock details. No extra causal claim, target cleaning, cache clearing, speed flag/profile/feature change, wrapper forcing, job cap, global lock or service/job interference is introduced.
+
+The initial v2offline helper attempt failed after42.378s due to a local variable shadowing error; v3only renamed literal_current and passed the new actual check. The failed helper output and diagnosis remain preserved. This was an evidence-helper correction, not a product/native/oracle rerun.
+
+As of this acceptance commit, the temporary new-Cargo hold remains until Root's explicit post-merge release; actual release receipts will be recorded at `/home/l/.codex/artifacts/sigis/round3-launch/shared-trust-integration/cargo-window-release.json`. Existing jobs finish normally. This is temporary acceptance scheduling; canonical targets, tools/cargo-locked.sh, system rust-slots and preserved sccache remain the normal contract.
+
+## Historical pre-d5e document retained verbatim
+
+The complete preceding document is retained below as raw historical bytes. Its source/counts and earlier scope statements describe that accepted checkpoint. Current scope and authority are defined above.
+
 # Current bounded shared ownership after source473 acceptance
 
 Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
