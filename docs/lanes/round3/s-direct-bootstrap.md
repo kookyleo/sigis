@@ -1,3 +1,17 @@
+# Lead acceptance note: S direct bootstrap
+
+Source134be605 accepts only S4; S812/12 and fetch50/6, after the current complete six-stage gate
+and independent final review. All six source-specific workspace gates returned zero with audit0; final independent current-source review is complete. Measured full Rust: **2111 discovered /2108 passed /3 ignored /0 failed /214 reports**. Final review: `/home/l/.codex/artifacts/sigis/round3-launch/appearance-bootstrap-integration/final-gate-review.json`, SHA256 `0738956ffae1c16e2d89ea6f195d174fb16da7324c29860dcdde17e3182b2faa`.
+Overall1431/1356/13/62 and library1155/13; supplements add zero IDs. The disabled
+fifth remains unaccepted in this cohort, irrespective of any separate future
+assignment. See [coherent acceptance](l-appearance-bootstrap.md) for exact IDs,
+actual source/CLI/input/output proofs, measured native totals and limits.
+
+## Historical assignment retained verbatim
+
+The original assignment below describes its historical baseline and approvals;
+its old counts and pending-acceptance instructions are not current status.
+
 # Approved S next increment: direct backend selection with a real basic consumer
 
 Lead decision2026-11-14. Accepted counts stay1431/1350/17/64; S824/808/16/0, fetch56/46/10/0. Source audit handler-design-decision/decision.md selects a smaller first consumer instead of the speculative three-source/POE-lock protocol. This supersedes the source-only restriction ONLY for the bounded scope below. No source/registry/revinfo/POE/context-owner API is approved.

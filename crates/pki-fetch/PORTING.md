@@ -1,5 +1,39 @@
 # Lead acceptance update
 
+Accepted source134be605: **56 total /50 passed /6 skipped /0 pending**.
+Exactly four direct-bootstrap lifecycle originals complete; prior46 functions
+retain their status once. All six source-specific workspace gates returned zero with audit0; final independent current-source review is complete. Measured full Rust: **2111 discovered /2108 passed /3 ignored /0 failed /214 reports**. Final review: `/home/l/.codex/artifacts/sigis/round3-launch/appearance-bootstrap-integration/final-gate-review.json`, SHA256 `0738956ffae1c16e2d89ea6f195d174fb16da7324c29860dcdde17e3182b2faa`.
+
+- `pyhanko-certvalidator/test_fetcher_lifecycle.py::test_bootstrap_owns_the_default_backend` -> `round3_handler_bootstrap::test_bootstrap_owns_the_default_backend`
+- `pyhanko-certvalidator/test_fetcher_lifecycle.py::test_bootstrap_owns_the_default_backend_explicitly` -> `round3_handler_bootstrap::test_bootstrap_owns_the_default_backend_explicitly`
+- `pyhanko-certvalidator/test_fetcher_lifecycle.py::test_bootstrap_leaves_a_supplied_backend_alone` -> `round3_handler_bootstrap::test_bootstrap_leaves_a_supplied_backend_alone`
+- `pyhanko-certvalidator/test_fetcher_lifecycle.py::test_bootstrap_leaves_supplied_fetchers_alone` -> `round3_handler_bootstrap::test_bootstrap_leaves_supplied_fetchers_alone`
+
+Actual source134 focus13+33, four genuine unchanged originals, four separate
+probes,26nativeprofiles/52same-byte calls and real HTTP/cache/close controls
+precede acceptance. Exact25agree1stricter and ordinary23agree3differences remain
+separate; ordinary differences are bidirectional, no universal fail-closed claim.
+Existing public owner fields/helper shared views remain; supplied empty has no
+fallback, borrowed close0, default backend is real. This is direct handler
+ownership and main retrieval, not context/source/POE ownership or outer cleanup.
+
+Six lifecycle gaps remain skipped in this cohort:
+- `test_context_provisions_and_owns_a_backend`
+- `test_no_backend_when_fetchers_are_unreachable`
+- `test_unreachable_fetchers_still_adopt_an_owned_backend`
+- `test_bootstrap_without_fetching_owns_nothing`
+- `test_policy_hands_ownership_to_the_context`
+- `test_policy_without_handlers_hands_over_nothing`
+
+Disabled fifth remains supplemental zero-ID proof pending its own separately
+approved semantic mapping. Reachability2/policy2/implicit-context1 remain gaps.
+See docs/lanes/round3/l-appearance-bootstrap.md. Earlier count tables below
+are historical and retain their original bytes.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted source21323f9c: **56 total /46 passed /10 skipped /0 pending**.
 Exactly two backend-context lifecycle originals complete: supplied backend
 close0/private owner-None and adopted backend close1/exact private Arc identity.

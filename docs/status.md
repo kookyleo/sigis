@@ -17,12 +17,13 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped188
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped190
 includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
 ordinary validation39, basic software2, PKCS12/LTA11, PEM/DER10, timestamp2,
 the remaining five runtime originals, three encrypted PEM originals and two
-detached PEM/DER originals and three identity/getpass originals.
-All11 lead live functions are accepted;64 pending functions remain in C.
+detached PEM/DER originals, three identity/getpass originals and two default
+appearance originals.
+All11 lead live functions are accepted;62 pending functions remain in C.
 Other signing, qualification, provider and reader-state commands
 and the complete port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
@@ -31,7 +32,22 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **3a7737ec**. All six source-specific workspace
+Current accepted source: **134be605**. Exactly six original functions complete:
+C2 default-visible appearance/five parameters and S4 direct-bootstrap ownership.
+Inventory: **1431/1356/13/62**, C190/62, S812/12, fetch50/6, library1155/13;
+P296/1, V47 and L11 remain unchanged. All six source-specific workspace gates returned zero with audit0; final independent current-source review is complete. Measured full Rust: **2111 discovered /2108 passed /3 ignored /0 failed /214 reports**. Final review: `/home/l/.codex/artifacts/sigis/round3-launch/appearance-bootstrap-integration/final-gate-review.json`, SHA256 `0738956ffae1c16e2d89ea6f195d174fb16da7324c29860dcdde17e3182b2faa`.
+Current actual CLI a2cea192 (124037320 bytes,13units/236inputs) and both VM copies,
+C8 focus/five native+five fresh original bodies/seven same-output and no-root
+pairs/17callbacks(3success14denial), and S13+33 focus/four genuine originals plus
+four separate probes precede acceptance. S26profiles/52calls have25exact
+agreements and1stricter refusal, versus23ordinary agreements/3differences;
+bidirectional ordinary normalization differences preclude universal parity or
+fail-closed claims. Real CLI NOW and fixture2020 callbacks/reference remain
+separate. Disabled fifth, reachability2/policy2/implicit-context1 and remaining
+CLI/qualification/provider work are unfinished. See
+[current acceptance](lanes/round3/l-appearance-bootstrap.md).
+
+Historical accepted source: **3a7737ec**. All six source-specific workspace
 gates and final current-source/runtime reviews passed. Measured Rust results:
 **2087 discovered /2084 passed /3 ignored /0 failed /212 reports**
 (discovered/passed/ignored/failed/reports).
@@ -295,17 +311,17 @@ integration and the lead gate; their claimed passes are not accepted early.
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
-| `sigis-pki-fetch` | 56 | 46 | 10 | 0 |
+| `sigis-pki-fetch` | 56 | 50 | 6 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 402 | 4 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 296 | 1 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,151** | **17** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 188 | 0 | 64 |
+| **Library lanes A–E** | **1,168** | **1,155** | **13** | **0** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 190 | 0 | 62 |
 | Lead: live integration (round-3 L) | 11 | 11 | 0 | 0 |
-| **Overall** | **1,431** | **1,350** | **17** | **64** |
+| **Overall** | **1,431** | **1,356** | **13** | **62** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -328,17 +344,20 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 ### Pending work
 
-| Owner | Pending | Functions or missing flow |
-| --- | ---: | --- |
-| C / CLI and configuration | 64 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is188 unique functions |
-| Lead / live integration | 0 | All11 assigned live functions accepted; integration, parameter/skip/provenance audits and final acceptance remain L work |
-| **Total** | **64** | All pending immutable functions are C-owned |
+| Owner | Pending | Skipped | Functions or missing flow |
+| --- | ---: | ---: | --- |
+| C / CLI and configuration | 62 | 0 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is190 unique functions |
+| S / library primitives | 0 | 12 | Fetch6, deprecated registry2 and PDF4; disabled fifth is not accepted in this cohort |
+| P / signing | 0 | 1 | SafeNet signing-PIN original remains skipped |
+| V / AdES validation | 0 | 0 | All47 assigned originals accepted; compatibility limits remain explicit |
+| Lead / live integration | 0 | 0 | All11 assigned originals accepted; integration and final acceptance remain L work |
+| **Total** | **62** | **13** | Pending originals are C-owned; library1155passed/13skipped |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not complete the17 remaining library skips, provider parameter gaps or unassigned
+This does not complete the13 remaining library skips, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -346,15 +365,15 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The17 skipped functions comprise certvalidator two, fetchers10,
+The13 skipped functions comprise certvalidator two, fetchers6,
 CMS zero, PDF four and signing one. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
   exact policy-graph functions pass using actual native graph operations;
   eight former partial adapters were replaced. All six name-predicate functions
-  exercise their54 exact pinned cases. Fetchers retain10 lifecycle/
-  bootstrap gaps after the two complete backend ownership originals; the deprecated TSA forwarding original is accepted with an
+  exercise their54 exact pinned cases. Fetchers retain6 lifecycle/
+  bootstrap gaps after two context and four direct-bootstrap ownership originals; the deprecated TSA forwarding original is accepted with an
   explicit compiler-diagnostic phase adaptation. Four lifecycle functions and
   nonsensical auth rejection were accepted previously.
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
@@ -378,7 +397,7 @@ owning `PORTING.md` and lane files:
   other DSA provider matrix parameters still require proof.
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the64 pending
+provider behaviour and remaining validator compatibility; the62 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local

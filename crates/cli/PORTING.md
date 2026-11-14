@@ -1,5 +1,24 @@
 # Lead acceptance update
 
+Accepted assigned counts: **252 total /190 passed /0 skipped /62 pending**.
+Source134be605 adds exactly two default-visible PEM originals/five parameters:
+RSA/ECDSA/Ed25519/Ed448 positive and fixed RSA existing-only incompatibility.
+All six source-specific workspace gates returned zero with audit0; final independent current-source review is complete. Measured full Rust: **2111 discovered /2108 passed /3 ignored /0 failed /214 reports**. Final review: `/home/l/.codex/artifacts/sigis/round3-launch/appearance-bootstrap-integration/final-gate-review.json`, SHA256 `0738956ffae1c16e2d89ea6f195d174fb16da7324c29860dcdde17e3182b2faa`.
+Current coherent CLI a2cea192/124037320bytes/13units236inputs/bothVMcopies,
+C8focus/five native+five fresh original bodies/seven same-output and no-root
+pairs/17callbacks(3success14denial) bind real default AP/Rect/V, sentinel/input,
+full config/usage/context and continuing reader/auth/MAC/budget controls.
+CAPIRED534 is distinct from measured CLIbehaviorRED359; fulltests164 precede
+prod55. Actual NOW differs from fixture2020 callback/reference validation.
+Prior188 originals remain counted once;62 signing/qualified/provider/reader
+originals remain pending. S812/12,fetch50/6,library1155/13; P296/1,V47,L11.
+No full-port or universal fail-closed claim. See APPEARANCE_DEFAULT_PORTING.md
+and docs/lanes/round3/l-appearance-bootstrap.md.
+
+## Historical preceding lead acceptance
+
+# Lead acceptance update
+
 Accepted assigned counts: **252 total /188 passed /0 skipped /64 pending**.
 Source4d47f41c accepts exactly three identity/getpass originals/four architectures
 each (12 cases): configured identity, public programmatic callback and actual
