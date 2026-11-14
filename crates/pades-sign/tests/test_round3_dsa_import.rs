@@ -1,5 +1,5 @@
-//! Native import controls for the still-excluded raw DSA token signing case.
-//! Import is not a token signature or a completed upstream signing function.
+//! Native DSA import controls for token signing fixtures.
+//! Import alone does not replace the actual token signing tests.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -13,7 +13,6 @@ use sigis_pades_sign::pkcs11::cryptoki::object::{
 use sigis_pades_sign::pkcs11::cryptoki::session::UserType;
 use sigis_pades_sign::pkcs11::cryptoki::types::AuthPin;
 use sigis_pades_sign::pkcs11::load_module;
-use sigis_pki_core::algorithms::DigestAlgorithm;
 use sigis_pki_core::asn1::oids;
 
 fn fixture() -> Vec<u8> {
@@ -22,14 +21,6 @@ fn fixture() -> Vec<u8> {
     assert_eq!(blocks.len(), 1);
     assert_eq!(blocks[0].label, "PRIVATE KEY");
     blocks[0].der.clone()
-}
-
-fn digest(data: &[u8]) -> String {
-    DigestAlgorithm::Sha256
-        .digest(data)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
 }
 
 #[test]
@@ -104,13 +95,6 @@ fn native_dsa_fixture_import_retains_prime_base_and_private_token_policy() {
         info.as_slice(),
         [AttributeInfo::Available(length)] if *length == params.subprime.as_bytes().len()
     ));
-    eprintln!(
-        "DSA_IMPORT_PROOF module={} input_sha256={} input_length={} cert_sha256={}",
-        cfg.module,
-        digest(&input),
-        input.len(),
-        digest(cert.der())
-    );
     session.destroy_object(handle).unwrap();
 }
 
@@ -157,18 +141,8 @@ fn invalid_dsa_key_metadata_is_rejected_before_token_object_creation() {
         ("negative_private_value", negative_x.to_der().unwrap()),
         ("zero_private_value", zero_x.to_der().unwrap()),
     ] {
-        let error = support::softhsm::import_dsa_pkcs8(&session, &bytes, "dsa-import-invalid")
+        support::softhsm::import_dsa_pkcs8(&session, &bytes, "dsa-import-invalid")
             .expect_err("invalid DSA metadata must be rejected");
-        let retained =
-            std::env::temp_dir().join(format!("sigis-p-dsa-{}-{case}.der", std::process::id()));
-        std::fs::write(&retained, &bytes).unwrap();
-        eprintln!(
-            "DSA_IMPORT_NEGATIVE {}",
-            serde_json::json!({
-                "case": case, "input_path": retained, "input_sha256": digest(&bytes),
-                "input_length": bytes.len(), "native_error": error,
-            })
-        );
         assert_eq!(session.find_objects(&query).unwrap(), before, "{case}");
     }
     session.destroy_object(sentinel).unwrap();

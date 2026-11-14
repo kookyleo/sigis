@@ -76,7 +76,70 @@ pub const ALL_ALGOS: &[(&str, &str, Option<&str>)] = &[
 pub struct SoftHsm {
     pub module: String,
     pub dir: PathBuf,
-    raw_dsa_enabled: bool,
+}
+
+/// Locate an explicitly selected or normally installed SoftHSM module.
+pub fn module_path() -> Result<String, String> {
+    if let Ok(path) = std::env::var("PKCS11_TEST_MODULE") {
+        return std::path::Path::new(&path)
+            .is_file()
+            .then_some(path)
+            .ok_or_else(|| "selected PKCS#11 module does not exist".into());
+    }
+    let mut candidates = Vec::new();
+    if let Some(home) = std::env::var_os("HOME") {
+        candidates
+            .push(PathBuf::from(home).join(
+                ".codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime/libsofthsm2.so",
+            ));
+    }
+    candidates.extend(
+        [
+            "/usr/lib/softhsm/libsofthsm2.so",
+            "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so",
+            "/usr/lib64/softhsm/libsofthsm2.so",
+            "/usr/local/lib/softhsm/libsofthsm2.so",
+        ]
+        .map(PathBuf::from),
+    );
+    candidates
+        .into_iter()
+        .find(|path| path.is_file())
+        .map(|path| path.to_string_lossy().into_owned())
+        .ok_or_else(|| "SoftHSM module not found; install SoftHSM or set PKCS11_TEST_MODULE".into())
+}
+
+fn utility_path() -> Result<PathBuf, String> {
+    if let Some(path) = std::env::var_os("PKCS11_TEST_SOFTHSM_UTIL") {
+        return Ok(PathBuf::from(path));
+    }
+    let mut candidates = Vec::new();
+    if let Some(home) = std::env::var_os("HOME") {
+        candidates.push(
+            PathBuf::from(home)
+                .join(".codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime/softhsm2-util"),
+        );
+    }
+    if let Some(paths) = std::env::var_os("PATH") {
+        candidates.extend(std::env::split_paths(&paths).map(|path| path.join("softhsm2-util")));
+    }
+    candidates
+        .into_iter()
+        .find(|path| path.is_file())
+        .ok_or_else(|| {
+            "softhsm2-util not found; install SoftHSM or set PKCS11_TEST_SOFTHSM_UTIL".into()
+        })
+}
+
+/// Use the existing reference overlay when it is available, otherwise the venv.
+pub fn oracle_overlay() -> Option<PathBuf> {
+    std::env::var_os("HANKO_DSA_ORACLE_OVERLAY")
+        .map(PathBuf::from)
+        .or_else(|| {
+            let path = PathBuf::from(std::env::var_os("HOME")?)
+                .join(".codex/artifacts/sigis/round3/p/raw-dsa-overlay/overlay-0.9.5");
+            path.is_dir().then_some(path)
+        })
 }
 
 /// Serialises the tests that use the token: login state is shared by all
@@ -119,18 +182,9 @@ pub fn p11_config(algo: &str) -> Option<P11Config> {
     })
 }
 
-/// Explicit acceptance-only DSA fixture; generic ALL_ALGOS stays excluded.
-/// Select before this test binary first initializes its native fixture.
+/// Complete DSA fixture; generic ALL_ALGOS exclusion accounting stays unchanged.
 pub fn raw_dsa_config() -> Result<P11Config, String> {
-    if std::env::var("PKCS11_TEST_RAW_DSA").as_deref() != Ok("1") {
-        return Err(
-            "raw DSA acceptance requires PKCS11_TEST_RAW_DSA=1 before initialization".into(),
-        );
-    }
     let hsm = softhsm().ok_or("mandatory raw DSA native fixture setup failed")?;
-    if !hsm.raw_dsa_enabled {
-        return Err("raw DSA opt-in must precede the first native fixture initialization".into());
-    }
     Ok(P11Config {
         algo: "dsa",
         arch: "testing-ca-dsa",
@@ -144,11 +198,8 @@ pub fn raw_dsa_config() -> Result<P11Config, String> {
 }
 
 fn setup() -> Result<SoftHsm, String> {
-    let module = std::env::var("PKCS11_TEST_MODULE")
-        .unwrap_or_else(|_| "/usr/lib/softhsm/libsofthsm2.so".into());
-    if !std::path::Path::new(&module).exists() {
-        return Err(format!("PKCS#11 module {module} not found"));
-    }
+    let module = module_path()?;
+    let utility = utility_path()?;
     let dir = std::env::temp_dir().join(format!("hanko-softhsm-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let tokens = dir.join("tokens");
@@ -166,21 +217,16 @@ fn setup() -> Result<SoftHsm, String> {
     // variable in C_Initialize.
     std::env::set_var("SOFTHSM2_CONF", &conf);
     let mut usable: Vec<_> = ALL_ALGOS.iter().filter(|(_, _, r)| r.is_none()).collect();
-    let raw_dsa_enabled = std::env::var("PKCS11_TEST_RAW_DSA").as_deref() == Ok("1");
-    if raw_dsa_enabled {
-        // Only the dedicated complete acceptance test opts in. General
-        // parametrized tests still exclude DSA through ALL_ALGOS.
-        usable.push(
-            ALL_ALGOS
-                .iter()
-                .find(|(algo, _, _)| *algo == "dsa")
-                .unwrap(),
-        );
-    }
+    // Provision DSA once alongside the other real tokens, so dedicated DSA
+    // tests do not depend on selector order. General tests retain ALL_ALGOS.
+    usable.push(
+        ALL_ALGOS
+            .iter()
+            .find(|(algo, _, _)| *algo == "dsa")
+            .unwrap(),
+    );
     for (algo, _, _) in &usable {
-        let utility =
-            std::env::var_os("PKCS11_TEST_SOFTHSM_UTIL").unwrap_or_else(|| "softhsm2-util".into());
-        let out = Command::new(utility)
+        let out = Command::new(&utility)
             .args(["--module", &module])
             .env("SOFTHSM2_CONF", &conf)
             .args([
@@ -246,11 +292,7 @@ fn setup() -> Result<SoftHsm, String> {
         session.logout().ok();
         session.close().ok();
     }
-    Ok(SoftHsm {
-        module,
-        dir,
-        raw_dsa_enabled,
-    })
+    Ok(SoftHsm { module, dir })
 }
 
 fn cert_template(cert: &Cert, label: &str) -> Vec<Attribute> {

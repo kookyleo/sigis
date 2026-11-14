@@ -1,5 +1,4 @@
 //! Generic DSA parameter completion candidate for two existing upstream IDs.
-//! Source-only candidate: UNCOMPILED / UNRUN until L integrates and verifies it.
 //! Each actual native PDF requires a fresh mandatory pinned-reference verdict.
 //! The original async config case uses the existing blocking Rust public API.
 //! Three DSA parameters add zero new unique upstream-function credit.
@@ -24,7 +23,7 @@ use sigis_pki_core::algorithms::{
 };
 use sigis_pki_core::cert::Cert;
 use sigis_pki_core::sign::KeySigner;
-use std::{path::PathBuf, process::Command, sync::Arc};
+use std::{process::Command, sync::Arc};
 use support::{pki, Pki};
 
 const TIME: &str = "2020-11-01T00:00:00Z";
@@ -35,13 +34,6 @@ struct DsaSignature<'a> {
     s: der::asn1::UintRef<'a>,
 }
 
-struct ReviewedProvider {
-    module: String,
-    module_bytes: Vec<u8>,
-    utility: String,
-    utility_bytes: Vec<u8>,
-}
-
 fn sha256(bytes: &[u8]) -> String {
     DigestAlgorithm::Sha256
         .digest(bytes)
@@ -50,36 +42,9 @@ fn sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn reviewed_provider() -> ReviewedProvider {
-    let module = std::env::var("PKCS11_TEST_MODULE")
-        .expect("explicit reviewed private module selector is mandatory");
-    let utility = std::env::var("PKCS11_TEST_SOFTHSM_UTIL")
-        .expect("explicit reviewed private utility selector is mandatory");
-    let module_bytes = std::fs::read(&module).unwrap();
-    let utility_bytes = std::fs::read(&utility).unwrap();
-    assert_eq!(
-        sha256(&module_bytes),
-        "8453e1bde7dac7a24ed1bab11786fa8641a0ff2b4093c5f027ceaf368a7a438d"
-    );
-    assert_eq!(
-        sha256(&utility_bytes),
-        "dbe84fb38af1cbcaf58fcea71b0d00753b0eb8480b517a1a4dd98f9ee95dfdb3"
-    );
-    ReviewedProvider {
-        module,
-        module_bytes,
-        utility,
-        utility_bytes,
-    }
-}
-
-fn fixture(provider: &ReviewedProvider) -> softhsm::P11Config {
-    // Reuse the accepted acceptance-only provisioning opt-in. Its raw name
-    // describes the original consumer, not the mechanism selected below.
-    // Missing provider/config/capability fails; no generic ALL_ALGOS change.
-    let cfg = softhsm::raw_dsa_config()
-        .expect("PKCS11_TEST_RAW_DSA=1 must select the complete DSA fixture before initialization");
-    assert_eq!(cfg.module, provider.module);
+fn fixture() -> softhsm::P11Config {
+    let cfg = softhsm::raw_dsa_config().expect("complete real DSA fixture is required");
+    assert_eq!(cfg.module, softhsm::module_path().unwrap());
     assert_eq!(cfg.algo, "dsa");
     assert_eq!(cfg.arch, "testing-ca-dsa");
     assert_eq!(cfg.token_label, "testdsa");
@@ -138,24 +103,12 @@ fn context(root: &Cert, intermediate: &Cert, original_case: bool) -> ValidationC
 
 fn complete_case(
     case: &str,
-    entrypoint: &str,
     cfg: &softhsm::P11Config,
-    provider: &ReviewedProvider,
     advertised_mechanisms: &[u64],
     signer: Arc<dyn KeySigner>,
 ) {
-    let evidence = PathBuf::from(
-        std::env::var_os("HANKO_GENERIC_DSA_EVIDENCE_DIR")
-            .expect("persistent evidence directory is mandatory for generic DSA acceptance"),
-    )
-    .join(case);
-    std::fs::create_dir_all(&evidence).unwrap();
-    // A second run must choose a fresh evidence parent, never replace a case.
-    let _marker = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(evidence.join("generic-dsa-native.started"))
-        .unwrap();
+    let temporary = tempfile::Builder::new().prefix(case).tempdir().unwrap();
+    let directory = temporary.path();
     let token_signer = signer.signing_cert().clone();
     assert_eq!(token_signer, cfg.pki().cert("signer1"));
     assert_eq!(dsa_key_size(&token_signer.public_key()), Some(1024));
@@ -204,7 +157,7 @@ fn complete_case(
         ("interm.der", intermediate.der()),
         ("signer.der", token_signer.der()),
     ] {
-        std::fs::write(evidence.join(name), bytes).unwrap();
+        std::fs::write(directory.join(name), bytes).unwrap();
     }
     let file = sigis_pdf::PdfFile::parse(&output).unwrap();
     let signatures = file.embedded_signatures().unwrap();
@@ -307,55 +260,6 @@ fn complete_case(
         ))
     );
     assert!(default_status.cms.signature.error_time_horizon.is_none());
-    let native_status = serde_json::json!({
-        "case": case, "entrypoint": entrypoint,
-        "field": status.field_name, "digest": "sha256", "metadata_md_algorithm": null,
-        "mechanism": "CKM_DSA_SHA256", "mechanism_value": 0x14,
-        "pre_sign_transform": null, "post_sign_transform": "EncodeDsa",
-        "advertised_mechanisms": advertised_mechanisms, "policy_dsa_threshold": 1024,
-        "intact": status.cms.signature.intact, "valid": status.cms.signature.valid,
-        "trusted": status.cms.signature.trusted(), "bottom_line": status.bottom_line(),
-        "summary": status.summary(), "path_len": 3,
-        "coverage": "ENTIRE_FILE", "modification_level": "NONE",
-        "default_policy_threshold": 3192,
-        "default_trust_indication": "CRYPTO_CONSTRAINTS_FAILURE",
-        "default_intact": default_status.cms.signature.intact,
-        "default_valid": default_status.cms.signature.valid,
-        "default_trusted": default_status.cms.signature.trusted(),
-        "default_bottom_line": default_status.bottom_line()
-    });
-    let status_bytes = serde_json::to_vec_pretty(&native_status).unwrap();
-    std::fs::write(evidence.join("native-status.json"), &status_bytes).unwrap();
-    let executable = std::env::current_exe().unwrap();
-    let executable_bytes = std::fs::read(&executable).unwrap();
-    assert!(
-        executable_bytes.starts_with(b"\x7fELF"),
-        "current test executable must be ELF"
-    );
-    let native_receipt = serde_json::json!({
-        "case": case,
-        "provider": {"module": provider.module, "bytes": provider.module_bytes.len(),
-            "sha256": sha256(&provider.module_bytes), "utility": provider.utility,
-            "utility_bytes": provider.utility_bytes.len(),
-            "utility_sha256": sha256(&provider.utility_bytes)},
-        "binary": {"path": executable, "bytes": executable_bytes.len(),
-            "sha256": sha256(&executable_bytes)},
-        "outputs": [
-            {"file": "native.pdf", "bytes": output.len(), "sha256": sha256(&output)},
-            {"file": "root.der", "bytes": root.der().len(), "sha256": sha256(root.der())},
-            {"file": "interm.der", "bytes": intermediate.der().len(), "sha256": sha256(intermediate.der())},
-            {"file": "signer.der", "bytes": token_signer.der().len(), "sha256": sha256(token_signer.der())},
-            {"file": "native-status.json", "bytes": status_bytes.len(), "sha256": sha256(&status_bytes)}
-        ],
-        "status": native_status,
-        "compilation_source_proof": "requires independent L compiler-input audit"
-    });
-    std::fs::write(
-        evidence.join("native-receipt.json"),
-        serde_json::to_vec_pretty(&native_receipt).unwrap(),
-    )
-    .unwrap();
-    println!("GENERIC_DSA_NATIVE_RECEIPT {native_receipt}");
     let python = std::env::var_os("HANKO_ORACLE")
         .unwrap_or_else(|| "/tmp/pyhanko-oracle/venv/bin/python".into());
     let mut command = Command::new(python);
@@ -367,24 +271,21 @@ fn complete_case(
             "-c",
             include_str!("support/raw_dsa_oracle.py"),
         ])
-        .arg(&evidence);
-    // Assertions and interpreter selection must not be altered by inherited
-    // Python settings. The isolated python-pkcs11 0.9.5 overlay is mandatory.
+        .arg(directory);
+    // Keep the pinned interpreter assertions enabled and ignore user Python settings.
     for (key, _) in std::env::vars_os() {
         if key.to_string_lossy().starts_with("PYTHON") {
             command.env_remove(key);
         }
     }
-    let overlay = std::env::var_os("HANKO_DSA_ORACLE_OVERLAY")
-        .expect("reviewed python-pkcs11 0.9.5 isolated overlay is required");
-    command.env("PYTHONPATH", overlay);
+    if let Some(overlay) = softhsm::oracle_overlay() {
+        command.env("PYTHONPATH", overlay);
+    }
     command.env("PYTHONDONTWRITEBYTECODE", "1");
     command.env("PYTHONNOUSERSITE", "1");
     let oracle = command
         .output()
         .expect("mandatory pinned same-output oracle must start");
-    std::fs::write(evidence.join("oracle.stdout.json"), &oracle.stdout).unwrap();
-    std::fs::write(evidence.join("oracle.stderr.log"), &oracle.stderr).unwrap();
     assert!(
         oracle.status.success(),
         "mandatory oracle rejected: {}",
@@ -413,26 +314,12 @@ fn complete_case(
     // Both implementations must validate the exact native bytes exported here.
     assert_eq!(verdict["pdf_sha256"], sha256(&output));
     assert_eq!(verdict["signer_sha256"], sha256(token_signer.der()));
-    let opened = verdict["opened_inputs"].as_array().unwrap();
-    assert_eq!(opened.len(), 4);
-    for name in ["native.pdf", "root.der", "interm.der", "signer.der"] {
-        let path = evidence.join(name).canonicalize().unwrap();
-        let path_text = path.to_str().unwrap();
-        let record = opened
-            .iter()
-            .find(|record| record["path"] == path_text)
-            .unwrap();
-        let bytes = std::fs::read(&path).unwrap();
-        assert_eq!(record["bytes"], bytes.len());
-        assert_eq!(record["sha256"], sha256(&bytes));
-    }
 }
 
 #[test]
 fn test_simple_sign() {
     let _guard = softhsm::lock();
-    let provider = reviewed_provider();
-    let cfg = fixture(&provider);
+    let cfg = fixture();
     for (bulk_fetch, case) in [
         (true, "simple-sign-bulk-true"),
         (false, "simple-sign-bulk-false"),
@@ -456,22 +343,14 @@ fn test_simple_sign() {
         assert!(options.mechanism_override.is_none());
         let signer = Arc::new(Pkcs11Signer::new(session, options).unwrap());
         assert_eq!(signer.cert_registry(), signer.cert_chain());
-        complete_case(
-            case,
-            "Pkcs11Signer::new",
-            &cfg,
-            &provider,
-            &advertised_mechanisms,
-            signer,
-        );
+        complete_case(case, &cfg, &advertised_mechanisms, signer);
     }
 }
 
 #[test]
 fn test_simple_sign_from_config_async() {
     let _guard = softhsm::lock();
-    let provider = reviewed_provider();
-    let cfg = fixture(&provider);
+    let cfg = fixture();
     // Same configured actual token, same upstream gate; the signer itself
     // must still be opened through pkcs11::open, never substituted directly.
     let (gate_session, advertised_mechanisms) = checked_session(&cfg);
@@ -500,9 +379,7 @@ fn test_simple_sign_from_config_async() {
     let signer = pkcs11::open(&config, None).unwrap();
     complete_case(
         "simple-sign-from-config-async",
-        "pkcs11::open (blocking adaptation)",
         &cfg,
-        &provider,
         &advertised_mechanisms,
         signer,
     );

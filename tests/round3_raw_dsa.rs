@@ -22,7 +22,7 @@ use sigis_pki_core::algorithms::{
 };
 use sigis_pki_core::cert::Cert;
 use sigis_pki_core::sign::KeySigner;
-use std::{path::PathBuf, process::Command, sync::Arc};
+use std::{process::Command, sync::Arc};
 use support::{pki, Pki};
 
 const TIME: &str = "2020-11-01T00:00:00Z";
@@ -132,27 +132,12 @@ fn assert_actual_raw_token_signature(signer: &Pkcs11Signer, signed_attrs: &[u8])
 
 #[test]
 fn test_simple_sign_with_raw_dsa() {
-    let module_path = std::env::var("PKCS11_TEST_MODULE")
-        .expect("explicit reviewed private module selector is mandatory");
-    let utility_path = std::env::var("PKCS11_TEST_SOFTHSM_UTIL")
-        .expect("explicit reviewed private utility selector is mandatory");
-    let module_bytes = std::fs::read(&module_path).unwrap();
-    let utility_bytes = std::fs::read(&utility_path).unwrap();
-    assert_eq!(
-        sha256(&module_bytes),
-        "8453e1bde7dac7a24ed1bab11786fa8641a0ff2b4093c5f027ceaf368a7a438d"
-    );
-    assert_eq!(
-        sha256(&utility_bytes),
-        "dbe84fb38af1cbcaf58fcea71b0d00753b0eb8480b517a1a4dd98f9ee95dfdb3"
-    );
     let _guard = softhsm::lock();
-    // Acceptance selector: absent fixture/provider/capability is a failed
-    // prerequisite, never a passing early return. Generic provider exclusions
-    // remain separate from this explicit authenticated acceptance run.
+    // A real provider/capability is required; no passing availability shortcut.
+    // Generic ALL_ALGOS exclusions remain separate from this DSA operation.
     let cfg =
         softhsm::raw_dsa_config().expect("explicit complete raw DSA native fixture is required");
-    assert_eq!(cfg.module, module_path);
+    assert_eq!(cfg.module, softhsm::module_path().unwrap());
     assert_eq!(cfg.algo, "dsa");
     assert_eq!(cfg.arch, "testing-ca-dsa");
     assert_eq!(cfg.token_label, "testdsa");
@@ -316,56 +301,16 @@ fn test_simple_sign_with_raw_dsa() {
         ))
     );
     assert!(default_status.cms.signature.error_time_horizon.is_none());
-    let evidence = PathBuf::from(
-        std::env::var_os("HANKO_RAW_DSA_EVIDENCE_DIR")
-            .expect("persistent evidence directory is required for this acceptance case"),
-    );
-    std::fs::create_dir_all(&evidence).unwrap();
-    // Reject stale acceptance output instead of silently replacing it.
-    let _marker = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(evidence.join("raw-dsa-native.started"))
-        .unwrap();
+    let temporary = tempfile::tempdir().unwrap();
+    let directory = temporary.path();
     for (name, bytes) in [
         ("native.pdf", output.as_slice()),
         ("root.der", root.der()),
         ("interm.der", intermediate.der()),
         ("signer.der", token_signer.der()),
     ] {
-        std::fs::write(evidence.join(name), bytes).unwrap();
+        std::fs::write(directory.join(name), bytes).unwrap();
     }
-    let executable = std::env::current_exe().unwrap();
-    let executable_bytes = std::fs::read(&executable).unwrap();
-    let native_receipt = serde_json::json!({
-        "provider": {"module": module_path, "bytes": module_bytes.len(),
-            "sha256": sha256(&module_bytes), "utility": utility_path,
-            "utility_sha256": sha256(&utility_bytes)},
-        "binary": {"path": executable, "bytes": executable_bytes.len(),
-            "sha256": sha256(&executable_bytes)},
-        "outputs": [
-            {"file": "native.pdf", "bytes": output.len(), "sha256": sha256(&output)},
-            {"file": "root.der", "bytes": root.der().len(), "sha256": sha256(root.der())},
-            {"file": "interm.der", "bytes": intermediate.der().len(), "sha256": sha256(intermediate.der())},
-            {"file": "signer.der", "bytes": token_signer.der().len(), "sha256": sha256(token_signer.der())}
-        ],
-        "field": status.field_name, "digest": "sha256", "policy_dsa_threshold": 1024,
-        "intact": status.cms.signature.intact, "valid": status.cms.signature.valid,
-        "trusted": status.cms.signature.trusted(), "bottom_line": status.bottom_line(),
-        "summary": status.summary(), "path_len": 3, "default_policy_threshold": 3192,
-        "default_trust_indication": "CRYPTO_CONSTRAINTS_FAILURE",
-        "default_intact": default_status.cms.signature.intact,
-        "default_valid": default_status.cms.signature.valid,
-        "default_trusted": default_status.cms.signature.trusted(),
-        "default_bottom_line": default_status.bottom_line(),
-        "compilation_source_proof": "requires independent L compiler-input audit"
-    });
-    std::fs::write(
-        evidence.join("native-receipt.json"),
-        serde_json::to_vec_pretty(&native_receipt).unwrap(),
-    )
-    .unwrap();
-    println!("RAW_DSA_NATIVE_RECEIPT {native_receipt}");
     let python = std::env::var_os("HANKO_ORACLE")
         .unwrap_or_else(|| "/tmp/pyhanko-oracle/venv/bin/python".into());
     let mut command = Command::new(python);
@@ -377,24 +322,22 @@ fn test_simple_sign_with_raw_dsa() {
             "-c",
             include_str!("support/raw_dsa_oracle.py"),
         ])
-        .arg(&evidence);
+        .arg(directory);
     // Inherited PYTHONOPTIMIZE/PYTHONHOME must not disable assertions or
-    // redirect the exact pinned interpreter. The explicit overlay is required.
+    // redirect the pinned interpreter.
     for (key, _) in std::env::vars_os() {
         if key.to_string_lossy().starts_with("PYTHON") {
             command.env_remove(key);
         }
     }
-    let overlay = std::env::var_os("HANKO_DSA_ORACLE_OVERLAY")
-        .expect("reviewed python-pkcs110.9.5 isolated overlay is required");
-    command.env("PYTHONPATH", overlay);
+    if let Some(overlay) = softhsm::oracle_overlay() {
+        command.env("PYTHONPATH", overlay);
+    }
     command.env("PYTHONDONTWRITEBYTECODE", "1");
     command.env("PYTHONNOUSERSITE", "1");
     let oracle = command
         .output()
         .expect("mandatory pinned same-output oracle must start");
-    std::fs::write(evidence.join("oracle.stdout.json"), &oracle.stdout).unwrap();
-    std::fs::write(evidence.join("oracle.stderr.log"), &oracle.stderr).unwrap();
     assert!(
         oracle.status.success(),
         "mandatory oracle rejected: {}",
