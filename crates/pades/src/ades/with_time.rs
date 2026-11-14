@@ -290,11 +290,19 @@ fn process_with_time(
         result.api_status = Some(status);
         return result;
     }
-    // Time processing resolved the original trust problem. Retain the
-    // revocation details for reporting, as the oracle does, while restoring
-    // the trust verdict at the proven signature time.
-    status.signature.trust_problem = None;
-    status.signature.trust_problem_indic = None;
+    // An existence bound does not complete MAIN validation that stopped at
+    // validity, revocation or an algorithm constraint. A retained error path
+    // may not have passed certificate signatures, names, policies or MAIN
+    // usage checks. This context-free reducer cannot run those checks.
+    // Keep the typed failure and time bounds for genuine historical validation.
+    if sub != AdesPassed::OK.into() || !status.signature.trusted() {
+        if result.ades_subindic == AdesPassed::OK.into() {
+            // A cached OK indication is not authority to clear a real failure.
+            result.ades_subindic = AdesIndeterminate::GENERIC.into();
+        }
+        result.api_status = Some(status);
+        return result;
+    }
     if let (Some(registry), Some(path)) = (
         qualification.registry,
         status.signature.validation_path.as_ref(),
