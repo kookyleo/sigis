@@ -1,3 +1,37 @@
+# Lead acceptance update: decode-limit reader continuity
+
+Accepted after the completed Root full gate: **252 total /193 passed /0 skipped
+/59 pending**. Source `14d6c6a3340714e14fe1d1798e047227b0442dc5` completes exactly three
+C originals/six parameters; prior190 C originals remain counted once.
+The combined C3 + separately reviewed S1 cohort yields overall
+**1431/1360/12/59**. These C documents claim no S function credit.
+Full workspace Rust results: **2118 discovered /2115 passed /3 ignored /0 failed /215 reports**.
+Final independent gate review SHA256: **25fa11d1ab703d58c5c0ca450b9afbd35a35cb6a8fac55f15ea67178e9d0ea58**.
+All six returned gates/audit0 and final independent review precede this acceptance.
+Gate: All six returned0 with audit0 (build 3.2s; test 1113.47s; clippy 9.75s; doc 64.23s; layer 3.7s; fmt 3.57s).
+
+Actual source16efb59c full integration baseline against accepted A2 CLI measured
+3passed/1failed; only trusted addfields and addfields-resave commands failed.
+Source14d repairs fields.rs only, preserving the SAME selected parsed reader,
+strictness and remaining budget through PdfReopenState/open_with_state, with
+make_fresh only for resave. No new route, shared API or dependency is introduced.
+Current CLI34d4a7de/124035704bytes,13producerunits/236inputs and matching VM
+copy receipts bind actual current execution. Field-state units2 and integration
+4 pass; only3 unique upstream functions/6parameters are accepted for credit.
+
+Actual current cohort:12native original commands (6default refusal/6flagged
+success),6fresh original-body calls,6same-native-input helper calls,5actual
+same-native-output inspections and2encrypted-field refusal supplements,
+plus6fresh fixture prepares =37process receipts. All131archived length/hash
+checks and26Python opened-read bindings pass. Reader-state1000->200/late300
+refusal does not prove finite-budget final serialization; trusted compact replay
+and actual output revisions are a separate control. Unsigned structural parsing
+is not signature trust, QR decoding or universal parity. Encrypted field editing
+continues to refuse. Existing decrypt2/timestamp1 remain accepted once.
+See DECODE_LIMITS_SIMPLE_PORTING.md and the Root c-decode-three addendum.
+
+## Historical preceding lead acceptance retained verbatim
+
 # Lead acceptance update
 
 Accepted assigned counts: **252 total /190 passed /0 skipped /62 pending**.

@@ -17,13 +17,14 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped190
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped193
 includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
 ordinary validation39, basic software2, PKCS12/LTA11, PEM/DER10, timestamp2,
 the remaining five runtime originals, three encrypted PEM originals and two
 detached PEM/DER originals, three identity/getpass originals and two default
-appearance originals.
-All11 lead live functions are accepted;62 pending functions remain in C.
+appearance originals and three decode-limit originals.
+All11 lead live functions are accepted;59 pending functions remain in C after
+the four-function acceptance.
 Other signing, qualification, provider and reader-state commands
 and the complete port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
@@ -32,7 +33,34 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **134be605**. Exactly six original functions complete:
+Current accepted source: **14d6c6a3**.
+Exactly four original functions are accepted: C3 decode-limit functions/six
+parameters and S1 Disabled-bootstrap semantic mapping. Inventory:
+**1431/1360/12/59**, C193/59, S813/11, fetch51/5, library1156/12;
+P296/1, V47 and L11 remain unchanged. Full six-stage gate results:
+**All six returned0 with audit0 (build 3.2s; test 1113.47s; clippy 9.75s; doc 64.23s; layer 3.7s; fmt 3.57s)**. Measured full Rust aggregate:
+**2118 discovered /2115 passed /3 ignored /0 failed /215 reports**. Final independent review:
+`/home/l/.codex/artifacts/sigis/round3-launch/decode-disabled-integration/final-review/review.json`, SHA256
+**25fa11d1ab703d58c5c0ca450b9afbd35a35cb6a8fac55f15ea67178e9d0ea58**.
+Current CLI34d4a7de (124035704bytes,13producerunits/236inputs) and both VM copy
+receipts bind focused C integration4pass/state2pass. Actual C37process records
+include12native original commands,6fresh original bodies,6same-input peers,
+5actual native-output inspections,6prepares and2encrypted-field refusals;
+131archive/26actual-read checks pass. S current1pass/13filtered has one fresh
+unchanged original plus3same-native profiles/6reference calls; the Disabled-only
+component-availability mapping does not normalize Supplied(empty) presence.
+Finite field state1000->200/late300 refusal is not finite serialization.
+Independent final review verifies all returned full-gate summaries/input audits
+and34compressed snapshots (old32 plus decode target and CLI units), including
+raw ELF identity after decompression. Focus and full-gate identities remain separate.
+The complete S14-test run separately exports29 profiles for58 fresh calls:
+exact28agree/1stricter, ordinary26agree/3bidirectional differences; Disabled3
+agree on both surfaces. One of258 input markers is an undecoded interleaved
+record;257 complete JSON inputs and all29 case exports remain verified. See
+the full-S sidecar and bounded limitations in the acceptance document.
+See [current acceptance](lanes/round3/l-decode-disabled.md).
+
+Historical accepted source: **134be605**. Exactly six original functions complete:
 C2 default-visible appearance/five parameters and S4 direct-bootstrap ownership.
 Inventory: **1431/1356/13/62**, C190/62, S812/12, fetch50/6, library1155/13;
 P296/1, V47 and L11 remain unchanged. All six source-specific workspace gates returned zero with audit0; final independent current-source review is complete. Measured full Rust: **2111 discovered /2108 passed /3 ignored /0 failed /214 reports**. Final review: `/home/l/.codex/artifacts/sigis/round3-launch/appearance-bootstrap-integration/final-gate-review.json`, SHA256 `0738956ffae1c16e2d89ea6f195d174fb16da7324c29860dcdde17e3182b2faa`.
@@ -311,17 +339,17 @@ integration and the lead gate; their claimed passes are not accepted early.
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
-| `sigis-pki-fetch` | 56 | 50 | 6 | 0 |
+| `sigis-pki-fetch` | 56 | 51 | 5 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 402 | 4 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 296 | 1 | 0 |
 | `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,155** | **13** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 190 | 0 | 62 |
+| **Library lanes A–E** | **1,168** | **1,156** | **12** | **0** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 193 | 0 | 59 |
 | Lead: live integration (round-3 L) | 11 | 11 | 0 | 0 |
-| **Overall** | **1,431** | **1,356** | **13** | **62** |
+| **Overall** | **1,431** | **1,360** | **12** | **59** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -346,18 +374,18 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Skipped | Functions or missing flow |
 | --- | ---: | ---: | --- |
-| C / CLI and configuration | 62 | 0 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is190 unique functions |
-| S / library primitives | 0 | 12 | Fetch6, deprecated registry2 and PDF4; disabled fifth is not accepted in this cohort |
+| C / CLI and configuration | 59 | 0 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is193 unique functions; next styling slice is3 originals/9parameters |
+| S / library primitives | 0 | 11 | Fetch5, deprecated registry2 and PDF4; Disabled-only mapping is accepted, independent source/context ownership remains open |
 | P / signing | 0 | 1 | SafeNet signing-PIN original remains skipped |
 | V / AdES validation | 0 | 0 | All47 assigned originals accepted; compatibility limits remain explicit |
 | Lead / live integration | 0 | 0 | All11 assigned originals accepted; integration and final acceptance remain L work |
-| **Total** | **62** | **13** | Pending originals are C-owned; library1155passed/13skipped |
+| **Total** | **59** | **12** | Pending originals are C-owned; library1156passed/12skipped |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not complete the13 remaining library skips, provider parameter gaps or unassigned
+This does not complete the12 remaining library skips, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -365,15 +393,15 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The13 skipped functions comprise certvalidator two, fetchers6,
+The12 skipped functions comprise certvalidator two, fetchers5,
 CMS zero, PDF four and signing one. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
   exact policy-graph functions pass using actual native graph operations;
   eight former partial adapters were replaced. All six name-predicate functions
-  exercise their54 exact pinned cases. Fetchers retain6 lifecycle/
-  bootstrap gaps after two context and four direct-bootstrap ownership originals; the deprecated TSA forwarding original is accepted with an
+  exercise their54 exact pinned cases. Fetchers retain5 lifecycle/
+  bootstrap gaps after two context and five direct-bootstrap ownership originals; the deprecated TSA forwarding original is accepted with an
   explicit compiler-diagnostic phase adaptation. Four lifecycle functions and
   nonsensical auth rejection were accepted previously.
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
@@ -396,8 +424,18 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. The dedicated raw DSA original is accepted;
   other DSA provider matrix parameters still require proof.
 
+The five remaining fetch lifecycle originals are the following exact functions
+in `pyhanko-certvalidator/test_fetcher_lifecycle.py`; Disabled's scoped mapping
+adds no registry/revinfo/POE or context-owner handoff parity:
+
+- `test_context_provisions_and_owns_a_backend`
+- `test_no_backend_when_fetchers_are_unreachable`
+- `test_unreachable_fetchers_still_adopt_an_owned_backend`
+- `test_policy_hands_ownership_to_the_context`
+- `test_policy_without_handlers_hands_over_nothing`
+
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the62 pending
+provider behaviour and remaining validator compatibility; the59 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -534,7 +572,48 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-Accepted source134be605 preserves actual C default-appearance outcomes,
+Accepted source14d covers only the stated decode3 and Disabled1 scope
+after the completed Root gate and independent final review. Unsigned output checks do not establish signer
+trust; the Disabled proof is limited to one original, three same-material/clock
+profiles and six API calls. Expected Python InsufficientRevinfo stderr and a
+separate same-byte process receipt are not retained in that S comparison; its
+complete JSON/stdout/log and Root-reported exit0 remain the disclosed proof,
+without inventing missing traces. Explicit component/owner absence, no legacy
+fetch escape before or after cache warming, signed-local success and reachable
+controls support only the approved Disabled mapping. Remaining raw policy,
+provider/empty-PIN, historical POE,12skips and59pending originals still prevent
+a universal all-divergences-fail-closed or complete-port claim.
+
+Current validation diagnostic, **zero new IDs and no accepted production
+repair**: V projection `d56ba126f4b6ceff9ceb5aaf4e6446ae0a3b20ae` reports a confirmed
+public WithTime mandatory-path trust defect with unchanged production. Genuine
+main CMS/authenticated TST plus an expired leaf yields native OK/trusted for
+`path_length` and `bad_cert_signature`, while the fresh same-byte pinned
+WithTime reference refuses both before expiry. NameConstraints, unknown critical
+extensions and required-KU omissions are also observed, but are shared by the
+pinned Python surface; shared omission is not proof of safety. The diagnostic
+native run is4pass/1hardening-RED/0ignored, with63fresh pinned API calls.
+Final LTA missing-history/bad-purpose/corrupt-imprint controls still deny; this
+does not make the independently public WithTime result safe. These observations
+are stronger than a payload-only difference and explicitly show that **not all
+current trust divergences fail closed**. They do not mechanically downgrade an
+accepted original ID; Root must review acceptance impact separately.
+
+The production bytes in source14d are identical to diagnostic d56 for
+[with_time_validation](../crates/pades/src/ades/with_time.rs#L334), its
+[options entry](../crates/pades/src/ades/with_time.rs#L353),
+[with_time_result](../crates/pades/src/ades/with_time.rs#L164),
+[lta_validation](../crates/pades/src/ades/lta.rs#L363) and
+[past_validate_with](../crates/pki-certvalidator/src/ltv/mod.rs#L144).
+Exact report: [urgent-with-time-finding.md](/home/l/.codex/artifacts/sigis/round3/v/qualified-preliminary-completion/urgent-with-time-finding.md); source/provenance records remain
+in that report's qualified-preliminary-completion directory. No production fix,
+clock waiver, mechanical failed-past API promotion or trusted retained-path
+promotion is accepted. The approved bounded V containment is in progress, with original-ID audit
+required; P independently audits read-only and L owns shared API/acceptance.
+No generic safe historical-completion rule has been established. Final gate success for this C/S cohort will not erase
+this separate hardening RED or authorize a universal trust/parity claim.
+
+Historical accepted source134be605 preserves actual C default-appearance outcomes,
 full caller requirements, authenticated reader state and equal-evidence empty-root
 refusals. CLI NOW and fixture2020 reference/callback clocks remain distinct.
 S direct-bootstrap focus and full-runtime comparisons each have26 exact profiles:
@@ -721,24 +800,36 @@ trust-verdict exception should be silently reintroduced.
 
 ## Next parallel lanes
 
+L has approved bounded V containment in `/home/l/.codex/artifacts/sigis/round3-launch/v-withtime-containment-approval.md`. It is in progress and not an accepted production repair: only with_time.rs and its unit/adversarial test/fixture paths may change; failed MAIN must never become trusted/OK from a retained path and valid timestamp alone. Typed failure, diagnostic path/API and timing bounds stay available. Existing full LTA production stays unchanged. An audit of all47 original IDs/affected assertions is required, with any proposed downgrade routed to Root; no count is silently changed. P independently audits read-only; Root owns shared API, integration and acceptance. No clock waiver or mechanical failed-past promotion is approved.
+
+A separate L-approved implicit-default-context packet is in progress under `/home/l/.codex/artifacts/sigis/round3-launch/s-implicit-context-default-approval.md`, with no pass or production acceptance yet. Its sole original is test_context_provisions_and_owns_a_backend. Exclusive production scope is CV context.rs plus pades policy.rs: add generic ValidationContextBuilder::build_with_backend_fallback<F> where F:FnOnce()->Arc<dyn FetcherBackend>, and L2 policy::bootstrap_validation_context using actual HttpFetchers and a real Basic consumer. Ordinary build remains disabled; explicit fetchers including empty suppress fallback, and validated construction/owner precedence remain. No new dependency/manifest/layer edge or source/POE framework is approved. The other four lifecycle gaps remain unapproved; this future packet earns no current credit.
+
 Root manifests, layers, shared APIs, fixture allocation, lockfile and central
 acceptance remain L-owned. No service switch follows from function totals.
 
 | Lane | Exclusive file scope | Remaining work | Acceptance |
 | --- | --- | --- | --- |
-| P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review1 skip (SafeNet PIN); retain explicit required-context type-phase boundary, audit repaired legacy-KU beyond the measured profiles, generic provider parameters and evidence/state compatibility | Keep mandatory rejection and scoped native/oracle proofs; source-only empty-PIN direction remains unknown |
-| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 assigned functions accepted; first test failed-past preliminary status/qualification retention; audit archival/POE and independent trust domains without weakening mandatory decisions | Retain explicit NO_POE/API-bottom-line and legacy timestamp-first boundaries; no trust/algorithm/revocation waiver |
-| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review12 skips (PDF4/CV2/fetch6); first port the disabled-bootstrap original, then actual reachability/context ownership and parser/model boundaries | Port exact substantive assertions; Hash relationships do not imply Eq, numeric Python hashes or collision freedom |
-| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Finish62pending originals after scoped190: first the three decode-limit originals and reader continuity, then remaining signing/LTV/qualified/provider flows | Preserve configuration, unknown mandatory settings, current-source CLI and complete native/oracle evidence; no whole-engine projection credit |
+| P — Signing completion | `crates/pades-sign/`, P fixtures/reports | Original pending0; review1 skip (SafeNet PIN); independent read-only audit of the V public WithTime path/signature finding, plus legacy-KU/provider/evidence-state boundaries | Route shared fixes/API/acceptance to L; preserve diagnostic inputs and mandatory refusal; source-only empty-PIN direction remains unknown |
+| V — Validation / AdES | `crates/pades/`, `crates/ades-model/`, V fixtures/reports | All47 IDs retain current bounded acceptance; approved containment in progress only in with_time.rs plus unit/adversarial tests, preventing failed-MAIN trust promotion; full LTA production unchanged | Audit every affected original ID/assertion; no clock waiver or silent retained-pass/downgrade; Root owns integration/API/acceptance |
+| S — Structural / PKI parity | Owned PDF/diff/PKI/fetch/CMS/EUTL paths/fixtures | Original pending0; review11 skips (PDF4/CV2/fetch5); approved implicit-context1 packet in progress only in CV context.rs and pades policy.rs; other4 lifecycle gaps remain unapproved | Generic validated builder fallback plus L2 actual HTTP/Basic consumer; ordinary build disabled, no new edge; no current default-context credit |
+| C — CLI / configuration | `crates/cli/` and C tests/fixtures | Accepted193/59pending; next bounded named-text/QR/missing-URL styling3 originals/9parameters, then remaining signing/LTV/qualified/provider flows | Preserve full config/context/usage and reader/auth/MAC/budget, actual signed outputs and original failure assertions; no whole-engine projection credit |
 | L — Lead / integration | Root/tools/shared APIs/lock/central status | Assigned live functions11/11; pending0. Continue integration, parameter/skip/provenance audits, complete gates and final service-replacement decision | Keep coherent source/ELF/runtime acceptance and immutable ownership; no service restart or complete-port inference |
 
 P/V/S/C can proceed within exclusive paths while L coordinates interfaces and
-acceptance. Library1168/1155/13/0 and L11/11/0/0 do not complete the13skips,
-provider parameters or unassigned features. All62pending IDs are in C. The C
+acceptance. Library1168/1156/12/0 and L11/11/0/0 do not complete
+the12skips, provider parameters or unassigned features. All59pending IDs are in C. The C
 unit LTA fixtures adapt expired frozen2020 signer1 to existing signer1-long.
 The true L live CLI-LTA original already uses current signer1-long and needs
 no new credential adaptation. These are distinct, explicit scopes. The final
 service change still requires functional/trust acceptance beyond inventory totals.
+
+The next C styling slice is exactly three originals/nine parameters, not all
+59 pending functions: `test_cli_sign_visible_with_style` (RSA/ECDSA/Ed25519/Ed448:4),
+`test_cli_sign_visible_with_qr_style` (the same4), and
+`test_cli_sign_visible_with_qr_style_omit_stamp_url` (Ed25519 only:1).
+Pinned source definitions are at test_cli_signing.py826/859/893; the explicit
+Ed25519 decorator controls the last case. No style-count, decode test or
+unsigned output inspection credits these future signed originals in advance.
 
 ## Separate XML programme
 

@@ -1,3 +1,41 @@
+# C decode3 acceptance addendum
+
+Source `14d6c6a3340714e14fe1d1798e047227b0442dc5` is accepted after the completed
+Root full gate and independent final review. The preceding inventory was
+C252/190/0/62 and overall1431/1356/13/62. Accepted combined C3+separately reviewed
+S1 gives C **252/193/0/59** and overall **1431/1360/12/59**. C claims only
+three unique originals: test_simple_commands(4parameters), test_text_stamp(1),
+test_qr_stamp(1). Decrypt2/timestamp1 remain excluded and counted once.
+Full workspace Rust results: **2118 discovered /2115 passed /3 ignored /0 failed /215 reports**.
+Final independent gate review SHA256: **25fa11d1ab703d58c5c0ca450b9afbd35a35cb6a8fac55f15ea67178e9d0ea58**.
+All six returned gates/audit0 and final independent review precede this acceptance.
+Gate: All six returned0 with audit0 (build 3.2s; test 1113.47s; clippy 9.75s; doc 64.23s; layer 3.7s; fmt 3.57s).
+
+Source16ef real A2 behavior baseline is3PASS1FAIL, with only trusted addfields
+and addfields-resave failing. Source14d fields.rs-only repair carries the same
+parsed lenient/default-finite or explicit trusted reader through existing
+PdfReopenState/open_with_state; make_fresh is resave-only. No new routing,
+shared API/dependency or encrypted-field capability is introduced.
+
+Current immutable CLI34d4a7de/124035704bytes/13units236inputs and matching VM
+copy receipts bind actual source14d focus: integration4PASS (36.18s wall),
+reader-state2PASS (6.65s wall), zero failed/ignored/filtered. Current37records
+cover6prepares+12nativecommands+6freshoriginal+6sameinput+5actualoutputparse+
+2encryptedrefusal, with131archive checks/26actual Python-read bindings.
+Native output evidence is actual same-byte encryption/field/page/revision/stamp
+structure, not sample-only parsing, signature trust or QR visual equivalence.
+
+Finite unit1000->200/late300 refusal proves transfer, not finite serialization;
+trusted compact replay/write/reopen is a separate proof. Gzip/raw ELF identities
+are checked separately; post-run captures are not run-instant identity. No old
+owner GREEN is relabelled. Full port, qualification/provider and other pending
+CLI work remain incomplete. Detailed verified proof:
+`/home/l/.codex/artifacts/sigis/round3-launch/decode-disabled-integration/c-focus-review/review.json`;
+porting proposal: `crates/cli/DECODE_LIMITS_SIMPLE_PORTING.md`.
+
+
+## Historical assignment
+
 > Assignment continuity: main6127ed09 now accepts compiled source134be605 after
 > all six workspace gates. Current unique-function counts are1431/1356/13/62,
 > C190/62, S812/12, fetch50/6, P296/1 and V47. This assignment was delivered
