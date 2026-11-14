@@ -1,3 +1,55 @@
+# CLI acceptance: default styles, visible preflight and PKCS11 requirements
+
+Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
+
+CLI inventory is **252total/206passed/0skipped/46pending**. Exactly ten C-owned originals complete: default3, visible4 and the three temporarily implemented P preflights. P-owned signing inventory stays297/296/1/0; V stays47/46/0/1. Combined S1yields overall1431/1374/10/47.57unfinished functions comprise47Pending and10skipped.
+
+The coherent CLI is SHA256 `15ce7c48c0047dd35787088303f6dc089111bcc98b5cdf2415293b90835622a1`/124233528bytes, actual producer8.02s/13units/237inputs/audit0; both VM copies returned0 with the same path/hash. It is the compiler-event executable captured after Cargo returned, not a run-instant or lock-held attestation. Current CLI focus returned0 in286.02s (19units/256inputs/audit0): default8pass/84.65s, visible13pass/173.90s, PEM/DER9pass/0.22s, P2two/3.99s and config5pass/18.34s. Five package-qualified raw/gzip captures include two exact immutable byte reuses for storage only. See [current focus receipt](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/current-cli-receipt.json) and [five captures](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/current-cli-executables/capture.json).
+
+Default selection schema-checks the raw chosen style while using the borrowed effective config. Visible preflight uses actual field geometry and the real signing consumer's interpretation through the continuing authenticated PdfReopenState/open_with_state; signer unique-empty-field/seed constraints remain. Seven appearance originals have26parameters (default12, visible14); only the first four visible NoCfg parameters use post_validate, while all default parameters retain teardown. No raster/QR scanner capability is inferred from PDF/vector checks.
+
+The typed CliConfig::pkcs11_setup/Pkcs11Setup path returns the exact missing-profile error/exit1 before provider/input/output work. A valid profile reaches the explicit source473unsupported-signing boundary. Config5native tests cover13process controls; P2two full bodies use separate native child stores and real0.9.5extension/DSO/authenticated root+intermediate certificate reads. Native children read2certificates each; Python's shared fixture chain cache observes2/0. Bodies make0additional covered provider calls; no private signing key, token signature or hardware support is claimed. Fresh unchanged config1/preflight2returned0 in1.935s/2.472s. Two current15cefile traces observe unchanged four-file sentinels and no configured-canary filename events for unknown/valid-profile cases (exit1each), scoped to strace -f --trace=%file; this is not global no-I/O/network proof or a permanent restriction on a future approved signer. See [sealed P focus](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/p-focus-review/review.json).
+
+Tests-first history is retained honestly: default0/8 and config0/5 against the old accepted CLI; visible originals1pass/3fail, not all RED; P2first-GREEN2/2/b431with genuine full fixtures; S API RED E0432x1/CVE0599x5at e280is absent API, not behavior failure. The zero-ID unsupported-style control measured0/1before precise missing-config migration; all20guards remain, current PEM/DER9pass. Cowner59/1and invalid old0f26producer evidence are retained as failed/historical, not silently credited. The old5ebscalar18collector crash had no terminal Rust rc and proves no full pass; external collector guard/drain repairs are evidence infrastructure, not product code.
+
+## Current per-crate inventory
+
+| Crate | Total | Passed | Skipped | Pending |
+| --- | ---: | ---: | ---: | ---: |
+| sigis-pki-certvalidator |133|131|2|0|
+| sigis-pki-fetch |56|53|3|0|
+| sigis-cms |78|78|0|0|
+| sigis-pki-core |4|4|0|0|
+| sigis-pdf |406|402|4|0|
+| sigis-pdf-diff |94|94|0|0|
+| sigis-pades-sign |297|296|1|0|
+| sigis-pades |47|46|0|1|
+| sigis-eutl |53|53|0|0|
+| sigis-cli |252|206|0|46|
+| sigis |11|11|0|0|
+
+## Actual source473 gate
+
+All six returned0/audit0: build7.44s, test1517.83s, clippy24.91s, strict doc220.61s, layer3.98s and fmt3.82s. Full compiler audit covers518selected units/3117input records. Actual top-level Rust totals are **2191 discovered /2187 passed /4 ignored /0 failed /224 reports**; P2 child summaries are excluded. All63package-qualified raw/gzip captures bind actual Running paths, complete five-field summaries and separate compressed/decompressed hashes/lengths.
+
+Independent final review returned0 in70.459s:71423checks,16399proof paths,552current source locators and724historical source versions. [Final review](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/final-review/review.json) SHA256 **68c4a379af0b4f130250fb653cdb67599c42893d8a8fefd01cd1d7ebcee12a1d**; [actual receipt](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/final-review/actual-receipt.json) SHA256 **92e2d0157d8f57331ad42d31fab3d47fad2a2d068b678644cc911cb93de1a535**. The top-level failed.json is preserved attempt history, not the current result.
+
+## Source, runtime and trust proof boundaries
+
+Compiler proof is content/origin-specific, not universal literal locator identity. Two standalone S9527phases retain text.d Root+OWNER versus binary Root+Root locators: exact text SHA256 `6bcc791b8e1bc90e2e94eb10c9c4f641f4a53ed2f66625ca2618010fec786f5b` and binary SHA256 `cd5f51d8528355264c45f6002aa75c4b16c82df52e846b5ce3265e0e78f9f5e0`. Full additionally has exactly38enumerated units/46raw alias occurrences (36Clippy manifest+5test fixture+5Clippy fixture),6relative files/7concrete path pairs/2alternate origins. Exact phase/text/binary hashes delimit actual-origin own HEAD/common-Git and Root473same-relative SHA256/BLAKE3/length proof; unknown aliases fail. This is neither generic normalization nor full external environment attestation. Failed strict audit attempts remain historical evidence, not native failures.
+
+Full S05fuses literal Root+Root source locators and raw ELF `238b86f231380f9d17d77a090e32cd9c2c5cfc8c60e86e62fbfdededa4801544`/88799152bytes, distinct from focused `7aeeb4a08631af8fb607598bfde80a75dadacb1ca2889df1df4642271049708b`/88788024bytes. Full225INPUTmarkers comprise223complete records and2unparseable raw lines1821/1865, retained without joining/repair/reconstruction; focused225complete inputs are separate. Sealed S review08a24bd9binds full11exports/29HTTP/0new reference API calls and focus20actual API/2constructor refusals with six literal subfield differences. It does not claim all-field parity.
+
+Full S has11registered tests/11PASS/0FAIL/0IGNORE/0FILTER, with9complete single-line results and2transport-missing native functions: test_policy_hands_ownership_to_the_context and independent_handler_contexts_have_independent_pools_and_issued_caches. Exactly those two use complete-suite/source/capture inference plus independent focused serial-harness start/terminal success for all11functions (10interleaved starts with separate ok terminals,1single-line result). Only S1 is a newly credited inferred original; the supplement adds0IDs. All ten C candidate IDs have direct full result lines. No missing line is fabricated and no generic inference is granted.
+
+All five MAIN usage predicates, caller context/options/time, mandatory policy, authenticated PDF reader/strict remaining decode budget/MAC and WithTime containment are retained. The bounded controls are not an exhaustive policy, encrypted-document, finite-serialization, rendering/scanner or universal fail-closed/parity/full-port proof. V remains47/46/0/1; genuine complete historical MAIN rescue is still a separate Pending original. The source9d trust matrix is historical, not fresh source473V parity.
+
+The [L acceptance brief](../../docs/lanes/round3/l-cli-policy-acceptance.md) records exact IDs and next ownership. P1Env PIN implementation, C1tests/fixture preparation and their inherited-control/CLIlib limits are separate future work, not signing/qualification support claimed here.
+
+## Historical pre-source473 document retained verbatim
+
+The complete preceding document below retains its original acceptance numbers and source-stage statements as historical evidence. Current accepted scope and next authority are defined above.
+
 # Lead acceptance update: named text and QR signature styles
 
 Accepted source9d921382ea837819b2ad5dda2b9546adc83dba03 completes exactly three

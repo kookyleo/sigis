@@ -1,3 +1,21 @@
+# C default styles: three accepted originals
+
+Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
+
+Three originals/twelve parameters complete. Baseline0pass/8failagainst old CLI, current target8pass. Effective default selection, aliases/raw schema and undefined-default refusal preserve caller policy and reader state; all twelve original parameters retain teardown.
+
+- `pyhanko-cli/test_cli_signing.py::test_cli_sign_visible_with_custom_default_style` → `appearance_default_styles::test_cli_sign_visible_with_custom_default_style`.
+- `pyhanko-cli/test_cli_signing.py::test_cli_sign_visible_with_default_style_and_others_in_config` → `appearance_default_styles::test_cli_sign_visible_with_default_style_and_others_in_config`.
+- `pyhanko-cli/test_cli_signing.py::test_cli_sign_visible_with_undefined_default_style` → `appearance_default_styles::test_cli_sign_visible_with_undefined_default_style`.
+
+Accepted once under [L source473 acceptance](l-cli-policy-acceptance.md) and final review `68c4a379af0b4f130250fb653cdb67599c42893d8a8fefd01cd1d7ebcee12a1d`. Supplemental controls and parameter wrappers add no IDs.
+
+Default selection schema-checks the raw chosen style while using the borrowed effective config. Visible preflight uses actual field geometry and the real signing consumer's interpretation through the continuing authenticated PdfReopenState/open_with_state; signer unique-empty-field/seed constraints remain. Seven appearance originals have26parameters (default12, visible14); only the first four visible NoCfg parameters use post_validate, while all default parameters retain teardown. No raster/QR scanner capability is inferred from PDF/vector checks.
+
+## Historical pre-source473 document retained verbatim
+
+The complete preceding document below retains its original acceptance numbers and source-stage statements as historical evidence. Current accepted scope and next authority are defined above.
+
 # C next three default style originals
 
 The previous named-style3 packet is accepted on main e2ff5ad0/source9d. Next isolated task ONLY pyhanko-cli/test_cli_signing.py::{test_cli_sign_visible_with_custom_default_style,test_cli_sign_visible_with_default_style_and_others_in_config,test_cli_sign_visible_with_undefined_default_style}. All three inherit RSA/ECDSA/Ed25519/Ed448, twelve original cases (confirm complete closure before editing). First asserts literal Blah in direct final /AP/N decoded stream; second asserts Digitally signed by despite an unrelated named-style map; third exit1 and exact There is no stamp style named 'undefined'. Preserve native direct AP byte assertions, not only rendered/nonempty proxy.

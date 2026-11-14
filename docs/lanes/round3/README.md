@@ -1,3 +1,38 @@
+# Round 3 current source473 acceptance and next scopes
+
+Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
+
+The source473 cohort completes exactly eleven unique upstream functions: ten C-owned CLI originals and one S-owned fetch original. No P-owned or V original is added. Accepted inventory is **1431 total /1374 passed /10 skipped /47 pending**; library scope is **1168/1157/10/1**. Immutable ownership remains unchanged. The Root ledger postimage preserves all346old raw overrides in order and appends eleven passed rows, yielding357; prior dispositions remain intact.
+
+**57 functions remain unfinished:47 Pending (46 CLI plus1 V) and10 skipped (9 S plus1 P SafeNet).** Function IDs, parameters, Rust wrappers, callbacks, API calls and executable captures are separate counts.
+
+The complete [per-crate inventory](../../status.md) and [L acceptance proof](l-cli-policy-acceptance.md) record the returned gate and exact eleven IDs. Immutable ownership and the launch baseline remain preserved below.
+
+## Remaining completion scope and immediate assignments
+
+| CLI upstream module | Pending |
+| --- | ---: |
+| validation/test_cli_qualified_validation.py |22|
+| test_cli_signing_pkcs11.py |10|
+| test_cli_signing.py |7|
+| test_cli_decode_limits.py |4|
+| test_cli_ltv.py |3|
+| Total |46|
+
+Full work ownership is P's temporary10C-owned provider originals plus its own1SafeNet skip; C's other36CLI originals; V's1Pending original; S's9skips (3fetch+2deprecated CV+4PDF type/language); L's integration/gates/acceptance. That partition is broader than immediate implementation authority:
+
+- S: [three remaining lifecycle originals](s-remaining-fetch-three-source.md), TESTS ONLY with the explicit limited empty-capability fixture mapping; no production/API or general source-graph parity.
+- P: [one Env PIN token-signing original](p-cli-signing-env-pin.md), bounded tests-first implementation/allfiveeffectiveEd25519rows/new private store. Other nine signing originals remain source-only. Whole CLIlib is P-exclusive until freeze/L handoff.
+- C: [one qualified-required original](c-qualified-one-tests-first.md), TESTS/FIXTURE PREPARATION ONLY, with qualified+required VALID and nonqualified+not-required VALID controls before same-byte mandatory negative credit. The [eight-original source inventory](c-qualified-current-source.md) is retained, within22remaining qualified-module functions. No production/lib/lower/manifest edits.
+- V: [one later-revoked leaf original](v-leaf-revoked-completion.md), bounded tests-first implementation with status5314/owned-facts5444guards. Its current Pending annotation/count remains until a later accepted proof.
+- L: all shared coordination, exact source integration, metadata/ledger, final gates and local main transactions. No lane merges or expands shared APIs independently.
+
+Future packets receive no credit from this cohort. All Cargo uses tools/cargo-locked.sh/canonical rust-target-env/system slots/preserved sccache. Keep exclusive ownership, local English commits, old proofs and dirty independent work; no target cleaning, speed flags/features/profiles, manual remote Cargo, pushes, kills, service restarts or interference.
+
+## Historical pre-source473 document retained verbatim
+
+The complete preceding document below retains its original acceptance numbers and source-stage statements as historical evidence. Current accepted scope and next authority are defined above.
+
 # Round 3 port lanes
 
 The lead remains `sigis-cx` and owns L. Four independent Codex aoa sessions

@@ -1,3 +1,34 @@
+# L accepted CLI-policy integration and next coordination
+
+Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
+
+The source473transaction accepts Cdefault3/Pconfig1/Ppreflight2/Sowner1/Cvisible4: eleven unique originals, ten C-owned and one S-owned.31curated paths/six production paths preserve fields/decode/MAC/mandatory policy/WithTime containment, with no manifest/lock/layer change. [L acceptance](l-cli-policy-acceptance.md) holds exact counts, source proofs and final returned gate. Historical plans below retain their original bytes and no longer define current numerical or next-stage authority.
+
+## Remaining completion scope and immediate assignments
+
+| CLI upstream module | Pending |
+| --- | ---: |
+| validation/test_cli_qualified_validation.py |22|
+| test_cli_signing_pkcs11.py |10|
+| test_cli_signing.py |7|
+| test_cli_decode_limits.py |4|
+| test_cli_ltv.py |3|
+| Total |46|
+
+Full work ownership is P's temporary10C-owned provider originals plus its own1SafeNet skip; C's other36CLI originals; V's1Pending original; S's9skips (3fetch+2deprecated CV+4PDF type/language); L's integration/gates/acceptance. That partition is broader than immediate implementation authority:
+
+- S: [three remaining lifecycle originals](s-remaining-fetch-three-source.md), TESTS ONLY with the explicit limited empty-capability fixture mapping; no production/API or general source-graph parity.
+- P: [one Env PIN token-signing original](p-cli-signing-env-pin.md), bounded tests-first implementation/allfiveeffectiveEd25519rows/new private store. Other nine signing originals remain source-only. Whole CLIlib is P-exclusive until freeze/L handoff.
+- C: [one qualified-required original](c-qualified-one-tests-first.md), TESTS/FIXTURE PREPARATION ONLY, with qualified+required VALID and nonqualified+not-required VALID controls before same-byte mandatory negative credit. The [eight-original source inventory](c-qualified-current-source.md) is retained, within22remaining qualified-module functions. No production/lib/lower/manifest edits.
+- V: [one later-revoked leaf original](v-leaf-revoked-completion.md), bounded tests-first implementation with status5314/owned-facts5444guards. Its current Pending annotation/count remains until a later accepted proof.
+- L: all shared coordination, exact source integration, metadata/ledger, final gates and local main transactions. No lane merges or expands shared APIs independently.
+
+Future packets receive no credit from this cohort. All Cargo uses tools/cargo-locked.sh/canonical rust-target-env/system slots/preserved sccache. Keep exclusive ownership, local English commits, old proofs and dirty independent work; no target cleaning, speed flags/features/profiles, manual remote Cargo, pushes, kills, service restarts or interference.
+
+## Historical pre-source473 document retained verbatim
+
+The complete preceding document below retains its original acceptance numbers and source-stage statements as historical evidence. Current accepted scope and next authority are defined above.
+
 # L next integration: default styles and missing PKCS11 profile
 
 Start from accepted main e2ff5ad0/source9d. C owns default-style3 (12 parameters); P temporarily implements one C-owned no-provider PKCS11 missing-profile original. S policy-owner2 and V historical positive are source-only architecture plans, not implementation approvals. See the four sibling briefs. C may not edit CLIlib.rs; P may not edit pemder_signing.rs or signature_appearance.rs. No shared API/manifest/lock changes are authorized without L review.

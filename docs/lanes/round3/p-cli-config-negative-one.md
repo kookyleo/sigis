@@ -1,3 +1,19 @@
+# P temporary C-owned missing-profile original accepted
+
+Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
+
+One C-owned original completes; no new P-owned ID. Actual baseline0/5precedes the minimal lib dispatch/frontend, current target5pass/13process controls. Fresh unchanged original and bounded current file traces are separate actual proof.
+
+- `pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_pkcs11_setup_config_unreadable` → `pkcs11_requirements::test_cli_pkcs11_setup_config_unreadable`.
+
+Accepted once under [L source473 acceptance](l-cli-policy-acceptance.md) and final review `68c4a379af0b4f130250fb653cdb67599c42893d8a8fefd01cd1d7ebcee12a1d`. Supplemental controls and parameter wrappers add no IDs.
+
+The typed CliConfig::pkcs11_setup/Pkcs11Setup path returns the exact missing-profile error/exit1 before provider/input/output work. A valid profile reaches the explicit source473unsupported-signing boundary. Config5native tests cover13process controls; P2two full bodies use separate native child stores and real0.9.5extension/DSO/authenticated root+intermediate certificate reads. Native children read2certificates each; Python's shared fixture chain cache observes2/0. Bodies make0additional covered provider calls; no private signing key, token signature or hardware support is claimed. Fresh unchanged config1/preflight2returned0 in1.935s/2.472s. Two current15cefile traces observe unchanged four-file sentinels and no configured-canary filename events for unknown/valid-profile cases (exit1each), scoped to strace -f --trace=%file; this is not global no-I/O/network proof or a permanent restriction on a future approved signer. See [sealed P focus](/home/l/.codex/artifacts/sigis/round3-launch/cli-policy-integration/p-focus-review/review.json).
+
+## Historical pre-source473 document retained verbatim
+
+The complete preceding document below retains its original acceptance numbers and source-stage statements as historical evidence. Current accepted scope and next authority are defined above.
+
 # P temporary C frontend assignment: one no-provider original
 
 The independent V original-impact audit is received; this assignment changes no P count. To use the available lane, L temporarily delegates a bounded C-owned task to P. Original ownership/counter stays C, never P. Exact ID: pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_pkcs11_setup_config_unreadable, ONE nonparametrized nosmoke function, not malformed YAML: valid pkcs11-setups:{} plus missing named setup test. P's prior complete source-only scope identifies no p11_config/post_validate/platform/hardware fixture for this function; preserve all actual import/autouse fixture preconditions and verify again. No provider mechanism/token/hardware queries or signing are authorized.
