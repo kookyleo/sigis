@@ -1260,3 +1260,260 @@ fn policy_handoff_preserves_all_context_fields_clones_and_typed_close_errors() {
     assert_eq!(identity.close(), Err(error));
     assert_eq!(backend_count(&owner.closes), 5);
 }
+
+// Limited fixture-capability mapping approved for the final three lifecycle
+// originals. Python's empty C/R stores have no concrete retrieval capabilities;
+// explicit Fetchers::none() models that fixture, not a general source graph.
+#[test]
+fn remaining_fetch_policy_none_has_no_added_private_owner() {
+    backend_execution_identity();
+    // Empty trust roots, soft-fail and current timing mirror the unchanged
+    // original's policy setup. The public L2 None producer is exercised in the
+    // separate root integration target; this inspects the real private owner.
+    let context = ValidationContext::builder()
+        .revocation_mode("soft-fail")
+        .moment(Moment::now())
+        .build()
+        .unwrap();
+    assert!(context.owned_fetcher_backend.is_none());
+    assert!(context.fetchers.cert.is_none());
+    assert!(context.fetchers.crl.is_none());
+    assert!(context.fetchers.ocsp.is_none());
+    assert!(context.trust_anchors.is_empty());
+    assert!(context.other_certs.is_empty());
+    assert!(context.crls.is_empty());
+    assert!(context.ocsps.is_empty());
+    context.close().unwrap();
+    context.close().unwrap();
+    assert!(context.owned_fetcher_backend.is_none());
+}
+
+#[test]
+fn remaining_fetch_unreachable_default_has_no_owner_or_factory() {
+    backend_execution_identity();
+    let unused_default = FallbackBackend::new();
+    let creations = std::cell::Cell::new(0);
+    let context = ValidationContext::builder()
+        .fetchers(Fetchers::none())
+        .build_with_backend_fallback(|| {
+            creations.set(creations.get() + 1);
+            unused_default.clone()
+        })
+        .unwrap();
+    assert!(context.owned_fetcher_backend.is_none());
+    assert!(context.fetchers.cert.is_none());
+    assert!(context.fetchers.crl.is_none());
+    assert!(context.fetchers.ocsp.is_none());
+    assert!(context.other_certs.is_empty());
+    assert!(context.crls.is_empty());
+    assert!(context.ocsps.is_empty());
+    assert_eq!(creations.get(), 0);
+    assert_eq!(backend_count(&unused_default.retrievals), 0);
+    context.close().unwrap();
+    assert_eq!(backend_count(&unused_default.closes), 0);
+}
+
+#[test]
+fn remaining_fetch_unreachable_owned_retains_exact_owner_and_one_close() {
+    backend_execution_identity();
+    let backend = Arc::new(RecordingBackend::default());
+    let identity: Arc<dyn FetcherBackend> = backend.clone();
+    let unused_default = FallbackBackend::new();
+    let creations = std::cell::Cell::new(0);
+    let context = ValidationContext::builder()
+        .owned_fetcher_backend(identity.clone())
+        .fetchers(Fetchers::none())
+        .build_with_backend_fallback(|| {
+            creations.set(creations.get() + 1);
+            unused_default.clone()
+        })
+        .unwrap();
+    assert!(Arc::ptr_eq(
+        context.owned_fetcher_backend.as_ref().unwrap(),
+        &identity
+    ));
+    assert!(context.fetchers.cert.is_none());
+    assert!(context.fetchers.crl.is_none());
+    assert!(context.fetchers.ocsp.is_none());
+    assert_eq!(creations.get(), 0);
+    assert_eq!(backend_count(&backend.retrievals), 0);
+    assert_eq!(backend_count(&unused_default.retrievals), 0);
+    assert_eq!(backend_count(&backend.closes), 0);
+    context.close().unwrap();
+    // Complete original count obligation: the actual returned context delegates
+    // exactly once, even though its explicit issued set is unreachable/empty.
+    assert_eq!(backend_count(&backend.closes), 1);
+    assert!(Arc::ptr_eq(
+        context.owned_fetcher_backend.as_ref().unwrap(),
+        &identity
+    ));
+    assert_eq!(backend_count(&unused_default.closes), 0);
+    // A surviving caller alias remains usable; it was never taken or cleared.
+    identity.close().unwrap();
+    assert_eq!(backend_count(&backend.closes), 2);
+}
+
+fn remaining_fetch_caller_builder(original: &ValidationContext) -> ValidationContextBuilder {
+    // Private test fixture only: retain every builder field and local input.
+    // Production uses its existing common validated field-moving constructor.
+    ValidationContextBuilder {
+        trust_anchors: original.trust_anchors.clone(),
+        other_certs: original.other_certs.clone(),
+        crls: original.crls().map(<[u8]>::to_vec).collect(),
+        ocsps: original.ocsps().map(<[u8]>::to_vec).collect(),
+        moment: Some(original.timing.validation_time),
+        point_in_time_validation: Some(original.timing.point_in_time_validation),
+        best_signature_time: Some(original.timing.best_signature_time),
+        time_tolerance: Some(original.timing.time_tolerance),
+        revinfo_policy: Some(original.revinfo_policy),
+        revocation_mode: Some("ignored-because-policy-is-explicit".into()),
+        algorithm_policy: Some(original.algorithm_policy.clone()),
+        freshness_judge: Some(original.freshness_judge.clone()),
+        assertions: original.assertions.clone(),
+        fetchers: None,
+        fetcher_backend: None,
+        acceptable_ac_targets: original.acceptable_ac_targets.clone(),
+        trust_manager: original.trust_manager.clone(),
+    }
+}
+
+#[test]
+fn remaining_fetch_empty_capabilities_preserve_state_aliases_and_typed_close_errors() {
+    backend_execution_identity();
+    let mut original = original_context();
+    let cutoff = moment("2020-10-15T00:00:00Z");
+    original.algorithm_policy = Arc::new(HandoffTimedDenial(cutoff));
+    let mut qualifiers = original.trust_anchors[0].qualifiers().clone();
+    qualifiers.standard_parameters = Some(crate::policy::PkixValidationParams {
+        user_initial_policy_set: vec!["1.2.3.4".parse().unwrap()],
+        user_initial_policy_constraint: Some(std::collections::BTreeSet::new()),
+        initial_explicit_policy: true,
+        initial_policy_mapping_inhibit: true,
+        initial_any_policy_inhibit: true,
+        max_policy_graph_nodes: Some(11),
+        ..Default::default()
+    });
+    original.trust_anchors[0] =
+        TrustAnchor::with_qualifiers(original.trust_anchors[0].cert().clone(), qualifiers);
+    let error = FetchError::new(
+        sigis_pki_core::errors::FetchErrorKind::Timeout,
+        "unused backend explicit close timeout",
+    );
+    for owned in [false, true] {
+        for components_first in [false, true] {
+            let backend = Arc::new(RecordingBackend {
+                close_error: Some(error.clone()),
+                ..Default::default()
+            });
+            let identity: Arc<dyn FetcherBackend> = backend.clone();
+            let unused_default = FallbackBackend::new();
+            let creations = std::cell::Cell::new(0);
+            let mut builder = remaining_fetch_caller_builder(&original);
+            if components_first {
+                builder = builder.fetchers(Fetchers::none());
+            }
+            builder = if owned {
+                builder.owned_fetcher_backend(identity.clone())
+            } else {
+                builder.fetcher_backend(identity.clone())
+            };
+            if !components_first {
+                builder = builder.fetchers(Fetchers::none());
+            }
+            let result = builder
+                .build_with_backend_fallback(|| {
+                    creations.set(creations.get() + 1);
+                    unused_default.clone()
+                })
+                .unwrap();
+            assert_security_configuration_preserved(&original, &result);
+            assert_timing_equal(original.timing(), result.timing());
+            let params = result.trust_anchors[0]
+                .qualifiers()
+                .standard_parameters
+                .as_ref()
+                .unwrap();
+            assert!(params
+                .effective_user_initial_policy_set()
+                .unwrap()
+                .is_empty());
+            assert_eq!(params.max_policy_graph_nodes, Some(11));
+            assert!(params.initial_explicit_policy);
+            assert!(params.initial_policy_mapping_inhibit);
+            assert!(params.initial_any_policy_inhibit);
+            let denied = result.algorithm_policy.digest_algorithm_allowed(
+                &sigis_pki_core::asn1::oids::SHA256,
+                Some(result.timing.validation_time),
+            );
+            assert!(!denied.allowed);
+            assert_eq!(denied.not_allowed_after, Some(cutoff));
+            assert_eq!(creations.get(), 0);
+            assert_eq!(backend_count(&backend.retrievals), 0);
+            assert_eq!(backend_count(&unused_default.retrievals), 0);
+            let mut timing = *result.timing();
+            timing.time_tolerance = Duration::from_secs(19);
+            let copies = [
+                result.clone(),
+                result.with_timing(timing),
+                result.with_fetchers(Fetchers::none()),
+            ];
+            for (index, copy) in copies.iter().enumerate() {
+                assert_security_configuration_preserved(&original, copy);
+                assert!(copy.fetchers().is_empty());
+                assert_eq!(copy.owned_fetcher_backend.is_some(), owned);
+                if owned {
+                    assert!(Arc::ptr_eq(
+                        copy.owned_fetcher_backend.as_ref().unwrap(),
+                        &identity
+                    ));
+                    assert_eq!(copy.close(), Err(error.clone()));
+                    assert_eq!(backend_count(&backend.closes), index + 1);
+                } else {
+                    copy.close().unwrap();
+                    assert_eq!(backend_count(&backend.closes), 0);
+                }
+            }
+            assert_timing_equal(copies[0].timing(), result.timing());
+            assert_timing_equal(copies[1].timing(), &timing);
+            assert_timing_equal(copies[2].timing(), result.timing());
+            drop(copies);
+            drop(result);
+            assert_eq!(backend_count(&backend.closes), if owned { 3 } else { 0 });
+            assert_eq!(identity.close(), Err(error.clone()));
+            assert_eq!(backend_count(&backend.closes), if owned { 4 } else { 1 });
+            assert_eq!(backend_count(&unused_default.closes), 0);
+            assert!(!original.fetchers().is_empty());
+        }
+    }
+}
+
+#[test]
+fn remaining_fetch_explicit_none_does_not_bypass_policy_or_der_validation() {
+    backend_execution_identity();
+    for invalid in 0..3 {
+        let build = || match invalid {
+            0 => ValidationContext::builder().revocation_mode("invalid-mode"),
+            1 => ValidationContext::builder().crl(vec![0x30, 0x00]),
+            _ => ValidationContext::builder().ocsp_response(vec![0x30, 0x00]),
+        };
+        let expected = build().build().unwrap_err();
+        let backend = Arc::new(RecordingBackend::default());
+        let unused_default = FallbackBackend::new();
+        let creations = std::cell::Cell::new(0);
+        let error = build()
+            .fetchers(Fetchers::none())
+            .owned_fetcher_backend(backend.clone())
+            .build_with_backend_fallback(|| {
+                creations.set(creations.get() + 1);
+                unused_default.clone()
+            })
+            .unwrap_err();
+        assert!(matches!(error, ValidationError::Malformed(_)));
+        assert_eq!(format!("{error:?}"), format!("{expected:?}"));
+        assert_eq!(creations.get(), 0);
+        assert_eq!(backend_count(&backend.retrievals), 0);
+        assert_eq!(backend_count(&backend.closes), 0);
+        assert_eq!(backend_count(&unused_default.retrievals), 0);
+        assert_eq!(backend_count(&unused_default.closes), 0);
+    }
+}
