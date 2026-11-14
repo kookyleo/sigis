@@ -18,7 +18,7 @@ That is the whole gate. Standalone build/docs/layering stages, source-file hashe
 
 | Lane/session | Remaining scope | Main implementation boundary |
 | --- | --- | --- |
-| P / sigis-r3-p | Eight CLI PKCS#11 originals plus SafeNet skip review | PKCS#11 implementation and dedicated tests; coordinate runtime/shared CLI edits with L |
+| P / sigis-r3-p | Two CLI signing-PIN originals plus fixture/hardware exclusions | PKCS#11 implementation and dedicated tests; coordinate runtime/shared CLI edits with L |
 | C / sigis-r3-c | Current 34-original batch accepted; help remaining CLI work | CLI commands/configuration and tests; coordinate helper boundaries |
 | V / sigis-r3-v | Later-revoked leaf original | Necessary CV/CMS/PAdES completion implementation and tests |
 | S / sigis-r3-s | Two CLI historical-validation cases plus five registry/PDF exclusions | CLI validation/reporting cases and registry/PDF equivalents; coordinate lower completion with V |

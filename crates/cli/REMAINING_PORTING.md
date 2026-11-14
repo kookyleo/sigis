@@ -5,7 +5,7 @@ The coordinator's simplified gate replaces provenance/capture/review pipelines.
 All Cargo uses tools/cargo-locked.sh; logs are plain text under
 `~/.codex/artifacts/sigis/round3/c/remaining-20261115/`.
 
-The 34 completed originals in this batch are accepted after the simple current-main gate. The two ignored historical-validation implementation gaps remain Pending, not Skipped. Current CLI inventory is252/242/0/10: eight provider originals are delegated to P and the two historical-validation cases to S/V. Executed original parameter rows pass the pinned Python reference; helper tests and parameters add no IDs.
+The 34 completed originals in this batch are accepted after the simple current-main gate. The two ignored historical-validation implementation gaps remain Pending, not Skipped. Current CLI inventory is252/246/2/4: two context-specific signing-PIN originals remain with P and the two historical-validation cases with S/V; two genuine raw-ECDSA fixture exclusions are skipped. Executed original parameter rows pass the pinned Python reference; helper tests and parameters add no IDs.
 
 ## Batch1: field/hybrid/dictionary signing, seven originals /16 rows
 
