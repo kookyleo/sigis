@@ -1,0 +1,134 @@
+{
+  "scope": "Actual executed ten-file generator manifest plus additive original caller inputs; no further execution",
+  "executed_manifest": {
+    "file": "manifest.json",
+    "length": 3191,
+    "sha256": "a9aa85c65e9fcf8629d989e7f452ef383b56591b218dda9a13c81f88d1a972ac"
+  },
+  "signed_time": "2020-11-01T00:00:00Z",
+  "current_validation_time": "2020-12-25T00:00:00Z",
+  "modified_not_before": "2020-11-15T00:00:00Z",
+  "files": [
+    {
+      "file": "cert-root-original.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    {
+      "file": "cert-interm-original.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    {
+      "file": "cert-signer2-original.der",
+      "length": 1136,
+      "sha256": "eb1d7b1c82780108a1f6afbb9df0860f44af9ef9d5ebe355b8c369f1b2a3ead5"
+    },
+    {
+      "file": "cert-tsa-original.der",
+      "length": 997,
+      "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+    },
+    {
+      "file": "cert-interm-not-before-nov15.der",
+      "length": 987,
+      "sha256": "acca3bcab3094f756f757cdf2681e2994468b2568aa74d7fe4122fec750719e6"
+    },
+    {
+      "file": "cert-tsa-not-before-nov15.der",
+      "length": 997,
+      "sha256": "b6e6d496685a071f4d08e29185892f456a20a1915314c1d3332a22fd401a77c1"
+    },
+    {
+      "file": "2020-11-01/crl-root.der",
+      "length": 542,
+      "sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "file": "2020-11-01/ocsp-signer2.der",
+      "length": 1407,
+      "sha256": "ce3ae2936cb90e29ba4d29bcfb437dac4db7e53d833521a88677474b9e3af177"
+    },
+    {
+      "file": "2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    },
+    {
+      "file": "2020-12-25/ocsp-signer2.der",
+      "length": 1429,
+      "sha256": "678c5e9a0a9a244bc5799bc2f1606a8b847621de090525a5d7ce6e3a68854597"
+    },
+    {
+      "file": "2020-11-01/crl-interm.der",
+      "length": 553,
+      "sha256": "6d9bde6f25cb1d79aadc41e2eed8ac9e9edc3313af3589b67020b4ea3cecc020",
+      "source": "crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-11-01/crl-interm.der",
+      "scope": "Static caller input copy; not used by the eight recorded public reference path calls"
+    },
+    {
+      "file": "2020-12-25/crl-interm.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d",
+      "source": "crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-interm.der",
+      "scope": "Static caller input copy; not used by the eight recorded public reference path calls"
+    }
+  ],
+  "original_certificate_origins": [
+    {
+      "file": "cert-root-original.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/root.crt"
+    },
+    {
+      "file": "cert-interm-original.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/interm.crt"
+    },
+    {
+      "file": "cert-signer2-original.der",
+      "length": 1136,
+      "sha256": "eb1d7b1c82780108a1f6afbb9df0860f44af9ef9d5ebe355b8c369f1b2a3ead5",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/signer2.crt"
+    },
+    {
+      "file": "cert-tsa-original.der",
+      "length": 997,
+      "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/tsa.crt"
+    }
+  ],
+  "actual_reissue_signing_key_label": "root",
+  "extra_inputs": [
+    {
+      "file": "2020-11-01/crl-interm.der",
+      "length": 553,
+      "sha256": "6d9bde6f25cb1d79aadc41e2eed8ac9e9edc3313af3589b67020b4ea3cecc020",
+      "source": "crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-11-01/crl-interm.der",
+      "scope": "Static caller input copy; not used by the eight recorded public reference path calls"
+    },
+    {
+      "file": "2020-12-25/crl-interm.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d",
+      "source": "crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-interm.der",
+      "scope": "Static caller input copy; not used by the eight recorded public reference path calls"
+    }
+  ],
+  "root_caller_constraints": [
+    "SimpleSigner registry contains Root and selected intermediate only",
+    "DummyTimeStamper embeds Root only; no original intermediate injected",
+    "ctx.other_certs contains selected intermediate only",
+    "Actual raw original responses bind same issuer Name/SPKI and Bob serial",
+    "Required root/CA/channel checks remain active; no retiming or provider substitution"
+  ],
+  "root_planned_profiles": [
+    "original MAIN/original TSA positive",
+    "MAIN intermediate notBefore Nov15 with genuine Nov1 TST",
+    "TSA notBefore Nov15 with genuine Nov1 TST",
+    "native trust-anchor valid_from Nov15 with genuine Nov1 TST"
+  ],
+  "service_bound_limit": "No new signed TL/service bytes provided; no unsigned membership or invented service interval can authorize recovery."
+}

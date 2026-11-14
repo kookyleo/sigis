@@ -1,0 +1,587 @@
+{
+  "scope": "Tests-first signed metadata adversaries. Signature checks only; no native/CV/reference path execution.",
+  "current_time": "2020-12-25T00:00:00Z",
+  "architecture": "testing-ca",
+  "actual_signer_keys": [
+    "interm-ocsp",
+    "interm",
+    "root"
+  ],
+  "private_keys_written": false,
+  "cases": [
+    {
+      "id": "ocsp-key-compromise",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "explicit KeyCompromise",
+      "expected_proof": "eligible",
+      "file": "ocsp-key-compromise.der",
+      "description": "explicit KeyCompromise"
+    },
+    {
+      "id": "ocsp-reason-absent",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "reason absent",
+      "expected_proof": "reject",
+      "file": "ocsp-reason-absent.der",
+      "description": "reason absent"
+    },
+    {
+      "id": "ocsp-reason-unspecified",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "reason unspecified",
+      "expected_proof": "reject",
+      "file": "ocsp-reason-unspecified.der",
+      "description": "reason unspecified"
+    },
+    {
+      "id": "ocsp-reason-hold",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "certificateHold",
+      "expected_proof": "reject",
+      "file": "ocsp-reason-hold.der",
+      "description": "certificateHold"
+    },
+    {
+      "id": "ocsp-reason-remove",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "removeFromCRL",
+      "expected_proof": "reject",
+      "file": "ocsp-reason-remove.der",
+      "description": "removeFromCRL"
+    },
+    {
+      "id": "ocsp-reason-unassigned",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "unassigned reason ENUMERATED7",
+      "expected_proof": "reject",
+      "file": "ocsp-reason-unassigned.der",
+      "description": "unassigned reason ENUMERATED7"
+    },
+    {
+      "id": "ocsp-revocation-fraction",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "fractional revocationTime",
+      "expected_proof": "reject",
+      "file": "ocsp-revocation-fraction.der",
+      "description": "fractional revocationTime"
+    },
+    {
+      "id": "ocsp-produced-fraction",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "fractional producedAt",
+      "expected_proof": "reject",
+      "file": "ocsp-produced-fraction.der",
+      "description": "fractional producedAt"
+    },
+    {
+      "id": "ocsp-this-update-fraction",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "fractional thisUpdate",
+      "expected_proof": "reject",
+      "file": "ocsp-this-update-fraction.der",
+      "description": "fractional thisUpdate"
+    },
+    {
+      "id": "ocsp-next-update-fraction",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "fractional nextUpdate",
+      "expected_proof": "reject",
+      "file": "ocsp-next-update-fraction.der",
+      "description": "fractional nextUpdate"
+    },
+    {
+      "id": "ocsp-duplicate-single",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "duplicate matching SingleResponse",
+      "expected_proof": "reject",
+      "file": "ocsp-duplicate-single.der",
+      "description": "duplicate matching SingleResponse"
+    },
+    {
+      "id": "ocsp-response-unknown-critical",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "unknown critical response extension",
+      "expected_proof": "reject",
+      "file": "ocsp-response-unknown-critical.der",
+      "description": "unknown critical response extension"
+    },
+    {
+      "id": "ocsp-single-unknown-critical",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "unknown critical single extension",
+      "expected_proof": "reject",
+      "file": "ocsp-single-unknown-critical.der",
+      "description": "unknown critical single extension"
+    },
+    {
+      "id": "ocsp-duplicate-response-extension",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "duplicate response extension OID",
+      "expected_proof": "reject",
+      "file": "ocsp-duplicate-response-extension.der",
+      "description": "duplicate response extension OID"
+    },
+    {
+      "id": "ocsp-duplicate-single-extension",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "duplicate single extension OID",
+      "expected_proof": "reject",
+      "file": "ocsp-duplicate-single-extension.der",
+      "description": "duplicate single extension OID"
+    },
+    {
+      "id": "ocsp-invalidity-date",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "invalidityDate dependency",
+      "expected_proof": "reject",
+      "file": "ocsp-invalidity-date.der",
+      "description": "invalidityDate dependency"
+    },
+    {
+      "id": "ocsp-good",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "Good at same reference",
+      "expected_proof": "good-control",
+      "file": "ocsp-good.der",
+      "description": "Good at same reference"
+    },
+    {
+      "id": "ocsp-revocation-earlier",
+      "kind": "ocsp",
+      "target": "leaf",
+      "mutation": "effective event differs from CRL Dec1",
+      "expected_proof": "eligible",
+      "file": "ocsp-revocation-earlier.der",
+      "description": "effective event differs from CRL Dec1"
+    },
+    {
+      "id": "crl-key-compromise",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "explicit KeyCompromise",
+      "expected_proof": "eligible",
+      "file": "crl-key-compromise.der",
+      "description": "explicit KeyCompromise"
+    },
+    {
+      "id": "crl-reason-absent",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "reason absent",
+      "expected_proof": "reject",
+      "file": "crl-reason-absent.der",
+      "description": "reason absent"
+    },
+    {
+      "id": "crl-reason-unspecified",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "reason unspecified",
+      "expected_proof": "reject",
+      "file": "crl-reason-unspecified.der",
+      "description": "reason unspecified"
+    },
+    {
+      "id": "crl-reason-hold",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "certificateHold",
+      "expected_proof": "reject",
+      "file": "crl-reason-hold.der",
+      "description": "certificateHold"
+    },
+    {
+      "id": "crl-reason-remove",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "removeFromCRL",
+      "expected_proof": "reject",
+      "file": "crl-reason-remove.der",
+      "description": "removeFromCRL"
+    },
+    {
+      "id": "crl-reason-unassigned",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "unassigned reason ENUMERATED7",
+      "expected_proof": "reject",
+      "file": "crl-reason-unassigned.der",
+      "description": "unassigned reason ENUMERATED7"
+    },
+    {
+      "id": "crl-invalidity-date",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "invalidityDate dependency",
+      "expected_proof": "reject",
+      "file": "crl-invalidity-date.der",
+      "description": "invalidityDate dependency"
+    },
+    {
+      "id": "crl-revocation-fraction",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "fractional revocationDate",
+      "expected_proof": "reject",
+      "file": "crl-revocation-fraction.der",
+      "description": "fractional revocationDate"
+    },
+    {
+      "id": "crl-this-update-fraction",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "fractional thisUpdate",
+      "expected_proof": "reject",
+      "file": "crl-this-update-fraction.der",
+      "description": "fractional thisUpdate"
+    },
+    {
+      "id": "crl-duplicate-entry",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "duplicate matching revoked entry",
+      "expected_proof": "reject",
+      "file": "crl-duplicate-entry.der",
+      "description": "duplicate matching revoked entry"
+    },
+    {
+      "id": "crl-duplicate-entry-extension",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "duplicate entry extension OID",
+      "expected_proof": "reject",
+      "file": "crl-duplicate-entry-extension.der",
+      "description": "duplicate entry extension OID"
+    },
+    {
+      "id": "crl-duplicate-extension",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "duplicate CRL extension OID",
+      "expected_proof": "reject",
+      "file": "crl-duplicate-extension.der",
+      "description": "duplicate CRL extension OID"
+    },
+    {
+      "id": "crl-unknown-critical",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "unknown critical CRL extension",
+      "expected_proof": "reject",
+      "file": "crl-unknown-critical.der",
+      "description": "unknown critical CRL extension"
+    },
+    {
+      "id": "crl-entry-unknown-critical",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "unknown critical CRL entry extension",
+      "expected_proof": "reject",
+      "file": "crl-entry-unknown-critical.der",
+      "description": "unknown critical CRL entry extension"
+    },
+    {
+      "id": "crl-delta",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "delta CRL dependency",
+      "expected_proof": "reject",
+      "file": "crl-delta.der",
+      "description": "delta CRL dependency"
+    },
+    {
+      "id": "crl-partial-reasons",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "incomplete reason coverage despite authentic leaf event",
+      "expected_proof": "reject",
+      "file": "crl-partial-reasons.der",
+      "description": "incomplete reason coverage despite authentic leaf event"
+    },
+    {
+      "id": "crl-good",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "Good at same reference",
+      "expected_proof": "good-control",
+      "file": "crl-good.der",
+      "description": "Good at same reference"
+    },
+    {
+      "id": "crl-revocation-earlier",
+      "kind": "crl",
+      "target": "leaf",
+      "mutation": "effective event differs from OCSP Dec1",
+      "expected_proof": "eligible",
+      "file": "crl-revocation-earlier.der",
+      "description": "effective event differs from OCSP Dec1"
+    },
+    {
+      "id": "root-crl-unknown-critical",
+      "kind": "crl",
+      "target": "ancestor",
+      "mutation": "ancestor selected CRL unknown critical extension",
+      "expected_proof": "reject",
+      "file": "root-crl-unknown-critical.der",
+      "description": "ancestor selected CRL unknown critical extension"
+    },
+    {
+      "id": "root-crl-duplicate-extension",
+      "kind": "crl",
+      "target": "ancestor",
+      "mutation": "ancestor selected CRL duplicate extension OID",
+      "expected_proof": "reject",
+      "file": "root-crl-duplicate-extension.der",
+      "description": "ancestor selected CRL duplicate extension OID"
+    },
+    {
+      "id": "root-crl-this-update-fraction",
+      "kind": "crl",
+      "target": "ancestor",
+      "mutation": "ancestor selected CRL fractional thisUpdate",
+      "expected_proof": "reject",
+      "file": "root-crl-this-update-fraction.der",
+      "description": "ancestor selected CRL fractional thisUpdate"
+    }
+  ],
+  "files": [
+    {
+      "file": "ocsp-key-compromise.der",
+      "length": 1429,
+      "sha256": "678c5e9a0a9a244bc5799bc2f1606a8b847621de090525a5d7ce6e3a68854597"
+    },
+    {
+      "file": "ocsp-reason-absent.der",
+      "length": 1424,
+      "sha256": "ff1ede8ac7babcabaf4c6ff34a9946cb0ab53fadc81835e91a124bc2309649f0"
+    },
+    {
+      "file": "ocsp-reason-unspecified.der",
+      "length": 1429,
+      "sha256": "32088178d030ebddf9a31fbe66d4f9acb7489ecc2b7e919b725b855befd0309c"
+    },
+    {
+      "file": "ocsp-reason-hold.der",
+      "length": 1429,
+      "sha256": "b621913305bfe9f32b8a1fe9498c4da0e3b76e23790981f3562d7a29bf6846e5"
+    },
+    {
+      "file": "ocsp-reason-remove.der",
+      "length": 1429,
+      "sha256": "e75f7395dfd54092201bcb9a25a6ccd32aaaee59314272501bbbd37fdad81013"
+    },
+    {
+      "file": "ocsp-reason-unassigned.der",
+      "length": 1429,
+      "sha256": "8fa66dff5d7f7d799225b6a8483483bf494a24410d5dd731db70ab4ad5849aa2"
+    },
+    {
+      "file": "ocsp-revocation-fraction.der",
+      "length": 1431,
+      "sha256": "9aeaa34f3aa513cfeb1d2d1d6f0f11baec65074885caca84f32c0d6a27fbad70"
+    },
+    {
+      "file": "ocsp-produced-fraction.der",
+      "length": 1431,
+      "sha256": "b0d00c3fe07c4d1e63bbe701dc57a23eb6dddbc00426e4a87cc9f7cf3aa8c9dc"
+    },
+    {
+      "file": "ocsp-this-update-fraction.der",
+      "length": 1431,
+      "sha256": "a9cc868c0b93dd1b30f49961b598073d89e13926b166e98f702b7b46bd23faa6"
+    },
+    {
+      "file": "ocsp-next-update-fraction.der",
+      "length": 1431,
+      "sha256": "e41191b1d7a666e535ef8a6724dbcacb989b4871f545f21b032aa4ba8efbd04d"
+    },
+    {
+      "file": "ocsp-duplicate-single.der",
+      "length": 1554,
+      "sha256": "ded16376a814dc7808cc17dc517bdb81b1f5eaad8c13401a4edbfa4d48174fd3"
+    },
+    {
+      "file": "ocsp-response-unknown-critical.der",
+      "length": 1449,
+      "sha256": "e8c4343cabec2d9438dbd073a8017c6ca213722ab5630159c0926d4d04151012"
+    },
+    {
+      "file": "ocsp-single-unknown-critical.der",
+      "length": 1451,
+      "sha256": "46d9bd77e742aefd0ff5ae8b5afedfe64dd2291fe3fdf1bcfea7240e9065a9ac"
+    },
+    {
+      "file": "ocsp-duplicate-response-extension.der",
+      "length": 1526,
+      "sha256": "038d2d8ce751ee9b5a45b7e809f6ea7ffdbd25f4aaa628ae866cc3510ebac2c0"
+    },
+    {
+      "file": "ocsp-duplicate-single-extension.der",
+      "length": 1461,
+      "sha256": "4df76f7160e1d8d00151ce7678d4891aaf74e36e9f8cc7957f5d69763fea8104"
+    },
+    {
+      "file": "ocsp-invalidity-date.der",
+      "length": 1461,
+      "sha256": "3688eed12379813d41df4be7f3bb47455927578325220540645f868268a6534c"
+    },
+    {
+      "file": "ocsp-good.der",
+      "length": 1407,
+      "sha256": "4f8b7bb7964c10f4331c5c74142f43bb51fc98cc4d35457545a404c4e2d2e12b"
+    },
+    {
+      "file": "ocsp-revocation-earlier.der",
+      "length": 1429,
+      "sha256": "ea7896c397c2f32d24aab9166d4fc538ed5bcaae560c5daca630de1947da81c0"
+    },
+    {
+      "file": "crl-key-compromise.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d"
+    },
+    {
+      "file": "crl-reason-absent.der",
+      "length": 576,
+      "sha256": "2342007d06c27513ef6c63d95de3873e84ef4a2c887b4a766b712be0d8c591a7"
+    },
+    {
+      "file": "crl-reason-unspecified.der",
+      "length": 590,
+      "sha256": "366ea2ac6bf9a1d67edc1a9729584b219a7755e3f798669094e3d80ae26bd27b"
+    },
+    {
+      "file": "crl-reason-hold.der",
+      "length": 590,
+      "sha256": "5f4406495d5fd5b0a42ca47aa3426f5cd85f1d1500840431167440cb1467da06"
+    },
+    {
+      "file": "crl-reason-remove.der",
+      "length": 590,
+      "sha256": "b185b99a36900174a74a27470f099a419a83fd29574ee6be3899992bd56b820b"
+    },
+    {
+      "file": "crl-reason-unassigned.der",
+      "length": 590,
+      "sha256": "10d25d255e4c6b86acdfa91d1791f57db16fc4da6314dc2e79d1806625d0c3e1"
+    },
+    {
+      "file": "crl-invalidity-date.der",
+      "length": 616,
+      "sha256": "74c7f5900ec8b788a566dff1214e9760cd34e567a1f7e5a5918bed992f5cb321"
+    },
+    {
+      "file": "crl-revocation-fraction.der",
+      "length": 592,
+      "sha256": "ef2ababd1610c0e14e86658e6ad49ba75f553e6cdb193ae1c8d0dee8f3a00e96"
+    },
+    {
+      "file": "crl-this-update-fraction.der",
+      "length": 592,
+      "sha256": "ea79d2c651f03ffeb697b91c5829539cb55131c59df802f6f1b57b6c52be7fb2"
+    },
+    {
+      "file": "crl-duplicate-entry.der",
+      "length": 627,
+      "sha256": "79a5fde6677a9c616fa1f44fa304057425ed7c44e4728bcc2c1a6d6e20c0517b"
+    },
+    {
+      "file": "crl-duplicate-entry-extension.der",
+      "length": 602,
+      "sha256": "95c310a14cb84f09a7dcbe25933e205eaa0406d39b9ea8807e0af25631aaee42"
+    },
+    {
+      "file": "crl-duplicate-extension.der",
+      "length": 605,
+      "sha256": "bffb74e877ad7a34bb2d35a29979063de463d09f0d9d99542ec30d276fb7cc27"
+    },
+    {
+      "file": "crl-unknown-critical.der",
+      "length": 608,
+      "sha256": "a16c80eefe97f1baf82a95dd95039fa73fc2722c25fdb377a535b6e42c815c6a"
+    },
+    {
+      "file": "crl-entry-unknown-critical.der",
+      "length": 606,
+      "sha256": "7f6eaf5a2d8b7865a84951a486ba5a34980984a2bfe33aebbcdddf376ed66f28"
+    },
+    {
+      "file": "crl-delta.der",
+      "length": 608,
+      "sha256": "7a2df6066cbc7c0ccbc67b79081f54d7ab77c650311524ed4e3b81fd974f184d"
+    },
+    {
+      "file": "crl-partial-reasons.der",
+      "length": 594,
+      "sha256": "a1b80559975b16221b4ebb3edc69dc7ffe57f7b28b5d54e331b1c8a0f0372eac"
+    },
+    {
+      "file": "crl-good.der",
+      "length": 551,
+      "sha256": "320f84c6fa92a08c81c24262fc2662adf6d48f44de077007c930aaf4643cfbbf"
+    },
+    {
+      "file": "crl-revocation-earlier.der",
+      "length": 588,
+      "sha256": "015f24ea4ea488dd66938e0dd2c1f5037e17c78bcea217af19ac7af743cc144f"
+    },
+    {
+      "file": "root-crl-unknown-critical.der",
+      "length": 560,
+      "sha256": "1ce6914cd135f306c1b7cf88c3b9ea5dad0be6e945e38ae3f6148faf9a171287"
+    },
+    {
+      "file": "root-crl-duplicate-extension.der",
+      "length": 556,
+      "sha256": "ab0508511bdf97e52820c6a93ca14c727cae59377401ff9effe1009885a6b104"
+    },
+    {
+      "file": "root-crl-this-update-fraction.der",
+      "length": 544,
+      "sha256": "919cf335e412ad47bad13832371aabe690b5f3ee2e58bd02cbdb9fbab6b19e05"
+    }
+  ],
+  "source_inputs": [
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/ocsp-signer2.der",
+      "length": 1429,
+      "sha256": "678c5e9a0a9a244bc5799bc2f1606a8b847621de090525a5d7ce6e3a68854597"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-interm.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    }
+  ],
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1",
+    "certomancer": "0.16.0"
+  },
+  "assertions_enabled": true,
+  "provider_exclusions": []
+}

@@ -1,0 +1,93 @@
+{
+  "scope": "Only genuine root-signed certificate time-bound data + fresh public path diagnostics; no CMS/TST/native",
+  "signed_time": "2020-11-01T00:00:00Z",
+  "current_validation_time": "2020-12-25T00:00:00Z",
+  "modified_not_before": "2020-11-15T00:00:00Z",
+  "files": [
+    {
+      "file": "cert-root-original.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    {
+      "file": "cert-interm-original.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    {
+      "file": "cert-signer2-original.der",
+      "length": 1136,
+      "sha256": "eb1d7b1c82780108a1f6afbb9df0860f44af9ef9d5ebe355b8c369f1b2a3ead5"
+    },
+    {
+      "file": "cert-tsa-original.der",
+      "length": 997,
+      "sha256": "31d7cc1589f388928dec5e1c6ccd2f973d0881dfa9d4874ca3caf0926918a7a6"
+    },
+    {
+      "file": "cert-interm-not-before-nov15.der",
+      "length": 987,
+      "sha256": "acca3bcab3094f756f757cdf2681e2994468b2568aa74d7fe4122fec750719e6"
+    },
+    {
+      "file": "cert-tsa-not-before-nov15.der",
+      "length": 997,
+      "sha256": "b6e6d496685a071f4d08e29185892f456a20a1915314c1d3332a22fd401a77c1"
+    },
+    {
+      "file": "2020-11-01/crl-root.der",
+      "length": 542,
+      "sha256": "c557a02c4d152d5a1b9232b43c3f1408bdbe0365dfa2f680fb7e8fc41c7dc701"
+    },
+    {
+      "file": "2020-11-01/ocsp-signer2.der",
+      "length": 1407,
+      "sha256": "ce3ae2936cb90e29ba4d29bcfb437dac4db7e53d833521a88677474b9e3af177"
+    },
+    {
+      "file": "2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    },
+    {
+      "file": "2020-12-25/ocsp-signer2.der",
+      "length": 1429,
+      "sha256": "678c5e9a0a9a244bc5799bc2f1606a8b847621de090525a5d7ce6e3a68854597"
+    }
+  ],
+  "crypto_controls": [
+    {
+      "cert": "cert-interm-not-before-nov15.der",
+      "real_root_signature_valid": true,
+      "original_issuer_subject_spki_ski_serial_extensions_notafter_preserved": true,
+      "only_notbefore_changed_in_tbs": true,
+      "not_before": "2020-11-15T00:00:00Z"
+    },
+    {
+      "cert": "cert-tsa-not-before-nov15.der",
+      "real_root_signature_valid": true,
+      "original_issuer_subject_spki_ski_serial_extensions_notafter_preserved": true,
+      "only_notbefore_changed_in_tbs": true,
+      "not_before": "2020-11-15T00:00:00Z"
+    }
+  ],
+  "actual_bob_signature_still_valid_under_same_modified_intermediate_key": true,
+  "both_ocsp_full_certids_still_bind_real_same_issuer_and_bob": true,
+  "architecture": "testing-ca",
+  "actual_certificate_signing_key_label": "root",
+  "private_keys_written": false,
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1",
+    "certomancer": "0.16.0"
+  },
+  "assertions_enabled": true,
+  "provider_exclusions": [],
+  "limits": [
+    "No new TST or CMS is generated here",
+    "No signed TL/service boundary is supplied; unsupported service eligibility must remain closed",
+    "No context retiming or ordinary policy alteration is proposed"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "scope": "Tests-first real cryptographic authority adversaries; no native execution",
+  "current_time": "2020-12-25T00:00:00Z",
+  "root_revocation_time": "2020-12-01T00:00:00Z",
+  "files": [
+    {
+      "file": "cert-root.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    {
+      "file": "cert-interm.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    {
+      "file": "cert-signer1.der",
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5"
+    },
+    {
+      "file": "cert-signer2.der",
+      "length": 1136,
+      "sha256": "eb1d7b1c82780108a1f6afbb9df0860f44af9ef9d5ebe355b8c369f1b2a3ead5"
+    },
+    {
+      "file": "root-good.crl.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    },
+    {
+      "file": "real-delegated-good.ocsp.der",
+      "length": 1407,
+      "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3"
+    },
+    {
+      "file": "root-revokes-intermediate.crl.der",
+      "length": 577,
+      "sha256": "ab1e6ed26c1f95fd667535c2ecacf4ff47baa830c6904285c527ed9c54cb0cac"
+    },
+    {
+      "file": "fake-issuer-copied-signature.der",
+      "length": 987,
+      "sha256": "d007ef09a56f26992e5bd8f6bdcf8d4fd3a2630d6fd8caea6f17b1af668fbbf5"
+    },
+    {
+      "file": "fake-issuer-signed-good.ocsp.der",
+      "length": 1521,
+      "sha256": "0fb99ca22290cad9dee7f27a836a3cba06fb6b532620bf432c3cf4eb8d67c3a6"
+    },
+    {
+      "file": "fake-issuer-bad-raw-signature.ocsp.der",
+      "length": 1521,
+      "sha256": "09c42dc3561eaf6c0cba14b37545fc37c05504a4a1dcdb5cf5a2487d78889aff"
+    },
+    {
+      "file": "leaf-real-key-compromise.crl.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d"
+    },
+    {
+      "file": "leaf-crl-inner-sha384-outer-sha256.der",
+      "length": 590,
+      "sha256": "70b325096b0dabd42fc6505c125ac7728ee3de31fce9724db4cd100836281603"
+    }
+  ],
+  "source_inputs": [
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/ocsp-signer1.der",
+      "length": 1407,
+      "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-interm.der",
+      "length": 590,
+      "sha256": "4893717a9edf83e4d446c73a0422e8e1e1c05545598d768ec02bf39ef001476d"
+    }
+  ],
+  "crypto_controls": {
+    "genuine_delegated_ocsp_signature_valid": true,
+    "root_revoked_intermediate_crl_signature_valid": true,
+    "fake_issuer_certificate_signature_invalid": true,
+    "fake_issuer_copies_real_issuer_dn_serial_signature_bits": true,
+    "fake_issuer_spki_is_distinct_actual_signer1_key": true,
+    "fake_key_ocsp_signature_valid": true,
+    "fake_key_ocsp_not_verifiable_by_actual_issuer": true,
+    "full_original_leaf_actual_issuer_certid_unchanged": true,
+    "bad_raw_ocsp_signature_rejected": true,
+    "bad_signature_tbs_identical": true,
+    "crl_algorithm_mismatch_actual_outer_sha256_signature_valid": true,
+    "crl_algorithm_mismatch_signed_inner_sha384_outer_sha256": true
+  },
+  "private_keys_written": false,
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1",
+    "certomancer": "0.16.0"
+  },
+  "assertions_enabled": true,
+  "provider_exclusions": []
+}

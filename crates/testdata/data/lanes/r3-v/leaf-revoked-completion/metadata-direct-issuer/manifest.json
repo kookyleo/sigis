@@ -1,0 +1,66 @@
+{
+  "scope": "Actual direct issuer authority positive/negative; tests-first, no native",
+  "current_time": "2020-12-25T00:00:00Z",
+  "files": [
+    {
+      "file": "cert-root.der",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    {
+      "file": "cert-interm.der",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    {
+      "file": "cert-signer1.der",
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5"
+    },
+    {
+      "file": "actual-direct-issuer-good.ocsp.der",
+      "length": 1521,
+      "sha256": "29a4fde76ae82b52f83a9c99417a06dc9a8d1e9aac5664d7edcdd9cb6f4e8f39"
+    },
+    {
+      "file": "actual-direct-issuer-bad-raw-signature.ocsp.der",
+      "length": 1521,
+      "sha256": "75305ffe85b85df85734f96f3ed1c33f63867eeeb0f43662f654b5fc2dec27a6"
+    },
+    {
+      "file": "root-good.crl.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    }
+  ],
+  "crypto_controls": {
+    "actual_embedded_issuer_der_exact": true,
+    "responder_by_name_matches_actual_issuer": true,
+    "original_full_certid_and_good_status_preserved": true,
+    "actual_issuer_key_signature_valid": true,
+    "bad_raw_signature_invalid": true,
+    "bad_raw_signature_same_tbs_and_certificate": true
+  },
+  "source_inputs": [
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/ocsp-signer1.der",
+      "length": 1407,
+      "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    }
+  ],
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1",
+    "certomancer": "0.16.0"
+  },
+  "assertions_enabled": true,
+  "private_keys_written": false,
+  "provider_exclusions": []
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "Read-only copy of existing authentic original Certomancer signer1 certificate. No generation/signing/runtime validation.",
+  "source_git": "873c052bbb32b19dda70b6f26166b9694f3e5c5e",
+  "source_relative": "crates/testdata/data/lanes/d/pki/testing-ca/signer1.crt",
+  "source_sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5",
+  "source_length": 1140,
+  "files": [
+    {
+      "file": "cert-signer1.der",
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5"
+    }
+  ],
+  "original_genuine_good_ocsp": {
+    "relative": "2020-12-25/ocsp-signer1.der",
+    "length": 1407,
+    "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3"
+  },
+  "frozen_metadata_manifest_sha256": "b0d3f3bf310c34c1f954f0f3c724e67cde94ae6f248e2d2820e3a3368583cbf6",
+  "native_calls": 0,
+  "cargo_calls": 0,
+  "oracle_calls": 0
+}

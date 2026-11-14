@@ -1,0 +1,38 @@
+{
+  "scope": "Static exact certificate copy identities, not another execution",
+  "architecture": "testing-ca",
+  "actual_ocsp_signing_key_label": "interm",
+  "certificate_origins": [
+    {
+      "fixture": "cert-root.der",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/root.crt",
+      "length": 976,
+      "sha256": "2b6dea78737d478eaf911cddc71d58b0c557eceb1623e6475dfa5770d3ff26fa"
+    },
+    {
+      "fixture": "cert-interm.der",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/interm.crt",
+      "length": 987,
+      "sha256": "0e8fa78719fdd97ac8f9a531fa32929462d65306b9c58a63881ef21ca1a9509f"
+    },
+    {
+      "fixture": "cert-signer1.der",
+      "source": "crates/testdata/data/lanes/d/pki/testing-ca/signer1.crt",
+      "length": 1140,
+      "sha256": "449ecb59122767b13cbfbb6e75feb98bac90a4e1f782b4da43c071af94329aa5"
+    }
+  ],
+  "source_evidence_inputs": [
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/ocsp-signer1.der",
+      "length": 1407,
+      "sha256": "7835d257a48a82c6a115735ce8665bdac5560646d43bc8e82736268133b185b3"
+    },
+    {
+      "path": "/home/l/D/kooky/sigis-wt/r3-v-leaf-revoked-completion/crates/testdata/data/lanes/r3-v/leaf-revoked-completion/2020-12-25/crl-root.der",
+      "length": 542,
+      "sha256": "5b8a25d50da418ce93b9f73ea14e590c18fcba684be79e30bb2e8cc650ed7a80"
+    }
+  ],
+  "private_keys_written": false
+}
