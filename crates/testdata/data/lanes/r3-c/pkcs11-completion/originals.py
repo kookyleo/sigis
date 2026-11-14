@@ -20,7 +20,8 @@ FUNCTIONS = [
     "test_cli_addsig_pkcs11_with_setup_pull_certs",
     "test_cli_addsig_pkcs11_with_setup_read_certs_from_file",
     "test_cli_addsig_pkcs11_with_setup_raw_ecdsa",
-    "test_cli_addsig_pkcs11_with_setup_and_pin_prompt",
+    "test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt",
+    "test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
 ]
 
 

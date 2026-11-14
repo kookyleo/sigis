@@ -18,7 +18,8 @@ use std::{
 };
 
 fn fixture_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../testdata/data/lanes/r3-c/pkcs11-signing-credentials")
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../testdata/data/lanes/r3-c/pkcs11-signing-credentials")
 }
 
 fn module() -> String {
@@ -102,8 +103,7 @@ fn check_pdf(bytes: &[u8], cert_dir: &Path) {
 }
 
 fn python() -> String {
-    std::env::var("HANKO_ORACLE")
-        .unwrap_or_else(|_| "/tmp/pyhanko-oracle/venv/bin/python".into())
+    std::env::var("HANKO_ORACLE").unwrap_or_else(|_| "/tmp/pyhanko-oracle/venv/bin/python".into())
 }
 
 fn overlay() -> String {
@@ -114,7 +114,10 @@ fn overlay() -> String {
 
 fn run(name: &str, case: &str) {
     if std::env::var("PKCS11_CREDENTIAL_CHILD").as_deref() == Ok(name) {
-        body(&PathBuf::from(std::env::var("PKCS11_CREDENTIAL_ROOT").unwrap()), case);
+        body(
+            &PathBuf::from(std::env::var("PKCS11_CREDENTIAL_ROOT").unwrap()),
+            case,
+        );
         return;
     }
     let root = tempfile::tempdir().unwrap();
@@ -135,10 +138,14 @@ fn run(name: &str, case: &str) {
     fs::write(root.path().join("prepare.stdout.log"), &prepared.stdout).unwrap();
     fs::write(root.path().join("prepare.stderr.log"), &prepared.stderr).unwrap();
     if !prepared.status.success() {
-        panic!("Fixture provisioning failed; inspect {}", root.keep().display());
+        panic!(
+            "Fixture provisioning failed; inspect {}",
+            root.keep().display()
+        );
     }
     let mut child = Command::new("/proc/self/exe");
-    child.args(["--exact", name, "--nocapture", "--test-threads=1"])
+    child
+        .args(["--exact", name, "--nocapture", "--test-threads=1"])
         .env("PKCS11_CREDENTIAL_CHILD", name)
         .env("PKCS11_CREDENTIAL_ROOT", &fixture)
         .env("SOFTHSM2_CONF", fixture.join("provider/softhsm2.conf"))
@@ -153,7 +160,10 @@ fn run(name: &str, case: &str) {
     fs::write(root.path().join("child.stdout.log"), output.stdout).unwrap();
     fs::write(root.path().join("child.stderr.log"), output.stderr).unwrap();
     if !output.status.success() {
-        panic!("Credential control failed; inspect {}", root.keep().display());
+        panic!(
+            "Credential control failed; inspect {}",
+            root.keep().display()
+        );
     }
 }
 
@@ -201,15 +211,25 @@ fn body(root: &Path, case: &str) {
         ..Default::default()
     };
     let args = vec![
-        "--config".into(), config.display().to_string(),
-        "sign".into(), "addsig".into(), "--field".into(), "Sig1".into(),
-        "pkcs11".into(), "--p11-setup".into(), "test".into(),
-        input.display().to_string(), output.display().to_string(),
+        "--config".into(),
+        config.display().to_string(),
+        "sign".into(),
+        "addsig".into(),
+        "--field".into(),
+        "Sig1".into(),
+        "pkcs11".into(),
+        "--p11-setup".into(),
+        "test".into(),
+        input.display().to_string(),
+        output.display().to_string(),
     ];
     let result = sigis_cli::run_with_runtime(&args, &PluginRegistry::default(), &runtime);
     assert_eq!(fs::read(&input).unwrap(), input_bytes);
     assert_eq!(fs::read_to_string(&config).unwrap(), setup);
-    assert_eq!(calls.load(Ordering::SeqCst), usize::from(case == "environment"));
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        usize::from(case == "environment")
+    );
     for secret in ["1234", "incorrect-user", "incorrect-signing"] {
         assert!(!result.stdout.contains(secret) && !result.stderr.contains(secret));
     }
@@ -221,7 +241,9 @@ fn body(root: &Path, case: &str) {
         if case == "generic-password" {
             assert!(result.stderr.contains("User PIN prompt"));
         } else {
-            assert!(!result.stderr.contains("Unsupported PKCS#11 signing requirement"));
+            assert!(!result
+                .stderr
+                .contains("Unsupported PKCS#11 signing requirement"));
         }
         return;
     }
@@ -238,30 +260,48 @@ fn body(root: &Path, case: &str) {
         .unwrap();
     fs::write(root.join("peer.stdout.log"), &peer.stdout).unwrap();
     fs::write(root.join("peer.stderr.log"), &peer.stderr).unwrap();
-    assert!(peer.status.success(), "Same-output pinned reference validation failed");
+    assert!(
+        peer.status.success(),
+        "Same-output pinned reference validation failed"
+    );
 }
 
 #[test]
 fn configured_signing_pin_authenticates_real_rsa_signature() {
-    run("configured_signing_pin_authenticates_real_rsa_signature", "configured");
+    run(
+        "configured_signing_pin_authenticates_real_rsa_signature",
+        "configured",
+    );
 }
 
 #[test]
 fn environment_signing_pin_preserves_user_prompt_authority() {
-    run("environment_signing_pin_preserves_user_prompt_authority", "environment");
+    run(
+        "environment_signing_pin_preserves_user_prompt_authority",
+        "environment",
+    );
 }
 
 #[test]
 fn wrong_signing_pin_cannot_fall_back_to_correct_user_pin() {
-    run("wrong_signing_pin_cannot_fall_back_to_correct_user_pin", "wrong-signing");
+    run(
+        "wrong_signing_pin_cannot_fall_back_to_correct_user_pin",
+        "wrong-signing",
+    );
 }
 
 #[test]
 fn wrong_user_pin_cannot_be_replaced_by_correct_signing_pin() {
-    run("wrong_user_pin_cannot_be_replaced_by_correct_signing_pin", "wrong-user");
+    run(
+        "wrong_user_pin_cannot_be_replaced_by_correct_signing_pin",
+        "wrong-user",
+    );
 }
 
 #[test]
 fn generic_document_password_cannot_authorize_token_user_login() {
-    run("generic_document_password_cannot_authorize_token_user_login", "generic-password");
+    run(
+        "generic_document_password_cannot_authorize_token_user_login",
+        "generic-password",
+    );
 }
