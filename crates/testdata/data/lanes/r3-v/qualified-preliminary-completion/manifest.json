@@ -1,0 +1,353 @@
+{
+  "unique_upstream_credit": 0,
+  "generated_by": "generate.py with genuine cryptography certificate/CRL signatures and pinned SimpleSigner/DummyTimeStamper",
+  "signed_at": "2020-08-01T00:00:00+00:00",
+  "expired_validation_time": "2025-03-01T22:00:00+00:00",
+  "root": "root.der",
+  "tsa": "tsa.der",
+  "content": "content.bin",
+  "cases": [
+    {
+      "id": "good",
+      "cms": "good.cms.der",
+      "signer": "good.der",
+      "other_certs": [
+        "good-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": true,
+      "intended_invalid": false
+    },
+    {
+      "id": "name_constraints",
+      "cms": "name_constraints.cms.der",
+      "signer": "name_constraints.der",
+      "other_certs": [
+        "name_constraints-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": false,
+      "intended_invalid": true
+    },
+    {
+      "id": "unknown_critical",
+      "cms": "unknown_critical.cms.der",
+      "signer": "unknown_critical.der",
+      "other_certs": [
+        "unknown_critical-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": false,
+      "intended_invalid": true
+    },
+    {
+      "id": "path_length",
+      "cms": "path_length.cms.der",
+      "signer": "path_length.der",
+      "other_certs": [
+        "path_length-issuer0.der",
+        "path_length-issuer1.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": false,
+      "intended_invalid": true
+    },
+    {
+      "id": "policy_mismatch",
+      "cms": "policy_mismatch.cms.der",
+      "signer": "policy_mismatch.der",
+      "other_certs": [
+        "policy_mismatch-issuer0.der"
+      ],
+      "required_policy": "1.2.3.4.1",
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": false,
+      "intended_invalid": true
+    },
+    {
+      "id": "bad_cert_signature",
+      "cms": "bad_cert_signature.cms.der",
+      "signer": "bad_cert_signature.der",
+      "other_certs": [
+        "bad_cert_signature-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": false,
+      "intended_invalid": true
+    },
+    {
+      "id": "ds_only",
+      "cms": "ds_only.cms.der",
+      "signer": "ds_only.der",
+      "other_certs": [
+        "ds_only-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2025-03-01T22:00:00+00:00",
+      "revocation": "none",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": true,
+      "intended_invalid": false
+    },
+    {
+      "id": "revoked_nr",
+      "cms": "revoked_nr.cms.der",
+      "signer": "revoked_nr.der",
+      "other_certs": [
+        "revoked_nr-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2021-06-01T00:00:00+00:00",
+      "revocation": "require",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": true,
+      "intended_invalid": false,
+      "crls": [
+        "revoked_nr-leaf.crl.der",
+        "root.crl.der"
+      ]
+    },
+    {
+      "id": "revoked_ds",
+      "cms": "revoked_ds.cms.der",
+      "signer": "revoked_ds.der",
+      "other_certs": [
+        "revoked_ds-issuer0.der"
+      ],
+      "required_policy": null,
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "validation_time": "2021-06-01T00:00:00+00:00",
+      "revocation": "require",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "historical_valid": true,
+      "intended_invalid": false,
+      "crls": [
+        "revoked_ds-leaf.crl.der",
+        "root.crl.der"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "root.der",
+      "length": 793,
+      "sha256": "88106d24bf6e61c4ff151b49e1f21ada4b93044ed866d85551305054437a97e0"
+    },
+    {
+      "file": "tsa.der",
+      "length": 810,
+      "sha256": "a8bf93628936ca19a5075627a5a8238723fe889c715b9e6d142db8b8d37b2e15"
+    },
+    {
+      "file": "content.bin",
+      "length": 45,
+      "sha256": "b21608d31857112663c5af16f40769ebaede59c2770fb3d2052c7edece2391bc"
+    },
+    {
+      "file": "good.cms.der",
+      "length": 5360,
+      "sha256": "f85f623e01ca05113a70ceb5e84462a600c46a783b7c38befce3cf1fcd499fdb"
+    },
+    {
+      "file": "good.der",
+      "length": 795,
+      "sha256": "e1683c8263f734ea2109dd0dea7df9a8249e04fa1cebb98ddc8fe6cd2b7380c0"
+    },
+    {
+      "file": "good-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "name_constraints.cms.der",
+      "length": 5441,
+      "sha256": "a8f41c5dde173d1ceda5a2059fc06fb0c4a6bbc159978b9c6a4cab9c7230bb7c"
+    },
+    {
+      "file": "name_constraints.der",
+      "length": 836,
+      "sha256": "bd581c397184e31766d7585ee26d306a27e0130c7500faca3cddaf05d182c00d"
+    },
+    {
+      "file": "name_constraints-issuer0.der",
+      "length": 839,
+      "sha256": "a8fcca5f4d615429b663e695e6de3fd0861ba2cbc92a4e9504840ae1bedd07ac"
+    },
+    {
+      "file": "unknown_critical.cms.der",
+      "length": 5388,
+      "sha256": "e4d710b68beb7e3a503dd86075a483fa820ef9fffaa19fa0b34d85ff6036dde2"
+    },
+    {
+      "file": "unknown_critical.der",
+      "length": 823,
+      "sha256": "776ed553d671ca5515c42d9e7bd04b8c594198d87a5a5b008d0734aebc51ef55"
+    },
+    {
+      "file": "unknown_critical-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "path_length.cms.der",
+      "length": 6166,
+      "sha256": "abb0f5a1f49987fe474bcf246585af96fd4b6dda751ed3e4149747ada70af734"
+    },
+    {
+      "file": "path_length.der",
+      "length": 800,
+      "sha256": "671c4ef4849ea99a6254fd719b215fa5c769a8b873396b173234b35c18cc4c63"
+    },
+    {
+      "file": "path_length-issuer0.der",
+      "length": 806,
+      "sha256": "92389d05af721c642b44e27562184c6b545f71f5a6a3f296edecf113248cd554"
+    },
+    {
+      "file": "path_length-issuer1.der",
+      "length": 800,
+      "sha256": "c59a8aca7258c2edaed2068f2c62f01960bee2a38315ef9b77463fb1d6202bb6"
+    },
+    {
+      "file": "policy_mismatch.cms.der",
+      "length": 5393,
+      "sha256": "fd76d2613ddd51b978710e86cba029714604596a8bf898811dcac72726efa68b"
+    },
+    {
+      "file": "policy_mismatch.der",
+      "length": 821,
+      "sha256": "f5bcf66deae4d70db52dc8382fb34f6d1f5aa78b0b3713174f667f302529a962"
+    },
+    {
+      "file": "policy_mismatch-issuer0.der",
+      "length": 816,
+      "sha256": "27c00dd218e7f7ba61a7b179ccf302ada2f3278998a84afa332c6588d91acaa1"
+    },
+    {
+      "file": "bad_cert_signature.cms.der",
+      "length": 5374,
+      "sha256": "af71d13a058cc75de0626f8d18006c771b2a75107ed1d595175c4440dd6650f7"
+    },
+    {
+      "file": "bad_cert_signature.der",
+      "length": 809,
+      "sha256": "b18de457999c68889b6a75c63c0bad8f12e0c62c4ba6b1dfdbf2a50917855000"
+    },
+    {
+      "file": "bad_cert_signature-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "ds_only.cms.der",
+      "length": 5363,
+      "sha256": "c8e27d8ca9df1384983c11d571de7138d5be9b4a1d7d5396d1617a5d51070142"
+    },
+    {
+      "file": "ds_only.der",
+      "length": 798,
+      "sha256": "21057327d9251e13c81c796e7817184a2c1689de60acfc94bee1e343253c1e70"
+    },
+    {
+      "file": "ds_only-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "revoked_nr.cms.der",
+      "length": 5366,
+      "sha256": "ce3bf68ae3ffe8f35587f0c13ac2ffabdff96aecea5a82eb21818a6d8db63198"
+    },
+    {
+      "file": "revoked_nr.der",
+      "length": 801,
+      "sha256": "d62757debadc3157c460fb1ebcc1a8c66ad7acff2c32db3d8f409d58d5a42e33"
+    },
+    {
+      "file": "revoked_nr-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "revoked_nr-leaf.crl.der",
+      "length": 452,
+      "sha256": "7fd01e61798c141364b8aa5512a2d1de2ff665dab6d462e52d63a96b519ac3bf"
+    },
+    {
+      "file": "revoked_ds.cms.der",
+      "length": 5366,
+      "sha256": "b4d4c0c298a59cd762c42eb6e336db233e831b031d761f5fdb27d7de26f831df"
+    },
+    {
+      "file": "revoked_ds.der",
+      "length": 801,
+      "sha256": "9aa341f6249bcdc76f164e9337ed7002ebb5f2832ede514b10db40006a9853f1"
+    },
+    {
+      "file": "revoked_ds-issuer0.der",
+      "length": 801,
+      "sha256": "9433026cde7137e2ba6a609f2d84a4277f4f8ce73a2a8b793bbd3506f16f9979"
+    },
+    {
+      "file": "revoked_ds-leaf.crl.der",
+      "length": 452,
+      "sha256": "23caca5d20faf42a6fd4a5fda5ee6fcbc9417349dfaa15c92002a49ad23535e4"
+    },
+    {
+      "file": "root.crl.der",
+      "length": 407,
+      "sha256": "c8158e2a0bb3a0275f9e70831b3e8ba5691814823e2559c493e69be8ac297287"
+    }
+  ],
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1"
+  },
+  "assertions_enabled": true,
+  "no_private_keys_persisted": true
+}

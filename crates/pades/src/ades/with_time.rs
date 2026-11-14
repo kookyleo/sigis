@@ -552,7 +552,8 @@ mod tests {
         let r = with_time_result(status(None, Some(t(1_600_000_000))), &q, None, None, now);
         assert_eq!(name(&r), "OK");
         assert_eq!(r.best_signature_time, Some(t(1_600_000_000)));
-        // Revoked after the timestamp: the POE rescues the signature.
+        // Intentional hardening: an earlier timestamp does not complete the
+        // MAIN checks skipped by the current revoked path. Keep the refusal.
         let r = with_time_result(
             status(revoked(t(1_700_000_000)), Some(t(1_600_000_000))),
             &q,
@@ -560,7 +561,8 @@ mod tests {
             None,
             now,
         );
-        assert_eq!(name(&r), "OK");
+        assert_eq!(name(&r), "REVOKED_NO_POE");
+        assert!(!r.api_status.as_ref().unwrap().signature.trusted());
         // Revoked before the timestamp: stays REVOKED_NO_POE.
         let r = with_time_result(
             status(revoked(t(1_500_000_000)), Some(t(1_600_000_000))),
@@ -570,7 +572,7 @@ mod tests {
             now,
         );
         assert_eq!(name(&r), "REVOKED_NO_POE");
-        // Earlier POE wins.
+        // Earlier POE remains a bound; it cannot upgrade incomplete MAIN trust.
         let r = with_time_result(
             status(revoked(t(1_550_000_000)), Some(t(1_600_000_000))),
             &q,
@@ -578,7 +580,8 @@ mod tests {
             None,
             now,
         );
-        assert_eq!(name(&r), "OK");
+        assert_eq!(name(&r), "REVOKED_NO_POE");
+        assert!(!r.api_status.as_ref().unwrap().signature.trusted());
         assert_eq!(r.best_signature_time, Some(t(1_500_000_000)));
         // Content timestamp later than the signature timestamp.
         let r = with_time_result(
@@ -620,6 +623,25 @@ mod tests {
             )),
             "TRY_LATER"
         );
+    }
+
+    #[test]
+    fn cached_ok_does_not_authorize_clearing_a_real_main_failure() {
+        let t = |s| Moment::from_unix_secs(s);
+        let mut failed = status(revoked(t(1_700_000_000)), Some(t(1_600_000_000)));
+        failed.signature.trust_problem_indic = Some(AdesPassed::OK.into());
+        let before = format!("{:?}", failed.signature);
+        let result = with_time_result(
+            failed,
+            &QualificationSpec::default(),
+            None,
+            None,
+            t(2_000_000_000),
+        );
+        assert_ne!(name(&result), "OK");
+        let after = result.api_status.unwrap();
+        assert!(!after.signature.trusted());
+        assert_eq!(format!("{:?}", after.signature), before);
     }
 
     #[test]

@@ -1,0 +1,296 @@
+{
+  "unique_upstream_credit": 0,
+  "generated_by": "generate.py genuine cryptography certificate signatures, pinned PdfSigner and DummyTimeStamper",
+  "signed_at": "2020-08-01T00:00:00+00:00",
+  "current_validation_time": "2021-06-01T00:00:00+00:00",
+  "expired_validation_time": "2025-03-01T22:00:00+00:00",
+  "root": "root.der",
+  "tsa": "tsa.der",
+  "field_name": "Signature1",
+  "cases": [
+    {
+      "id": "good",
+      "file": "good.pdf",
+      "signer": "good.der",
+      "other_certs": [
+        "good-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": false,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "path_length",
+      "file": "path_length.pdf",
+      "signer": "path_length.der",
+      "other_certs": [
+        "path_length-issuer0.der",
+        "path_length-issuer1.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "bad_cert_signature",
+      "file": "bad_cert_signature.pdf",
+      "signer": "bad_cert_signature.der",
+      "other_certs": [
+        "bad_cert_signature-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "ds_only",
+      "file": "ds_only.pdf",
+      "signer": "ds_only.der",
+      "other_certs": [
+        "ds_only-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "name_constraints",
+      "file": "name_constraints.pdf",
+      "signer": "name_constraints.der",
+      "other_certs": [
+        "name_constraints-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "unknown_critical",
+      "file": "unknown_critical.pdf",
+      "signer": "unknown_critical.der",
+      "other_certs": [
+        "unknown_critical-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "wrong_tsa_purpose",
+      "file": "wrong_tsa_purpose.pdf",
+      "signer": "wrong_tsa_purpose.der",
+      "other_certs": [
+        "wrong_tsa_purpose-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "wrong-purpose-tsa.der",
+      "timestamp_imprint_expected_valid": true
+    },
+    {
+      "id": "corrupt_imprint",
+      "file": "corrupt_imprint.pdf",
+      "signer": "corrupt_imprint.der",
+      "other_certs": [
+        "corrupt_imprint-issuer0.der"
+      ],
+      "signed_at": "2020-08-01T00:00:00+00:00",
+      "key_usage": [
+        "non_repudiation"
+      ],
+      "revocation": "none",
+      "intended_invalid": true,
+      "tsa": "tsa.der",
+      "timestamp_imprint_expected_valid": false
+    }
+  ],
+  "files": [
+    {
+      "file": "root.der",
+      "length": 813,
+      "sha256": "c80e56966f85ced543acd97e756cbc3404a8466cd53e0abdea577f1aab52f1b7"
+    },
+    {
+      "file": "tsa.der",
+      "length": 830,
+      "sha256": "814fb2c8d38aa799084dab6b623ee9622c9e3439ed88745ed3dec30edc17c52c"
+    },
+    {
+      "file": "wrong-purpose-tsa.der",
+      "length": 832,
+      "sha256": "9a8c4f87e10b5730c3f705e7ed5ff6af1cf18537cdd498414aa2a42654982948"
+    },
+    {
+      "file": "good.pdf",
+      "length": 18308,
+      "sha256": "280538bbe54adaeb7c4632b5d9cb7607676110c785270f7cedcf9f5125faf7cb"
+    },
+    {
+      "file": "good.der",
+      "length": 815,
+      "sha256": "c26f6ca469399df6970f8a2fba5f36b8f671178b0233203c172bd34b3c492fcd"
+    },
+    {
+      "file": "good-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    },
+    {
+      "file": "path_length.pdf",
+      "length": 20606,
+      "sha256": "b59a4b740351ec646d53cce97690df0425b0a646ae109e205418a1dda5b6c260"
+    },
+    {
+      "file": "path_length.der",
+      "length": 810,
+      "sha256": "37d5af1b0436bc30b9656b1d7bf5e32cf36adeb7b0ff8146a9a5ef293d112989"
+    },
+    {
+      "file": "path_length-issuer0.der",
+      "length": 806,
+      "sha256": "28d9b319bbfcb872915443496af887409dbd779401556b1ba73670b69ec0453f"
+    },
+    {
+      "file": "path_length-issuer1.der",
+      "length": 810,
+      "sha256": "8e36df0fa4a40f09c2c36863e10f8b6885b7daeafe8f9bc73a63272ff715f02b"
+    },
+    {
+      "file": "bad_cert_signature.pdf",
+      "length": 18350,
+      "sha256": "8ab4cf4fb3f7f5516e18e52ea16e6c82308e126c12f674fbc372e3ac8f001b78"
+    },
+    {
+      "file": "bad_cert_signature.der",
+      "length": 829,
+      "sha256": "0ca50b5ca6a88ef616ea8e39a4a8e041568b46380fc08e50f44df4484ea36e28"
+    },
+    {
+      "file": "bad_cert_signature-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    },
+    {
+      "file": "ds_only.pdf",
+      "length": 18316,
+      "sha256": "b6b8d6920c52a6bed68310ef28caf2d1221e8ea6dff73337cb85e3b5c7b066af"
+    },
+    {
+      "file": "ds_only.der",
+      "length": 818,
+      "sha256": "36256daee3baa2f6b8125eb8ea08a5053148a3ad58a94b56781b6bc3bfa7ac93"
+    },
+    {
+      "file": "ds_only-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    },
+    {
+      "file": "name_constraints.pdf",
+      "length": 18430,
+      "sha256": "da2c10e7f2c924152f318b83e47dab95861858f1ba6a758ef07a2a6ba1728c02"
+    },
+    {
+      "file": "name_constraints.der",
+      "length": 846,
+      "sha256": "471da68317c41410f6b2d53c9a73cc98a7490655f012fe4aafdabee3bb379e33"
+    },
+    {
+      "file": "name_constraints-issuer0.der",
+      "length": 849,
+      "sha256": "0890fe94dea5c1057253f1514fb8b82e35059663b458884cdad796641e2da55e"
+    },
+    {
+      "file": "unknown_critical.pdf",
+      "length": 18392,
+      "sha256": "317010069e4a36f0a5ddeeb5d2b5b7b35ef020f594443f78dae81d9ef475cb9c"
+    },
+    {
+      "file": "unknown_critical.der",
+      "length": 843,
+      "sha256": "daf799482e16b7e470ae0c234d42df343f45077ef9b235a685fbe7def767db1b"
+    },
+    {
+      "file": "unknown_critical-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    },
+    {
+      "file": "wrong_tsa_purpose.pdf",
+      "length": 18358,
+      "sha256": "acc348e0e3f74c9ff11d5e4caee5d21751fb41f0a0f6a98043a514ab978de6a8"
+    },
+    {
+      "file": "wrong_tsa_purpose.der",
+      "length": 828,
+      "sha256": "bcff85a20308a3d686978f511c514936b8f2d728c6d4edef1254b0657a577415"
+    },
+    {
+      "file": "wrong_tsa_purpose-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    },
+    {
+      "file": "corrupt_imprint.pdf",
+      "length": 18340,
+      "sha256": "4d11518bb238de0acb65622a8b2f809a594a002a192695e5fe163175b37054bd"
+    },
+    {
+      "file": "corrupt_imprint.der",
+      "length": 826,
+      "sha256": "bc1359a53ede51731964ab6f58e4ba9925aafd2d72466375a2fec237d6b46263"
+    },
+    {
+      "file": "corrupt_imprint-issuer0.der",
+      "length": 821,
+      "sha256": "1ab07030c1c7d125302736fde5074380c263fcea2734557afcb88fd90f8ffb55"
+    }
+  ],
+  "input_origin": {
+    "path": "/home/l/D/kooky/sigis-wt/r3-v-withtime-containment/crates/testdata/data/pyhanko/pdf/minimal.pdf",
+    "sha256": "0e8bbc125c7bc3bb13dedf28990ae93aa375387481ba67a0471806c89a1cfd16",
+    "length": 739
+  },
+  "versions": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1"
+  },
+  "assertions_enabled": true,
+  "no_private_keys_persisted": true
+}
