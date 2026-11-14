@@ -288,8 +288,16 @@ fn pre_revocation_poe_preserves_incomplete_main_refusal() {
     assert!(initial.signature.validation_path.is_some());
     assert!(initial.timestamp_validity.as_ref().unwrap().trusted());
 
-    let result =
-        with_time_validation(&bytes, None, &ctx, &QualificationSpec::default(), None).unwrap();
+    // This guard is deliberately the PURE status transformer: the ordinary
+    // failed CMS payload above is not a complete current MAIN evaluation.
+    // Context-bearing recovery has a separate actual-producer positive test.
+    let result = sigis_pades::ades::with_time::with_time_result(
+        initial.clone(),
+        &QualificationSpec::default(),
+        None,
+        None,
+        ctx.moment(),
+    );
     assert_eq!(result.ades_subindic.standard_name(), "REVOKED_NO_POE");
     assert_eq!(
         result.best_signature_time,

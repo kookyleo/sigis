@@ -145,6 +145,123 @@ fn require_contained(
     );
 }
 
+// Proposed exact-fixture positive; it is NOT a generic exception to
+// require_contained and must never be used for a public failed status alone.
+fn require_current_key_compromise_completion(
+    bytes: &[u8],
+    content: &[u8],
+    ctx: &ValidationContext,
+    before: &StandardCmsSignatureStatus,
+    result: &sigis_pades::ades::with_time::WithTimeValidationResult,
+    entry: &str,
+) {
+    use sigis_cms::validate::evaluate_cms_leaf_revocation;
+    let expected_t = Moment::parse_rfc3339("2020-08-01T00:00:00Z").unwrap();
+    let expected_r = Moment::parse_rfc3339("2021-01-01T00:00:00Z").unwrap();
+    let expected_v = Moment::parse_rfc3339("2021-06-01T00:00:00Z").unwrap();
+    assert_eq!(
+        hash(bytes),
+        "ce3bf68ae3ffe8f35587f0c13ac2ffabdff96aecea5a82eb21818a6d8db63198"
+    );
+    assert_eq!(
+        hash(content),
+        "b21608d31857112663c5af16f40769ebaede59c2770fb3d2052c7edece2391bc"
+    );
+    assert_eq!(ctx.moment(), expected_v);
+    assert_eq!(ctx.best_signature_time(), expected_v);
+    assert!(expected_t < expected_r && expected_r <= expected_v);
+    let source_context = format!("{ctx:?}");
+    let algorithm_policy = ctx.algorithm_policy_arc();
+    let exact = match entry {
+        "exact_cms" => Some(predicate()),
+        "ordinary_cms" => None,
+        _ => panic!("pure/unknown entry cannot use the completion assertion"),
+    };
+    let selected_options = CmsValidationOptions {
+        validation_order: CmsValidationOrder::SignerFirst,
+        exact_key_usage_settings: exact,
+        ..Default::default()
+    };
+    assert!(selected_options.validation_path.is_none());
+    assert!(selected_options.pkix_validation_params.is_none());
+    // This diagnostic CMS operation creates its OWN opaque CV facts and
+    // consumes its OWN selected token. Its value is never supplied to the
+    // independently measured WithTime operation or constructed from `before`.
+    let operation = evaluate_cms_leaf_revocation(
+        bytes,
+        SignedContent::Data(content),
+        ctx,
+        &selected_options,
+    )
+    .unwrap();
+    let frozen = operation.unresolved_status().clone();
+    assert!(frozen.signature.intact && frozen.signature.valid);
+    assert!(!frozen.signature.trusted());
+    assert!(frozen.signature.revoked());
+    assert_eq!(
+        format!("{:?}", frozen.signature),
+        format!("{:?}", before.signature),
+        "the fully checked eligible row retains the original current failure"
+    );
+    assert_eq!(
+        frozen.signature.trust_problem_indic.unwrap().standard_name(),
+        "REVOKED_NO_POE"
+    );
+    assert_eq!(frozen.signature.validation_time, Some(expected_v));
+    let event = frozen.signature.revocation_details.as_ref().unwrap();
+    assert!(!event.ca_revoked);
+    assert_eq!(event.revocation_reason, Some("key_compromise"));
+    assert_eq!(event.revocation_date, Some(expected_r));
+    assert_eq!(frozen.signature.error_time_horizon, Some(expected_r));
+    assert!(frozen.content_timestamp_validity.is_none());
+    assert!(frozen.ac_attrs.is_none());
+    assert!(frozen.ac_validation_errs.as_ref().is_none_or(Vec::is_empty));
+    let token = operation
+        .eligible_signature_timestamp()
+        .expect("only the producer's own fully eligible canonical bound");
+    assert!(token.signature.intact && token.signature.valid && token.trusted());
+    assert_eq!(token.timestamp, expected_t);
+    assert_eq!(token.signature.validation_time, Some(expected_v));
+    for path in [
+        frozen.signature.validation_path.as_ref().unwrap(),
+        token.signature.validation_path.as_ref().unwrap(),
+    ] {
+        for cert in path.certs() {
+            assert!(cert.not_before() <= expected_t && expected_t <= cert.not_after());
+            assert!(cert.not_before() <= expected_v && expected_v <= cert.not_after());
+        }
+        let bounds = path.trust_anchor().qualifiers();
+        assert!(bounds.valid_from.is_none_or(|start| start <= expected_t));
+        assert!(bounds.valid_until.is_none_or(|end| expected_t <= end));
+    }
+    // The clone below is ONLY an expected output comparison. It is never
+    // validated, passed to a resolver or used to mint completion authority.
+    let mut expected = frozen.clone();
+    expected.signature.trust_problem = None;
+    expected.signature.trust_problem_indic = None;
+    let resolved = operation.resolve_signature_timestamp();
+    assert_eq!(format!("{resolved:?}"), format!("{expected:?}"));
+    assert!(resolved.signature.trusted() && resolved.bottom_line());
+    assert!(resolved.signature.revoked());
+    assert_eq!(resolved.signature.revocation_details, frozen.signature.revocation_details);
+    assert_eq!(resolved.signature.validation_time, Some(expected_v));
+    assert_eq!(resolved.signature.error_time_horizon, Some(expected_r));
+    assert_eq!(resolved.signature.validation_path, frozen.signature.validation_path);
+    assert_eq!(result.ades_subindic.standard_name(), "OK");
+    assert_eq!(result.best_signature_time, Some(expected_t));
+    assert!(result.signature_not_before_time.is_none());
+    assert!(result.failure_msg.is_none());
+    assert!(result.qualification.is_none());
+    assert!(result.timestamp_qualification.is_none());
+    assert_eq!(
+        format!("{:?}", result.api_status.as_ref().unwrap()),
+        format!("{resolved:?}"),
+        "WithTime must independently consume its own complete operation"
+    );
+    assert_eq!(format!("{ctx:?}"), source_context);
+    assert!(std::sync::Arc::ptr_eq(&algorithm_policy, &ctx.algorithm_policy_arc()));
+}
+
 #[test]
 fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
     use sigis_pades::ades::with_time::{with_time_result, with_time_validation};
@@ -214,12 +331,24 @@ fn pure_and_cms_withtime_preserve_failed_main_in_both_current_clock_profiles() {
                     "subindic":result.ades_subindic.standard_name(),"best":result.best_signature_time.map(|t|t.to_string()),
                     "not_before":result.signature_not_before_time.map(|t|t.to_string())}),
                 );
-                require_contained(&initial, &result, &label);
-                assert_eq!(
-                    result.best_signature_time,
-                    Some(token.timestamp),
-                    "retain genuine bound"
-                );
+                // Exactly this current, fully valid KeyCompromise fixture
+                // may exercise the new operation-bound completion. The pure
+                // transformer and EVERY other row/profile retain the guard.
+                if row["id"] == "revoked_nr"
+                    && stage == "current"
+                    && matches!(entry, "exact_cms" | "ordinary_cms")
+                {
+                    require_current_key_compromise_completion(
+                        &bytes, &content, current, &initial, &result, entry,
+                    );
+                } else {
+                    require_contained(&initial, &result, &label);
+                    assert_eq!(
+                        result.best_signature_time,
+                        Some(token.timestamp),
+                        "retain genuine bound"
+                    );
+                }
             }
         }
         assert_eq!(format!("{ctx:?}"), source, "source context is immutable");
