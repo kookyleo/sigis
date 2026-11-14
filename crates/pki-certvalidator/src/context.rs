@@ -455,7 +455,36 @@ impl ValidationContextBuilder {
     }
 
     /// Parse the revocation information and build the context.
+    ///
+    /// No default backend is provisioned by this ordinary construction path.
     pub fn build(self) -> Result<ValidationContext, ValidationError> {
+        self.build_with_optional_backend_fallback(None::<fn() -> Arc<dyn FetcherBackend>>)
+    }
+
+    /// Build with a default backend only when neither retrieval choice was set.
+    ///
+    /// Policy and revocation DER validation precede the fallback. Explicit
+    /// fetchers, including an empty set, suppress it. An explicit backend keeps
+    /// its selected borrowed/adopted close authority. The fallback backend is
+    /// adopted by its exact handle and issues one fetcher set; explicit close
+    /// retains that handle and the issued caches and request budget.
+    pub fn build_with_backend_fallback<F>(
+        self,
+        fallback: F,
+    ) -> Result<ValidationContext, ValidationError>
+    where
+        F: FnOnce() -> Arc<dyn FetcherBackend>,
+    {
+        self.build_with_optional_backend_fallback(Some(fallback))
+    }
+
+    fn build_with_optional_backend_fallback<F>(
+        mut self,
+        fallback: Option<F>,
+    ) -> Result<ValidationContext, ValidationError>
+    where
+        F: FnOnce() -> Arc<dyn FetcherBackend>,
+    {
         let revinfo_policy = match (self.revinfo_policy, self.revocation_mode) {
             (Some(policy), _) => policy,
             (None, Some(mode)) => CertRevTrustPolicy::new(
@@ -477,6 +506,9 @@ impl ValidationContextBuilder {
         }
         // Factories may allocate transport resources: resolve the selection
         // only after all fallible builder validation above has succeeded.
+        if self.fetchers.is_none() && self.fetcher_backend.is_none() {
+            self.fetcher_backend = fallback.map(|create| (create(), true));
+        }
         let fetchers = self.fetchers.unwrap_or_else(|| {
             self.fetcher_backend
                 .as_ref()

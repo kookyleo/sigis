@@ -8,9 +8,9 @@ use super::{
     basic::{basic_validation_with_options, BasicValidationResult, QualificationSpec},
     AdesValidationOptions,
 };
-use sigis_pki_certvalidator::ValidationContext;
+use sigis_pki_certvalidator::{context::ValidationContextBuilder, ValidationContext};
 use sigis_pki_core::{
-    errors::{FetchError, HankoError},
+    errors::{FetchError, HankoError, ValidationError},
     fetch::{FetcherBackend, Fetchers},
 };
 use sigis_pki_fetch::HttpFetchers;
@@ -121,6 +121,19 @@ impl ValidationDataHandlers {
     pub fn fetching_allowed(&self) -> bool {
         self.fetchers.ocsp.is_some() || self.fetchers.crl.is_some()
     }
+}
+
+/// Construct a fetching-enabled context for actual validation operations.
+///
+/// A real default HTTP backend is created and adopted only if neither fetchers
+/// nor a backend was explicitly selected. The complete builder is validated
+/// before that factory runs. Ordinary context construction stays offline.
+/// The caller retains the returned context through validation and explicit
+/// repeated close; this constructor performs no certificate/signature validation or automatic close.
+pub fn bootstrap_validation_context(
+    builder: ValidationContextBuilder,
+) -> Result<ValidationContext, ValidationError> {
+    builder.build_with_backend_fallback(|| Arc::new(HttpFetchers::default()))
 }
 
 /// Run basic AdES validation with this handler's exact fetcher components.
