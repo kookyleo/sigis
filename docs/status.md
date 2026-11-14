@@ -800,6 +800,12 @@ trust-verdict exception should be silently reintroduced.
 
 ## Next parallel lanes
 
+Current bounded briefs: [P audit](lanes/round3/p-withtime-impact-audit.md),
+[V hardening](lanes/round3/v-withtime-containment.md),
+[S context](lanes/round3/s-context-default.md),
+[C styling](lanes/round3/c-styled-three.md) and
+[L acceptance](lanes/round3/l-next-acceptance.md).
+
 L has approved bounded V containment in `/home/l/.codex/artifacts/sigis/round3-launch/v-withtime-containment-approval.md`. It is in progress and not an accepted production repair: only with_time.rs and its unit/adversarial test/fixture paths may change; failed MAIN must never become trusted/OK from a retained path and valid timestamp alone. Typed failure, diagnostic path/API and timing bounds stay available. Existing full LTA production stays unchanged. An audit of all47 original IDs/affected assertions is required, with any proposed downgrade routed to Root; no count is silently changed. P independently audits read-only; Root owns shared API, integration and acceptance. No clock waiver or mechanical failed-past promotion is approved.
 
 A separate L-approved implicit-default-context packet is in progress under `/home/l/.codex/artifacts/sigis/round3-launch/s-implicit-context-default-approval.md`, with no pass or production acceptance yet. Its sole original is test_context_provisions_and_owns_a_backend. Exclusive production scope is CV context.rs plus pades policy.rs: add generic ValidationContextBuilder::build_with_backend_fallback<F> where F:FnOnce()->Arc<dyn FetcherBackend>, and L2 policy::bootstrap_validation_context using actual HttpFetchers and a real Basic consumer. Ordinary build remains disabled; explicit fetchers including empty suppress fallback, and validated construction/owner precedence remain. No new dependency/manifest/layer edge or source/POE framework is approved. The other four lifecycle gaps remain unapproved; this future packet earns no current credit.
