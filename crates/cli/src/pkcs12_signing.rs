@@ -43,6 +43,8 @@ fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
         "with-validation-info",
         "use-pades-lta",
         "no-strict-syntax",
+        "use-pades",
+        "no-decode-limits",
     ];
     if let Some(flag) = opts.repeated_flags.iter().next() {
         return Err(extended(&format!("Repeated --{flag}")));
@@ -336,14 +338,14 @@ fn run_with_field_policy(
     enforce_usage(&signer, &policy)?;
     let input = read(&opts.paths[0])?;
     let strict = !opts.flag("no-strict-syntax");
-    let reader = crate::read_for_update(
-        &input,
-        sigis_pdf::ReaderOptions {
-            strict,
-            ..Default::default()
-        },
-    )
-    .map_err(|e| e.to_string())?;
+    let mut reader_options = sigis_pdf::ReaderOptions {
+        strict,
+        ..Default::default()
+    };
+    if opts.flag("no-decode-limits") {
+        reader_options.decode_limits = sigis_pdf::decode_limits::DecodeLimits::for_trusted_input();
+    }
+    let reader = crate::read_for_update(&input, reader_options).map_err(|e| e.to_string())?;
     if reader.encrypted() {
         return Err(extended("Encrypted PDF input"));
     }
@@ -427,7 +429,7 @@ fn run_with_field_policy(
     metadata.embed_validation_info =
         opts.flag("with-validation-info") || opts.flag("use-pades-lta");
     metadata.use_pades_lta = opts.flag("use-pades-lta");
-    if metadata.use_pades_lta {
+    if metadata.use_pades_lta || opts.flag("use-pades") {
         metadata.subfilter = Some(sigis_pades_sign::SubFilter::Pades);
     }
     if metadata.embed_validation_info || opts.get("validation-context").is_some() {

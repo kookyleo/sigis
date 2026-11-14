@@ -3,6 +3,7 @@ pub mod config;
 pub mod crypt;
 pub mod detached_signing;
 pub mod fields;
+pub mod ltv;
 pub mod identity_signing;
 pub mod pemder_signing;
 mod pkcs11_config_frontend;
@@ -141,9 +142,10 @@ pub fn run_with_runtime(
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
             Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
+            Some("ltaupdate" | "ltvfix") => ltv::run_with_runtime(&values, config.as_ref(), runtime),
             Some("timestamp") => timestamp::run_with_runtime(&values[1..], config.as_ref(), runtime),
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry, runtime),
-            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig, timestamp\n".into()),
+            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig, timestamp, ltaupdate, ltvfix\n".into()),
             Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
         _ => Err(format!("Command '{name}' is not available in this cryptography-and-fields increment.")),

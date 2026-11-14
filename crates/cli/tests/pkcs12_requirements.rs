@@ -135,7 +135,6 @@ fn unsupported_signing_requirements_reject_before_missing_pfx() {
         vec!["--trust-replace"],
         vec!["--no-revocation-check"],
         vec!["--soft-revocation-check"],
-        vec!["--no-decode-limits"],
         vec!["--password", "A document password"],
     ];
     for requirement in requirements {
