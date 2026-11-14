@@ -115,7 +115,7 @@ fn check_authorization(
     let issuer = subject.issuer;
     // The issuer itself signed the response.
     if responder.issuer() == issuer.issuer() && responder.serial_bytes() == issuer.serial_bytes() {
-        if responder.decoded().signature() == issuer.decoded().signature() {
+        if responder.der() == issuer.der() {
             return true;
         }
         failures.push("Unable to verify OCSP response since response was signed by an unauthorized certificate");

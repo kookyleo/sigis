@@ -600,7 +600,14 @@ impl<'a> TspTrustManager<'a> {
             .first()?;
         let cert = self.registry.cert_for(authority)?;
         Some(QualifiedTrustAnchor {
-            anchor: TrustAnchor::new(cert.clone()),
+            anchor: TrustAnchor::with_qualifiers(
+                cert.clone(),
+                sigis_pki_certvalidator::authority::TrustQualifiers {
+                    valid_from: Some(sd.base_info.valid_from),
+                    valid_until: sd.base_info.valid_until,
+                    ..Default::default()
+                },
+            ),
             trusted_service_type: TrustedServiceType::from_service_type_uri(
                 &sd.base_info.service_type,
             ),
