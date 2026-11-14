@@ -1,9 +1,9 @@
 //! Signature field management compatible with pyHanko 0.38.1.
 use sigis_pades_sign::pdf::{
     fields::{append_signature_field, SigFieldSpec},
-    writer::PdfUpdate,
+    writer::{PdfReopenState, PdfUpdate},
 };
-use sigis_pdf::{reader::ReaderOptions, signatures::enumerate_sig_fields};
+use sigis_pdf::{reader::ReaderOptions, signatures::enumerate_sig_fields, PdfFile};
 
 /// Parse a CLI field location, preserving pyHanko's diagnostic messages.
 pub fn parse_field_spec(value: &str) -> Result<SigFieldSpec, String> {
@@ -118,19 +118,26 @@ pub fn run(args: &[String]) -> Result<String, String> {
         }
         return Ok(output);
     }
-    let mut writer = if resave {
-        PdfUpdate::fresh(&bytes)
-    } else {
-        PdfUpdate::new(&bytes)
-    }
-    .map_err(|e| format!("Failed to read PDF: {e}"))?;
-    writer.set_strict(false);
+    let mut writer =
+        update_from_reader(&bytes, pdf, resave).map_err(|e| format!("Failed to read PDF: {e}"))?;
     for spec in specs {
         append_signature_field(&mut writer, &spec).map_err(|e| e.to_string())?;
     }
     let output = writer.write().map_err(|e| e.to_string())?.0;
     std::fs::write(&paths[1], output).map_err(|e| e.to_string())?;
     Ok(String::new())
+}
+
+fn update_from_reader(
+    bytes: &[u8],
+    reader: PdfFile,
+    resave: bool,
+) -> sigis_pki_core::errors::Result<PdfUpdate> {
+    let mut writer = PdfUpdate::open_with_state(bytes, PdfReopenState::from_reader(reader))?;
+    if resave {
+        writer.make_fresh();
+    }
+    Ok(writer)
 }
 
 #[cfg(test)]
