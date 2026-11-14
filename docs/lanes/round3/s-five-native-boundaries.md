@@ -45,6 +45,16 @@ SoftHSM setup and removal of obsolete mandatory proof variables. Workspace
 acceptance is **blocked**, never reported as zero-failure. No other-lane file,
 provider, shared venv, ignore or production API was changed.
 
+A subsequent focused Root generic-DSA run supplied the existing real SoftHSM
+module/tool, raw-DSA capability, Python overlay and oracle through Cargo's
+worker environment configuration. Both tests then reached
+`tests/round3_generic_dsa.rs:149` and failed because a persistent evidence
+directory is mandatory. This confirms an obsolete shared-harness requirement
+beyond ordinary provider availability. The actual run used vm2064 slot0;
+`shared-ordinary-setup.log` retains its two failures. No proof directory or
+collector was recreated to bypass that requirement. L/P must remove the
+shared guard before a normal workspace gate can succeed for this packet.
+
 Plain command logs are under
 `~/.codex/artifacts/sigis/round3/s/five-native-boundaries/`. No hash/ELF/JSON
 proof pipeline or independent review was added. The initial preparation/fmt
