@@ -111,6 +111,8 @@ impl Case {
         let output = Command::new(executable)
             .args(&args)
             .current_dir(self.dir.path())
+            .env_remove("PYHANKO_PKCS11_PIN")
+            .env_remove("PYHANKO_PKCS11_SIGNING_PIN")
             .output()
             .unwrap();
         let executable_after = snapshot(executable);

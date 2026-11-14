@@ -1,0 +1,11 @@
+# Ed25519 environment-user-PIN original fixture
+
+Scope: exactly `pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_pin`, all five real `root_cert_data` labels. Its function-level marker selects Ed25519 for every item. No other signing original or provider is completed by these files.
+
+`inputs.json` records exact existing original key and accepted pinned generated certificate inputs. `provision_signing.py ABSOLUTE_NEW_PROVIDER_DIRECTORY` runs only in a fresh process, creates a new isolated `tested25519` token, imports three certificate objects and the original matching signing key, and verifies public binding, selectors, certificate readback and object attributes. It never generates replacement keys, reads private VALUE from a token, exports a private key, or signs during provisioning. User/SO PIN constants are public test data, not product credentials.
+
+`run_original_reference.sh ABSOLUTE_NEW_RECORD_DIRECTORY` selects the pinned interpreter and existing artifact-only python-pkcs11 0.9.5 overlay. It provisions the new store, then executes the unchanged original through real pytest/CliRunner and its full real fixtures/post-validation. The observer transparently delegates real module/session/object/signing/parser calls. It records actual collection, all five labels/effective algorithms, credential source hashes without PIN text, token certificate retrieval and actual intermediate file loader, actual signature call counts, output/input/source/ELF/DSO identities and full setup/call/teardown. No skip or empty collection is accepted.
+
+The helper's literal string `other-certs-to-pull: interm` is not normalized upstream: it selects bulk fetching followed by substring matching. Normal fixture labels still select the intermediate. This query strategy must not be described as identical to a native normalized single-label query.
+
+Native output validation and adverse probes are separate from the unchanged original. Native actual NOW and the original frozen 2020-11-01 clock are distinct; callers must retain both real outcomes and identical explicit policies/clocks for same-output peers. No new product clock flag, POE or weaker trust fallback follows.

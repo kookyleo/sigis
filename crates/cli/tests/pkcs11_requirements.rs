@@ -9,7 +9,7 @@ mod common;
 use cases::{Case, CANARY};
 
 const CONFIG_ERROR: &str = "Error while reading PKCS#11 config";
-const UNSUPPORTED: &str = "requires PKCS#11 signing support";
+const UNSUPPORTED: &str = "Unsupported PKCS#11 signing requirement: User PIN prompt";
 
 /// pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_pkcs11_setup_config_unreadable.
 /// Valid YAML and an empty setup map; the named profile is missing.
