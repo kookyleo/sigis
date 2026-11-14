@@ -1,3 +1,13 @@
+# P Env PIN delivery: bounded L integration closure
+
+Root accepted this bounded one-original packet after the actual gates and final proof listed below.
+
+Root integrates source `ba9a4a6573bbc43713797ff33f0d6339130a82e7` for exactly the one C-owned Env PIN original; no P-owned ID is credited. The [L acceptance brief](l-cli-signing-env-pin.md) records the actual original/native/peer/provider/provenance evidence and final proof: /home/l/.codex/artifacts/sigis/round3-launch/p-env-pin-integration/final-review/final-third.json SHA256 e7813cb35848320b917b9d24565ea49a815f422302770cd09245cf9c3f1ef075; actual independent PASS, 11401 checked files. Earlier helper attempts remain failed and preserved: one interleaved marker, then focused/full capture field-name mismatch; no native rerun or source change. The exact transport disposition /home/l/.codex/artifacts/sigis/round3-launch/p-env-pin-integration/final-review/root-transport-disposition.json SHA256 8d39bf322ba18a28c6b80a584f68be62cc21140ef8c8b591027319d690c9e84c preserves 2313 complete CLI markers, 1 malformed line and 1 orphan fragment without JSON repair. Same-path/length/hash timestamp readiness archives corroborate the missing key marker. The zero-ID timestamp_config_scope_rejects_before_io control uses explicit source-registration plus completed unfiltered eight-pass suite inference, never an invented intact named line; required EnvPIN rows receive zero exceptions. P remains297/296/1/0. The nine other provider originals remain SOURCE ONLY, SafeNet remains skipped, and CLIlib/shared APIs are L-owned. Historical P-exclusive reservation and unapplied-migration statements below describe the old delivery phase, not a new assignment.
+
+## Historical pre-Env-PIN document retained verbatim
+
+The entire previous document follows as its unchanged raw bytes. Earlier source/counts, ownership reservations and scheduling statements are historical; the current section above defines this packet.
+
 # P one Env PIN token-signing original: bounded implementation
 
 Accepted compiled source: `473b7cbddef5df4aaaefef5a0f7075953927d0b3`.
