@@ -1,0 +1,18 @@
+> Assignment continuity: main6127ed09 now accepts compiled source134be605 after
+> all six workspace gates. Current unique-function counts are1431/1356/13/62,
+> C190/62, S812/12, fetch50/6, P296/1 and V47. This assignment was delivered
+> before that acceptance; its earlier boundary statements below are historical.
+> No original in these next packets is accepted by this document. Preserve
+> tests-first projections and do not relabel old execution as a rerun.
+
+# Approved C next increment: exact decode-limit simple/stamp originals
+
+Acceptedmain33d/source3a stays C188/64/overall1350/17/64. CurrentRootcandidate134 includesyourappearance2+Sdirect4, underRootfull6 gate, NOTyetaccepted. Yourappearance8-path packet remains frozen. Start a SEPARATE isolated projection from accepted33d (or134 ifuseful, clearlycandidate), preservingallowner/history/dirtylocks. No edits toRootworktree.
+
+Scope EXACT pyhanko-cli/test_cli_decode_limits.py::{test_simple_commands,test_text_stamp,test_qr_stamp}. Complete6parameters: simple encrypt/list/addfields/addfields-resave4 plus text1/QR1. Preserve both _check_flag invocations: default exit1 AND rerun-with-FLAG message; --no-decode-limits noexception/success. Port full original fixtures/oversized compressed object-stream construction FIRST, beforeimplementation, keep genuine tests missingAPI versus behavioralRED/firstgreen distinct. Do not count the alreadyaccepted decrypt2/timestamp1 or only2of4simpleparameters. Do not countsourceintent/cachedfixtures asfresh execution.
+
+P current-source audit round3/p/current-reader-state-interface/reply.md identified REAL C addfields transfer gap: fields.rs97-127 parses configured lenient/trusted reader then discardsit in PdfUpdate::new/fresh, set_strict onlychangeswriter. ExistingpublicPstateAPI isenough. Minimal approved production ONLY crates/cli/src/fields.rs: construct update from PdfReopenState::from_reader(the SAME configured reader) via PdfUpdate::open_with_state; usemake_fresh forresave; preserveactualselectedstrictness/budget/authentication andinput/outputerrorordering/sentinel. Keepencrypted-field unsupportedrejectionunchanged; no permissionbypass/newPAPI. No lib/pemder/signatureappearance/P12/shared/P/manifest/lock changes. If another concrete Cproductiongap blocks remaining4params, reportexactgap beforeexpanding writes; don'tweaken assertions or silentlyremoveparam.
+
+Newexclusive tests crates/cli/tests/decode_limits_simple.rs, common/decode_limits_simple_cases.rs ifneeded, newr3-c/decode-limits-simple/oracle.py/compactfixture. Add actualoutput parse/field/revision/encryption/stamp checks asSUPPLEMENTAL, noextraoriginalID. Include defaultfinite-budgetrefusal, trusted success through full update, leniency retained, cumulative/spentbudget/programmaticcontrols ifexistingpublicinterfaceexpresses them. Avoidcreatingnewglobaltest-onlyoptions/clock/speedflags. Allfields7/stamp12/crypt23 regressionsretainbehavior. Reuseexistingcompressed fixture andpinnedMINIMAL generation; disk17Gfreekeepcopieslean, don'tclean sharedtarget/oldproofs.
+
+Freshpinned0.38.1/.33 venv /tmp/pyhanko-oracle/venv assertionsenabled, nativeactualCLI/currentELF/actualinputoutput/source receipts; exactoriginalbody/reference andactualnativeoutputchecks, replayoriginexplicit. AllCargo tools/cargo-locked.sh only/oneperlane/systemautomaticplacement/canonical/sccache; Rootgateactive no manualremote/localpin/flock/jobcap/flags. Englishlocaltestsfirst/prodcommit+minimalreadyref/patch/report total252/188/0/64 accepteduntilLnextgate (oracceptedupdatedcounter ifnotified), exact6param results/differences/limits. No push/pkill/services/other sessions. Qualified8 remainsnextSOURCEplan, do notcombineengine into thissmallpacket.

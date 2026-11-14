@@ -1,0 +1,16 @@
+> Assignment continuity: main6127ed09 now accepts compiled source134be605 after
+> all six workspace gates. Current unique-function counts are1431/1356/13/62,
+> C190/62, S812/12, fetch50/6, P296/1 and V47. This assignment was delivered
+> before that acceptance; its earlier boundary statements below are historical.
+> No original in these next packets is accepted by this document. Preserve
+> tests-first projections and do not relabel old execution as a rerun.
+
+# Approved V next tests-first diagnostic packet: failed-past payload
+
+Your qualified-cli-next-source analysis isaccepted as SOURCEONLY, notnativefailureevidence. CurrentRoot134 C2/S4 full6 active; acceptedmain33d/source3a V47 unchanged. Start SEPARATEcleanprojection fromaccepted33d preservingoldowner/phaseA/rootcurrenthistory. No productionfix isassignedYET.
+
+Port substantive exactpinned failed-past payload assertions BEFOREimplementation in new crates/pades/tests/qualified_preliminary_result.rs andnewr3-v/qualified-preliminary-result fixtures/oracle ifneeded. CopyminimumactualauthenticqualifiedCfixturebytes withSHA/origin/clockrecord, signedTL/LOTLmustreallyauthenticate; useexistingpublicQualificationSpec/TspTrustManager/detailedLTA. DoNOTimportunacceptedCengine/provider orupdateoldfixtures. CompareSAMErawbytes/newnativebaseline andfreshpinned AdES (notjustordinaryCLIdisplay), with real finalsubindic/prelimCMS flags/path/qualification/best/control/POE/failure. Recordcurrent2020observed/current2020 andexplicitvalidation2025observed2020 separately; genuineNOW/retrospective2025 canbe anexplicitunsupported/negativeprofile, neverseedearlierPOE fromrequestedtime. No APIs/profile/time/NoRevdefaultchange.
+
+Goal: establish actual whether legitimatefailed-past NO_POE returns olderCMS/Nonequalification instead oftheSAME fullyevaluatedpreliminarycurrent result at lta594/629/655/670. BEFOREanyfix, include mandatoryexactMAINpurpose negatives DS-only vsrequiredNR/forbidden/EKU, untrustedroots, requiredunqualifiedsigner/TSA/wrongpurpose/imprint/rawsignature/seed/coverage controls, discovery-only unvalidatedpath, and missing/lateknowledge. Determinewhichpreliminarystatus'smandatorychecksactuallyran (timeprocessingcanprecedefinalKUrecheck). NevermakeapiCMS.trusted truefromunvalidated candidate/pastfailure orerasea latermandatorydenial. APIprelimstatus isnotcompleteLTAtrust; CconservativeAdESOKAND remains, no Basic/ordinaryfallback/NO_POEwhitelist.
+
+Delivertests-firstref/actualbaseline source/ELF/nativefreshreport+smallest proposedproduction-onlydiff (ifclear andsafe) restricted lta.rs helper/failed-pastreturns. Keep finalNO_POE/failure/realbest/control/proofs andexistingexactMAIN/TSA/order/qualification constraints. Rootwillreviewactualevidence BEFOREauthorizingproduction; donotimplementspeculative3branchcopy or newpublicresult/provider/observed_at/POEclockAPI. Thisdiagnosticpacket0newIDs/V47regressionsnotrecounted. No work onSdelegatedpolicy/Root/C/sharedcore/CV/reportfiles/manifests/lock/layers. AllCargo wrapper/systemautomatic/canonical/sccache, oneperlane, nopush/pkill/services/flags/targetcleanup. Rootgatecanrunelsewhere; no manualremote/buildbypass. Storeartifacts round3/v/qualified-preliminary-result/.
