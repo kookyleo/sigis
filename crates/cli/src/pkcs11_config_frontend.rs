@@ -1,4 +1,4 @@
-//! Named PKCS11 configuration checks before unsupported signing operations.
+//! Named PKCS11 configuration checks before real provider dispatch.
 
 use crate::{
     argument_positions,
@@ -68,7 +68,11 @@ fn parse_options(args: &[String]) -> Result<Options, String> {
     Ok(parsed)
 }
 
-pub(crate) fn run(args: &[String], config: Option<&CliConfig>) -> Result<String, String> {
+pub(crate) fn run(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &crate::runtime::ValidationRuntime,
+) -> Result<String, String> {
     let options = parse_options(args)?;
     if options.paths.len() != 2 {
         return Err("PKCS#11 signing requires an input and output file.".into());
@@ -91,7 +95,5 @@ pub(crate) fn run(args: &[String], config: Option<&CliConfig>) -> Result<String,
     {
         return Err("The parameters --lib and --cert-label are required.".into());
     }
-    // Parsing an actual profile is not a provider/session capability. Do not
-    // load the module, prompt for credentials, read the PDF or create output.
-    Err("This request requires PKCS#11 signing support, which is not available.".into())
+    crate::pkcs11_signing::run(&options, setup.as_ref(), config, runtime)
 }

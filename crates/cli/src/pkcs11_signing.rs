@@ -1,0 +1,380 @@
+//! Bounded real PKCS11 signing with typed configuration and inherited PDF state.
+use crate::{
+    config::{CliConfig, PinEntry, Pkcs11Setup, SigningPinEntry},
+    runtime::ValidationRuntime,
+    software_signing::Options,
+};
+use serde_json::Value;
+use sigis_pades_sign::{
+    pdf::writer::PdfReopenState,
+    pkcs11::{open_signer, PinEntryMode, Pkcs11Config, TokenCriteria},
+    PdfSignatureMetadata, PdfSigner, SignOptions,
+};
+use sigis_pki_core::algorithms::DigestAlgorithm;
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
+
+fn unsupported(requirement: &str) -> String {
+    format!("Unsupported PKCS#11 signing requirement: {requirement}.")
+}
+
+fn normalized<'a>(
+    value: &'a Value,
+    component: &str,
+) -> Result<BTreeMap<String, &'a Value>, String> {
+    let mut result = BTreeMap::new();
+    for (key, value) in value
+        .as_object()
+        .ok_or_else(|| format!("{component} must be a mapping."))?
+    {
+        let name = key.replace('_', "-");
+        if result.insert(name.clone(), value).is_some() {
+            return Err(format!("Conflicting aliases in {component}: {name}."));
+        }
+    }
+    Ok(result)
+}
+
+fn boolean(map: &BTreeMap<String, &Value>, name: &str, default: bool) -> Result<bool, String> {
+    map.get(name).map_or(Ok(default), |value| {
+        value
+            .as_bool()
+            .ok_or_else(|| format!("PKCS#11 setting '{name}' must be a boolean."))
+    })
+}
+
+fn option_scope(options: &Options) -> Result<(), String> {
+    if let Some(flag) = options.repeated_flags.iter().next() {
+        return Err(unsupported(&format!("Repeated --{flag}")));
+    }
+    for (key, values) in &options.values {
+        if ![
+            "field",
+            "p11-setup",
+            "password",
+            "validation-context",
+            "md-algorithm",
+            "reason",
+            "location",
+            "contact-info",
+            "name",
+        ]
+        .contains(&key.as_str())
+            || values.len() != 1
+        {
+            return Err(unsupported(&format!("--{key}")));
+        }
+    }
+    for flag in &options.flags {
+        if ![
+            "existing-only",
+            "no-strict-syntax",
+            "no-decode-limits",
+            "with-validation-info",
+        ]
+        .contains(&flag.as_str())
+        {
+            return Err(unsupported(&format!("--{flag}")));
+        }
+    }
+    match options.get("field") {
+        Some(field) if !field.is_empty() && !field.contains('/') => Ok(()),
+        _ => Err(unsupported(
+            "An implicit, empty or coordinate field specification",
+        )),
+    }
+}
+
+fn config_scope(config: Option<&CliConfig>, context_selected: bool) -> Result<(), String> {
+    let Some(config) = config else { return Ok(()) };
+    let map = normalized(&config.raw_config, "PKCS#11 configuration")?;
+    for key in map.keys() {
+        if ![
+            "pkcs11-setups",
+            "validation-contexts",
+            "default-validation-context",
+            "time-tolerance",
+            "retroactive-revinfo",
+            "logging",
+        ]
+        .contains(&key.as_str())
+        {
+            return Err(unsupported(&format!("Configuration setting '{key}'")));
+        }
+    }
+    // Do not silently discard selected default validation requirements, or
+    // change ordinary no-context signing into a new implicit trust profile.
+    if !context_selected
+        && map.keys().any(|key| {
+            [
+                "validation-contexts",
+                "default-validation-context",
+                "time-tolerance",
+                "retroactive-revinfo",
+            ]
+            .contains(&key.as_str())
+        })
+    {
+        return Err(unsupported("Configured validation requirements need an explicit validation-context or validation-info selection"));
+    }
+    let defaults = CliConfig::parse("")?;
+    if config.default_stamp_style != defaults.default_stamp_style
+        || config.stamp_styles != defaults.stamp_styles
+        || !config.identities.is_empty()
+        || !config.plugin_endpoints.is_empty()
+        || config.cache_dir.is_some()
+    {
+        return Err(unsupported(
+            "Configured appearance, identity, plugin or cache settings",
+        ));
+    }
+    Ok(())
+}
+
+fn pull_labels(value: Option<&Value>) -> Result<Option<Vec<String>>, String> {
+    Ok(match value {
+        None => Some(Vec::new()),
+        Some(Value::Null) => None,
+        Some(Value::String(label)) => Some(if label.is_empty() {
+            Vec::new()
+        } else {
+            vec![label.clone()]
+        }),
+        Some(Value::Array(labels)) => Some(
+            labels
+                .iter()
+                .map(|label| {
+                    label
+                        .as_str()
+                        .map(str::to_owned)
+                        .ok_or("PKCS#11 certificate pull labels must be strings.".to_owned())
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
+        _ => return Err("PKCS#11 other-certs-to-pull must be a label, label list or null.".into()),
+    })
+}
+
+fn native_setup(setup: &Pkcs11Setup) -> Result<Pkcs11Config, String> {
+    let map = normalized(&setup.raw, "PKCS#11 setup")?;
+    if let Some(criteria) = map.get("token-criteria") {
+        for key in normalized(criteria, "PKCS#11 token-criteria")?.keys() {
+            if !["label", "serial"].contains(&key.as_str()) {
+                return Err(format!(
+                    "Unsupported PKCS#11 token-criteria setting '{key}'."
+                ));
+            }
+        }
+    }
+    for key in map.keys() {
+        if ![
+            "module-path",
+            "token-label",
+            "token-criteria",
+            "slot-no",
+            "cert-label",
+            "cert-id",
+            "key-label",
+            "key-id",
+            "signing-certificate",
+            "other-certs",
+            "only-resident-certs",
+            "prompt-pin",
+            "signing-pin-mode",
+            "user-pin",
+            "signing-pin",
+            "other-certs-to-pull",
+            "bulk-fetch",
+            "prefer-pss",
+            "raw-mechanism",
+            "signature-mechanism",
+        ]
+        .contains(&key.as_str())
+        {
+            return Err(unsupported(&format!("PKCS#11 setup setting '{key}'")));
+        }
+    }
+    if map
+        .get("signature-mechanism")
+        .is_some_and(|value| !value.is_null())
+    {
+        return Err(unsupported(
+            "Explicit ASN.1 signature-mechanism configuration",
+        ));
+    }
+    // The CLI has no per-sign credential callback. Never reinterpret signing
+    // credentials as the user-login PIN or as a PDF decryption password.
+    let signing_env_requested =
+        std::env::var_os("PYHANKO_PKCS11_SIGNING_PIN").is_some_and(|value| !value.is_empty());
+    if setup.signing_pin_mode != SigningPinEntry::Skip
+        || setup.signing_pin.is_some()
+        || signing_env_requested
+    {
+        return Err(unsupported(
+            "Context-specific signing PIN or signing PIN prompt",
+        ));
+    }
+    let pull = pull_labels(map.get("other-certs-to-pull").copied())?;
+    let mut native = Pkcs11Config {
+        module_path: setup.module_path.clone(),
+        token_criteria: setup.token_criteria.as_ref().map(|criteria| TokenCriteria {
+            label: criteria.label.clone(),
+            serial: criteria.serial.clone(),
+        }),
+        slot_no: setup
+            .slot_no
+            .map(usize::try_from)
+            .transpose()
+            .map_err(|_| "PKCS#11 slot number is out of range.".to_owned())?,
+        cert_label: setup.cert_label.clone(),
+        cert_id: setup.cert_id.clone(),
+        key_label: setup.key_label.clone(),
+        key_id: setup.key_id.clone(),
+        signing_certificate: setup.signing_certificate.clone(),
+        other_certs: setup.other_certs.clone(),
+        user_pin: setup.user_pin.clone(),
+        prompt_pin: match setup.prompt_pin {
+            PinEntry::Prompt => PinEntryMode::Prompt,
+            PinEntry::Skip => PinEntryMode::Skip,
+            PinEntry::Defer => PinEntryMode::Defer,
+        },
+        other_certs_to_pull: pull,
+        bulk_fetch: boolean(&map, "bulk-fetch", true)?,
+        prefer_pss: boolean(&map, "prefer-pss", false)?,
+        raw_mechanism: boolean(&map, "raw-mechanism", false)?,
+        only_resident_certs: boolean(&map, "only-resident-certs", setup.only_resident_certs)?,
+        ..Default::default()
+    };
+    // Match the CLI's configured-value, then truthy environment precedence.
+    // The library's explicit-empty override differs from Python's `or`: an
+    // empty environment after stripping must fall back to the configured value.
+    let mut cli_pin = native.user_pin.clone();
+    if cli_pin.is_none() {
+        if let Some(value) = std::env::var_os("PYHANKO_PKCS11_PIN").filter(|v| !v.is_empty()) {
+            let value = value
+                .into_string()
+                .map_err(|_| "Invalid user PIN environment encoding.".to_owned())?;
+            cli_pin = Some(
+                value
+                    .trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c))
+                    .to_owned(),
+            );
+        }
+    }
+    if cli_pin.is_none() && native.prompt_pin == PinEntryMode::Prompt {
+        return Err(unsupported(
+            "User PIN prompt; provide a configured user PIN or PYHANKO_PKCS11_PIN",
+        ));
+    }
+    if cli_pin.as_deref().is_some_and(|pin| !pin.is_empty()) {
+        native.user_pin = cli_pin;
+    }
+    Ok(native)
+}
+
+/// Complete the bounded request with a real token key and the caller's state.
+pub(crate) fn run(
+    options: &Options,
+    setup: Option<&Pkcs11Setup>,
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+) -> Result<String, String> {
+    if options.paths.len() != 2 {
+        return Err("PKCS#11 signing requires an input and output file.".into());
+    }
+    option_scope(options)?;
+    let context_selected =
+        options.flag("with-validation-info") || options.get("validation-context").is_some();
+    config_scope(config, context_selected)?;
+    let setup =
+        setup.ok_or_else(|| unsupported("Direct module signing without a named PKCS#11 setup"))?;
+    let native = native_setup(setup)?;
+    let policy = config
+        .map(|config| config.key_usages(options.get("validation-context")))
+        .transpose()?
+        .unwrap_or_default();
+    let mut complete_usage = crate::usage::key_usage_constraints(&policy);
+    if complete_usage.key_usage.is_none() {
+        complete_usage.key_usage = Some(BTreeSet::from(["non_repudiation".into()]));
+    }
+    let context = if context_selected {
+        Some(Arc::new(crate::validation::context_from_config(
+            config,
+            options.get("validation-context"),
+            runtime,
+        )?))
+    } else {
+        None
+    };
+    let mut metadata = PdfSignatureMetadata::pyhanko_defaults(
+        options.get("field").ok_or("Missing signature field.")?,
+    );
+    metadata.signer_key_usage = complete_usage
+        .key_usage
+        .clone()
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
+    metadata.validation_context = context;
+    metadata.embed_validation_info = options.flag("with-validation-info");
+    metadata.md_algorithm = options
+        .get("md-algorithm")
+        .map(|name| {
+            DigestAlgorithm::from_name(name)
+                .ok_or_else(|| format!("Unknown digest algorithm '{name}'."))
+        })
+        .transpose()?;
+    metadata.reason = options.get("reason").map(str::to_owned);
+    metadata.location = options.get("location").map(str::to_owned);
+    metadata.name = options.get("name").map(str::to_owned);
+    metadata.contact_info = options.get("contact-info").map(str::to_owned);
+    let input = crate::software_signing::read(&options.paths[0])?;
+    let mut reader_options = sigis_pdf::ReaderOptions {
+        strict: !options.flag("no-strict-syntax"),
+        ..Default::default()
+    };
+    if options.flag("no-decode-limits") {
+        reader_options.decode_limits = sigis_pdf::decode_limits::DecodeLimits::for_trusted_input();
+    }
+    let reader =
+        crate::read_for_update(&input, reader_options).map_err(|error| error.to_string())?;
+    if reader.encrypted() && options.get("password").is_none() && runtime.password.is_none() {
+        return Err(unsupported("PDF decryption password prompt"));
+    }
+    let password = crate::software_signing::authenticate_document(&reader, options, runtime)?;
+    let settings = SignOptions {
+        strict: reader.strict(),
+        password,
+        existing_fields_only: options.flag("existing-only"),
+        reopen_state: Some(PdfReopenState::from_reader(reader)),
+        ..Default::default()
+    };
+    let signer = open_signer(&native, None).map_err(|error| error.to_string())?;
+    let mut pdf_signer =
+        PdfSigner::new(metadata, Arc::new(signer)).with_signer_key_usage_policy(complete_usage);
+    pdf_signer.signing_time = Some(runtime.now);
+    pdf_signer.stamp_style = Some(match config {
+        Some(config) => config.stamp_style(None)?,
+        None => CliConfig::parse("")?.stamp_style(None)?,
+    });
+    crate::software_signing::sign_pdf_and_write(&pdf_signer, &input, &settings, &options.paths[1])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::pull_labels;
+    use serde_json::json;
+
+    #[test]
+    fn empty_certificate_selection_does_not_request_an_unnamed_certificate() {
+        assert_eq!(pull_labels(None).unwrap(), Some(Vec::new()));
+        assert_eq!(pull_labels(Some(&json!([]))).unwrap(), Some(Vec::new()));
+        assert_eq!(pull_labels(Some(&json!(""))).unwrap(), Some(Vec::new()));
+        assert_eq!(pull_labels(Some(&json!(null))).unwrap(), None);
+        assert_eq!(
+            pull_labels(Some(&json!("interm"))).unwrap(),
+            Some(vec!["interm".into()])
+        );
+        assert!(pull_labels(Some(&json!(17))).is_err());
+    }
+}

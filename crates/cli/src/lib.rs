@@ -6,6 +6,7 @@ pub mod fields;
 pub mod identity_signing;
 pub mod pemder_signing;
 mod pkcs11_config_frontend;
+mod pkcs11_signing;
 pub mod pkcs12_signing;
 pub mod plugins;
 pub mod runtime;
@@ -253,7 +254,7 @@ fn run_signing(
         return detached_signing::run_with_runtime(&rewritten, config, runtime);
     }
     if args[i] == "pkcs11" && rewritten[i] == "pkcs11" {
-        return pkcs11_config_frontend::run(&rewritten, config);
+        return pkcs11_config_frontend::run(&rewritten, config, runtime);
     }
     pkcs12_signing::require_timestamp(&rewritten)?;
     if args[i] == "pkcs12" && rewritten[i] == "pkcs12" {
