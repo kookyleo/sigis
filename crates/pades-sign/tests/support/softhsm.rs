@@ -78,6 +78,23 @@ pub struct SoftHsm {
     pub dir: PathBuf,
 }
 
+// The scheduler may execute tests under a different HOME on a worker. Keep
+// the existing shared fixture installations discoverable without proof selectors.
+fn runtime_directories() -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Some(home) = std::env::var_os("HOME") {
+        candidates.push(
+            PathBuf::from(home).join(".codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime"),
+        );
+    }
+    candidates.extend([
+        PathBuf::from("/home/l/.codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime"),
+        PathBuf::from("/home/l/.codex/artifacts/sigis/round3/p/cli-signing-env-pin/runtime"),
+        PathBuf::from("/tmp/sigis-p-softhsm-8453e1bde7da"),
+    ]);
+    candidates
+}
+
 /// Locate an explicitly selected or normally installed SoftHSM module.
 pub fn module_path() -> Result<String, String> {
     if let Ok(path) = std::env::var("PKCS11_TEST_MODULE") {
@@ -87,12 +104,11 @@ pub fn module_path() -> Result<String, String> {
             .ok_or_else(|| "selected PKCS#11 module does not exist".into());
     }
     let mut candidates = Vec::new();
-    if let Some(home) = std::env::var_os("HOME") {
-        candidates
-            .push(PathBuf::from(home).join(
-                ".codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime/libsofthsm2.so",
-            ));
-    }
+    candidates.extend(
+        runtime_directories()
+            .into_iter()
+            .map(|dir| dir.join("libsofthsm2.so")),
+    );
     candidates.extend(
         [
             "/usr/lib/softhsm/libsofthsm2.so",
@@ -114,12 +130,11 @@ fn utility_path() -> Result<PathBuf, String> {
         return Ok(PathBuf::from(path));
     }
     let mut candidates = Vec::new();
-    if let Some(home) = std::env::var_os("HOME") {
-        candidates.push(
-            PathBuf::from(home)
-                .join(".codex/artifacts/sigis/round3/p/cli-user-pin-prompt/runtime/softhsm2-util"),
-        );
-    }
+    candidates.extend(
+        runtime_directories()
+            .into_iter()
+            .map(|dir| dir.join("softhsm2-util")),
+    );
     if let Some(paths) = std::env::var_os("PATH") {
         candidates.extend(std::env::split_paths(&paths).map(|path| path.join("softhsm2-util")));
     }
@@ -136,9 +151,17 @@ pub fn oracle_overlay() -> Option<PathBuf> {
     std::env::var_os("HANKO_DSA_ORACLE_OVERLAY")
         .map(PathBuf::from)
         .or_else(|| {
-            let path = PathBuf::from(std::env::var_os("HOME")?)
-                .join(".codex/artifacts/sigis/round3/p/raw-dsa-overlay/overlay-0.9.5");
-            path.is_dir().then_some(path)
+            let mut candidates = Vec::new();
+            if let Some(home) = std::env::var_os("HOME") {
+                candidates.push(
+                    PathBuf::from(home)
+                        .join(".codex/artifacts/sigis/round3/p/raw-dsa-overlay/overlay-0.9.5"),
+                );
+            }
+            candidates.push(PathBuf::from(
+                "/home/l/.codex/artifacts/sigis/round3/p/raw-dsa-overlay/overlay-0.9.5",
+            ));
+            candidates.into_iter().find(|path| path.is_dir())
         })
 }
 
