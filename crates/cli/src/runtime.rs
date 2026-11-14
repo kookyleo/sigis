@@ -1,5 +1,59 @@
 //! Injectable clock and certificate retrieval services for command execution.
 use sigis_pki_core::{fetch::Fetchers, time::Moment};
+use std::sync::Arc;
+
+/// A dedicated USER-PIN request did not produce a credential.
+///
+/// These errors carry no caller-controlled diagnostic text or PIN value.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pkcs11UserPinPromptError {
+    /// The caller cannot supply a token USER PIN.
+    Unavailable,
+    /// The caller cancelled this token USER-PIN request.
+    Cancelled,
+}
+
+type UserPinCallback =
+    dyn Fn(&'static str) -> Result<String, Pkcs11UserPinPromptError> + Send + Sync + 'static;
+
+/// Explicit programmatic authority to answer the token USER-PIN prompt.
+///
+/// This capability cannot answer a document-password, software-key passphrase
+/// or context-specific signing-PIN prompt. It installs no terminal or stdin
+/// fallback. Clones share the callback, never a cached returned PIN. Caller
+/// callback logging, panics, blocking and capture zeroization are not controlled
+/// by this wrapper.
+#[derive(Clone)]
+pub struct Pkcs11UserPinPrompt {
+    callback: Arc<UserPinCallback>,
+}
+
+impl std::fmt::Debug for Pkcs11UserPinPrompt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Pkcs11UserPinPrompt(<redacted>)")
+    }
+}
+
+impl Pkcs11UserPinPrompt {
+    /// Supply a callback dedicated to the USER-PIN request for this runtime.
+    ///
+    /// The callback receives only `PKCS#11 user PIN: `. Its response is not
+    /// trimmed or logged by the adapter. An empty response retains the existing
+    /// PKCS11 CLI fallback semantics; it is distinct from cancellation.
+    pub fn new<F>(callback: F) -> Self
+    where
+        F: Fn(&'static str) -> Result<String, Pkcs11UserPinPromptError> + Send + Sync + 'static,
+    {
+        Self {
+            callback: Arc::new(callback),
+        }
+    }
+
+    pub(crate) fn request_user_pin(&self) -> Result<String, Pkcs11UserPinPromptError> {
+        (self.callback)("PKCS#11 user PIN: ")
+    }
+}
+
 /// Runtime services corresponding to the upstream CLI context.
 #[derive(Clone, Debug)]
 pub struct ValidationRuntime {
@@ -9,6 +63,12 @@ pub struct ValidationRuntime {
     pub fetchers: Fetchers,
     /// Password supplied by an injected CLI password prompter.
     pub password: Option<String>,
+    /// Optional, explicitly supplied token USER-PIN prompt capability.
+    ///
+    /// `None` preserves the existing unsupported-prompt refusal; `password` is
+    /// never substituted for it. External exhaustive runtime literals must
+    /// include this field or use `..Default::default()`.
+    pub pkcs11_user_pin_prompt: Option<Pkcs11UserPinPrompt>,
     /// Optional trusted-list HTTP provider; None uses the bounded production transport.
     pub trusted_list_transport: Option<std::sync::Arc<dyn sigis_pki_fetch::HttpTransport>>,
 }
@@ -16,6 +76,7 @@ impl Default for ValidationRuntime {
     fn default() -> Self {
         Self {
             password: None,
+            pkcs11_user_pin_prompt: None,
             trusted_list_transport: None,
             now: Moment::now(),
             fetchers: sigis_pki_fetch::HttpFetchers::default().as_fetchers(),
@@ -58,7 +119,9 @@ mod user_pin_tests {
             .unwrap();
         assert!(answer == secret, "The dedicated callback response changed");
         assert_eq!(calls.load(Ordering::SeqCst), 1);
-        assert!(ValidationRuntime::default().pkcs11_user_pin_prompt.is_none());
+        assert!(ValidationRuntime::default()
+            .pkcs11_user_pin_prompt
+            .is_none());
     }
 
     #[derive(Debug)]
@@ -66,7 +129,7 @@ mod user_pin_tests {
     impl sigis_pki_fetch::HttpTransport for NoTransportIo {
         fn send(
             &self,
-            _: &sigis_pki_fetch::HttpRequest<'_>,
+            _: &sigis_pki_fetch::transport::HttpRequest<'_>,
         ) -> Result<sigis_pki_fetch::HttpResponse, sigis_pki_fetch::TransportError> {
             panic!("Cloning runtime services must not perform transport I/O")
         }

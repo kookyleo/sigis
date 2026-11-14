@@ -1,7 +1,7 @@
 //! Bounded real PKCS11 signing with typed configuration and inherited PDF state.
 use crate::{
     config::{CliConfig, PinEntry, Pkcs11Setup, SigningPinEntry},
-    runtime::ValidationRuntime,
+    runtime::{Pkcs11UserPinPrompt, Pkcs11UserPinPromptError, ValidationRuntime},
     software_signing::Options,
 };
 use serde_json::Value;
@@ -155,7 +155,43 @@ fn pull_labels(value: Option<&Value>) -> Result<Option<Vec<String>>, String> {
     })
 }
 
-fn native_setup(setup: &Pkcs11Setup) -> Result<Pkcs11Config, String> {
+fn resolve_cli_user_pin(
+    configured: Option<&str>,
+    raw_env_pin: Option<&std::ffi::OsStr>,
+    mode: PinEntryMode,
+    user_pin_prompt: Option<&Pkcs11UserPinPrompt>,
+) -> Result<Option<String>, String> {
+    let mut cli_pin = configured.map(str::to_owned);
+    if cli_pin.is_none() {
+        if let Some(value) = raw_env_pin.filter(|value| !value.is_empty()) {
+            let value = value
+                .to_str()
+                .ok_or("Invalid user PIN environment encoding.")?;
+            cli_pin = Some(
+                value
+                    .trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c))
+                    .to_owned(),
+            );
+        }
+    }
+    if cli_pin.is_none() && mode == PinEntryMode::Prompt {
+        let prompt = user_pin_prompt.ok_or_else(|| {
+            unsupported("User PIN prompt; provide a configured user PIN or PYHANKO_PKCS11_PIN")
+        })?;
+        cli_pin = Some(prompt.request_user_pin().map_err(|error| match error {
+            Pkcs11UserPinPromptError::Unavailable => "PKCS#11 user PIN is unavailable.".to_owned(),
+            Pkcs11UserPinPromptError::Cancelled => {
+                "PKCS#11 user PIN request was cancelled.".to_owned()
+            }
+        })?);
+    }
+    Ok(cli_pin)
+}
+
+fn native_setup(
+    setup: &Pkcs11Setup,
+    user_pin_prompt: Option<&Pkcs11UserPinPrompt>,
+) -> Result<Pkcs11Config, String> {
     let map = normalized(&setup.raw, "PKCS#11 setup")?;
     if let Some(criteria) = map.get("token-criteria") {
         for key in normalized(criteria, "PKCS#11 token-criteria")?.keys() {
@@ -248,24 +284,17 @@ fn native_setup(setup: &Pkcs11Setup) -> Result<Pkcs11Config, String> {
     // Match the CLI's configured-value, then truthy environment precedence.
     // The library's explicit-empty override differs from Python's `or`: an
     // empty environment after stripping must fall back to the configured value.
-    let mut cli_pin = native.user_pin.clone();
-    if cli_pin.is_none() {
-        if let Some(value) = std::env::var_os("PYHANKO_PKCS11_PIN").filter(|v| !v.is_empty()) {
-            let value = value
-                .into_string()
-                .map_err(|_| "Invalid user PIN environment encoding.".to_owned())?;
-            cli_pin = Some(
-                value
-                    .trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c))
-                    .to_owned(),
-            );
-        }
-    }
-    if cli_pin.is_none() && native.prompt_pin == PinEntryMode::Prompt {
-        return Err(unsupported(
-            "User PIN prompt; provide a configured user PIN or PYHANKO_PKCS11_PIN",
-        ));
-    }
+    let raw_env_pin = if native.user_pin.is_none() {
+        std::env::var_os("PYHANKO_PKCS11_PIN")
+    } else {
+        None
+    };
+    let cli_pin = resolve_cli_user_pin(
+        native.user_pin.as_deref(),
+        raw_env_pin.as_deref(),
+        native.prompt_pin,
+        user_pin_prompt,
+    )?;
     if cli_pin.as_deref().is_some_and(|pin| !pin.is_empty()) {
         native.user_pin = cli_pin;
     }
@@ -288,7 +317,7 @@ pub(crate) fn run(
     config_scope(config, context_selected)?;
     let setup =
         setup.ok_or_else(|| unsupported("Direct module signing without a named PKCS#11 setup"))?;
-    let native = native_setup(setup)?;
+    let native = native_setup(setup, runtime.pkcs11_user_pin_prompt.as_ref())?;
     let policy = config
         .map(|config| config.key_usages(options.get("validation-context")))
         .transpose()?
@@ -381,10 +410,19 @@ mod tests {
     fn configured_user_pin_including_empty_dominates_environment_and_modes() {
         for configured in ["configured", "", "  configured  "] {
             for env in [None, Some(OsStr::new("")), Some(OsStr::new("different"))] {
-                for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+                for mode in [
+                    PinEntryMode::Prompt,
+                    PinEntryMode::Skip,
+                    PinEntryMode::Defer,
+                ] {
                     assert_eq!(
-                        resolve_cli_user_pin(Some(configured), env, mode, Some(&forbidden_prompt()))
-                            .unwrap(),
+                        resolve_cli_user_pin(
+                            Some(configured),
+                            env,
+                            mode,
+                            Some(&forbidden_prompt())
+                        )
+                        .unwrap(),
                         Some(configured.to_owned())
                     );
                 }
@@ -401,10 +439,19 @@ mod tests {
             ("\u{a0}\u{2003}environment\u{3000}", "environment"),
             (" \t\n\u{1c}\u{3000}", ""),
         ] {
-            for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+            for mode in [
+                PinEntryMode::Prompt,
+                PinEntryMode::Skip,
+                PinEntryMode::Defer,
+            ] {
                 assert_eq!(
-                    resolve_cli_user_pin(None, Some(OsStr::new(raw)), mode, Some(&forbidden_prompt()))
-                        .unwrap(),
+                    resolve_cli_user_pin(
+                        None,
+                        Some(OsStr::new(raw)),
+                        mode,
+                        Some(&forbidden_prompt())
+                    )
+                    .unwrap(),
                     Some(expected.to_owned())
                 );
             }
@@ -493,7 +540,11 @@ mod tests {
     fn invalid_environment_encoding_is_ignored_only_when_configured_pin_wins() {
         use std::os::unix::ffi::OsStrExt;
         let invalid = OsStr::from_bytes(&[0xff, 0xfe]);
-        for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+        for mode in [
+            PinEntryMode::Prompt,
+            PinEntryMode::Skip,
+            PinEntryMode::Defer,
+        ] {
             assert_eq!(
                 resolve_cli_user_pin(Some(""), Some(invalid), mode, Some(&forbidden_prompt()))
                     .unwrap(),
@@ -524,8 +575,14 @@ mod tests {
         if selected.as_deref().is_some_and(|pin| !pin.is_empty()) {
             configured_empty.user_pin = selected;
         }
-        assert!(matches!(handle_pin(&configured_empty, None), UserPin::Pin(value) if value.is_empty()));
-        for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+        assert!(
+            matches!(handle_pin(&configured_empty, None), UserPin::Pin(value) if value.is_empty())
+        );
+        for mode in [
+            PinEntryMode::Prompt,
+            PinEntryMode::Skip,
+            PinEntryMode::Defer,
+        ] {
             let mut native = Pkcs11Config {
                 prompt_pin: mode,
                 ..Default::default()
@@ -542,7 +599,9 @@ mod tests {
                 native.user_pin = selected;
             }
             match mode {
-                PinEntryMode::Defer => assert!(matches!(handle_pin(&native, None), UserPin::ProtectedAuth)),
+                PinEntryMode::Defer => {
+                    assert!(matches!(handle_pin(&native, None), UserPin::ProtectedAuth))
+                }
                 _ => assert!(matches!(handle_pin(&native, None), UserPin::None)),
             }
         }
