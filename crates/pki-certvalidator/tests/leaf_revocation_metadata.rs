@@ -190,7 +190,10 @@ fn authenticated_crl_metadata_and_incomplete_reasons_refuse_completion() {
     let leaf = cert("signer2");
     let mut failures = Vec::new();
     for row in manifest["cases"].as_array().unwrap().iter().filter(|row| {
-        row["kind"] == "crl" && row["target"] == "leaf" && row["expected_proof"] == "reject"
+        row["kind"] == "crl"
+            && row["target"] == "leaf"
+            && row["expected_proof"] == "reject"
+            && row["id"] != "crl-reason-remove"
     }) {
         let name = row["id"].as_str().unwrap();
         let input = format!("metadata/{}", row["file"].as_str().unwrap());
@@ -220,6 +223,48 @@ fn authenticated_crl_metadata_and_incomplete_reasons_refuse_completion() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn remove_from_crl_is_not_a_temporal_event_and_cannot_complete_required_both() {
+    use sigis_pki_certvalidator::validate::find_valid_path;
+    manifest();
+    let leaf = cert("signer2");
+    let ordinary_context = context(
+        RevocationCheckingRule::CrlRequired,
+        "2020-12-25/crl-root.der",
+        None,
+        Some("metadata/crl-reason-remove.der"),
+    );
+    let ordinary = find_valid_path(&ordinary_context, &leaf, None).unwrap();
+    let current = find_current_leaf_revocation_evaluation(&ordinary_context, &leaf, None).unwrap();
+    assert_eq!(current.path(), &ordinary);
+    assert!(
+        current.leaf_events().is_empty(),
+        "removeFromCRL cannot mint a revocation proof"
+    );
+    assert!(current.unresolved_failure().is_none());
+
+    // A real agreeing Both positive precedes the forbidden selected peer.
+    let agreeing = context(
+        RevocationCheckingRule::CrlAndOcspRequired,
+        "2020-12-25/crl-root.der",
+        Some("metadata/ocsp-key-compromise.der"),
+        Some("metadata/crl-key-compromise.der"),
+    );
+    let complete = find_current_leaf_revocation_evaluation(&agreeing, &leaf, None).unwrap();
+    assert_eq!(complete.leaf_events().len(), 2);
+    assert!(complete.unresolved_failure().is_some());
+    let unsupported = context(
+        RevocationCheckingRule::CrlAndOcspRequired,
+        "2020-12-25/crl-root.der",
+        Some("metadata/ocsp-key-compromise.der"),
+        Some("metadata/crl-reason-remove.der"),
+    );
+    assert!(
+        find_current_leaf_revocation_evaluation(&unsupported, &leaf, None).is_err(),
+        "a selected removeFromCRL peer must never authorize temporal completion"
+    );
 }
 
 #[test]
