@@ -5,6 +5,7 @@ use super::{
     with_time::{timestamp_subindication, with_time_result_at_poe},
     AdesIndeterminate, AdesPassed, AdesSubIndic,
 };
+use der::Decode;
 use sigis_cms::{
     CmsValidationOptions, CmsValidationOrder, SignedContent, StandardCmsSignatureStatus,
     TimestampSignatureStatus,
@@ -32,7 +33,9 @@ use sigis_pki_core::{
 pub struct LtaValidationResult {
     /// Final ETSI sub-indication.
     pub ades_subindic: AdesSubIndic,
-    /// Actual cryptographic validation status.
+    /// Actual checked cryptographic status. After archival failure, this may
+    /// retain a fully validated preliminary status at authenticated signing POE;
+    /// its own validation reference does not imply final archival success.
     pub api_status: Option<StandardCmsSignatureStatus>,
     /// Earliest proven existence of the signature.
     pub best_signature_time: Option<Moment>,
@@ -359,6 +362,185 @@ fn outcome(
         poe,
     }
 }
+// A preliminary historical CMS conclusion is separate from archival success.
+// Never clear the expired current status: produce a new, fully checked status
+// over the same signed bytes, path and caller requirements at authenticated POE.
+#[allow(clippy::too_many_arguments)]
+fn checked_historical_preliminary(
+    file: &PdfFile,
+    signature: &EmbeddedSignature,
+    ctx: &ValidationContext,
+    qual: &QualificationSpec<'_>,
+    options: &CmsValidationOptions<'_>,
+    status: &StandardCmsSignatureStatus,
+    best: Moment,
+    poe: &PoeManager,
+    selected_timestamp: &[u8],
+    docmdp: Option<sigis_pdf::MdpPerm>,
+) -> Result<Option<super::with_time::WithTimeValidationResult>> {
+    use sigis_pki_core::{asn1::tlv::Tlv, errors::ValidationError};
+    if best >= ctx.moment()
+        || ctx.revinfo_policy().revocation_checking_policy != sigis_pki_certvalidator::NO_REVOCATION
+        || !status.signature.intact
+        || !status.signature.valid
+        || !matches!(
+            status.signature.trust_problem,
+            Some(TrustProblem::Path(ValidationError::Expired { .. }))
+        )
+        || !status
+            .signature
+            .signing_cert
+            .as_ref()
+            .is_some_and(|cert| cert.not_after() < ctx.moment())
+    {
+        return Ok(None);
+    }
+    let (Some(path), Some(timestamp)) = (
+        status.signature.validation_path.as_ref(),
+        status.timestamp_validity.as_ref(),
+    ) else {
+        return Ok(None);
+    };
+    if !timestamp.trusted()
+        || timestamp.timestamp != best
+        || !path
+            .certs()
+            .into_iter()
+            .skip(1)
+            .all(|cert| poe.get(cert.der()).is_some_and(|(time, _)| time <= best))
+    {
+        return Ok(None);
+    }
+    // This bounded profile has no uncertainty/attribute-certificate or content
+    // timestamp completion protocol. Leave those cases conservatively refused.
+    let sd = signed_data(crate::cms_from_contents(&signature.contents)?)?;
+    if !sd.attribute_certificates.is_empty()
+        || status.content_timestamp_validity.is_some()
+        || !poe
+            .get(&signer(&sd)?.signature)
+            .is_some_and(|(time, _)| time <= best)
+    {
+        return Ok(None);
+    }
+    let token = signed_data(crate::cms_from_contents(selected_timestamp)?)?;
+    let info = sigis_cms::validate::tst_info(&token)?;
+    if info.accuracy.is_some() || info.extensions.is_some() {
+        return Ok(None);
+    }
+    let fields = token.econtent.as_deref().and_then(|raw| {
+        Tlv::parse_exact(raw)
+            .ok()
+            .and_then(|value| value.children().ok())
+    });
+    let raw_time = fields.as_ref().and_then(|fields| fields.get(4));
+    let canonical_bound = raw_time
+        .filter(|raw| {
+            raw.is_universal(24)
+                && !raw.constructed
+                && raw.value.len() == 15
+                && raw.value.last() == Some(&b'Z')
+                && raw.value[..14].iter().all(u8::is_ascii_digit)
+        })
+        .and_then(|raw| der::asn1::GeneralizedTime::from_der(raw.raw).ok())
+        .map(|time| Moment::from(time.to_date_time()));
+    if canonical_bound != Some(best) {
+        return Ok(None);
+    }
+    let Some(ts_path) = timestamp.signature.validation_path.as_ref() else {
+        return Ok(None);
+    };
+    let covers_bound = |path: &sigis_pki_certvalidator::ValidationPath| {
+        let anchor = path.trust_anchor();
+        path.certs()
+            .into_iter()
+            .skip(1)
+            .all(|cert| cert.not_before() <= best && best <= cert.not_after())
+            && (!anchor.enforce_validity()
+                || (anchor.cert().not_before() <= best && best <= anchor.cert().not_after()))
+            && anchor
+                .qualifiers()
+                .valid_from
+                .is_none_or(|start| start <= best)
+            && anchor
+                .qualifiers()
+                .valid_until
+                .is_none_or(|end| best <= end)
+    };
+    if !covers_bound(ts_path) {
+        return Ok(None);
+    }
+    let historical = at(ctx, best, best, false);
+    let historical_options = CmsValidationOptions {
+        // MAIN's authenticated historical reference is not TSA self-POE.
+        // Keep all timestamp validation at the original independently trusted reference.
+        ts_validation_context: Some(ctx),
+        ..options.clone()
+    };
+    let mut candidate = sigis_cms::validate_cms_signature_with(
+        &signature.contents,
+        SignedContent::Data(&signature.signed_data(file)?),
+        &historical,
+        &historical_options,
+    )?;
+    // No timed/permanent algorithm recovery is licensed by this preliminary
+    // expiration path. Check the actual fresh path with the original policy/time.
+    annotate_algorithm_constraint(&sd, &mut candidate.signature, ctx)?;
+    let (Some(checked_path), Some(checked_ts)) = (
+        candidate.signature.validation_path.as_ref(),
+        candidate.timestamp_validity.as_ref(),
+    ) else {
+        return Ok(None);
+    };
+    if !candidate.bottom_line()
+        || candidate
+            .ac_validation_errs
+            .as_ref()
+            .is_some_and(|errors| !errors.is_empty())
+        || candidate
+            .cades_signer_attrs
+            .as_ref()
+            .is_some_and(|attrs| !attrs.valid())
+        || checked_path.certs() != path.certs()
+        || checked_path.trust_anchor() != path.trust_anchor()
+        || checked_ts.timestamp != timestamp.timestamp
+        || checked_ts.signature.validation_time != timestamp.signature.validation_time
+        || checked_ts.signature.validation_path != timestamp.signature.validation_path
+        || checked_ts.signature.signing_cert != timestamp.signature.signing_cert
+    {
+        return Ok(None);
+    }
+    let current = with_time_result_at_poe(candidate, qual, best, None, ctx.moment());
+    if current.ades_subindic != AdesPassed::OK.into()
+        || [
+            current.qualification.as_ref(),
+            current.timestamp_qualification.as_ref(),
+        ]
+        .into_iter()
+        .flatten()
+        .any(|assessment| {
+            assessment
+                .service_definition
+                .as_ref()
+                .is_some_and(|service| {
+                    best < service.base_info.valid_from
+                        || service.base_info.valid_until.is_some_and(|end| best > end)
+                })
+        })
+    {
+        return Ok(None);
+    }
+    // Past-validation errors otherwise return before this mandatory PDF check.
+    let Some(checked_status) = current.api_status.as_ref() else {
+        return Ok(None);
+    };
+    let dictionary = crate::sig_dictionary(file, signature)?;
+    let (_, seed_error) =
+        crate::seed_values::validate(file, signature, &dictionary, checked_status, docmdp)?;
+    if seed_error.is_some() {
+        return Ok(None);
+    }
+    Ok(Some(current))
+}
 /// Validate a PDF signature using DSS and document timestamps.
 pub fn lta_validation(
     file: &PdfFile,
@@ -542,6 +724,7 @@ pub fn lta_validation_with_ades_options(
     let mut best = poe.poe_time(si.signature.as_slice());
     let mut ts_failure = None;
     let mut timestamp = None;
+    let mut selected_timestamp = None;
     for token in timestamp_tokens(&sd)? {
         let alg = crate::tst_imprint_algorithm(&token)?;
         let ts = ts_at(&token, &alg.digest(si.signature.as_slice()), &ctx, &poe)?;
@@ -568,6 +751,7 @@ pub fn lta_validation_with_ades_options(
                 .is_none_or(|t: &TimestampSignatureStatus| ts.timestamp < t.timestamp)
             {
                 timestamp = Some(ts);
+                selected_timestamp = Some(token);
             }
         } else {
             ts_failure = Some((
@@ -652,6 +836,31 @@ pub fn lta_validation_with_ades_options(
                 } else {
                     AdesIndeterminate::NO_POE.into()
                 };
+                if let Some(token) = selected_timestamp.as_deref() {
+                    if let Some(preliminary) = checked_historical_preliminary(
+                        file,
+                        signature,
+                        &ctx,
+                        qual,
+                        &cms_options,
+                        &status,
+                        best,
+                        &poe,
+                        token,
+                        pdf.docmdp_level,
+                    )? {
+                        // Full MAIN validity at proven best is informative;
+                        // archival validation still failed with this exact cause.
+                        return Ok(LtaValidationResult {
+                            ades_subindic: without_archival_proof(failed),
+                            api_status: preliminary.api_status,
+                            qualification: preliminary.qualification,
+                            best_signature_time: Some(best),
+                            failure_msg: Some(message),
+                            poe,
+                        });
+                    }
+                }
                 return Ok(outcome(
                     without_archival_proof(failed),
                     Some(status),
