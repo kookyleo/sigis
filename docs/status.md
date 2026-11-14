@@ -31,7 +31,26 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **4d47f41c**. All six source-specific workspace
+Current accepted source: **3a7737ec**. All six source-specific workspace
+gates and final current-source/runtime reviews passed. Measured Rust results:
+**2087 discovered /2084 passed /3 ignored /0 failed /212 reports**
+(discovered/passed/ignored/failed/reports).
+The opt-in exact main-signer AdES surface preserves Default/None and carries
+all five native fields through current, discovery, final historical and future
+MAIN validation while retaining fixed TSA purpose. Root focused15+3 tests,
+69actual exports and207 fresh pinned API calls add zero original IDs.
+Among68 matched exact profiles,56 final results agree and12 native refusals
+are stricter; one legacy-None comparison uses different ordinary defaults.
+The69-case aggregate56/13 is not13 matched-profile divergences. Component
+exact/ordinary differences15/33 and21 API-clock differences remain separate.
+Inventory stays **1431/1350/17/64**, C188/64, V47/47 and library1151/17.
+No C qualified CLI original, universal fail-closed/parity or complete port is
+accepted by this cohort. Final gate/review hashes:
+**/home/l/.codex/artifacts/sigis/round3-launch/ades-exact-integration/final-gate-review.json SHA256 cf2069f0c53fca7dd3b0a5c498f2b507d3be03b609d010d4580d1947185b8b4d**. See
+[current acceptance](lanes/round3/l-ades-exact.md) and
+[qualified CLI interface decision](lanes/round3/c-qualified-interface-decision.md).
+
+Historical accepted source: **4d47f41c**. All six source-specific workspace
 gates passed. Measured Rust results: **2,069 discovered /2,066 passed
 /3 ignored /0 failed**,210 reports. Immutable inventory:
 **1,431 total /1,350 passed /17 skipped /64 pending**. Exactly three C originals
@@ -376,7 +395,7 @@ other global/provider exclusions remain unchanged.
 
 ## Differential results
 
-Current accepted source4d47f41c adds three C identity/getpass originals/12
+Historical accepted source4d47f41c adds three C identity/getpass originals/12
 architecture cases. Actual configured CLI, public programmatic callback and
 real PTY children produce12 original PDFs;3 supplemental PDFs add no IDs.
 The35 current process records separate4nativeCLI/4terminaldrivers/12original-
@@ -496,7 +515,21 @@ claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
 
-Current4d47 identity and visible-P12 routes explicitly retain complete
+Current accepted source3a7737ec adds zero original IDs.
+Among68 matched Some-exact profiles,56 final results agree and12 native
+refusals are stricter. One legacy-None native ordinary-NR versus unrestricted
+Python-AdES control compares different defaults; it accounts for the thirteenth
+aggregate difference and is not a matched exact-profile divergence. The69-case
+aggregate is56agreements/13differences. Exact low-level MAIN has15 component
+flag differences (native trust higher13/lower2); ordinary normalizing CMS has33
+(higher27/lower6). Those stage/time/predicate scopes differ from final public
+AdES. Best signature times agree, while21 returned API-status clocks differ.
+These are bounded current Root observations, not universal fail-closed/parity
+or complete-port proof. Optional/raw policy, provider and historical POE/profile
+limits remain open; full workspace gate and final current-source/runtime review
+are recorded separately in the source-specific acceptance. See l-ades-exact.md.
+
+Historical accepted4d47 identity and visible-P12 routes explicitly retain complete
 caller usage/configuration/property requirements through validated private
 adapter capability; no projected empty config, fallback engine or implicit
 root is used to force agreement. Previously accepted ordinary/detached/
@@ -668,8 +701,8 @@ acceptance remain L-owned. No service switch follows from function totals.
 | L — Lead / integration | Root/tools/shared APIs/lock/central status | Assigned live functions11/11; pending0. Continue integration, parameter/skip/provenance audits, complete gates and final service-replacement decision | Keep coherent source/ELF/runtime acceptance and immutable ownership; no service restart or complete-port inference |
 
 P/V/S/C can proceed within exclusive paths while L coordinates interfaces and
-acceptance. Library1168/1148/20/0 and L11/11/0/0 do not complete the20skips,
-provider parameters or unassigned features. All69pending IDs are in C. The C
+acceptance. Library1168/1151/17/0 and L11/11/0/0 do not complete the17skips,
+provider parameters or unassigned features. All64pending IDs are in C. The C
 unit LTA fixtures adapt expired frozen2020 signer1 to existing signer1-long.
 The true L live CLI-LTA original already uses current signer1-long and needs
 no new credential adaptation. These are distinct, explicit scopes. The final
