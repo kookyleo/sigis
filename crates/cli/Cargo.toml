@@ -30,6 +30,7 @@ sigis-cms = { workspace = true }
 sigis-pades = { workspace = true }
 sigis-pdf-diff = { workspace = true }
 sigis-pki-certvalidator = { workspace = true }
+sigis-eutl = { workspace = true }
 
 [dev-dependencies]
 sigis-cms = { workspace = true }

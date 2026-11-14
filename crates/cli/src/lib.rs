@@ -3,13 +3,14 @@ pub mod config;
 pub mod crypt;
 pub mod detached_signing;
 pub mod fields;
-pub mod ltv;
 pub mod identity_signing;
+pub mod ltv;
 pub mod pemder_signing;
 mod pkcs11_config_frontend;
 mod pkcs11_signing;
 pub mod pkcs12_signing;
 pub mod plugins;
+mod qualified_validation;
 pub mod runtime;
 pub mod signature_appearance;
 pub mod software_signing;
@@ -70,7 +71,12 @@ pub fn run(args: &[String]) -> Output {
 
 /// Run with explicitly registered native signing plugins.
 pub fn run_with_registry(args: &[String], registry: &plugins::PluginRegistry) -> Output {
-    run_with_runtime(args, registry, &runtime::ValidationRuntime::default())
+    run_with_runtime_mode(
+        args,
+        registry,
+        &runtime::ValidationRuntime::default(),
+        false,
+    )
 }
 
 /// Run cryptography with explicit runtime services and native plugin dispatch.
@@ -79,6 +85,15 @@ pub fn run_with_runtime(
     args: &[String],
     registry: &plugins::PluginRegistry,
     runtime: &runtime::ValidationRuntime,
+) -> Output {
+    run_with_runtime_mode(args, registry, runtime, true)
+}
+
+fn run_with_runtime_mode(
+    args: &[String],
+    registry: &plugins::PluginRegistry,
+    runtime: &runtime::ValidationRuntime,
+    injected_runtime: bool,
 ) -> Output {
     let matches = match command()
         .try_get_matches_from(std::iter::once("pyhanko".to_owned()).chain(args.iter().cloned()))
@@ -142,10 +157,11 @@ pub fn run_with_runtime(
         "sign" => match values.first().map(String::as_str) {
             Some("list" | "addfields") => fields::run(&values),
             Some("validate") => validation::run_with_runtime(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime),
+            Some("adesverify") => qualified_validation::run(&values[1..], config.as_ref(), matches.get_flag("verbose"), runtime, injected_runtime),
             Some("ltaupdate" | "ltvfix") => ltv::run_with_runtime(&values, config.as_ref(), runtime),
             Some("timestamp") => timestamp::run_with_runtime(&values[1..], config.as_ref(), runtime),
             Some("addsig") => run_signing(&values[1..], config.as_ref(), &registry, runtime),
-            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, addsig, timestamp, ltaupdate, ltvfix\n".into()),
+            Some("--help") | None => Ok("Usage: pyhanko sign [COMMAND]\nCommands: list, addfields, validate, adesverify, addsig, timestamp, ltaupdate, ltvfix\n".into()),
             Some(command) => Err(format!("Command '{command}' is not available in this cryptography-and-fields increment.")),
         },
         _ => Err(format!("Command '{name}' is not available in this cryptography-and-fields increment.")),

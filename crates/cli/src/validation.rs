@@ -141,6 +141,39 @@ pub fn context_from_config(
     name: Option<&str>,
     runtime: &ValidationRuntime,
 ) -> Result<ValidationContext, String> {
+    context_from_original_settings(config, name, runtime, None)
+}
+
+/// AdES replaces the complete legacy revocation policy before the one original
+/// builder is consumed. Other represented settings retain their original values.
+pub(crate) fn context_for_ades(
+    config: Option<&CliConfig>,
+    name: Option<&str>,
+    runtime: &ValidationRuntime,
+    no_revocation_check: bool,
+    point_in_time: bool,
+) -> Result<ValidationContext, String> {
+    use sigis_pki_certvalidator::policy::{
+        CertRevTrustPolicy, FreshnessReqType, NO_REVOCATION, REQUIRE_REVINFO,
+    };
+    let mut policy = CertRevTrustPolicy::new(if no_revocation_check {
+        NO_REVOCATION
+    } else {
+        REQUIRE_REVINFO
+    });
+    if !no_revocation_check {
+        policy.freshness = None;
+        policy.freshness_req_type = FreshnessReqType::MaxDiffRevocationValidation;
+    }
+    context_from_original_settings(config, name, runtime, Some((policy, point_in_time)))
+}
+
+fn context_from_original_settings(
+    config: Option<&CliConfig>,
+    name: Option<&str>,
+    runtime: &ValidationRuntime,
+    ades_policy: Option<(sigis_pki_certvalidator::policy::CertRevTrustPolicy, bool)>,
+) -> Result<ValidationContext, String> {
     let mut builder = ValidationContext::builder()
         .moment(runtime.now)
         .time_tolerance(Duration::from_secs(30))
@@ -167,6 +200,12 @@ pub fn context_from_config(
         );
         policy.retroactive_revinfo = s.retroactive_revinfo;
         builder = builder.revinfo_policy(policy);
+    }
+    if let Some((policy, point_in_time)) = ades_policy {
+        builder = builder
+            .revinfo_policy(policy)
+            .point_in_time_validation(point_in_time)
+            .best_signature_time(runtime.now);
     }
     builder
         .build()
@@ -287,7 +326,7 @@ fn prompt_password(runtime: &ValidationRuntime) -> Result<String, String> {
         .map_err(|e| e.to_string())?;
     Ok(text.trim_end_matches(['\r', '\n']).into())
 }
-fn authenticate(
+pub(crate) fn authenticate(
     file: &PdfFile,
     password: Option<&str>,
     runtime: &ValidationRuntime,
