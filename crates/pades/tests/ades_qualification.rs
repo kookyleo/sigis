@@ -257,22 +257,72 @@ fn mandatory_qualification_without_registry_rejects() {
 }
 
 #[test]
-fn pre_revocation_poe_restores_api_trust() {
+fn pre_revocation_poe_preserves_incomplete_main_refusal() {
+    use sigis_cms::{CmsValidationOptions, CmsValidationOrder, SignedContent, TrustProblem};
+    use sigis_pki_core::{errors::ValidationError, time::Moment};
+
     let rec = Recording::load(MODULE);
     let call = &rec.calls(MODULE, "test_embedded_cades_pre_revoke_with_poe")[0];
-    let result = with_time_validation(
-        &call.content_info(),
-        None,
-        &default_context(&rec, call),
-        &QualificationSpec::default(),
-        None,
+    let bytes = call.content_info();
+    let ctx = default_context(&rec, call);
+    let context_before = format!("{ctx:?}");
+    // Same signed input, context and MAIN/TSA order as the detailed AdES call.
+    // This actual failed CMS operation diagnoses the retained status; it does
+    // not authorize a weaker retry or complete the interrupted MAIN checks.
+    let initial = sigis_cms::validate_cms_signature_with(
+        &bytes,
+        SignedContent::Encapsulated,
+        &ctx,
+        &CmsValidationOptions {
+            validation_order: CmsValidationOrder::SignerFirst,
+            ..Default::default()
+        },
     )
     .unwrap();
-    assert_eq!(result.ades_subindic.standard_name(), "OK");
-    let status = result.api_status.unwrap();
+    assert!(initial.signature.intact && initial.signature.valid);
+    assert!(!initial.signature.trusted());
+    assert!(matches!(
+        initial.signature.trust_problem,
+        Some(TrustProblem::Path(ValidationError::Revoked { .. }))
+    ));
+    assert!(initial.signature.validation_path.is_some());
+    assert!(initial.timestamp_validity.as_ref().unwrap().trusted());
+
+    let result =
+        with_time_validation(&bytes, None, &ctx, &QualificationSpec::default(), None).unwrap();
+    assert_eq!(result.ades_subindic.standard_name(), "REVOKED_NO_POE");
+    assert_eq!(
+        result.best_signature_time,
+        Some(Moment::parse_rfc3339("2020-11-01T00:00:00Z").unwrap())
+    );
+    assert!(result.signature_not_before_time.is_none());
+    assert!(result.qualification.is_none());
+    let status = result
+        .api_status
+        .expect("retain the available failed MAIN payload");
+    assert_eq!(
+        format!("{:?}", status.signature),
+        format!("{:?}", initial.signature)
+    );
     assert!(status.signature.revoked());
-    assert!(status.signature.trusted());
-    assert!(status.bottom_line());
+    assert!(!status.signature.trusted());
+    assert!(!status.bottom_line());
+    assert!(status.timestamp_validity.as_ref().unwrap().trusted());
+    assert_eq!(format!("{ctx:?}"), context_before);
+    eprintln!(
+        "V_WITH_TIME_PENDING_CONTRACT {}",
+        serde_json::json!({
+            "original": "pyhanko/test_ades_validation.py::test_embedded_cades_pre_revoke_with_poe",
+            "original_expected": "OK",
+            "hardened_subindic": result.ades_subindic.standard_name(),
+            "best_signature_time": result.best_signature_time.map(|t| t.to_string()),
+            "signature_not_before_time": result.signature_not_before_time.map(|t| t.to_string()),
+            "initial_main": format!("{:?}", initial.signature),
+            "retained_main": format!("{:?}", status.signature),
+            "signer_qualification": "None",
+            "original_function_pending": true
+        })
+    );
 }
 
 #[test]
