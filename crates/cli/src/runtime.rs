@@ -22,3 +22,162 @@ impl Default for ValidationRuntime {
         }
     }
 }
+
+#[cfg(test)]
+mod user_pin_tests {
+    use super::{Pkcs11UserPinPrompt, Pkcs11UserPinPromptError, ValidationRuntime};
+    use sigis_pki_core::time::Moment;
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
+
+    #[test]
+    fn user_pin_capability_is_explicit_and_debug_is_redacted() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let observed = calls.clone();
+        let secret = "CAPTURED_TOKEN_SECRET_MUST_NOT_BE_DEBUGGED";
+        let prompt = Pkcs11UserPinPrompt::new(move |label| {
+            assert_eq!(label, "PKCS#11 user PIN: ");
+            observed.fetch_add(1, Ordering::SeqCst);
+            Ok(secret.to_owned())
+        });
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        assert!(!format!("{prompt:?}").contains(secret));
+        let runtime = ValidationRuntime {
+            pkcs11_user_pin_prompt: Some(prompt),
+            ..Default::default()
+        };
+        assert!(!format!("{runtime:?}").contains(secret));
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        let answer = runtime
+            .pkcs11_user_pin_prompt
+            .as_ref()
+            .unwrap()
+            .request_user_pin()
+            .unwrap();
+        assert!(answer == secret, "The dedicated callback response changed");
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert!(ValidationRuntime::default().pkcs11_user_pin_prompt.is_none());
+    }
+
+    #[derive(Debug)]
+    struct NoTransportIo;
+    impl sigis_pki_fetch::HttpTransport for NoTransportIo {
+        fn send(
+            &self,
+            _: &sigis_pki_fetch::HttpRequest<'_>,
+        ) -> Result<sigis_pki_fetch::HttpResponse, sigis_pki_fetch::TransportError> {
+            panic!("Cloning runtime services must not perform transport I/O")
+        }
+    }
+
+    #[test]
+    fn runtime_clone_preserves_callback_identity_and_all_existing_services() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let observed = calls.clone();
+        let runtime = ValidationRuntime {
+            pkcs11_user_pin_prompt: Some(Pkcs11UserPinPrompt::new(move |_| {
+                let next = observed.fetch_add(1, Ordering::SeqCst) + 1;
+                Ok(format!("response-{next}"))
+            })),
+            now: Moment::from_unix_secs(1_604_188_800),
+            fetchers: sigis_pki_fetch::HttpFetchers::default().as_fetchers(),
+            password: Some("document-role-only".into()),
+            trusted_list_transport: Some(Arc::new(NoTransportIo)),
+        };
+        let clone = runtime.clone();
+        assert_eq!(clone.now, runtime.now);
+        assert_eq!(clone.password, runtime.password);
+        assert!(Arc::ptr_eq(
+            clone.fetchers.cert.as_ref().unwrap(),
+            runtime.fetchers.cert.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            clone.fetchers.ocsp.as_ref().unwrap(),
+            runtime.fetchers.ocsp.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            clone.fetchers.crl.as_ref().unwrap(),
+            runtime.fetchers.crl.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            clone.trusted_list_transport.as_ref().unwrap(),
+            runtime.trusted_list_transport.as_ref().unwrap()
+        ));
+        let first = runtime.pkcs11_user_pin_prompt.as_ref().unwrap();
+        let second = clone.pkcs11_user_pin_prompt.as_ref().unwrap();
+        assert!(Arc::ptr_eq(&first.callback, &second.callback));
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        assert_eq!(first.request_user_pin().unwrap(), "response-1");
+        assert_eq!(second.request_user_pin().unwrap(), "response-2");
+        assert_eq!(calls.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn closure_capture_drops_only_after_the_last_capability_clone() {
+        struct Capture(Arc<AtomicUsize>);
+        impl Drop for Capture {
+            fn drop(&mut self) {
+                self.0.fetch_add(1, Ordering::SeqCst);
+            }
+        }
+        let drops = Arc::new(AtomicUsize::new(0));
+        let capture = Capture(drops.clone());
+        let runtime = ValidationRuntime {
+            pkcs11_user_pin_prompt: Some(Pkcs11UserPinPrompt::new(move |_| {
+                let _keep_capture_alive = &capture;
+                Ok("fixture-response".into())
+            })),
+            ..Default::default()
+        };
+        let clone = runtime.clone();
+        let last = clone.pkcs11_user_pin_prompt.clone();
+        drop(runtime);
+        drop(clone);
+        assert_eq!(drops.load(Ordering::SeqCst), 0);
+        drop(last);
+        assert_eq!(drops.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn distinct_capabilities_keep_counters_and_responses_separate() {
+        let a = Arc::new(AtomicUsize::new(0));
+        let b = Arc::new(AtomicUsize::new(0));
+        let make = |counter: Arc<AtomicUsize>, response: &'static str| {
+            Pkcs11UserPinPrompt::new(move |_| {
+                counter.fetch_add(1, Ordering::SeqCst);
+                Ok(response.into())
+            })
+        };
+        let first = make(a.clone(), "first-role");
+        let second = make(b.clone(), "second-role");
+        assert_eq!(first.request_user_pin().unwrap(), "first-role");
+        assert_eq!(first.clone().request_user_pin().unwrap(), "first-role");
+        assert_eq!(second.request_user_pin().unwrap(), "second-role");
+        assert_eq!(a.load(Ordering::SeqCst), 2);
+        assert_eq!(b.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn typed_errors_have_no_arbitrary_credential_payload() {
+        for error in [
+            Pkcs11UserPinPromptError::Unavailable,
+            Pkcs11UserPinPromptError::Cancelled,
+        ] {
+            let prompt = Pkcs11UserPinPrompt::new(move |_| Err(error));
+            assert_eq!(prompt.request_user_pin(), Err(error));
+            assert!(matches!(
+                format!("{error:?}").as_str(),
+                "Unavailable" | "Cancelled"
+            ));
+        }
+    }
+
+    #[test]
+    fn runtime_and_prompt_keep_send_and_sync_contracts() {
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<Pkcs11UserPinPrompt>();
+        assert_send_sync::<ValidationRuntime>();
+    }
+}

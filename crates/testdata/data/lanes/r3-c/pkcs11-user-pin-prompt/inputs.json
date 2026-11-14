@@ -1,0 +1,35 @@
+{
+  "scope": "Actual original Ed25519 fixture input bytes; no generation, provider import or execution performed during preparation",
+  "architecture": "testing-ca-ed25519",
+  "token_label": "tested25519",
+  "certificates": [
+    {
+      "label": "root",
+      "file": "root.der",
+      "source": "/home/l/D/kooky/sigis-wt/r3-p-cli-signing-env-pin/crates/testdata/data/lanes/d/pki/testing-ca-ed25519/root.crt",
+      "length": 524,
+      "sha256": "1077fe74b6c0375b1487c20b3ab5d63475ccaaa6bb21ef9e4d7dfbecf9e57c41"
+    },
+    {
+      "label": "interm",
+      "file": "interm.der",
+      "source": "/home/l/D/kooky/sigis-wt/r3-p-cli-signing-env-pin/crates/testdata/data/lanes/d/pki/testing-ca-ed25519/interm.crt",
+      "length": 535,
+      "sha256": "14ec84148b998ebbe7d74834fe27b467d5069b52514fb8161e4eb7e2b605f78b"
+    },
+    {
+      "label": "signer1",
+      "file": "signer1.der",
+      "source": "/home/l/D/kooky/sigis-wt/r3-p-cli-signing-env-pin/crates/testdata/data/lanes/d/pki/testing-ca-ed25519/signer1.crt",
+      "length": 706,
+      "sha256": "452fe35a3a0017f4bb63c02624e1d671ad8c2d3e99d77af24c072aab8579b9b4"
+    }
+  ],
+  "private_key_input": {
+    "file": "signer.key.pem",
+    "source": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/keys-ed25519/signer.key.pem",
+    "length": 119,
+    "sha256": "6fe14b0effe8efaea259e07ecac8a38e42bce4e27aeafc6516ebfd4d7da247b1",
+    "readback_from_token": false
+  }
+}

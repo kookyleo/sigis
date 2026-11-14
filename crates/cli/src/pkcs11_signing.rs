@@ -362,8 +362,191 @@ pub(crate) fn run(
 
 #[cfg(test)]
 mod tests {
-    use super::pull_labels;
+    use super::{pull_labels, resolve_cli_user_pin, PinEntryMode};
+    use crate::runtime::{Pkcs11UserPinPrompt, Pkcs11UserPinPromptError};
     use serde_json::json;
+    use std::{
+        ffi::OsStr,
+        sync::{
+            atomic::{AtomicUsize, Ordering},
+            Arc,
+        },
+    };
+
+    fn forbidden_prompt() -> Pkcs11UserPinPrompt {
+        Pkcs11UserPinPrompt::new(|_| panic!("An existing credential must suppress the prompt"))
+    }
+
+    #[test]
+    fn configured_user_pin_including_empty_dominates_environment_and_modes() {
+        for configured in ["configured", "", "  configured  "] {
+            for env in [None, Some(OsStr::new("")), Some(OsStr::new("different"))] {
+                for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+                    assert_eq!(
+                        resolve_cli_user_pin(Some(configured), env, mode, Some(&forbidden_prompt()))
+                            .unwrap(),
+                        Some(configured.to_owned())
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn environment_user_pin_uses_python_strip_without_requesting_a_callback() {
+        for (raw, expected) in [
+            ("environment", "environment"),
+            (" \tenvironment\r\n", "environment"),
+            ("\u{1c}\u{1d}environment\u{1e}\u{1f}", "environment"),
+            ("\u{a0}\u{2003}environment\u{3000}", "environment"),
+            (" \t\n\u{1c}\u{3000}", ""),
+        ] {
+            for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+                assert_eq!(
+                    resolve_cli_user_pin(None, Some(OsStr::new(raw)), mode, Some(&forbidden_prompt()))
+                        .unwrap(),
+                    Some(expected.to_owned())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn absent_or_raw_empty_environment_requests_only_explicit_user_authority() {
+        for env in [None, Some(OsStr::new(""))] {
+            let calls = Arc::new(AtomicUsize::new(0));
+            let observed = calls.clone();
+            let prompt = Pkcs11UserPinPrompt::new(move |label| {
+                assert_eq!(label, "PKCS#11 user PIN: ");
+                observed.fetch_add(1, Ordering::SeqCst);
+                Ok("dedicated-user-response".into())
+            });
+            assert_eq!(
+                resolve_cli_user_pin(None, env, PinEntryMode::Prompt, Some(&prompt)).unwrap(),
+                Some("dedicated-user-response".into())
+            );
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            assert_eq!(
+                resolve_cli_user_pin(None, env, PinEntryMode::Prompt, None).unwrap_err(),
+                "Unsupported PKCS#11 signing requirement: User PIN prompt; provide a configured user PIN or PYHANKO_PKCS11_PIN."
+            );
+        }
+    }
+
+    #[test]
+    fn missing_credentials_in_skip_and_defer_do_not_invoke_user_prompt() {
+        for env in [None, Some(OsStr::new(""))] {
+            for mode in [PinEntryMode::Skip, PinEntryMode::Defer] {
+                assert_eq!(
+                    resolve_cli_user_pin(None, env, mode, Some(&forbidden_prompt())).unwrap(),
+                    None
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn returned_prompt_values_are_not_trimmed_or_retried() {
+        for response in ["", "  ", "\u{1c}response\u{1f}", "response"] {
+            let calls = Arc::new(AtomicUsize::new(0));
+            let observed = calls.clone();
+            let prompt = Pkcs11UserPinPrompt::new(move |_| {
+                observed.fetch_add(1, Ordering::SeqCst);
+                Ok(response.to_owned())
+            });
+            assert_eq!(
+                resolve_cli_user_pin(None, None, PinEntryMode::Prompt, Some(&prompt)).unwrap(),
+                Some(response.to_owned())
+            );
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+
+    #[test]
+    fn prompt_errors_have_static_diagnostics_without_fallback_or_retry() {
+        for (error, expected) in [
+            (
+                Pkcs11UserPinPromptError::Unavailable,
+                "PKCS#11 user PIN is unavailable.",
+            ),
+            (
+                Pkcs11UserPinPromptError::Cancelled,
+                "PKCS#11 user PIN request was cancelled.",
+            ),
+        ] {
+            let calls = Arc::new(AtomicUsize::new(0));
+            let observed = calls.clone();
+            let prompt = Pkcs11UserPinPrompt::new(move |_| {
+                observed.fetch_add(1, Ordering::SeqCst);
+                Err(error)
+            });
+            assert_eq!(
+                resolve_cli_user_pin(None, None, PinEntryMode::Prompt, Some(&prompt)).unwrap_err(),
+                expected
+            );
+            assert_eq!(calls.load(Ordering::SeqCst), 1);
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn invalid_environment_encoding_is_ignored_only_when_configured_pin_wins() {
+        use std::os::unix::ffi::OsStrExt;
+        let invalid = OsStr::from_bytes(&[0xff, 0xfe]);
+        for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+            assert_eq!(
+                resolve_cli_user_pin(Some(""), Some(invalid), mode, Some(&forbidden_prompt()))
+                    .unwrap(),
+                Some(String::new())
+            );
+            assert_eq!(
+                resolve_cli_user_pin(None, Some(invalid), mode, Some(&forbidden_prompt()))
+                    .unwrap_err(),
+                "Invalid user PIN environment encoding."
+            );
+        }
+    }
+
+    #[test]
+    fn empty_override_preserves_existing_native_authentication_distinctions() {
+        use sigis_pades_sign::pkcs11::{handle_pin, Pkcs11Config, UserPin};
+        let mut configured_empty = Pkcs11Config {
+            user_pin: Some(String::new()),
+            ..Default::default()
+        };
+        let selected = resolve_cli_user_pin(
+            configured_empty.user_pin.as_deref(),
+            Some(OsStr::new("ignored")),
+            PinEntryMode::Prompt,
+            Some(&forbidden_prompt()),
+        )
+        .unwrap();
+        if selected.as_deref().is_some_and(|pin| !pin.is_empty()) {
+            configured_empty.user_pin = selected;
+        }
+        assert!(matches!(handle_pin(&configured_empty, None), UserPin::Pin(value) if value.is_empty()));
+        for mode in [PinEntryMode::Prompt, PinEntryMode::Skip, PinEntryMode::Defer] {
+            let mut native = Pkcs11Config {
+                prompt_pin: mode,
+                ..Default::default()
+            };
+            let selected = resolve_cli_user_pin(
+                None,
+                Some(OsStr::new("  \u{1c} ")),
+                mode,
+                Some(&forbidden_prompt()),
+            )
+            .unwrap();
+            assert_eq!(selected, Some(String::new()));
+            if selected.as_deref().is_some_and(|pin| !pin.is_empty()) {
+                native.user_pin = selected;
+            }
+            match mode {
+                PinEntryMode::Defer => assert!(matches!(handle_pin(&native, None), UserPin::ProtectedAuth)),
+                _ => assert!(matches!(handle_pin(&native, None), UserPin::None)),
+            }
+        }
+    }
 
     #[test]
     fn empty_certificate_selection_does_not_request_an_unnamed_certificate() {

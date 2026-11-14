@@ -1,0 +1,203 @@
+{
+  "kind": "Historical strict-policy CRL fixture generation from pinned original Ed25519 CA keys",
+  "host": "s7",
+  "pid": 2673510,
+  "interpreter": {
+    "path": "/usr/bin/python3.14",
+    "length": 7477160,
+    "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+  },
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "assertions_enabled": true,
+  "packages": {
+    "pyhanko": "0.38.1",
+    "pyhanko-certvalidator": "0.33.0",
+    "certomancer": "0.16.0",
+    "cryptography": "50.0.2",
+    "asn1crypto": "1.5.1"
+  },
+  "generation_helper": {
+    "path": "/home/l/D/kooky/sigis-wt/r3-p-cli-user-pin-prompt/crates/testdata/data/lanes/r3-c/pkcs11-user-pin-prompt/create_policy_revinfo.py",
+    "length": 10181,
+    "sha256": "54a1e8abed1ca8e56bd64d2ef548b89e5b406fb953f67203add02cbf1a916f0e"
+  },
+  "architecture": "testing-ca-ed25519",
+  "requested_at": "2020-11-01T00:00:00+00:00",
+  "original_configuration": {
+    "path": "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/certomancer.yml",
+    "length": 26511,
+    "sha256": "7d2f4b5502e44cfd0f46b23ba5cbce17a525f84179424ece1dea8e6969cca424"
+  },
+  "original_input_manifest": {
+    "path": "/home/l/D/kooky/sigis-wt/r3-p-cli-user-pin-prompt/crates/testdata/data/lanes/r3-c/pkcs11-user-pin-prompt/inputs.json",
+    "length": 1482,
+    "sha256": "8196df8185d6ae87ce2dd9a7133b0d9fa8d5565dce24ef8c0337ac8ff309c387"
+  },
+  "module_sources": [
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/__init__.py",
+      "length": 557,
+      "sha256": "c4a35d6d01fbfa0605495f0416e3185f1bc9b371efd602e689242ae892c8d038"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/registry/keys.py",
+      "length": 6866,
+      "sha256": "ef792742f7de5128f064cbc956096785a41567058e48e0701a70b2641a67af89"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/registry/pki_arch.py",
+      "length": 52009,
+      "sha256": "e71777ada8509e7f5279e4e2c517c0ad0d739d990c448254a11b1b6935072c9c"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/certomancer/registry/svc_config/crl.py",
+      "length": 9617,
+      "sha256": "82017c30f1a1d67443ed7ecdca3af43dd3f10618ef795f2ebfa94df694e09276"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/cryptography/__init__.py",
+      "length": 364,
+      "sha256": "9ad86e52b4dde0544e0a9518ad322a863cfab3a4fd763019ad5ee7675a0c9b6a"
+    },
+    {
+      "path": "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/samples.py",
+      "length": 7183,
+      "sha256": "778ad36a025556160b6701ebc416e34d6a70bd0d81c977be600363e68890ff8b"
+    }
+  ],
+  "original_ca_key_inputs": [
+    {
+      "label": "root",
+      "input_file": {
+        "path": "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/keys-ed25519/root_ca.key.pem",
+        "length": 119,
+        "sha256": "a0a419a6d0cb9e86c4042d0b20871e0912195f5c431affcc03fcf5822ac66b94"
+      },
+      "use": "Pinned CA certificate materialization and CRL signature only; no key bytes emitted"
+    },
+    {
+      "label": "interm",
+      "input_file": {
+        "path": "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/keys-ed25519/intermediate_ca.key.pem",
+        "length": 119,
+        "sha256": "9d09aeb50b8e5b092691e24ecc024b853747e2ec9bff1e0071501fea2f109153"
+      },
+      "use": "Pinned CA certificate materialization and CRL signature only; no key bytes emitted"
+    }
+  ],
+  "original_signer_source_key_input": {
+    "input_file": {
+      "path": "/tmp/pyhanko-src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/crypto/keys-ed25519/signer.key.pem",
+      "length": 119,
+      "sha256": "6fe14b0effe8efaea259e07ecac8a38e42bce4e27aeafc6516ebfd4d7da247b1"
+    },
+    "use": "Pinned configured signer public-key materialization for exact certificate crosscheck only; never token readback, CRL signing or PDF signing"
+  },
+  "certificate_crosschecks": [
+    {
+      "label": "root",
+      "authoritative_input": {
+        "path": "/home/l/D/kooky/sigis-wt/r3-p-cli-user-pin-prompt/crates/testdata/data/lanes/r3-c/pkcs11-user-pin-prompt/root.der",
+        "length": 524,
+        "sha256": "1077fe74b6c0375b1487c20b3ab5d63475ccaaa6bb21ef9e4d7dfbecf9e57c41"
+      },
+      "architecture_der_length": 524,
+      "architecture_der_sha256": "1077fe74b6c0375b1487c20b3ab5d63475ccaaa6bb21ef9e4d7dfbecf9e57c41",
+      "byte_equal": true,
+      "subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+      "serial_number": "4096"
+    },
+    {
+      "label": "interm",
+      "authoritative_input": {
+        "path": "/home/l/D/kooky/sigis-wt/r3-p-cli-user-pin-prompt/crates/testdata/data/lanes/r3-c/pkcs11-user-pin-prompt/interm.der",
+        "length": 535,
+        "sha256": "14ec84148b998ebbe7d74834fe27b467d5069b52514fb8161e4eb7e2b605f78b"
+      },
+      "architecture_der_length": 535,
+      "architecture_der_sha256": "14ec84148b998ebbe7d74834fe27b467d5069b52514fb8161e4eb7e2b605f78b",
+      "byte_equal": true,
+      "subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+      "serial_number": "4097"
+    },
+    {
+      "label": "signer1",
+      "authoritative_input": {
+        "path": "/home/l/D/kooky/sigis-wt/r3-p-cli-user-pin-prompt/crates/testdata/data/lanes/r3-c/pkcs11-user-pin-prompt/signer1.der",
+        "length": 706,
+        "sha256": "452fe35a3a0017f4bb63c02624e1d671ad8c2d3e99d77af24c072aab8579b9b4"
+      },
+      "architecture_der_length": 706,
+      "architecture_der_sha256": "452fe35a3a0017f4bb63c02624e1d671ad8c2d3e99d77af24c072aab8579b9b4",
+      "byte_equal": true,
+      "subject_der_sha256": "85e40449e229dcefc8915fa5665183af11148a74353c780baff1fc570ff9486b",
+      "serial_number": "4097"
+    }
+  ],
+  "crls": [
+    {
+      "issuer_label": "root",
+      "service_label": "root",
+      "filename": "policy-root.crl.der",
+      "output": {
+        "path": "/home/l/.codex/artifacts/sigis/round3/p/cli-user-pin-prompt/policy-revinfo-generation/output/policy-root.crl.der",
+        "length": 340,
+        "sha256": "cdc1e7bd9c3cdb778ac7796a8d46f43a3d007f86c284a8e8d9e0c2e67976da72"
+      },
+      "requested_at": "2020-11-01T00:00:00+00:00",
+      "issuer_certificate_sha256": "1077fe74b6c0375b1487c20b3ab5d63475ccaaa6bb21ef9e4d7dfbecf9e57c41",
+      "issuer_subject_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+      "actual_crl_issuer_der_sha256": "ecb3ee5628ca4648c5c99425acb5391298ce9d882a8089a4b8478d8dc508f2c8",
+      "signature_algorithm_oid": "1.3.101.112",
+      "tbs_length": 262,
+      "tbs_sha256": "2d65740636b5d61967fd618cf4b7614370983bee3c5c7d54663f59aba498d16e",
+      "signature_length": 64,
+      "signature_sha256": "baf09eacf3ab86e9f5814905dab226ebeccb0bf4aa21aa30341168e82375d369",
+      "cryptography_signature_verified": true,
+      "this_update": "2020-09-12T00:00:00+00:00",
+      "next_update": "2020-12-11T00:00:00+00:00",
+      "crl_number": 84,
+      "revoked_entry_count": 0,
+      "target_label": "interm",
+      "target_certificate_sha256": "14ec84148b998ebbe7d74834fe27b467d5069b52514fb8161e4eb7e2b605f78b",
+      "target_serial_number": "4097",
+      "target_not_in_revoked_entries": true
+    },
+    {
+      "issuer_label": "interm",
+      "service_label": "interm",
+      "filename": "policy-interm.crl.der",
+      "output": {
+        "path": "/home/l/.codex/artifacts/sigis/round3/p/cli-user-pin-prompt/policy-revinfo-generation/output/policy-interm.crl.der",
+        "length": 353,
+        "sha256": "10854d4ad5a7aae3f7f57a44e4d6d13ba448827291a4e616e08067a42bbcf2a8"
+      },
+      "requested_at": "2020-11-01T00:00:00+00:00",
+      "issuer_certificate_sha256": "14ec84148b998ebbe7d74834fe27b467d5069b52514fb8161e4eb7e2b605f78b",
+      "issuer_subject_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+      "actual_crl_issuer_der_sha256": "34c3e53bfc968b21843402216da46f5da561a918b5ebd0dba8a9962c0df91f61",
+      "signature_algorithm_oid": "1.3.101.112",
+      "tbs_length": 275,
+      "tbs_sha256": "7e346d079f4a30876b6c37e2060521565b98f02a431fb75311732f795ea7383d",
+      "signature_length": 64,
+      "signature_sha256": "97898303c302f9a85d34bfe2c13b50c8930f84d4d2b14de3811d1b468abe2d45",
+      "cryptography_signature_verified": true,
+      "this_update": "2020-10-12T00:00:00+00:00",
+      "next_update": "2020-11-11T00:00:00+00:00",
+      "crl_number": 253,
+      "revoked_entry_count": 0,
+      "target_label": "signer1",
+      "target_certificate_sha256": "452fe35a3a0017f4bb63c02624e1d671ad8c2d3e99d77af24c072aab8579b9b4",
+      "target_serial_number": "4097",
+      "target_not_in_revoked_entries": true
+    }
+  ],
+  "materialization_scope": "Pinned architecture's normal lazy get_cert materializes original configured certificates solely for exact frozen-DER crosscheck; may read original CA keys",
+  "policy_scope": "Supplemental 2020-11-01 hard-fail policy contexts only; original five no-fetcher bodies unchanged",
+  "limitations": "Cryptographic signature/issuer/time/target absence verified here; actual path/revocation-policy acceptance is proved only by separate native/oracle consumers",
+  "token_private_key_readback": false,
+  "replacement_key_generation": false,
+  "provider_module_operations": false,
+  "token_store_changes": false,
+  "pdf_signing_operations": false
+}

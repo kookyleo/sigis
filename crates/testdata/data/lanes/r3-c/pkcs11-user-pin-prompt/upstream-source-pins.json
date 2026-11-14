@@ -1,0 +1,546 @@
+{
+  "original": {
+    "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_cli_signing_pkcs11.py",
+    "qualified_name": "test_cli_addsig_pkcs11_with_setup_and_pin_prompt",
+    "node_kind": "FunctionDef",
+    "start_line": 419,
+    "line": 421,
+    "end_line": 445,
+    "body_sha256": "266255075803625f256a0474292008c647d6fdb692ff00ec13242d51f5956e2c",
+    "decorated_sha256": "7b6fed9931e23c48aeb5638899600d23ddd3698aa104339ecda1043e31dce3b2",
+    "full_decorated_source": "@pytest.mark.hsm(platform='softhsm')\n@pytest.mark.algo(algo='ed25519')\ndef test_cli_addsig_pkcs11_with_setup_and_pin_prompt(\n    cli_runner,\n    post_validate,\n    p11_config,\n    pinentry_context,\n):\n    cfg = _pkcs11_setup_config_pull_certs(p11_config)\n    _write_config(cfg)\n\n    result = cli_runner.invoke(\n        cli_root,\n        [\n            'sign',\n            'addsig',\n            '--field',\n            'Sig1',\n            'pkcs11',\n            '--p11-setup',\n            'test',\n            INPUT_PATH,\n            SIGNED_OUTPUT_PATH,\n        ],\n        obj=pinentry_context,\n    )\n    assert not result.exception, result.output\n",
+    "decorators": [
+      "pytest.mark.hsm(platform='softhsm')",
+      "pytest.mark.algo(algo='ed25519')"
+    ],
+    "assertions": [
+      "assert not result.exception, result.output"
+    ],
+    "exact_id": "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_pin_prompt"
+  },
+  "source_files": [
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_cli_signing_pkcs11.py",
+      "length": 11762,
+      "sha256": "29b1247d723091c21cdbffb4f989303649f6901a890fe38283f35be9f26bef3e"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "length": 7107,
+      "sha256": "6a67cf73ca8f81394e9fd3fa0fec18ad9a0896e70d0f6c90621787062e1612e6"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/_ctx.py",
+      "length": 3585,
+      "sha256": "cc12047ac07c14e99cd56cba8c4707e41c6098ba9bbc8a02d3dd3010bbf9f9f2"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/plugin_api.py",
+      "length": 3826,
+      "sha256": "a1e0175a4b16044d4660f9a8a6e3b4f8bc4d81cc89b17d7843cdb4a81b963d81"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/pkcs11_cli.py",
+      "length": 6801,
+      "sha256": "4d1402143f8691b5ca2e16a127a4cfbaf1ed98a6914c24cf189e43f7d448739e"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/plugin.py",
+      "length": 7662,
+      "sha256": "510a1c63322b8d2ac13941c6cb1bc506c9ab780f333aac6cc317ee5f98e6ae22"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/utils.py",
+      "length": 2499,
+      "sha256": "7e3bb325d70ff3540c5da95bc1e6a461b98ab1aa5f6aacc7d8bb823c1257eea1"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "length": 29236,
+      "sha256": "874de38fdb5f0fee564b6f1fcc3d109c94c107e11528c8d1d21c9cd407f6a128"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/config/pkcs11.py",
+      "length": 11380,
+      "sha256": "fd4fa218bdb4f54b5f159313a1c4b29636f7e9d559fa2ba01ba60ef62b64ff34"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "length": 7887,
+      "sha256": "2c987491b35a118cd66485d9a137a0f5503bed679e20a7f92c5ba7c83e7a6425"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/config.py",
+      "length": 1520,
+      "sha256": "9d9bd2f763511b13c5f924d396a82186f39ed8f9cd48a2b3493a883e7e0ded72"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/_pytest/python.py",
+      "length": 72006,
+      "sha256": "9553fbb38363c987f59b1de522142a9dc0e9f6191cd1f173a6bee21140d4c887"
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/venv/lib/python3.14/site-packages/_pytest/nodes.py",
+      "length": 27996,
+      "sha256": "b135537fa611ecd46ecce3a6b51bace9aeefd56a58129fbdfdbf5a388b494287"
+    }
+  ],
+  "helpers": [
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_cli_signing_pkcs11.py",
+      "qualified_name": "root_cert_data",
+      "node_kind": "FunctionDef",
+      "start_line": 21,
+      "line": 27,
+      "end_line": 28,
+      "body_sha256": "070cf768341a7a3aa619cfcb50677e22084b219a500fa262061115cd2f0a9d2c",
+      "decorated_sha256": "22ef643faade60a6fd2b0b323ae63ea0f62bce0e59c6b699a9a3b2e321cca982",
+      "decorators": [
+        "pytest.fixture(params=[pytest.param(k, marks=pytest.mark.algo(algo=k)) for k in ('rsa', 'ecdsa', 'ed25519', 'ed448', 'mldsa')])"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_cli_signing_pkcs11.py",
+      "qualified_name": "pinentry_context",
+      "node_kind": "FunctionDef",
+      "start_line": 31,
+      "line": 32,
+      "end_line": 33,
+      "body_sha256": "cd3e4187b8665205ce5731a779e0ff6f21f13096deba88411c79fb27693d31c4",
+      "decorated_sha256": "d78a71281e0c4117236020211823b455b453c16c36ef8633c70085cfef404565",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/test_cli_signing_pkcs11.py",
+      "qualified_name": "_pkcs11_setup_config_pull_certs",
+      "node_kind": "FunctionDef",
+      "start_line": 95,
+      "line": 95,
+      "end_line": 109,
+      "body_sha256": "71b6e6e15bb31ea60a2a6f87f10e4b0ca7fb98aec04cecb6b901d913bacda627",
+      "decorated_sha256": "71b6e6e15bb31ea60a2a6f87f10e4b0ca7fb98aec04cecb6b901d913bacda627",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "qualified_name": "DummyPrompter",
+      "node_kind": "ClassDef",
+      "start_line": 50,
+      "line": 50,
+      "end_line": 55,
+      "body_sha256": "bddb33ca8001633a699cc9bb48f1d60c457ceb32dbfa41e1daaea1a49c790bee",
+      "decorated_sha256": "bddb33ca8001633a699cc9bb48f1d60c457ceb32dbfa41e1daaea1a49c790bee",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "qualified_name": "cli_runner",
+      "node_kind": "FunctionDef",
+      "start_line": 95,
+      "line": 96,
+      "end_line": 101,
+      "body_sha256": "50d7f0b1dbc022190a944813f3dad92470a06aafaf6c3ba0928a6a610605065a",
+      "decorated_sha256": "602672577a4c08281029d66e276635f0ebcf5fcfc5a6351f0303c882980b31df",
+      "decorators": [
+        "pytest.fixture(scope='function', autouse=True)"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "qualified_name": "_write_config",
+      "node_kind": "FunctionDef",
+      "start_line": 154,
+      "line": 154,
+      "end_line": 156,
+      "body_sha256": "c75c1c013dda150668173b931b2bf0669f419c3123c56fd760f3cc3cdc8c2974",
+      "decorated_sha256": "c75c1c013dda150668173b931b2bf0669f419c3123c56fd760f3cc3cdc8c2974",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "qualified_name": "post_validate",
+      "node_kind": "FunctionDef",
+      "start_line": 212,
+      "line": 213,
+      "end_line": 233,
+      "body_sha256": "a1de9e1b52c11ecf1657dcd1fc1d1075b06a9ed4eb959d719ce71bbb98066dc1",
+      "decorated_sha256": "6ffd8b48571fc99ca060900c1deecf802158e788eed8026d84e9c0ff4f5a3f1d",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/tests/conftest.py",
+      "qualified_name": "_validate_last_sig_in",
+      "node_kind": "FunctionDef",
+      "start_line": 168,
+      "line": 168,
+      "end_line": 209,
+      "body_sha256": "b40cec48dbd8e38f37bd9918db474e24d4b25bd7a3e96900de8333f7b524aef4",
+      "decorated_sha256": "b40cec48dbd8e38f37bd9918db474e24d4b25bd7a3e96900de8333f7b524aef4",
+      "decorators": [],
+      "assertions": [
+        "assert status.bottom_line, status.pretty_print_details()"
+      ]
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/_ctx.py",
+      "qualified_name": "PasswordPrompter",
+      "node_kind": "ClassDef",
+      "start_line": 19,
+      "line": 19,
+      "end_line": 32,
+      "body_sha256": "117d954ebb9b90f6a9898f277cd45995bb0e475bd536e13897495d58992db814",
+      "decorated_sha256": "117d954ebb9b90f6a9898f277cd45995bb0e475bd536e13897495d58992db814",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/_ctx.py",
+      "qualified_name": "GetpassPrompter",
+      "node_kind": "ClassDef",
+      "start_line": 35,
+      "line": 35,
+      "end_line": 42,
+      "body_sha256": "28aad244ec9e3230d6fd32c5228f33378b9de67cf7f18ff01f67015a61b2d050",
+      "decorated_sha256": "28aad244ec9e3230d6fd32c5228f33378b9de67cf7f18ff01f67015a61b2d050",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/_ctx.py",
+      "qualified_name": "UXContext",
+      "node_kind": "ClassDef",
+      "start_line": 45,
+      "line": 46,
+      "end_line": 63,
+      "body_sha256": "9f5512875dd279bad127de029043a37f650a2b8fc50cf6247dd34d10fc412640",
+      "decorated_sha256": "eb06b2634170705d3851f19286667a0b2540f961600a08a3da981bf53214e49e",
+      "decorators": [
+        "dataclass"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/_ctx.py",
+      "qualified_name": "CLIContext",
+      "node_kind": "ClassDef",
+      "start_line": 66,
+      "line": 67,
+      "end_line": 138,
+      "body_sha256": "47d408fb8d1a01bf091d9700db704a9f759afdd28c034fa7ce849236cd73907e",
+      "decorated_sha256": "f08fb95111fc288ba4c7f37f8ec6e5fce4ac692f2ba4b4821584674906393ae4",
+      "decorators": [
+        "dataclass"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/plugin_api.py",
+      "qualified_name": "prompt_for_password",
+      "node_kind": "FunctionDef",
+      "start_line": 125,
+      "line": 125,
+      "end_line": 134,
+      "body_sha256": "897959b15d2accf2341b8aaf795557222ea17c3f942141c2e9170416fc8064d9",
+      "decorated_sha256": "897959b15d2accf2341b8aaf795557222ea17c3f942141c2e9170416fc8064d9",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/pkcs11_cli.py",
+      "qualified_name": "_pkcs11_signer_context",
+      "node_kind": "FunctionDef",
+      "start_line": 121,
+      "line": 122,
+      "end_line": 207,
+      "body_sha256": "19a070e1de9adfa2ad4f15ed63d24cde5fd23ab10caefc5fc1e40e9a74797780",
+      "decorated_sha256": "2de88dea68e42845e7bdc3433a23383f625d78c72a9d44052d9df9e5368c1f90",
+      "decorators": [
+        "contextlib.contextmanager"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/pkcs11_cli.py",
+      "qualified_name": "PKCS11Plugin.create_signer",
+      "node_kind": "FunctionDef",
+      "start_line": 115,
+      "line": 115,
+      "end_line": 118,
+      "body_sha256": "d132365102b5c903cc35c36310537d8a070e2fb0f5cbe7f5a9e9005ad7118e91",
+      "decorated_sha256": "d132365102b5c903cc35c36310537d8a070e2fb0f5cbe7f5a9e9005ad7118e91",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/plugin.py",
+      "qualified_name": "_callback_logic",
+      "node_kind": "FunctionDef",
+      "start_line": 62,
+      "line": 62,
+      "end_line": 132,
+      "body_sha256": "611337358973a88773fb5647162b1c4ec6ce6aaab2f3caf91ffb725bfdd572b5",
+      "decorated_sha256": "611337358973a88773fb5647162b1c4ec6ce6aaab2f3caf91ffb725bfdd572b5",
+      "decorators": [],
+      "assertions": [
+        "assert cert is not None"
+      ]
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/utils.py",
+      "qualified_name": "OpenForSigning",
+      "node_kind": "ClassDef",
+      "start_line": 11,
+      "line": 11,
+      "end_line": 55,
+      "body_sha256": "eaa2ab85f1b8b80a073255d6a44409aab97647ae5043230799e0436307c54129",
+      "decorated_sha256": "eaa2ab85f1b8b80a073255d6a44409aab97647ae5043230799e0436307c54129",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko-cli/src/pyhanko/cli/commands/signing/utils.py",
+      "qualified_name": "open_for_signing",
+      "node_kind": "FunctionDef",
+      "start_line": 58,
+      "line": 58,
+      "end_line": 66,
+      "body_sha256": "7ab7b7b3d101759e970f5bdd2a87e877289eebd85af08981520baceaef52ec43",
+      "decorated_sha256": "7ab7b7b3d101759e970f5bdd2a87e877289eebd85af08981520baceaef52ec43",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/config/pkcs11.py",
+      "qualified_name": "PKCS11PinEntryMode",
+      "node_kind": "ClassDef",
+      "start_line": 52,
+      "line": 52,
+      "end_line": 98,
+      "body_sha256": "872877ac94cb5b7db54bc37efc0e409a19df91bc77609f375e3356c85bc18bdc",
+      "decorated_sha256": "872877ac94cb5b7db54bc37efc0e409a19df91bc77609f375e3356c85bc18bdc",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/config/pkcs11.py",
+      "qualified_name": "PKCS11SigningPinEntryMode",
+      "node_kind": "ClassDef",
+      "start_line": 101,
+      "line": 101,
+      "end_line": 146,
+      "body_sha256": "a15d3fd2a67b621ce2ad86504f145b12894a69f4ce25912a3f068dd652f5fc8d",
+      "decorated_sha256": "a15d3fd2a67b621ce2ad86504f145b12894a69f4ce25912a3f068dd652f5fc8d",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/config/pkcs11.py",
+      "qualified_name": "PKCS11SignatureConfig.process_entries",
+      "node_kind": "FunctionDef",
+      "start_line": 291,
+      "line": 292,
+      "end_line": 360,
+      "body_sha256": "4f1663ab5592f9c4172712661483e26e8d9c67a07afb61885318e13211850b46",
+      "decorated_sha256": "9e33e91e399899ad8c4455c7a1d9706c356f8dc5fdf27826699c13e4a42460ce",
+      "decorators": [
+        "classmethod"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11SigningContext.__init__",
+      "node_kind": "FunctionDef",
+      "start_line": 787,
+      "line": 787,
+      "end_line": 792,
+      "body_sha256": "b0194659ac8b9d43b09bf57c7c1a5857a87a1fade6703bcf90d78b3bd47329ac",
+      "decorated_sha256": "b0194659ac8b9d43b09bf57c7c1a5857a87a1fade6703bcf90d78b3bd47329ac",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11SigningContext._handle_pin",
+      "node_kind": "FunctionDef",
+      "start_line": 794,
+      "line": 794,
+      "end_line": 803,
+      "body_sha256": "30c4818510fc35970455ec805af37e5f2d1633155b93d60cc271402463125c95",
+      "decorated_sha256": "30c4818510fc35970455ec805af37e5f2d1633155b93d60cc271402463125c95",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11SigningContext._instantiate",
+      "node_kind": "FunctionDef",
+      "start_line": 805,
+      "line": 805,
+      "end_line": 840,
+      "body_sha256": "09b9bf207545115f375e8209ae6dd8660e1d6f4ad836851e24b6c2aac126a0f1",
+      "decorated_sha256": "09b9bf207545115f375e8209ae6dd8660e1d6f4ad836851e24b6c2aac126a0f1",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11SigningContext.__enter__",
+      "node_kind": "FunctionDef",
+      "start_line": 842,
+      "line": 842,
+      "end_line": 843,
+      "body_sha256": "2124e4ae65578f09780621579f4f2387b73ecb383b58b186238b4311609b4f6d",
+      "decorated_sha256": "2124e4ae65578f09780621579f4f2387b73ecb383b58b186238b4311609b4f6d",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "open_pkcs11_session",
+      "node_kind": "FunctionDef",
+      "start_line": 322,
+      "line": 322,
+      "end_line": 365,
+      "body_sha256": "9b5be4fad37da2d2cc6be3e8dbbe0d44c8c86a180328ee4596445d5525707482",
+      "decorated_sha256": "9b5be4fad37da2d2cc6be3e8dbbe0d44c8c86a180328ee4596445d5525707482",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11Signer.sign_kwargs",
+      "node_kind": "FunctionDef",
+      "start_line": 552,
+      "line": 552,
+      "end_line": 573,
+      "body_sha256": "12dbbad08453a84ffef9a7feb7bfd3f8f71a514f494d07b81fa4458c0605898b",
+      "decorated_sha256": "12dbbad08453a84ffef9a7feb7bfd3f8f71a514f494d07b81fa4458c0605898b",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/pkgs/pyhanko/src/pyhanko/sign/pkcs11.py",
+      "qualified_name": "PKCS11Signer.async_sign_raw",
+      "node_kind": "AsyncFunctionDef",
+      "start_line": 594,
+      "line": 594,
+      "end_line": 619,
+      "body_sha256": "a6b58ce22fae45b0605a41bb02148c16b05d00227fe45a131ea9f85d9d378335",
+      "decorated_sha256": "a6b58ce22fae45b0605a41bb02148c16b05d00227fe45a131ea9f85d9d378335",
+      "decorators": [],
+      "assertions": [
+        "assert self._key_handle is not None"
+      ]
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "declared_algo",
+      "node_kind": "FunctionDef",
+      "start_line": 39,
+      "line": 40,
+      "end_line": 43,
+      "body_sha256": "f1257ea99a9843044caa800198108cd7452f36d4dfdd467922538ad37f7ce21c",
+      "decorated_sha256": "c991f4458b96c4aa93deac2e06de876428b4eb5417d124a98c4c82b7a81669da",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "required_mechanism",
+      "node_kind": "FunctionDef",
+      "start_line": 46,
+      "line": 47,
+      "end_line": 61,
+      "body_sha256": "a90a0d10237b9b41d12220b124d615737b2eb7d0e2741538b63464a817945c16",
+      "decorated_sha256": "5e1eefdd1b96017f13806838a9262db8eb2238b59c5005213da753e34cdb0ee9",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "assertions": [
+        "assert isinstance(mech, pkcs11.Mechanism)"
+      ]
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "_available_platforms",
+      "node_kind": "FunctionDef",
+      "start_line": 64,
+      "line": 64,
+      "end_line": 81,
+      "body_sha256": "3e0eae9a981ee83d6c1d7a801f44a8e88c1e88ed1704db8880f829bf47ec4d6c",
+      "decorated_sha256": "3e0eae9a981ee83d6c1d7a801f44a8e88c1e88ed1704db8880f829bf47ec4d6c",
+      "decorators": [],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "platform",
+      "node_kind": "FunctionDef",
+      "start_line": 84,
+      "line": 85,
+      "end_line": 86,
+      "body_sha256": "f8b4ed68a3eb9b91d80e3fd2dc9a1e812fb21e6bb239a15018ff38fc2ff8e93a",
+      "decorated_sha256": "a07792aff88301cef084bde077e5518a1585affecbc3c3e54860c5f7891d8504",
+      "decorators": [
+        "pytest.fixture(scope='session', params=_available_platforms())"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "p11_global_test_config",
+      "node_kind": "FunctionDef",
+      "start_line": 89,
+      "line": 90,
+      "end_line": 155,
+      "body_sha256": "35e2a861e0f187ed0d896742571ed418a646075b36e5e2d4c0eb4939614b56ee",
+      "decorated_sha256": "511831a483dd351d356e06d4d5ccc47f25c3caee9f03333fd4d922a27bab4fd9",
+      "decorators": [
+        "pytest.fixture(scope='session')"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/fixtures.py",
+      "qualified_name": "p11_config",
+      "node_kind": "FunctionDef",
+      "start_line": 158,
+      "line": 159,
+      "end_line": 215,
+      "body_sha256": "2b7188ff68e229763bbf04e505bb1ae74315bada72269f65b2faf44b8f38aa73",
+      "decorated_sha256": "a43299d5da9e6ce226a26203b6a012e89f4aa27785cf266f8b72e99a47a4bd42",
+      "decorators": [
+        "pytest.fixture(scope='function')"
+      ],
+      "assertions": []
+    },
+    {
+      "path": "/tmp/pyhanko-oracle/src/v0.38.1/internal/common-test-utils/src/pyhanko_testing_commons/test_utils/pkcs11_utils/config.py",
+      "qualified_name": "P11TestConfig.session",
+      "node_kind": "FunctionDef",
+      "start_line": 24,
+      "line": 25,
+      "end_line": 32,
+      "body_sha256": "5f69524f54f6da3b16af930fc0fd22f17cc377578834232408304345bca0bcf1",
+      "decorated_sha256": "855dad652337e21a13fdc8e4d709b488ee8ac506884684a00bc2cb6ab35c82e8",
+      "decorators": [
+        "property"
+      ],
+      "assertions": []
+    }
+  ]
+}
