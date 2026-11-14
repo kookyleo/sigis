@@ -17,14 +17,15 @@ canonical target and invokes system rust-slots by absolute path. The system
 owns placement/concurrency; there is no repository flock, local pin or job cap.
 Automatic worker tests use the same pinned oracle runtime, now replicated and
 live-smoke-verified on vm2064/vm2065. See [lock audit](lanes/round3/cargo-lock-audit.md).
-At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped193
+At launch, the L6 `sigis-cli` shell earned no passes. The accepted scoped196
 includes configuration57/plugins11/crypt23/fields7/stamps12/runtime-read1,
 ordinary validation39, basic software2, PKCS12/LTA11, PEM/DER10, timestamp2,
 the remaining five runtime originals, three encrypted PEM originals and two
 detached PEM/DER originals, three identity/getpass originals and two default
-appearance originals and three decode-limit originals.
-All11 lead live functions are accepted;59 pending functions remain in C after
-the four-function acceptance.
+appearance originals, three decode-limit originals and three named-style originals.
+All11 lead live functions are accepted;57 pending functions remain: C56 and
+V1 incomplete historical MAIN recovery. Four new completions and one intentional
+passed-to-pending transition give the current net plus3 acceptance.
 Other signing, qualification, provider and reader-state commands
 and the complete port remain unfinished.
 Lane reports remain provisional until the lead accepts their commits,
@@ -33,7 +34,51 @@ worktree evidence below describe the preceding accepted snapshot.
 
 ## Accepted round 3 increments
 
-Current accepted source: **14d6c6a3**.
+Current accepted source: **9d921382**.
+Four original completions are accepted: C3 named text/QR/missing-URL styling
+(nine parameters) and S1 implicitly provisioned owned backend. Conservative
+WithTime hardening adds zero IDs and intentionally moves one previously passed
+original to pending. Net passed change is plus3. Inventory:
+**1431/1363/11/57**, C252/196/0/56, S824/814/10/0, fetch56/52/4/0,
+V47/46/0/1, P297/296/1/0, L11/11/0/0, library1168/1156/11/1.
+All six returned0 with audit0: build7.14s, workspace test1354.13s, clippy25.50s,
+strict doc212.45s, layer4.74s and fmt3.38s. Actual full Rust results:
+**2147 discovered /2143 passed /4 ignored /0 failed /219 reports**.
+Final independent review is complete at
+`/home/l/.codex/artifacts/sigis/round3-launch/styled-context-integration/final-review/review.json`,
+SHA256 **0fe33202d9be8c59a0b1b77b6e5c429190b4516cbdf7e22d47ee45612705230e**.
+Its actual49.017s checker validates58038 checks,58compressed ELF snapshots,
+8039 opened proof paths and586 source paths. Archive/raw ELF hashes remain
+separate. Current coherent CLIce448465 (124068816bytes,13producerunits/236inputs)
+and both verified VM copies bind the actual new executions.
+
+C b055 actual current-CLI baseline0pass/8fail precedes sole pemder repair.
+Current9d focus8pass has9native exact attempts,9fresh unchanged originals with
+complete teardown,10same-output trust and10full-PDF/vector peers,16callbacks
+(2positive/14denied), actual rootless refusals and precise missing-URL/sentinel
+checks. Five text outputs have zero QR Do; five QR outputs have exactly one.
+Actual operator/resource/QR matrix checks are not rendering or scanner claims.
+S current9d Root8 and14actual API calls plus2constructor refusals produce14/14
+matched flag agreements. First CV72, unchanged original and separate probe
+executed onf561; they are not relabelled9d. Ordinary build remains disabled;
+explicit empty components suppress fallback, ownership/close and policy
+capabilities remain in real consumers with no CV-to-fetch edge/source framework.
+The full-S sidecar retains its first undecodable transport line and exact
+lossless25-record projection, then unchanged oracle attempt2 exit0; its separate
+final review SHA256 is **913a4fb01ba6d4deee3247bf1160b0bd97ae4915e7e802f883251a4a2907c9ac**.
+
+Current WithTime cannot promote failed/incomplete MAIN from a retained path and
+trusted timestamp alone. Exactly one original function,
+test_embedded_cades_pre_revoke_with_poe, remains explicit pending after actual
+--ignored --exact execution0pass/1fail/13filtered (REVOKED_NO_POE versus OK).
+Its body is unchanged, not a provider skip. Current package157pass/1ignored,
+complete V46 mapping and genuine full-LTA positives remain distinct. Four Rust
+ignored tests are not four skipped upstream functions; the library retains11
+separate skips. Product NOW versus fixture2020 and remaining policy/profile/
+parameter/historical-recovery limits remain explicit. See
+[current acceptance](lanes/round3/l-styled-context-containment.md).
+
+Historical accepted source: **14d6c6a3**.
 Exactly four original functions are accepted: C3 decode-limit functions/six
 parameters and S1 Disabled-bootstrap semantic mapping. Inventory:
 **1431/1360/12/59**, C193/59, S813/11, fetch51/5, library1156/12;
@@ -339,17 +384,17 @@ integration and the lead gate; their claimed passes are not accepted early.
 | --- | ---: | ---: | ---: | ---: |
 | `sigis-pki-core` | 4 | 4 | 0 | 0 |
 | `sigis-pki-certvalidator` | 133 | 131 | 2 | 0 |
-| `sigis-pki-fetch` | 56 | 51 | 5 | 0 |
+| `sigis-pki-fetch` | 56 | 52 | 4 | 0 |
 | `sigis-cms` | 78 | 78 | 0 | 0 |
 | `sigis-pdf` | 406 | 402 | 4 | 0 |
 | `sigis-pdf-diff` | 94 | 94 | 0 | 0 |
 | `sigis-pades-sign` | 297 | 296 | 1 | 0 |
-| `sigis-pades` (including `ades`) | 47 | 47 | 0 | 0 |
+| `sigis-pades` (including `ades`) | 47 | 46 | 0 | 1 |
 | `sigis-eutl` | 53 | 53 | 0 | 0 |
-| **Library lanes A–E** | **1,168** | **1,156** | **12** | **0** |
-| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 193 | 0 | 59 |
+| **Library lanes A–E** | **1,168** | **1,156** | **11** | **1** |
+| `sigis-cli`: CLI/configuration (round-3 C) | 252 | 196 | 0 | 56 |
 | Lead: live integration (round-3 L) | 11 | 11 | 0 | 0 |
-| **Overall** | **1,431** | **1,360** | **12** | **59** |
+| **Overall** | **1,431** | **1,363** | **11** | **57** |
 
 E's earlier 13-pass report counted two Rust wrappers for the single
 parametrized upstream function `test_pades_basic_happy_path_with_tl` twice.
@@ -374,18 +419,18 @@ skeletons; pyHanko baseline coverage is N/A for those crates.
 
 | Owner | Pending | Skipped | Functions or missing flow |
 | --- | ---: | ---: | --- |
-| C / CLI and configuration | 59 | 0 | Remaining signing, LTV/qualified validation, provider and reader-state commands; accepted scope is193 unique functions; next styling slice is3 originals/9parameters |
-| S / library primitives | 0 | 11 | Fetch5, deprecated registry2 and PDF4; Disabled-only mapping is accepted, independent source/context ownership remains open |
+| C / CLI and configuration | 56 | 0 | Accepted196; next default-style3/12cases and temporary P no-provider frontend1 remain separate candidates; remaining signing/LTV/qualified/provider flows unfinished |
+| S / library primitives | 0 | 10 | Fetch4, deprecated registry2 and PDF4; owned default-context1 accepted; policy-owner2 source-only, reachability2 deferred |
 | P / signing | 0 | 1 | SafeNet signing-PIN original remains skipped |
-| V / AdES validation | 0 | 0 | All47 assigned originals accepted; compatibility limits remain explicit |
+| V / AdES validation | 1 | 0 | Accepted46; complete pre-revocation-POE original retained pending safe same-policy historical MAIN recovery, not provider skip |
 | Lead / live integration | 0 | 0 | All11 assigned originals accepted; integration and final acceptance remain L work |
-| **Total** | **59** | **12** | Pending originals are C-owned; library1156passed/12skipped |
+| **Total** | **57** | **11** | C56 plus V1 pending; library1156passed/11skipped/1pending |
 
 The preceding20-function increment closed the last eight pending library-owned callers:
 seven complete P AC/signing flows and the S-owned Adobe CMS caller. Their
 source-backed root tests exercise real P outputs and native V consumers with
 original trust/revocation policies, plus fresh same-output pinned Python.
-This does not complete the12 remaining library skips, provider parameter gaps or unassigned
+This does not complete the11 remaining library skips or new V pending recovery, provider parameter gaps or unassigned
 feature limitations. Mandatory unsupported requirements still reject. The
 separately gated Adobe RIA/order repair is accepted only for the verified
 profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
@@ -393,15 +438,15 @@ profiles described in [the current acceptance](lanes/round3/l-ria-order.md).
 
 ### Skip accounting and limitations
 
-The12 skipped functions comprise certvalidator two, fetchers5,
+The11 skipped functions comprise certvalidator two, fetchers4,
 CMS zero, PDF four and signing one. Skip reasons remain in the
 owning `PORTING.md` and lane files:
 
 - Certvalidator retains two deprecated registry entries as skipped. All33
   exact policy-graph functions pass using actual native graph operations;
   eight former partial adapters were replaced. All six name-predicate functions
-  exercise their54 exact pinned cases. Fetchers retain5 lifecycle/
-  bootstrap gaps after two context and five direct-bootstrap ownership originals; the deprecated TSA forwarding original is accepted with an
+  exercise their54 exact pinned cases. Fetchers retain4 lifecycle/
+  bootstrap gaps after accepted context/default-backend and direct-bootstrap ownership mappings; the deprecated TSA forwarding original is accepted with an
   explicit compiler-diagnostic phase adaptation. Four lifecycle functions and
   nonsensical auth rejection were accepted previously.
 - All four key-based digest selection parameters are accepted; CMS has no remaining skip. Weak-digest
@@ -424,18 +469,17 @@ owning `PORTING.md` and lane files:
   now have complete accepted assertions. The dedicated raw DSA original is accepted;
   other DSA provider matrix parameters still require proof.
 
-The five remaining fetch lifecycle originals are the following exact functions
+The four remaining fetch lifecycle originals are the following exact functions
 in `pyhanko-certvalidator/test_fetcher_lifecycle.py`; Disabled's scoped mapping
 adds no registry/revinfo/POE or context-owner handoff parity:
 
-- `test_context_provisions_and_owns_a_backend`
 - `test_no_backend_when_fetchers_are_unreachable`
 - `test_unreachable_fetchers_still_adopt_an_owned_backend`
 - `test_policy_hands_ownership_to_the_context`
 - `test_policy_without_handlers_hands_over_nothing`
 
 A complete functional port must revisit these exclusions, especially
-provider behaviour and remaining validator compatibility; the59 pending
+provider behaviour and remaining validator compatibility; the57 pending
 functions alone do not describe all remaining work.
 
 Function-level pass counts do not prove every parameter ran. The local
@@ -530,7 +574,7 @@ below. A Python recording alone is not a passing Rust port.
 | CMS | 161/161 committed-call replays agree; a historical lane-A run reported 77 Rust tests | Calls and upstream functions are different denominators |
 | PDF modification analysis | 165 recorded reviews, 982 sweep reviews, 1,308 seeded mutation verdicts agree | Extra historical seeds reported about 10,400 verdicts |
 | Trusted lists | Original 18 cases agree | Signature, parsing and registry outcomes; expanded for this integration |
-| AdES | 76 Python cases recorded, 144 validation calls, 98 HTTP exchanges | Historical snapshot only; current accepted assignment is47/47 |
+| AdES | 76 Python cases recorded, 144 validation calls, 98 HTTP exchanges | Historical snapshot only; current accepted assignment is46passed/1pending |
 | PDF encryption | PyHanko opens Rust-produced password/public-key encrypted files, including MAC/incremental cases | Live encryption interop requires `HANKO_ORACLE` |
 | Signing | Test outputs receive Rust integrity checks and oracle PDF/CMS verification when available | No stable aggregate output count was recorded |
 
@@ -571,6 +615,39 @@ were fixed or pinned by regression inputs. This integration does not
 claim to repeat that fuzz campaign.
 
 ## Divergences and fail-closed scope
+
+Current accepted9d conservative WithTime containment fixes the bounded public
+failed-MAIN trust-promotion defect diagnosed on old14d/d56: a candidate retained
+path and trusted TST no longer turn an incomplete MAIN result into OK/trusted.
+Typed original failures, path diagnostics and timing bounds remain available;
+fully validated positives and genuine full-LTA operations remain covered.
+The complete pre-revoke-with-POE positive remains pending after actual forced
+original0pass/1fail, not hidden as a pass/provider skip. This is a substantive
+hardening repair with an explicit compatibility cost, not full historical recovery.
+
+The actual127fresh Root reference calls keep distinct partitions: direct CMS27
+trust/bottom-line agreements with4 subindication/horizon differences; public
+WithTime24 matched profiles12agree/12native-stricter plus3explicit-PKIX profiles
+excluded; exact PDF32 profiles24agree/8native-stricter; ordinary PDF32 is diagnostic
+only. No matched native more-trusting decision was observed in this bounded
+matrix. Fresh review SHA2566bfedb79569134ad096053afef4dd56c186f9a67ae6c825744905051cb55c0d9.
+Python independent socket hooks observe zero covered events; this is not a kernel
+syscall/network-namespace attestation. Error/status/time-field, policy/profile,
+parameter/provider and pending positive-recovery limits remain. Other historical
+ordinary-default and semantic divergences are not erased; universal all-divergences-
+fail-closed, universal parity and complete-port claims remain unsupported.
+
+C actual9d9native/9fresh originals and10same-output pairs retain config/usage/
+context/reader and explicit empty-root controls; vector proofs do not establish
+rendering. S current8profiles yield14API plus2pre-validation malformed-OCSP
+constructor errors,14flag agreements. The original/probe onf561 is distinct
+from9d. Full-S first attempt failed to decode one interleaved HTTP transport
+line before any API; every CASE/ELF and16complete HTTP lines were retained in a
+lossless25-record line projection, with unchanged oracle attempt2exit0. That
+projection is not reconstructed material/policy or filtered case selection.
+These limited comparisons are not universal trust claims.
+
+### Historical source14d evidence and diagnostic (retained verbatim)
 
 Accepted source14d covers only the stated decode3 and Disabled1 scope
 after the completed Root gate and independent final review. Unsigned output checks do not establish signer
@@ -800,6 +877,36 @@ trust-verdict exception should be silently reintroduced.
 
 ## Next parallel lanes
 
+Current bounded assignments follow the accepted9d cohort. Root owns shared
+interfaces, central metadata, source/ELF/runtime acceptance and complete gates.
+No next packet is accepted from these assignments alone.
+
+| Lane | Exclusive file scope | Remaining work | Acceptance |
+| --- | --- | --- | --- |
+| P — temporary C frontend assignment | CLI lib.rs plus new pkcs11_config_frontend.rs and dedicated tests/fixtures only | Exactly C-owned test_cli_pkcs11_setup_config_unreadable: missing named profile in valid config, no provider/HSM queries or signing; P296/1 unchanged | Tests-first exact diagnostic/phase and genuine fresh original; no new P ID, no false signed-output claim. Approval: p-cli-config-negative-one-approval.md |
+| C — next default styles | pemder_signing.rs and only if needed signature_appearance.rs, new tests/fixtures; no lib.rs | Three originals/12 architecture cases: custom default, default plus unrelated styles, undefined default | Preserve direct AP literal bytes, exact undefined diagnostic and all current named-style/config/usage/auth-reader/MAC/budget contracts. Approval: c-default-style-three-approval.md |
+| S — policy ownership source plan | Source/read-only analysis only; no implementation authorized | Two exact policy-owner originals; select smallest real complete-ID handoff, other reachability2 deferred | Existing backend fallback and real consumer must retain identity/capabilities/close authority; no manager/source/POE framework, edge, manifest or hidden default. Request: s-policy-owner-two-source-request.md |
+| V — historical MAIN completion | Source/design and diagnostic planning; new implementation requires Root approval | One pending complete original; safe full same-policy recovery and retained LTA/MAIN/TSA/AC/PDF requirements | No failed-path promotion, weaker fallback, new clock waiver or implicit POE; current containment stays. Request: v-main-completion-design-request.md |
+| L — integration | Shared APIs/tools/central acceptance and gate/provenance coordination | Live11/11; maintain four exclusive packets and complete future source-specific gates | Metadata-only acceptance follows actual proofs; service replacement and complete port need further functional/trust acceptance |
+
+The exact next C IDs are
+`test_cli_sign_visible_with_custom_default_style`,
+`test_cli_sign_visible_with_default_style_and_others_in_config` and
+`test_cli_sign_visible_with_undefined_default_style`, four architectures each.
+The temporary P assignment remains C-owned and is exactly
+`pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_pkcs11_setup_config_unreadable`.
+No other PKCS11/profile/provider original is covered. The S request covers
+`test_policy_hands_ownership_to_the_context` and
+`test_policy_without_handlers_hands_over_nothing` as source-only work, not passes.
+
+Remaining57 pending originals are C56 plus V1, not all C. Library1168/1156/11/1
+and L11/11/0/0 retain their separate denominators. Qualification, provider and
+parameter gaps, conservative historical recovery and other declared semantic
+profiles preclude universal fail-closed/parity or complete-port claims. Actual
+CLI NOW and fixture2020 checks remain separate. No service switch is authorized.
+
+### Historical preceding assignment, source14d (retained verbatim)
+
 Current bounded briefs: [P audit](lanes/round3/p-withtime-impact-audit.md),
 [V hardening](lanes/round3/v-withtime-containment.md),
 [S context](lanes/round3/s-context-default.md),
@@ -836,6 +943,7 @@ The next C styling slice is exactly three originals/nine parameters, not all
 Pinned source definitions are at test_cli_signing.py826/859/893; the explicit
 Ed25519 decorator controls the last case. No style-count, decode test or
 unsigned output inspection credits these future signed originals in advance.
+
 
 ## Separate XML programme
 

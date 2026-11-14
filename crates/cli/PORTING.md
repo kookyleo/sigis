@@ -1,3 +1,43 @@
+# Lead acceptance update: named text and QR signature styles
+
+Accepted source9d921382ea837819b2ad5dda2b9546adc83dba03 completes exactly three
+C originals/nine parameters, yielding **252 total /196 passed /0 skipped
+/56 pending**. Previous193 C originals remain counted once. Four combined new
+C3/S1 completions plus one intentional V passed-to-pending transition yield
+**1431/1363/11/57**, not a net four passed increase. These C documents claim no
+S/V function credit. Full actual Rust results are **2147 discovered /2143 passed
+/4 ignored /0 failed /219 reports**. All six returned0/audit0: build7.14s,
+test1354.13s, clippy25.50s, strict doc212.45s, layer4.74s, fmt3.38s.
+Final independent review SHA256:
+**0fe33202d9be8c59a0b1b77b6e5c429190b4516cbdf7e22d47ee45612705230e**.
+
+Final tests-first b055 against acceptedCLI34d measured0pass/8fail, then sole
+pemder production353394 and combined9d focus8pass/0fail (42.09s harness).
+Current coherent CLIce448465/124068816bytes,13producerunits236inputs/bothVM
+copies, actual CtestELF401f5713 and15units242input audit bind the real current
+run. No new public API, fields, lower/shared source, dependency or manifest.
+Accepted fields14d repair remains intact. Caller raw/effective config, alias/
+schema, all five usage fields, selected context/time and strict/authenticated
+reader/budget/MAC requirements remain in the actual consumers.
+
+Current41process records contain9native exact attempts,9fresh unchanged original
+bodies/full post_validate,10same-output trust peers,10full-PDF/vector peers,
+2revinfo exports and1missing-URL-before-key supplement. Separate16callbacks are
+2positive/14denied. Ten signed native PDFs have full-file trust and explicit
+native/reference empty-root refusal; five QR Do1/five text Do0 plus actual text/
+resource/matrix/BBox/stream checks do not claim raster rendering or scanner
+success. Missing URL has exact diagnostic/no fresh-original output/native
+sentinel preservation. Product NOW and fixture2020 remain distinct.
+
+The next default-style3/12cases packet is unaccepted and exclusively owns
+pemder/signature_appearance, no lib.rs. P temporarily owns lib.rs/new frontend
+for exactly one different C-owned no-provider missing-profile original, no HSM.
+Remaining56 C pending functions and the separate V1 historical recovery are
+not a complete-port/universal-fail-closed claim. See STYLED_THREE_PORTING.md and
+[l-styled-context-containment](../../docs/lanes/round3/l-styled-context-containment.md).
+
+## Historical preceding lead acceptance retained verbatim
+
 # Lead acceptance update: decode-limit reader continuity
 
 Accepted after the completed Root full gate: **252 total /193 passed /0 skipped

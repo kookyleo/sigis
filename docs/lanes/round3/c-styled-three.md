@@ -1,3 +1,23 @@
+# Lead acceptance update: named styles
+
+Accepted compiled source9d921382ea837819b2ad5dda2b9546adc83dba03 completes the
+three exact functions/nine parameters below. C252/196/0/56; overall1431/1363/11/57
+includes separate S1 completion and V1 passed-to-pending, net plus3 passed.
+Current CLIce448465 and actual current8pass/0fail follow b055 tests-first0pass/
+8fail on acceptedCLI34d. Sole pemder repair preserves accepted fields reader
+state and mandatory caller requirements. Nine actual native attempts and nine
+fresh unchanged originals/full teardown,10same-output/full-PDF-vector pairs,
+16callbacks(2positive14denied), exact missing-URL and explicit no-root controls
+are independently reviewed; vector proof is not rendering. CLI NOW and
+fixture2020 scopes stay explicit. Full six/audit0 and actual2147/2143/4/0/219
+Rust counts precede acceptance. Final review SHA256:
+0fe33202d9be8c59a0b1b77b6e5c429190b4516cbdf7e22d47ee45612705230e.
+See l-styled-context-containment.md and crates/cli/STYLED_THREE_PORTING.md.
+Next default-style3/12cases is a separate unaccepted exclusive pemder/appearance
+packet; P's one C-owned missing-profile frontend exclusively owns lib.rs.
+
+## Historical assignment retained verbatim
+
 # C: three named signature appearance functions
 
 Accepted baseline ab08d1c6, compiled14d6c6a3: CLI252/193/0/59, overall
