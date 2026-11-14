@@ -8,6 +8,7 @@ pub mod pemder_signing;
 pub mod pkcs12_signing;
 pub mod plugins;
 pub mod runtime;
+pub mod signature_appearance;
 pub mod software_signing;
 pub mod stamp;
 pub mod timestamp;
@@ -266,6 +267,18 @@ fn run_signing(
         return pkcs12_signing::run_with_runtime(&rewritten, config, runtime);
     }
     if args[i] == "pemder" && rewritten[i] == "pemder" {
+        let visible = argument_positions(&rewritten).any(|position| {
+            rewritten[position]
+                .strip_prefix("--field=")
+                .is_some_and(|value| value.contains('/'))
+                || (rewritten[position] == "--field"
+                    && rewritten
+                        .get(position + 1)
+                        .is_some_and(|value| value.contains('/')))
+        });
+        if visible {
+            return signature_appearance::run_with_runtime(&rewritten, config, runtime);
+        }
         return pemder_signing::run_with_authenticated_input(&rewritten, config, runtime);
     }
     Err(format!(

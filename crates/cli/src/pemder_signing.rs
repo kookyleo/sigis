@@ -14,7 +14,7 @@ use std::{collections::BTreeSet, io::BufRead, sync::Arc};
 fn extended(requirement: &str) -> String {
     format!("{requirement} requires extended PEM/DER signing and is not supported by this command.")
 }
-fn option_scope(opts: &Options) -> Result<(), String> {
+fn option_scope(opts: &Options, visible: bool) -> Result<(), String> {
     if let Some(flag) = opts.repeated_flags.iter().next() {
         return Err(extended(&format!("Repeated --{flag}")));
     }
@@ -51,7 +51,7 @@ fn option_scope(opts: &Options) -> Result<(), String> {
     let field = opts
         .get("field")
         .ok_or_else(|| extended("An implicit field"))?;
-    if field.is_empty() || field.contains('/') {
+    if field.is_empty() || (!visible && field.contains('/')) {
         return Err(extended("A visible or empty field specification"));
     }
     Ok(())
@@ -239,7 +239,7 @@ pub fn run_with_runtime(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
-    run_with_input_policy(args, config, runtime, false, false)
+    run_with_input_policy(args, config, runtime, false, false, false)
 }
 
 /// Top-level PEM execution with authentication of the continuing PDF reader.
@@ -249,7 +249,7 @@ pub(crate) fn run_with_authenticated_input(
     config: Option<&CliConfig>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
-    run_with_input_policy(args, config, runtime, true, false)
+    run_with_input_policy(args, config, runtime, true, false, false)
 }
 
 pub(crate) fn run_with_identity(
@@ -257,7 +257,15 @@ pub(crate) fn run_with_identity(
     identity: &crate::identity_signing::PemIdentity<'_>,
     runtime: &ValidationRuntime,
 ) -> Result<String, String> {
-    run_with_input_policy(args, Some(identity.config()), runtime, false, true)
+    run_with_input_policy(args, Some(identity.config()), runtime, false, true, false)
+}
+
+pub(crate) fn run_with_visible_field(
+    args: &[String],
+    config: Option<&CliConfig>,
+    runtime: &ValidationRuntime,
+) -> Result<String, String> {
+    run_with_input_policy(args, config, runtime, true, false, true)
 }
 
 fn run_with_input_policy(
@@ -266,6 +274,7 @@ fn run_with_input_policy(
     runtime: &ValidationRuntime,
     authenticated_input: bool,
     identity: bool,
+    visible: bool,
 ) -> Result<String, String> {
     let at = crate::argument_positions(args)
         .find(|&i| {
@@ -281,8 +290,16 @@ fn run_with_input_policy(
     let mut combined = args[..at].to_vec();
     combined.extend_from_slice(&args[at + 1..]);
     let opts = options(&combined)?;
-    option_scope(&opts)?;
+    let field_spec = if visible {
+        Some(crate::signature_appearance::field_spec(&opts)?)
+    } else {
+        None
+    };
+    option_scope(&opts, visible)?;
     config_scope(config, identity)?;
+    if visible {
+        crate::signature_appearance::check_raw_schema(config, opts.get("validation-context"))?;
+    }
     if opts.paths.len() != 2 {
         return Err("Input and output file arguments are required.".into());
     }
@@ -307,6 +324,9 @@ fn run_with_input_policy(
     // Authenticate the reader that owns the spent decode budget before handing
     // its state to the signer. Do not reopen plaintext or reset reader policy.
     let password = crate::software_signing::authenticate_document(&reader, &opts, runtime)?;
+    if let Some(spec) = &field_spec {
+        crate::signature_appearance::ensure_visible(&reader, spec)?;
+    }
     let (signer, warn) = material(&opts, config, runtime)?;
     enforce_usage(&signer, &policy)?;
     let settings = SignOptions {
@@ -315,8 +335,11 @@ fn run_with_input_policy(
         reopen_state: Some(PdfReopenState::from_reader(reader)),
         ..Default::default()
     };
-    let mut metadata =
-        PdfSignatureMetadata::pyhanko_defaults(opts.get("field").expect("validated field"));
+    let name = field_spec
+        .as_ref()
+        .map(|spec| spec.sig_field_name.as_str())
+        .unwrap_or_else(|| opts.get("field").expect("validated field"));
+    let mut metadata = PdfSignatureMetadata::pyhanko_defaults(name);
     metadata.signer_key_usage = policy
         .key_usage
         .clone()
@@ -328,7 +351,10 @@ fn run_with_input_policy(
         metadata.validation_context = Some(Arc::new(context));
     }
     let mut pdf_signer = PdfSigner::new(metadata, Arc::new(signer));
-    if identity {
+    if let Some(spec) = field_spec {
+        pdf_signer = pdf_signer.with_field_spec(spec);
+    }
+    if identity || visible {
         let mut complete = crate::usage::key_usage_constraints(&policy);
         if complete.key_usage.is_none() {
             complete.key_usage = Some(BTreeSet::from(["non_repudiation".into()]));
@@ -336,7 +362,14 @@ fn run_with_input_policy(
         pdf_signer = pdf_signer.with_signer_key_usage_policy(complete);
     }
     pdf_signer.signing_time = Some(runtime.now);
-    pdf_signer.stamp_style = Some(CliConfig::parse("")?.stamp_style(None)?);
+    pdf_signer.stamp_style = Some(if visible {
+        match config {
+            Some(config) => config.stamp_style(None)?,
+            None => CliConfig::parse("")?.stamp_style(None)?,
+        }
+    } else {
+        CliConfig::parse("")?.stamp_style(None)?
+    });
     crate::software_signing::sign_pdf_and_write(&pdf_signer, &input, &settings, &opts.paths[1])?;
     Ok(if warn {
         "WARNING: passphrase is empty. If you intended to use an unencrypted private key, use --no-pass instead.\n".into()
