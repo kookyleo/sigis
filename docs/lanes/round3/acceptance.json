@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "77db5f041990a2f1ea85338cf42740055a42a138",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/c-qualified-product-current/workspace.log",
+  "accepted_source_commit": "8c04d3b79a67a49cde7fbb0271f8832334810f0c",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-user-pin-byte-comparisons/workspace.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2514,5 +2514,5 @@
       "reason": "The actual CLI preserves the fully checked historical trusted/qualified API conclusion while retaining raw full-LTA NO_POE and control-time failure. Authenticated signature/certificate POEs and complete same-path MAIN validation under the original caller policy are required; current TSA, PDF, seed, key-usage, algorithm and qualification refusals remain. Fresh unchanged original and same-byte peers pass; full workspace/clippy/fmt gate passes. No generic failed-status promotion or full-LTA success credit."
     }
   ],
-  "source_verification_note": "Test-only current-time qualified CLI companion on accepted main d6aa78d4: workspace2436passed/0failed/31inheritednativeignored across256reports, workspace all-target clippy-Dwarnings and fmt exit0. Focused companion1PASS; complete workspace also executes it successfully. Three actual product-NOW CLI decisions and fresh same-input pinned Python peers require qualified-required and nonqualified-optional positives before required refusal on identical nonqualified PDF bytes. No production/default/dependency change, invented POE or new original credit. All7 historical C software originals were already Passed and are not recounted. Overall1431/1421/10/0 unchanged; explicit hardware/fixture/language exclusions retain their statuses."
+  "source_verification_note": "USER-PIN test-support cleanup only, on accepted main ec052ce1: canonical-path/exact-byte preservation and actual DER CRL request assertions replace file/transport fingerprint records. Default focused USER target8PASS/0FAIL/0IGNORE; existing runtime signing callbackNone and all current Root/preflight/Env helpers preserved. First selector-free whole run2431pass/5fail/31ignored: five missing-SoftHSM fixture setups, retained separately and not counted green. With existing ordinary SDK/module/tool/oracle/overlay paths, the five targeted DSA cases pass and the unchanged-source whole workspace2436PASS/0FAIL/31inheritedignored across256reports; workspace all-target clippy-Dwarnings and fmt pass. No proof directory/source/CLI hash selector, assertion waiver, new production/API/dependency/lock change or original credit. Counts1431/1421/10/0 unchanged."
 }
