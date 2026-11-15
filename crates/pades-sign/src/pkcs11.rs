@@ -1129,6 +1129,15 @@ impl Default for Pkcs11SignerOptions {
     }
 }
 
+#[derive(Clone)]
+struct SigningPinCallback(Arc<dyn Fn() -> Result<String> + Send + Sync>);
+
+impl fmt::Debug for SigningPinCallback {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("SigningPinCallback(<redacted>)")
+    }
+}
+
 /// A key on a PKCS#11 token (`PKCS11Signer`).
 #[derive(Debug)]
 pub struct Pkcs11Signer {
@@ -1138,6 +1147,7 @@ pub struct Pkcs11Signer {
     registry: Vec<Cert>,
     key: ObjectHandle,
     options: Pkcs11SignerOptions,
+    signing_pin_callback: Option<SigningPinCallback>,
 }
 
 fn hex(b: &[u8]) -> String {
@@ -1310,6 +1320,7 @@ impl Pkcs11Signer {
             registry,
             key,
             options,
+            signing_pin_callback: None,
         })
     }
 
@@ -1327,6 +1338,23 @@ impl Pkcs11Signer {
     /// The session.
     pub fn session(&self) -> &Arc<Pkcs11Session> {
         &self.session
+    }
+
+    /// Supply a fresh context-specific signing PIN for each signature.
+    ///
+    /// The existing session, resolved key and static configuration are retained.
+    /// The callback overrides the static PIN, is never cached and is not called
+    /// by construction, Debug or mechanism selection. Errors propagate without
+    /// falling back to a USER or static credential or starting a provider sign.
+    /// Repeated calls replace only the callback. Callbacks run after mechanism
+    /// preparation and before the session lock, so concurrent callers control
+    /// callback blocking, logging and synchronization themselves.
+    pub fn with_signing_pin_callback<F>(mut self, callback: F) -> Self
+    where
+        F: Fn() -> Result<String> + Send + Sync + 'static,
+    {
+        self.signing_pin_callback = Some(SigningPinCallback(Arc::new(callback)));
+        self
     }
 
     fn mechanism_for(&self, digest: DigestAlgorithm) -> Result<AlgorithmIdentifierOwned> {
@@ -1399,7 +1427,10 @@ impl KeySigner for Pkcs11Signer {
         let mut pss_store = None;
         let mechanism = spec.mechanism.to_cryptoki(&mut pss_store)?;
         let key = self.key;
-        let pin = self.options.signing_pin.clone();
+        let pin = match &self.signing_pin_callback {
+            Some(callback) => Some((callback.0)()?),
+            None => self.options.signing_pin.clone(),
+        };
         let sig = self.session.with(|s| {
             if let Some(pin) = pin {
                 s.sign_init(&mechanism, key)?;

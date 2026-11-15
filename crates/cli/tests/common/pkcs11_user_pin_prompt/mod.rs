@@ -564,6 +564,7 @@ fn body(selected: &str) {
         fetchers,
         password,
         trusted_list_transport: None,
+        pkcs11_signing_pin_prompt: None,
         pkcs11_user_pin_prompt: (!missing).then_some(capability),
     };
     // Never log the full runtime: generic password Debug is outside this scope.

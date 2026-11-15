@@ -12,6 +12,7 @@ fn test_cli_addsig_pemder_with_identity_programmatically() {
         let case = cases::Case::new(arch, "programmatic");
         let cfg = CliConfig::parse(&serde_yaml::to_string(&case.config_value()).unwrap()).unwrap();
         let runtime = ValidationRuntime {
+            pkcs11_signing_pin_prompt: None,
             pkcs11_user_pin_prompt: None,
             now: sigis_pki_core::time::Moment::parse_rfc3339("2020-08-01T00:00:00+08:00").unwrap(),
             fetchers: sigis_pki_core::fetch::Fetchers::none(),

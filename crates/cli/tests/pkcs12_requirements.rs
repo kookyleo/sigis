@@ -79,6 +79,7 @@ impl Case {
     fn rejects(&self, args: &[String], config: Option<&CliConfig>, expected: &[&str]) {
         let before = fs::read(&self.input).unwrap();
         let runtime = ValidationRuntime {
+            pkcs11_signing_pin_prompt: None,
             pkcs11_user_pin_prompt: None,
             now: Moment::parse_rfc3339("2020-08-01T00:00:00Z").unwrap(),
             fetchers: Fetchers::none(),

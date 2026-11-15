@@ -87,6 +87,7 @@ fn invoke_with_pdf_reference(
         fetchers: Fetchers::none(),
         password: None,
         trusted_list_transport: Some(Arc::new(Offline)),
+        pkcs11_signing_pin_prompt: None,
         pkcs11_user_pin_prompt: None,
     };
     let output = sigis_cli::run_with_runtime(&args, &PluginRegistry::default(), &runtime);

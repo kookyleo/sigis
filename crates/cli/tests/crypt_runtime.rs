@@ -11,6 +11,7 @@ use std::{
 
 fn invoke(args: &[String], password: &str) -> Output {
     let runtime = ValidationRuntime {
+        pkcs11_signing_pin_prompt: None,
         pkcs11_user_pin_prompt: None,
         trusted_list_transport: None,
         now: Moment::now(),

@@ -71,6 +71,7 @@ impl Case {
     }
     fn runtime() -> ValidationRuntime {
         ValidationRuntime {
+            pkcs11_signing_pin_prompt: None,
             pkcs11_user_pin_prompt: None,
             now: Moment::parse_rfc3339("2020-08-01T00:00:00Z").unwrap(),
             fetchers: Fetchers::none(),

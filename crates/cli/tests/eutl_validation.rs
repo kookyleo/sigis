@@ -121,6 +121,7 @@ fn run_function(function: &str, expected_code: i32, phrases: &[&str]) {
                 ..Fetchers::none()
             },
             trusted_list_transport: Some(Arc::new(NoTlNetwork)),
+            pkcs11_signing_pin_prompt: None,
             pkcs11_user_pin_prompt: None,
         };
         let output = sigis_cli::run_with_runtime(&argv, &PluginRegistry::default(), &runtime);

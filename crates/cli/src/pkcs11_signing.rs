@@ -1,7 +1,10 @@
 //! Bounded real PKCS11 signing with typed configuration and inherited PDF state.
 use crate::{
     config::{CliConfig, PinEntry, Pkcs11Setup, SigningPinEntry},
-    runtime::{Pkcs11UserPinPrompt, Pkcs11UserPinPromptError, ValidationRuntime},
+    runtime::{
+        Pkcs11SigningPinPrompt, Pkcs11SigningPinPromptError, Pkcs11UserPinPrompt,
+        Pkcs11UserPinPromptError, ValidationRuntime,
+    },
     software_signing::Options,
 };
 use serde_json::Value;
@@ -248,6 +251,7 @@ fn direct_request(options: &Options) -> Result<(Options, Pkcs11Setup), String> {
 fn native_setup(
     setup: &Pkcs11Setup,
     user_pin_prompt: Option<&Pkcs11UserPinPrompt>,
+    signing_pin_prompt: Option<&Pkcs11SigningPinPrompt>,
 ) -> Result<Pkcs11Config, String> {
     let map = normalized(&setup.raw, "PKCS#11 setup")?;
     if let Some(criteria) = map.get("token-criteria") {
@@ -312,9 +316,10 @@ fn native_setup(
         (SigningPinEntryMode::Reauthenticate, Some(value.to_owned()))
     } else {
         match setup.signing_pin_mode {
-            SigningPinEntry::Prompt => {
+            SigningPinEntry::Prompt if signing_pin_prompt.is_none() => {
                 return Err(unsupported("Context-specific signing PIN prompt"));
             }
+            SigningPinEntry::Prompt => (SigningPinEntryMode::Prompt, None),
             SigningPinEntry::Skip if setup.signing_pin.is_some() => {
                 return Err(unsupported(
                     "Context-specific signing PIN needs reauthenticate mode",
@@ -402,7 +407,11 @@ pub(crate) fn run(
     config_scope(config, context_selected)?;
     let setup =
         setup.ok_or_else(|| unsupported("Direct module signing without a named PKCS#11 setup"))?;
-    let native = native_setup(setup, runtime.pkcs11_user_pin_prompt.as_ref())?;
+    let native = native_setup(
+        setup,
+        runtime.pkcs11_user_pin_prompt.as_ref(),
+        runtime.pkcs11_signing_pin_prompt.as_ref(),
+    )?;
     let policy = config
         .map(|config| config.key_usages(options.get("validation-context")))
         .transpose()?
@@ -464,6 +473,26 @@ pub(crate) fn run(
         ..Default::default()
     };
     let signer = open_signer(&native, None).map_err(|error| error.to_string())?;
+    let signer = if native.signing_pin_mode == SigningPinEntryMode::Prompt {
+        let prompt = runtime
+            .pkcs11_signing_pin_prompt
+            .clone()
+            .ok_or_else(|| unsupported("Context-specific signing PIN prompt"))?;
+        signer.with_signing_pin_callback(move || {
+            prompt.request_signing_pin().map_err(|error| {
+                sigis_pki_core::errors::HankoError::Signing(match error {
+                    Pkcs11SigningPinPromptError::Unavailable => {
+                        "PKCS#11 signing PIN is unavailable.".into()
+                    }
+                    Pkcs11SigningPinPromptError::Cancelled => {
+                        "PKCS#11 signing PIN request was cancelled.".into()
+                    }
+                })
+            })
+        })
+    } else {
+        signer
+    };
     let mut pdf_signer =
         PdfSigner::new(metadata, Arc::new(signer)).with_signer_key_usage_policy(complete_usage);
     pdf_signer.signing_time = Some(runtime.now);

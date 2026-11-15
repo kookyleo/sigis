@@ -54,6 +54,55 @@ impl Pkcs11UserPinPrompt {
     }
 }
 
+/// A context-specific signing-PIN request did not produce a credential.
+///
+/// Errors contain neither caller-controlled messages nor credential values.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pkcs11SigningPinPromptError {
+    /// The caller cannot supply a signing PIN for this operation.
+    Unavailable,
+    /// The caller cancelled this signing-PIN request.
+    Cancelled,
+}
+
+type SigningPinCallback =
+    dyn Fn(&'static str) -> Result<String, Pkcs11SigningPinPromptError> + Send + Sync + 'static;
+
+/// Explicit authority to answer context-specific token signing-PIN requests.
+///
+/// This capability cannot authorize USER login or document decryption. It
+/// installs no terminal fallback and caches no returned PIN. Clones retain the
+/// callback identity. Callers control callback concurrency, blocking, logging
+/// and captured data, as with the separate USER-PIN capability.
+#[derive(Clone)]
+pub struct Pkcs11SigningPinPrompt {
+    callback: Arc<SigningPinCallback>,
+}
+
+impl std::fmt::Debug for Pkcs11SigningPinPrompt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Pkcs11SigningPinPrompt(<redacted>)")
+    }
+}
+
+impl Pkcs11SigningPinPrompt {
+    /// Supply the callback for the fixed `PKCS#11 signing PIN: ` request.
+    ///
+    /// The response is not trimmed or cached, and is never used for USER login.
+    pub fn new<F>(callback: F) -> Self
+    where
+        F: Fn(&'static str) -> Result<String, Pkcs11SigningPinPromptError> + Send + Sync + 'static,
+    {
+        Self {
+            callback: Arc::new(callback),
+        }
+    }
+
+    pub(crate) fn request_signing_pin(&self) -> Result<String, Pkcs11SigningPinPromptError> {
+        (self.callback)("PKCS#11 signing PIN: ")
+    }
+}
+
 /// Runtime services corresponding to the upstream CLI context.
 #[derive(Clone, Debug)]
 pub struct ValidationRuntime {
@@ -69,6 +118,12 @@ pub struct ValidationRuntime {
     /// never substituted for it. External exhaustive runtime literals must
     /// include this field or use `..Default::default()`.
     pub pkcs11_user_pin_prompt: Option<Pkcs11UserPinPrompt>,
+    /// Optional, separate context-specific signing-PIN authority.
+    ///
+    /// `None` keeps prompt requests unsupported. Neither `password` nor the
+    /// USER-PIN callback substitutes for this capability. External exhaustive
+    /// literals must add this field or use `..Default::default()`.
+    pub pkcs11_signing_pin_prompt: Option<Pkcs11SigningPinPrompt>,
     /// Optional trusted-list HTTP provider; None uses the bounded production transport.
     pub trusted_list_transport: Option<std::sync::Arc<dyn sigis_pki_fetch::HttpTransport>>,
 }
@@ -77,6 +132,7 @@ impl Default for ValidationRuntime {
         Self {
             password: None,
             pkcs11_user_pin_prompt: None,
+            pkcs11_signing_pin_prompt: None,
             trusted_list_transport: None,
             now: Moment::now(),
             fetchers: sigis_pki_fetch::HttpFetchers::default().as_fetchers(),
@@ -147,6 +203,9 @@ mod user_pin_tests {
             now: Moment::from_unix_secs(1_604_188_800),
             fetchers: sigis_pki_fetch::HttpFetchers::default().as_fetchers(),
             password: Some("document-role-only".into()),
+            pkcs11_signing_pin_prompt: Some(super::Pkcs11SigningPinPrompt::new(|_| {
+                Ok("separate-signing-response".into())
+            })),
             trusted_list_transport: Some(Arc::new(NoTransportIo)),
         };
         let clone = runtime.clone();
@@ -167,6 +226,10 @@ mod user_pin_tests {
         assert!(Arc::ptr_eq(
             clone.trusted_list_transport.as_ref().unwrap(),
             runtime.trusted_list_transport.as_ref().unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            &runtime.pkcs11_signing_pin_prompt.as_ref().unwrap().callback,
+            &clone.pkcs11_signing_pin_prompt.as_ref().unwrap().callback,
         ));
         let first = runtime.pkcs11_user_pin_prompt.as_ref().unwrap();
         let second = clone.pkcs11_user_pin_prompt.as_ref().unwrap();
@@ -242,5 +305,55 @@ mod user_pin_tests {
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<Pkcs11UserPinPrompt>();
         assert_send_sync::<ValidationRuntime>();
+    }
+}
+
+#[cfg(test)]
+mod signing_pin_tests {
+    use super::{Pkcs11SigningPinPrompt, Pkcs11SigningPinPromptError, ValidationRuntime};
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
+
+    #[test]
+    fn signing_capability_is_separate_redacted_and_does_not_cache_responses() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let observed = calls.clone();
+        let prompt = Pkcs11SigningPinPrompt::new(move |label| {
+            assert_eq!(label, "PKCS#11 signing PIN: ");
+            let index = observed.fetch_add(1, Ordering::SeqCst) + 1;
+            Ok(format!("  signing-secret-{index}  "))
+        });
+        let runtime = ValidationRuntime {
+            pkcs11_signing_pin_prompt: Some(prompt.clone()),
+            ..Default::default()
+        };
+        let cloned = runtime.clone();
+        assert!(runtime.pkcs11_user_pin_prompt.is_none());
+        assert!(!format!("{runtime:?}").contains("signing-secret"));
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        let clone = cloned.pkcs11_signing_pin_prompt.as_ref().unwrap();
+        assert!(Arc::ptr_eq(&prompt.callback, &clone.callback));
+        assert_eq!(
+            prompt.request_signing_pin().unwrap(),
+            "  signing-secret-1  "
+        );
+        assert_eq!(clone.request_signing_pin().unwrap(), "  signing-secret-2  ");
+        assert_eq!(calls.load(Ordering::SeqCst), 2);
+        assert!(ValidationRuntime::default()
+            .pkcs11_signing_pin_prompt
+            .is_none());
+    }
+
+    #[test]
+    fn signing_capability_preserves_typed_refusals_without_freeform_diagnostics() {
+        for refusal in [
+            Pkcs11SigningPinPromptError::Unavailable,
+            Pkcs11SigningPinPromptError::Cancelled,
+        ] {
+            let prompt = Pkcs11SigningPinPrompt::new(move |_| Err(refusal));
+            assert_eq!(prompt.request_signing_pin(), Err(refusal));
+        }
     }
 }
