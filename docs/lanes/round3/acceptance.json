@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "659201037d8185eeabed89853763533fd4c03633",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/simple-gate/p-workspace-test.log",
+  "accepted_source_commit": "33bd7be338ff9ebe6773b68dab011795b3b9fb97",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/v-final-integration/workspace-final.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2076,7 +2076,7 @@
     },
     {
       "id": "pyhanko/test_ades_validation.py::test_embedded_cades_pre_revoke_with_poe",
-      "rust_test": "ades_validation::test_embedded_cades_pre_revoke_with_poe",
+      "rust_test": "ades_validation::test_embedded_cades_pre_revoke_with_poe; round3_leaf_revocation_completion::original_pre_revoke_full_native_closure",
       "previous_effective_status": "passed",
       "previous_status_origin": "Immutable ownership.json baseline entry, not an existing acceptance override",
       "history_evidence": {
@@ -2144,8 +2144,8 @@
         },
         "count_semantics": "One unique upstream pending ID is separate from Rust ignored test totals. Expected full-workspace ignored4 must be derived only after actual full-gate return."
       },
-      "status": "pending",
-      "reason": "Pending complete same-policy historical MAIN recovery after conservative WithTime hardening. The complete unchanged original assertion body is retained with one explicit pending ignore, not a provider skip or accepted pass. Actual Root9d --ignored --exact execution still fails REVOKED_NO_POE vs OK (0passed/1failed/13filtered,6.43s); normal package regression157passed/0failed/1ignored over22reports. Its immutable baseline passed entry and previous accepted status are preserved in history_evidence. Source9d full build/test/clippy -D warnings/strict doc/layer/fmt all returned0 with audit0; actual2147 discovered/2143 passed/4 ignored/0 failed/219 reports. Final independent review SHA256 0fe33202d9be8c59a0b1b77b6e5c429190b4516cbdf7e22d47ee45612705230e."
+      "status": "passed",
+      "reason": "Restored the unchanged original after complete current MAIN validation, authenticated later leaf-KeyCompromise evidence and genuine signature-timestamp closure. Pure failed-status promotion, unsupported expired/CA/cutoff recovery and mandatory policy or qualification failures remain refused. Current-main normal workspace gate2389passed/0failed/25ignored across248reports, all-target clippy-Dwarnings and fmt pass; fresh pinned original1PASS and same-native-CMS peer1PASS. Exactly one V original; supplemental guards add zero IDs."
     },
     {
       "id": "pyhanko-cli/test_cli_signing.py::test_cli_sign_visible_with_custom_default_style",
@@ -2490,5 +2490,5 @@
       "reason": "Genuine unchanged-upstream fixture exclusion: the missing combined ECDSA_SHA256 mechanism causes all original rows to skip (required_mechanism/require_mech marker mismatch). Actual raw ECDSA signing succeeds in two supplemental native controls; those controls are not original passes. Current-main simple workspace gate has zero failures; workspace all-target clippy and fmt are clean."
     }
   ],
-  "source_verification_note": "P provider batch simple gate:2297Rust passed/0failed/26ignored, workspace all-target clippy-Dwarnings and fmt clean. Four new C-owned provider originals passed and two genuine rawECDSA fixture exclusions classified skipped. USER-PIN was already accepted and is not counted again. Two SafeNet CLI signing-PIN originals remain Pending because CLI support and complete native test bodies are still absent, in addition to unavailable hardware. Existing P SafeNet skip is unchanged."
+  "source_verification_note": "V final batch simple gate on current maind1740401 plus six curated commits:2389passed/0failed/25ignored,248test/doc reports; workspace all-target clippy-Dwarnings and fmt clean. Root fresh pinned original1PASS and author same-native-CMS peer1PASS. First attempt failed doctest E0460; unchanged-source retry after coordinating Cargo jobs passed. Restored exactly one Pending V original to Passed, V47/47/0/0 and overall1431/1419/8/4. No new skips or helper credit; recovery remains limited to the currently valid later-KeyCompromise profile."
 }
