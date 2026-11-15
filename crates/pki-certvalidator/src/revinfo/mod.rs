@@ -128,6 +128,71 @@ impl OcspContainer {
             .map(|s| Moment::from(s.this_update.0.to_date_time()))
     }
 
+    /// Strict historical issuance eligibility, using the original signed time.
+    /// The public accessor remains suitable for whole-second freshness checks.
+    pub(crate) fn issued_by(&self, control_time: Moment) -> bool {
+        use sigis_pki_core::asn1::tlv::{tag, Tlv};
+
+        let eligible = || -> Option<bool> {
+            self.single()?;
+            let tbs = Tlv::parse_exact(&self.tbs).ok()?;
+            if !tbs.is_universal(tag::SEQUENCE) || !tbs.constructed {
+                return None;
+            }
+            let fields = tbs.children().ok()?;
+            let offset = usize::from(fields.first()?.is_context(0));
+            let [responder, produced_at, responses, ..] = fields.get(offset..)? else {
+                return None;
+            };
+            if !(responder.is_context(1) || responder.is_context(2))
+                || !produced_at.is_universal(tag::GENERALIZED_TIME)
+                || produced_at.constructed
+                || !responses.is_universal(tag::SEQUENCE)
+                || !responses.constructed
+            {
+                return None;
+            }
+            let singles = responses.children().ok()?;
+            let single = singles.get(self.index)?;
+            if !single.is_universal(tag::SEQUENCE) || !single.constructed {
+                return None;
+            }
+            let single_fields = single.children().ok()?;
+            let time = single_fields.get(2)?;
+            if !time.is_universal(tag::GENERALIZED_TIME) || time.constructed {
+                return None;
+            }
+            let utc = time.value.strip_suffix(b"Z")?;
+            let integral = utc.get(..14)?;
+            if !integral.iter().all(u8::is_ascii_digit) {
+                return None;
+            }
+            let has_nonzero_fraction = match utc.get(14..)? {
+                [] => false,
+                [b'.', digits @ ..]
+                    if !digits.is_empty() && digits.iter().all(u8::is_ascii_digit) =>
+                {
+                    digits.iter().any(|digit| *digit != b'0')
+                }
+                _ => return None,
+            };
+            // Validate the calendar with the existing decoder. No fractional
+            // digits are rounded or parsed numerically, so arbitrary precision
+            // and trailing zeroes retain their exact comparison semantics.
+            let mut seconds = [0u8; 17];
+            seconds[..2].copy_from_slice(&[0x18, 15]);
+            seconds[2..16].copy_from_slice(integral);
+            seconds[16] = b'Z';
+            let issued = Moment::from(
+                der::asn1::GeneralizedTime::from_der(&seconds)
+                    .ok()?
+                    .to_date_time(),
+            );
+            Some(issued < control_time || (issued == control_time && !has_nonzero_fraction))
+        };
+        eligible().unwrap_or(false)
+    }
+
     /// `nextUpdate` of the single response.
     pub fn next_update(&self) -> Option<Moment> {
         self.single()

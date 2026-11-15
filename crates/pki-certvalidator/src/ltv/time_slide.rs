@@ -104,10 +104,7 @@ fn collect_ocsps<'a>(
     let subj = subject(&target, issuer, path);
     let mut out = Vec::new();
     for r in &ctx.ocsps {
-        let Some(issued) = r.this_update() else {
-            continue;
-        };
-        if issued > control_time || poe.poe_time(&r.der) > control_time {
+        if !r.issued_by(control_time) || poe.poe_time(&r.der) > control_time {
             continue;
         }
         if !matches!(ocsp_mod::match_cert_id(r, &subj)?, CertIdMatch::Match) {
@@ -366,7 +363,9 @@ fn slide(
             let Some(issued) = ooi.response.this_update() else {
                 continue;
             };
-            if issued > control_time || poe.poe_time(&ooi.response.der) > control_time {
+            if !ooi.response.issued_by(control_time)
+                || poe.poe_time(&ooi.response.der) > control_time
+            {
                 continue;
             }
             control_time = slide(&ooi.prov_path, control_time, ctx, poe, options, &new_stack)?;
