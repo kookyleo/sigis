@@ -129,7 +129,7 @@ impl OcspContainer {
     }
 
     /// Strict historical issuance eligibility, using the original signed time.
-    /// The public accessor remains suitable for whole-second freshness checks.
+    /// The public accessor keeps its existing whole-second freshness semantics.
     pub(crate) fn issued_by(&self, control_time: Moment) -> bool {
         use sigis_pki_core::asn1::tlv::{tag, Tlv};
 
