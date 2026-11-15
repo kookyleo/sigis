@@ -1,11 +1,46 @@
-# Remaining CLI batches, November15 continuation
+# Remaining CLI originals and historical batch results
 
-Base main: cc1f4fb3. The old owner branch and frozen candidates remain separate.
-The coordinator's simplified gate replaces provenance/capture/review pipelines.
-All Cargo uses tools/cargo-locked.sh; logs are plain text under
-`~/.codex/artifacts/sigis/round3/c/remaining-20261115/`.
+## Current accepted inventory
 
-The 34 completed originals in this batch are accepted after the simple current-main gate. The two ignored historical-validation implementation gaps remain Pending, not Skipped. Current CLI inventory is252/246/2/4: two context-specific signing-PIN originals remain with P and the two historical-validation cases with S/V; two genuine raw-ECDSA fixture exclusions are skipped. Executed original parameter rows pass the pinned Python reference; helper tests and parameters add no IDs.
+As of accepted main `8b393619`, the [central ledger](../../docs/lanes/round3/acceptance.json)
+and [status](../../docs/status.md) record CLI **252 total / 246 passed / 2 skipped /
+4 pending**, and overall **1431 / 1419 / 8 / 4**. V's restored original adds no CLI
+credit. The 34-original C batch and four subsequent provider originals remain
+accepted once; parameters, helper controls and oracle calls add no functions.
+
+| Original ID | Status | Operational owner / reason |
+| --- | --- | --- |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt | Pending | P: incomplete SafeNet context-specific signing-PIN original |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin | Pending | P: incomplete SafeNet context-specific signing-PIN original |
+| pyhanko-cli/test_cli_decode_limits.py::test_validate | Pending | S: historical validation, both validate/adesverify parameters retained |
+| pyhanko-cli/validation/test_cli_qualified_validation.py::test_validate_eutl_ades_point_in_time_no_revinfo | Pending | S: historical point-in-time validation |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_raw_ecdsa | Skipped | Genuine unchanged-upstream fixture exclusion: missing combined ECDSA_SHA256 mechanism |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_raw_ecdsa | Skipped | Same genuine fixture exclusion |
+
+The raw-ECDSA fixture's required_mechanism/require_mech marker mismatch causes all
+original rows to skip. Successful supplemental raw-ECDSA signatures do not turn
+either original into a pass. The two historical-validation originals remain
+Pending despite ignored native wrappers; neither historical NO_POE results nor
+V's separate accepted recovery promotes them to Passed or Skipped.
+
+The accepted static configured/environment signing-PIN producer and five
+AlwaysAuthenticate controls are supplemental coverage. They do not complete
+either SafeNet CLI original or establish the missing hardware behavior. The S5
+native-boundary supplement likewise does not promote S's five exclusions. No
+original status changed in `8b393619`.
+
+L alone runs the combined current-main workspace, clippy and formatting gate.
+Lanes supply focused affected tests and applicable pinned pyHanko differentials.
+Every Cargo invocation uses `tools/cargo-locked.sh`. Reference-fixture assistance
+to P/S requires explicit file boundaries.
+
+## Historical November15 batch record
+
+The following scope and runtime results describe the earlier batch based on
+`cc1f4fb3`, not new executions on `8b393619`. The old owner branch and frozen
+candidates remain separate. Plain logs are under
+`~/.codex/artifacts/sigis/round3/c/remaining-20261115/`. Pending-gap diagnoses below
+are historical observations, not claims about current lower-layer behavior.
 
 ## Batch1: field/hybrid/dictionary signing, seven originals /16 rows
 
@@ -42,7 +77,7 @@ empty-root denial; unchanged original bodies supply the separate reference.
 | pyhanko-cli/test_cli_decode_limits.py::test_addsig | decode_limits_signing::test_addsig | PAdES/PAdES-LTA, pass|
 | pyhanko-cli/test_cli_decode_limits.py::test_validate | decode_limits_signing::test_validate | validate/adesverify, Pending (native test ignored)|
 
-Pending implementation gap: native full-LTA requires historical revocation proof absent from
+Historical pending-gap observation: native full-LTA required historical revocation proof absent from
 the upstream B-T API-only acceptance case. Both original parameter bodies remain;
 a separate ordinary_validate_decode_control exercises the supported parameter
 without awarding partial original-function credit.
@@ -70,7 +105,7 @@ the genuine original PKI retrieval fixture; acquisition traces are not identical
 | test_validate_eutl_ades_tsa_not_qualified |1row, pass|
 | test_validate_eutl_ades_point_in_time_no_revinfo |1row, Pending (native test ignored)|
 
-Pending implementation gap: native full-LTA lacks historical control-time proof for the expired
+Historical pending-gap observation: native full-LTA lacked historical control-time proof for the expired
 2025leaf, whereas the original CLI accepts its API status projection. The native
 NO_POE verdict is preserved; no whitelist, invented POE or clock waiver is used.
 
@@ -104,7 +139,7 @@ No original is credited for a supplemental wrapper, oracle call or constructor
 premise. Cold transport/TLS details, general ambiguous service histories and the
 two archival display differences are not universal compatibility claims.
 
-## Verification
+## Historical verification
 
 The combined new-target run passed35 native tests with2 explicit ignores; the
 extra ordinary-only decode control adds no upstream ID. Pinned original Python parameter checks passed. Workspace all-target Clippy with-Dwarnings and
@@ -119,10 +154,12 @@ and two CLI targets, plus two signing targets requiring a configured SoftHSM
 path or persistent proof directory. This is a failed workspace gate, not a
 successful porting claim. The CLI helper migration removes obsolete proof
 requirements while retaining actual token, frontend and signed-PDF checks.
-Root/signing harness adjustments are routed to their owners. Cargo.lock's one
-new existing-workspace sigis-eutl dependency edge is generated and uncommitted.
+Root/signing harness adjustments were routed to their owners. At that checkpoint,
+Cargo.lock's new existing-workspace sigis-eutl dependency edge was generated and
+uncommitted; this is not a statement about the current worktree or merged lock.
 
-Reproducible focused command (normal pinned oracle paths are the test defaults):
+Historical commands (not instructions to repeat the workspace gate in a lane;
+normal pinned oracle paths were the test defaults):
 
 ```sh
 tools/cargo-locked.sh test -p sigis-cli --test signing_remaining --test ltv --test decode_limits_signing --test qualified_validation --test eutl_validation --test pkcs12_requirements
@@ -130,6 +167,25 @@ tools/cargo-locked.sh clippy --workspace --all-targets -- -D warnings
 tools/cargo-locked.sh fmt --all -- --check
 ```
 
-## Accepted integration
+## Integration history and latest gate
 
-Current-main source `e2a0ef837a767e36fc3b9e63846f2f88ca168d4b` passed the normal-wrapper workspace gate:2283passed/0failed/6ignored. Workspace all-target clippy-Dwarnings and fmt check passed. The two newly ignored tests are still Pending originals. Root fixed the obsolete proof selectors and provider setup prerequisites; no immutable ELF, source provenance pipeline or independent final review was required.
+The C34 integration source `e2a0ef837a767e36fc3b9e63846f2f88ca168d4b`
+historically passed the normal-wrapper workspace gate: 2283 passed / 0 failed /
+6 ignored, with workspace all-target clippy-Dwarnings and fmt clean. Root fixed
+the obsolete proof selectors and provider setup prerequisites. The two newly
+ignored historical-validation originals remained Pending.
+
+Accepted main `fb6cd010` subsequently passed the normal current-main workspace
+gate: **2389 passed / 0 failed / 25 ignored**, across 248 reports; clippy and fmt
+returned 0. Root's fresh pinned V original and the author's same-native-CMS peer
+each passed. The initial E0460 attempt remains a failed attempt; the unchanged
+source retry passed. These are L's reported integration results, not new lane
+runs. Native ignore totals are not unique-original skip counts. No new skip or
+helper credit was awarded, and the four CLI originals above remain Pending.
+
+The latest combined gate, accepted as main `8b393619`, passed **2399 tests /
+0 failed / 25 inherited ignored**, across 251 reports, with all-target clippy
+and fmt returning 0. The new native targets passed 10/10; the existing
+provider/USER-PIN focus reported 22 passed / 20 ignored. Root's five fresh S
+originals passed and five PKI peers matched. These are L's reported results;
+this documentation update does not rerun Cargo or award any original credit.
