@@ -207,3 +207,11 @@ reference platform skips; they are not passes. CLI252/248/4/0 and overall
 1431/1421/10/0. The existing public runtime gains an optional signing-purpose
 capability default `None`; external exhaustive literals must add the field or use
 Default. No terminal fallback or new dependency is introduced.
+
+The separate current-time `qualified_product` companion is now accepted on
+source `77db5f04`: qualified-required and nonqualified-optional actual product
+commands succeed before required refusal on the same nonqualified bytes. Three
+fresh same-input pinned CLI peers agree. Focus1PASS and full workspace
+2436passed/0failed/31inheritedignored (256reports), clippy/fmt pass. This target
+was absent from the earlier accepted C software batch; it adds zero original IDs.
+The seven software originals remain accepted once; global1431/1421/10/0 unchanged.
