@@ -37,6 +37,8 @@ All-target workspace clippy with -Dwarnings and formatting checks pass. An
 initial unrelated-root fixture path was corrected to the existing Ed448 root;
 that missing-file preparation failure is not a product behavioral RED.
 
+## Historical gate on the original1ce1fae1 base
+
 The normal workspace command was executed and returned101: Root
 `tests/round3_generic_dsa.rs:55` has two failures because PKCS11_TEST_MODULE is
 unset. This shared fixture-configuration failure is outside S's files, not a
@@ -61,3 +63,7 @@ proof pipeline or independent review was added. The initial preparation/fmt
 failures remain in the plain logs. Central accepted counts stay
 S824/819/5/0, CV133/131/2/0 and PDF406/403/3/0; these related controls add no
 original passing credit.
+
+## Current-main integration
+
+The old shared blockers above were already removed by accepted Root027fafa8; they were not recreated or bypassed. The three S commits were curated onto current mainfb6cd010 alongside the independent P static-signing-PIN increment. The normal combined workspace passes 2399 tests / 0 failed / 25 inherited ignored across 251 test/doc reports; all-target clippy-Dwarnings and fmt pass. Focused native boundaries pass 5/5, fresh unchanged originals 5 PASS and same-input PKI peers 5/5 match. All five exclusions and their exact model differences remain unchanged; this supplies zero original credit. Current acceptance is recorded in [the supplemental batch note](p-static-s5-supplement.md).

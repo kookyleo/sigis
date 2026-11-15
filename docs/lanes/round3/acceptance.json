@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "33bd7be338ff9ebe6773b68dab011795b3b9fb97",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/v-final-integration/workspace-final.log",
+  "accepted_source_commit": "b49d312043e6a58ee2db990eacfbaa4e41d7493a",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-static-s5-integration/workspace.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2488,7 +2488,19 @@
       "status": "skipped",
       "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_raw_ecdsa_{rsa,ecdsa,ed25519,ed448,mldsa}",
       "reason": "Genuine unchanged-upstream fixture exclusion: the missing combined ECDSA_SHA256 mechanism causes all original rows to skip (required_mechanism/require_mech marker mismatch). Actual raw ECDSA signing succeeds in two supplemental native controls; those controls are not original passes. Current-main simple workspace gate has zero failures; workspace all-target clippy and fmt are clean."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt",
+      "status": "pending",
+      "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt",
+      "reason": "Pending: the dedicated per-sign signing-PIN runtime/provider callback is still absent, the native original body remains an ignored panic stub, and actual SafeNet hardware is not configured. Static reauthentication and the USER-PIN capability do not complete this original."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
+      "status": "pending",
+      "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
+      "reason": "Pending: static configured/environment reauthentication now works through the actual CLI and real RSA AlwaysAuthenticate software controls, but the complete SafeNet original native body remains an ignored panic stub and actual hardware is unavailable. Supplemental signing/credential/trust controls do not count as this original or as a new hardware skip."
     }
   ],
-  "source_verification_note": "V final batch simple gate on current maind1740401 plus six curated commits:2389passed/0failed/25ignored,248test/doc reports; workspace all-target clippy-Dwarnings and fmt clean. Root fresh pinned original1PASS and author same-native-CMS peer1PASS. First attempt failed doctest E0460; unchanged-source retry after coordinating Cargo jobs passed. Restored exactly one Pending V original to Passed, V47/47/0/0 and overall1431/1419/8/4. No new skips or helper credit; recovery remains limited to the currently valid later-KeyCompromise profile."
+  "source_verification_note": "Combined current-main supplemental gate: 2399 passed, 0 failed, 25 inherited ignored across 251 test/doc reports; workspace all-target clippy-Dwarnings and fmt pass. Ten new native boundary/credential controls pass, existing provider/USER-PIN focus22pass/20inheritedignored; fresh S originals5PASS and PKI peers5match. P reference12passed/28genuine fixture skips retained separately. Static configured/env context-specific authentication is implemented with no frontend/runtime/core/dependency changes. Five S exclusions and both incomplete SafeNet CLI originals retain their statuses; no new original credit or skip. Global1431/1419/8/4 unchanged; V47/47/0/0 remains accepted."
 }

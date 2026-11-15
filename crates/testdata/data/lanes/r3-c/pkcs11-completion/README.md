@@ -23,8 +23,11 @@ fixtures/teardown. It preserves all five collected labels and reports genuine
 provider availability exclusions in ordinary text pytest output. No hardware
 substitution, implicit token trust anchor or proof/ELF/hash pipeline is involved.
 
-The two SafeNet-only CLI originals are retained as explicit hardware exclusions;
-software reauthentication does not establish their platform-specific behavior.
+The two SafeNet-only CLI rows are excluded from this local provider run, but
+remain centrally Pending: their complete native original bodies are still
+ignored stubs, and the per-sign prompt interface is absent. Hardware availability
+and missing implementation are distinct; software reauthentication supplies no
+original credit or new accepted skip.
 The remaining P library original,
 `pyhanko/test_pkcs11.py::test_simple_sign_from_config_with_signing_pin`, also has
 an explicit upstream SafeNet-only marker (pinned test_pkcs11.py:388). It requires
