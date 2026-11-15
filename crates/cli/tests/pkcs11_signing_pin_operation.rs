@@ -250,14 +250,19 @@ fn callback_operations(_root: &Path) {
     for (index, bytes) in [
         b"First independent real token signature".as_slice(),
         b"Second different token signature".as_slice(),
-    ].into_iter().enumerate() {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let signature = signer.sign_raw(bytes, DigestAlgorithm::Sha256).unwrap();
         verify(&signer, bytes, &signature);
         assert_eq!(calls.load(Ordering::SeqCst), index + 1);
         assert!(Arc::ptr_eq(&session, signer.session()));
     }
     wrong.store(true, Ordering::SeqCst);
-    let error = signer.sign_raw(b"Must not be signed", DigestAlgorithm::Sha256).unwrap_err();
+    let error = signer
+        .sign_raw(b"Must not be signed", DigestAlgorithm::Sha256)
+        .unwrap_err();
     assert_eq!(calls.load(Ordering::SeqCst), 3);
     assert_no_secret(&error);
 }
@@ -272,9 +277,11 @@ fn callback_override(_root: &Path) {
     let signature = signer.sign_raw(data, DigestAlgorithm::Sha256).unwrap();
     verify(&signer, data, &signature);
     assert!(Arc::ptr_eq(&session, signer.session()));
-    let signer = signer.with_signing_pin_callback(|| Err(
-        sigis_pki_core::errors::HankoError::Signing("New callback unavailable".into())
-    ));
+    let signer = signer.with_signing_pin_callback(|| {
+        Err(sigis_pki_core::errors::HankoError::Signing(
+            "New callback unavailable".into(),
+        ))
+    });
     let error = signer.sign_raw(data, DigestAlgorithm::Sha256).unwrap_err();
     assert!(error.to_string().contains("New callback unavailable"));
     assert_no_secret(&error);
