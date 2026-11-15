@@ -3,10 +3,10 @@
 | Lane | Total | Passed | Skipped | Pending |
 | --- | ---: | ---: | ---: | ---: |
 | P | 297 | 296 | 1 | 0 |
-| C | 252 | 246 | 2 | 4 |
+| C | 252 | 248 | 2 | 2 |
 | V | 47 | 47 | 0 | 0 |
 | S | 824 | 819 | 5 | 0 |
 | L | 11 | 11 | 0 | 0 |
-| **Total** | **1431** | **1419** | **8** | **4** |
+| **Total** | **1431** | **1421** | **8** | **2** |
 
-Remaining pending work is two CLI context-specific signing-PIN originals (P) and two CLI historical-validation cases (S). V completed all47 owned originals; its final recovery is limited to currently valid later-KeyCompromise cases, with pure failed-status and unsupported historical recovery still refused. Eight skips remain: two raw-ECDSA fixture exclusions, one P SafeNet case and five S registry/PDF model exclusions. L alone runs the combined current-main workspace/clippy/fmt gate; lanes provide focused tests and applicable pinned pyHanko differentials. Counts come from [the ledger](lanes/round3/acceptance.json); helper controls add no functions. [V completion](lanes/round3/v-final-batch-acceptance.md). [Supplemental controls](lanes/round3/p-static-s5-supplement.md). [Historical status](history/round3-status-before-batch-process.md).
+Two CLI context-specific signing-PIN originals remain pending with P. Both CLI historical-validation originals now pass; historical trusted/qualified API status preserves the raw full-LTA NO_POE limitation. V completed all47 owned originals. Eight skips remain: two raw-ECDSA fixture exclusions, one P SafeNet case and five S registry/PDF model exclusions. L runs the combined workspace/clippy/fmt gate; lanes provide focused tests and pinned pyHanko differentials. Counts come from [the ledger](lanes/round3/acceptance.json); helper controls add no functions. [Historical CLI acceptance](lanes/round3/cli-historical-acceptance.md). [Historical status](history/round3-status-before-batch-process.md).

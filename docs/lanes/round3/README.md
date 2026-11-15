@@ -21,7 +21,7 @@ That is the whole gate. Standalone build/docs/layering stages, source-file hashe
 | P / sigis-r3-p | Two CLI signing-PIN originals plus fixture/hardware exclusions | PKCS#11 implementation and dedicated tests; coordinate runtime/shared CLI edits with L |
 | C / sigis-r3-c | Current 34-original batch accepted; help remaining CLI work | CLI commands/configuration and tests; coordinate helper boundaries |
 | V / sigis-r3-v | All47 owned originals complete; support concrete S validation blockers | CV/CMS/PAdES completion; preserve the bounded recovery profile |
-| S / sigis-r3-s | Two CLI historical-validation cases plus five registry/PDF exclusions | CLI validation/reporting cases and registry/PDF equivalents; coordinate lower completion with V |
+| S / sigis-r3-s | CLI historical-validation complete; five registry/PDF exclusions retained | CLI validation/reporting cases and registry/PDF equivalents; coordinate lower completion with V |
 | L / sigis-cx | Integration and status | Shared API coordination, rebases/merges, simple gate and ledger/status updates |
 
 These scopes use the current accepted counts, not the directive's older 46-pending/7-skipped snapshot: USER-PIN prompt and Boolean have already been accepted once. Operational assignments do not transfer original ownership.

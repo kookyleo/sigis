@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "b49d312043e6a58ee2db990eacfbaa4e41d7493a",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-static-s5-integration/workspace.log",
+  "accepted_source_commit": "5b24e8173ce4d261005677cba963e57c1fc8237f",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/cli-historical-integration/workspace.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2500,7 +2500,19 @@
       "status": "pending",
       "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
       "reason": "Pending: static configured/environment reauthentication now works through the actual CLI and real RSA AlwaysAuthenticate software controls, but the complete SafeNet original native body remains an ignored panic stub and actual hardware is unavailable. Supplemental signing/credential/trust controls do not count as this original or as a new hardware skip."
+    },
+    {
+      "id": "pyhanko-cli/test_cli_decode_limits.py::test_validate",
+      "status": "passed",
+      "rust_test": "decode_limits_signing::test_validate",
+      "reason": "Both validate and adesverify parameters pass through the actual CLI with bounded-reader flag refusal and fresh same-input pinned original comparisons. Accepted on the complete current-main workspace, clippy and fmt gate; one original, not two parameter credits."
+    },
+    {
+      "id": "pyhanko-cli/validation/test_cli_qualified_validation.py::test_validate_eutl_ades_point_in_time_no_revinfo",
+      "status": "passed",
+      "rust_test": "qualified_validation::test_validate_eutl_ades_point_in_time_no_revinfo",
+      "reason": "The actual CLI preserves the fully checked historical trusted/qualified API conclusion while retaining raw full-LTA NO_POE and control-time failure. Authenticated signature/certificate POEs and complete same-path MAIN validation under the original caller policy are required; current TSA, PDF, seed, key-usage, algorithm and qualification refusals remain. Fresh unchanged original and same-byte peers pass; full workspace/clippy/fmt gate passes. No generic failed-status promotion or full-LTA success credit."
     }
   ],
-  "source_verification_note": "Combined current-main supplemental gate: 2399 passed, 0 failed, 25 inherited ignored across 251 test/doc reports; workspace all-target clippy-Dwarnings and fmt pass. Ten new native boundary/credential controls pass, existing provider/USER-PIN focus22pass/20inheritedignored; fresh S originals5PASS and PKI peers5match. P reference12passed/28genuine fixture skips retained separately. Static configured/env context-specific authentication is implemented with no frontend/runtime/core/dependency changes. Five S exclusions and both incomplete SafeNet CLI originals retain their statuses; no new original credit or skip. Global1431/1419/8/4 unchanged; V47/47/0/0 remains accepted."
+  "source_verification_note": "Current-main historical CLI batch: workspace 2414 passed, 0 failed, 23 inherited ignored across 252 test/doc reports; all-target clippy-Dwarnings and fmt pass. Root fresh unchanged pinned originals3PASS; author current-base focus24PASS and same-byte peers pass. Two unique C originals restored, C252/248/2/2; overall1431/1421/8/2. V47 complete and S five exclusions unchanged. Raw NO_POE/control-time failure remains visible; no fabricated POE, Basic fallback, generic expired recovery, shared API or dependency change."
 }

@@ -2,9 +2,9 @@
 
 ## Current accepted inventory
 
-As of accepted main `8b393619`, the [central ledger](../../docs/lanes/round3/acceptance.json)
-and [status](../../docs/status.md) record CLI **252 total / 246 passed / 2 skipped /
-4 pending**, and overall **1431 / 1419 / 8 / 4**. V's restored original adds no CLI
+After the historical CLI integration on source `5b24e817`, the [central ledger](../../docs/lanes/round3/acceptance.json)
+and [status](../../docs/status.md) record CLI **252 total / 248 passed / 2 skipped /
+2 pending**, and overall **1431 / 1421 / 8 / 2**. V's restored original adds no CLI
 credit. The 34-original C batch and four subsequent provider originals remain
 accepted once; parameters, helper controls and oracle calls add no functions.
 
@@ -12,16 +12,16 @@ accepted once; parameters, helper controls and oracle calls add no functions.
 | --- | --- | --- |
 | pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt | Pending | P: incomplete SafeNet context-specific signing-PIN original |
 | pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin | Pending | P: incomplete SafeNet context-specific signing-PIN original |
-| pyhanko-cli/test_cli_decode_limits.py::test_validate | Pending | S: historical validation, both validate/adesverify parameters retained |
-| pyhanko-cli/validation/test_cli_qualified_validation.py::test_validate_eutl_ades_point_in_time_no_revinfo | Pending | S: historical point-in-time validation |
+| pyhanko-cli/test_cli_decode_limits.py::test_validate | Passed | Both validate/adesverify parameters retained; current-main full gate and original differential pass |
+| pyhanko-cli/validation/test_cli_qualified_validation.py::test_validate_eutl_ades_point_in_time_no_revinfo | Passed | Historical trusted/qualified API conclusion retained alongside raw NO_POE; full gate and original differential pass |
 | pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_raw_ecdsa | Skipped | Genuine unchanged-upstream fixture exclusion: missing combined ECDSA_SHA256 mechanism |
 | pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_raw_ecdsa | Skipped | Same genuine fixture exclusion |
 
 The raw-ECDSA fixture's required_mechanism/require_mech marker mismatch causes all
 original rows to skip. Successful supplemental raw-ECDSA signatures do not turn
-either original into a pass. The two historical-validation originals remain
-Pending despite ignored native wrappers; neither historical NO_POE results nor
-V's separate accepted recovery promotes them to Passed or Skipped.
+either original into a pass. The two historical-validation originals now pass complete CLI bodies and original
+differentials. The raw archival NO_POE/control-time failure remains explicit;
+acceptance does not claim full-LTA success or generic expired-status recovery.
 
 The accepted static configured/environment signing-PIN producer and five
 AlwaysAuthenticate controls are supplemental coverage. They do not complete
@@ -189,3 +189,10 @@ and fmt returning 0. The new native targets passed 10/10; the existing
 provider/USER-PIN focus reported 22 passed / 20 ignored. Root's five fresh S
 originals passed and five PKI peers matched. These are L's reported results;
 this documentation update does not rerun Cargo or award any original credit.
+
+The historical CLI integration on source `5b24e817` passed **2414 tests /
+0 failed / 23 inherited ignored**, across252 reports, plus workspace all-target
+clippy and fmt. Root reran the unchanged pinned originals:3 parameter rows pass.
+The author current-base focus passed24 tests including same-byte peers. Exactly
+two C originals changed to Passed; CLI252/248/2/2 and overall1431/1421/8/2.
+Earlier tables under the historical batch heading retain their original snapshot.
