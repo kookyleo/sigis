@@ -439,10 +439,12 @@ fn expired_leaf_lta_api_status_direct_reproducer() {
     timing.validation_time = timestamp.timestamp;
     timing.best_signature_time = timestamp.timestamp;
     let historical_context = context.with_timing(timing);
-    let mut cms_options = sigis_cms::CmsValidationOptions::default();
-    cms_options.exact_key_usage_settings = Some(KeyUsageConstraints::default());
-    cms_options.validation_order = sigis_cms::CmsValidationOrder::SignerFirst;
-    cms_options.ts_validation_context = Some(&context);
+    let cms_options = sigis_cms::CmsValidationOptions {
+        exact_key_usage_settings: Some(KeyUsageConstraints::default()),
+        validation_order: sigis_cms::CmsValidationOrder::SignerFirst,
+        ts_validation_context: Some(&context),
+        ..Default::default()
+    };
     let historical = sigis_cms::validate_cms_signature_with(
         &signature.contents,
         sigis_cms::SignedContent::Data(&signature.signed_data(&file).unwrap()),
