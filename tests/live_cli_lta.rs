@@ -350,10 +350,15 @@ fn test_pades_lta_live_with_cli() {
     assert_eq!(verdict["correct"]["dss_ocsps"], 1);
     // Supplemental differential guard; final OK is NOT an extra assertion
     // attributed to the original function body.
-    assert_eq!(
-        serde_json::json!(lta.ades_subindic.standard_name()),
-        verdict["correct"]["ades_subindic"]
-    );
+    let native_subindication = serde_json::json!(lta.ades_subindic.standard_name());
+    if native_subindication != verdict["correct"]["ades_subindic"] {
+        let retained = dir.keep();
+        eprintln!(
+            "LIVE_CLI_LTA_MISMATCH inputs={} validation_time={at} native={lta:#?} oracle={verdict}",
+            retained.display()
+        );
+    }
+    assert_eq!(native_subindication, verdict["correct"]["ades_subindic"]);
     let receipt = serde_json::json!({
         "id":"integration-tests/test_live_certomancer.py::test_pades_lta_live_with_cli",
         "parameter_cases":1,"argv":argv,"cli_path":cli,
