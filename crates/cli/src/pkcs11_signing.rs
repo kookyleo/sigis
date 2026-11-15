@@ -7,7 +7,7 @@ use crate::{
 use serde_json::Value;
 use sigis_pades_sign::{
     pdf::writer::PdfReopenState,
-    pkcs11::{open_signer, PinEntryMode, Pkcs11Config, TokenCriteria},
+    pkcs11::{open_signer, PinEntryMode, Pkcs11Config, SigningPinEntryMode, TokenCriteria},
     PdfSignatureMetadata, PdfSigner, SignOptions,
 };
 use sigis_pki_core::algorithms::DigestAlgorithm;
@@ -188,6 +188,63 @@ fn resolve_cli_user_pin(
     Ok(cli_pin)
 }
 
+/// Consume only direct provider arguments. Common command options and the
+/// original caller configuration/runtime remain authoritative for signing.
+fn direct_request(options: &Options) -> Result<(Options, Pkcs11Setup), String> {
+    use serde_json::{json, Map};
+    let mut common = Options {
+        values: options.values.clone(),
+        flags: options.flags.clone(),
+        paths: options.paths.clone(),
+        repeated_flags: options.repeated_flags.clone(),
+    };
+    let mut settings = Map::new();
+    for (argument, setting) in [
+        ("lib", "module-path"),
+        ("cert-label", "cert-label"),
+        ("key-label", "key-label"),
+    ] {
+        if let Some(values) = common.values.remove(argument) {
+            if values.len() != 1 {
+                return Err(format!("Option --{argument} must occur exactly once."));
+            }
+            settings.insert(setting.into(), json!(values[0]));
+        }
+    }
+    if let Some(values) = common.values.remove("token-label") {
+        if values.len() != 1 {
+            return Err("Option --token-label must occur exactly once.".into());
+        }
+        settings.insert("token-criteria".into(), json!({"label": values[0]}));
+    }
+    if let Some(values) = common.values.remove("slot-no") {
+        if values.len() != 1 {
+            return Err("Option --slot-no must occur exactly once.".into());
+        }
+        let slot: u64 = values[0]
+            .parse()
+            .map_err(|_| "PKCS#11 slot number must be a nonnegative integer.".to_owned())?;
+        settings.insert("slot-no".into(), json!(slot));
+    }
+    for (argument, setting) in [
+        ("other-cert", "other-certs-to-pull"),
+        ("other-cert-file", "other-certs"),
+    ] {
+        if let Some(values) = common.values.remove(argument) {
+            settings.insert(setting.into(), json!(values));
+        }
+    }
+    if common.flags.remove("raw-mechanism") {
+        settings.insert("raw-mechanism".into(), Value::Bool(true));
+    }
+    if common.flags.remove("skip-user-pin") {
+        settings.insert("prompt-pin".into(), json!("skip"));
+    }
+    let temporary = json!({"pkcs11-setups": {"direct": settings}});
+    let setup = CliConfig::parse(&temporary.to_string())?.pkcs11_setup("direct")?;
+    Ok((common, setup))
+}
+
 fn native_setup(
     setup: &Pkcs11Setup,
     user_pin_prompt: Option<&Pkcs11UserPinPrompt>,
@@ -238,18 +295,38 @@ fn native_setup(
             "Explicit ASN.1 signature-mechanism configuration",
         ));
     }
-    // The CLI has no per-sign credential callback. Never reinterpret signing
-    // credentials as the user-login PIN or as a PDF decryption password.
-    let signing_env_requested =
-        std::env::var_os("PYHANKO_PKCS11_SIGNING_PIN").is_some_and(|value| !value.is_empty());
-    if setup.signing_pin_mode != SigningPinEntry::Skip
-        || setup.signing_pin.is_some()
-        || signing_env_requested
-    {
-        return Err(unsupported(
-            "Context-specific signing PIN or signing PIN prompt",
-        ));
-    }
+    // A static context-specific credential is distinct from user login and
+    // document decryption. A per-sign prompt still requires its own capability.
+    let signing_env =
+        std::env::var_os("PYHANKO_PKCS11_SIGNING_PIN").filter(|value| !value.is_empty());
+    let (signing_pin_mode, signing_pin) = if let Some(value) = signing_env {
+        let value = value
+            .to_str()
+            .ok_or("Invalid signing PIN environment encoding.")?
+            .trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c));
+        // Refuse an ambiguous explicit empty credential before requesting any
+        // user PIN. Python instead falls back to the user credential here.
+        if value.is_empty() {
+            return Err(unsupported("Empty context-specific signing PIN"));
+        }
+        (SigningPinEntryMode::Reauthenticate, Some(value.to_owned()))
+    } else {
+        match setup.signing_pin_mode {
+            SigningPinEntry::Prompt => {
+                return Err(unsupported("Context-specific signing PIN prompt"));
+            }
+            SigningPinEntry::Skip if setup.signing_pin.is_some() => {
+                return Err(unsupported(
+                    "Context-specific signing PIN needs reauthenticate mode",
+                ));
+            }
+            SigningPinEntry::Skip => (SigningPinEntryMode::Skip, None),
+            SigningPinEntry::Reauthenticate => (
+                SigningPinEntryMode::Reauthenticate,
+                setup.signing_pin.clone().filter(|pin| !pin.is_empty()),
+            ),
+        }
+    };
     let pull = pull_labels(map.get("other-certs-to-pull").copied())?;
     let mut native = Pkcs11Config {
         module_path: setup.module_path.clone(),
@@ -269,6 +346,8 @@ fn native_setup(
         signing_certificate: setup.signing_certificate.clone(),
         other_certs: setup.other_certs.clone(),
         user_pin: setup.user_pin.clone(),
+        signing_pin_mode,
+        signing_pin,
         prompt_pin: match setup.prompt_pin {
             PinEntry::Prompt => PinEntryMode::Prompt,
             PinEntry::Skip => PinEntryMode::Skip,
@@ -311,6 +390,12 @@ pub(crate) fn run(
     if options.paths.len() != 2 {
         return Err("PKCS#11 signing requires an input and output file.".into());
     }
+    let direct = setup
+        .is_none()
+        .then(|| direct_request(options))
+        .transpose()?;
+    let options = direct.as_ref().map(|pair| &pair.0).unwrap_or(options);
+    let setup = setup.or_else(|| direct.as_ref().map(|pair| &pair.1));
     option_scope(options)?;
     let context_selected =
         options.flag("with-validation-info") || options.get("validation-context").is_some();

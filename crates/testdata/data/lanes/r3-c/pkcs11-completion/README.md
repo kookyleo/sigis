@@ -18,7 +18,27 @@ reference. `available.txt` states the actual selected mechanism capabilities.
 
 Use pinned Python with the existing isolated python-pkcs11 0.9.5 overlay on
 PYTHONPATH. `originals.py ABSOLUTE_NEW_DIRECTORY [EXACT_FUNCTION ...]` prepares a
-fresh store and runs the seven listed unchanged original functions and complete
+fresh store and runs the eight listed unchanged original functions and complete
 fixtures/teardown. It preserves all five collected labels and reports genuine
 provider availability exclusions in ordinary text pytest output. No hardware
 substitution, implicit token trust anchor or proof/ELF/hash pipeline is involved.
+
+The two SafeNet-only CLI rows are excluded from this local provider run, but
+remain centrally Pending: their complete native original bodies are still
+ignored stubs, and the per-sign prompt interface is absent. Hardware availability
+and missing implementation are distinct; software reauthentication supplies no
+original credit or new accepted skip.
+The remaining P library original,
+`pyhanko/test_pkcs11.py::test_simple_sign_from_config_with_signing_pin`, also has
+an explicit upstream SafeNet-only marker (pinned test_pkcs11.py:388). It requires
+its actual configured token and separate signing PIN. No such device is
+configured here, so its inherited skip remains; no device is probed.
+
+Configured or environment static signing PINs now reach native context-specific
+reauthentication independently of the user-login and document credentials.
+`pkcs11-signing-credentials` supplies separate RSA AlwaysAuthenticate software
+controls. A per-sign signing-PIN callback still needs a separate runtime/lower
+signer interface; the existing user callback is not reused. Explicit whitespace
+signing environment values are rejected before a user prompt, whereas Python
+falls back to the user PIN. A signing PIN configured with Skip mode is rejected
+rather than silently ignored. These bounded stricter differences remain explicit.
