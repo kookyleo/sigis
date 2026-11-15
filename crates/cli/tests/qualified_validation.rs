@@ -257,6 +257,9 @@ fn test_validate_eutl_ades_point_in_time_no_revinfo() {
     ] {
         assert!(message.contains(expected), "{message}");
     }
+    // This original accepts the historical API conclusion, not archival OK.
+    assert!(message.contains("AdES result: NO_POE"), "{message}");
+    assert!(message.contains("Failed to get control time"), "{message}");
 }
 
 /// A CLI API-status projection must still reject a changed signed preimage.
@@ -523,7 +526,19 @@ fn expired_leaf_lta_api_status_direct_reproducer() {
         context.moment(),
         Moment::parse_rfc3339("2025-03-01T22:00:00Z").unwrap()
     );
-    println!("HISTORICAL_MAIN_CONTROL actual_full_main=VALID original_lta_error_unchanged=true");
+    assert_eq!(
+        result.ades_subindic,
+        sigis_pades::ades::AdesIndeterminate::NO_POE.into()
+    );
+    assert!(
+        result
+            .failure_msg
+            .as_deref()
+            .is_some_and(|message| message.contains("Failed to get control time")),
+        "{:?}",
+        result.failure_msg
+    );
+    println!("HISTORICAL_MAIN_CONTROL actual_full_main=VALID archival_result=NO_POE");
     assert!(
         status.bottom_line(),
         "sub={:?}; MAIN={:?}; typed_error={:?}; best={:?}; diagnostic={:?}",
