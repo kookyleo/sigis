@@ -12,7 +12,7 @@ tools/cargo-locked.sh clippy --workspace --all-targets -- -D warnings
 tools/cargo-locked.sh fmt --all -- --check
 ```
 
-Provider suites still need a real installed test SDK. When default discovery cannot find it, select the existing module, utility and pinned oracle/overlay using ordinary functional environment or Cargo env settings. These are test inputs, not provenance requirements; missing runtime setup remains a failure. [Observed setup and final gate](p-user-pin-harness-acceptance.md).
+Provider suites still need a real installed test SDK. When default discovery cannot find it, select the existing module, utility and pinned oracle/overlay using ordinary functional environment or Cargo env settings. These are test inputs, not provenance requirements; missing runtime setup remains a failure. [Earlier observed setup](p-user-pin-harness-acceptance.md). Existing shared/private runtimes are now discovered across worker HOME differences; [default-only gate and OCSP precision fix](provider-defaults-ocsp-precision.md).
 
 That is the whole gate. Standalone build/docs/layering stages, source-file hashes, BLAKE3, ELF captures, fingerprint/dep-info audits, transport dispositions, frozen-source evidence pipelines and independent final reviews are not acceptance requirements. Do not generate JSON evidence artifacts. Keep normal test output and a short human-readable batch report. Existing evidence can remain historical; do not regenerate it.
 
