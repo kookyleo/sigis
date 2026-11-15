@@ -22,7 +22,6 @@ fn test_addsig() {
 
 /// pyhanko-cli/test_cli_decode_limits.py::test_validate (validate/adesverify).
 #[test]
-#[ignore = "Full-LTA cannot reproduce upstream B-T API-only acceptance without historical revocation proof"]
 fn test_validate() {
     for command in ["validate", "adesverify"] {
         let case = cases::Case::new("rsa", true);

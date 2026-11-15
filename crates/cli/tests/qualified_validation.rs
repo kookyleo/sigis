@@ -27,6 +27,21 @@ fn copy_dir(from: &Path, to: &Path) {
     }
 }
 fn invoke(index: usize, extra: &[&str]) -> sigis_cli::Output {
+    invoke_with_pdf(index, extra, |_| {})
+}
+fn invoke_with_pdf(
+    index: usize,
+    extra: &[&str],
+    change: impl FnOnce(&mut Vec<u8>),
+) -> sigis_cli::Output {
+    invoke_with_pdf_reference(index, extra, change, None)
+}
+fn invoke_with_pdf_reference(
+    index: usize,
+    extra: &[&str],
+    change: impl FnOnce(&mut Vec<u8>),
+    expected_peer_code: Option<i32>,
+) -> sigis_cli::Output {
     let source =
         sigis_testdata::path(&["lanes", "r3-c", "qualified-ades"]).join(format!("case-{index}"));
     let dir = tempfile::tempdir().unwrap();
@@ -48,6 +63,9 @@ fn invoke(index: usize, extra: &[&str]) -> sigis_cli::Output {
     }
     fs::write(&path, serde_yaml::to_string(&config).unwrap()).unwrap();
     let pdf = dir.path().join("to-validate.pdf");
+    let mut bytes = fs::read(&pdf).unwrap();
+    change(&mut bytes);
+    fs::write(&pdf, bytes).unwrap();
     let before = fs::read(&pdf).unwrap();
     let mut args = vec![
         "-c".to_owned(),
@@ -111,7 +129,7 @@ assert result.exit_code==int(sys.argv[1]),(result.exit_code,result.output)
 print(result.output)
 "#,
     )
-    .arg(output.code.to_string())
+    .arg(expected_peer_code.unwrap_or(output.code).to_string())
     .args(&args)
     .output()
     .unwrap();
@@ -123,6 +141,12 @@ print(result.output)
         String::from_utf8_lossy(&oracle.stdout),
         String::from_utf8_lossy(&oracle.stderr)
     );
+    if expected_peer_code == Some(0) && output.code == 1 {
+        // Explicit supplemental stricter-native cases only. Original tests
+        // always compare equal exit codes and retain all original assertions.
+        assert!(String::from_utf8_lossy(&oracle.stdout).contains("judged VALID"));
+        println!("STRICTER_TSA_CONTROL native=REJECT pinned_cli=VALID");
+    }
     assert_eq!(
         fs::read(&pdf).unwrap(),
         before,
@@ -213,7 +237,6 @@ fn test_validate_eutl_ades_tsa_not_qualified() {
     }
 }
 #[test]
-#[ignore = "Native full-LTA lacks historical control-time proof for the expired 2025 leaf; upstream CLI accepts its status projection"]
 fn test_validate_eutl_ades_point_in_time_no_revinfo() {
     let out = invoke(
         10,
@@ -234,4 +257,225 @@ fn test_validate_eutl_ades_point_in_time_no_revinfo() {
     ] {
         assert!(message.contains(expected), "{message}");
     }
+}
+
+/// A CLI API-status projection must still reject a changed signed preimage.
+/// Both native and pinned CLI validate the same mutated PDF, whose header
+/// remains syntactically valid; the CMS signature and timestamp are untouched.
+#[test]
+fn ades_api_projection_rejects_changed_signed_content() {
+    let out = invoke_with_pdf(0, &["--pretty-print", "--no-revocation-check"], |bytes| {
+        assert!(bytes.starts_with(b"%PDF-1."));
+        bytes[7] = if bytes[7] == b'7' { b'6' } else { b'7' };
+    });
+    let message = text(&out);
+    assert_eq!(out.code, 1, "{message}");
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+/// CMS integrity alone cannot authorize an unsigned replacement of its PDF
+/// signature dictionary. Preserve PDF coverage/modification constraints too.
+#[test]
+fn ades_api_projection_rejects_replaced_signature_dictionary() {
+    let out = invoke_with_pdf(0, &["--pretty-print", "--no-revocation-check"], |bytes| {
+        let file = sigis_pdf::PdfFile::parse(bytes).unwrap();
+        let signature = file.embedded_signatures().unwrap().remove(0);
+        let mut dictionary = file
+            .get_object_at(signature.sig_object, None)
+            .unwrap()
+            .as_dict()
+            .unwrap()
+            .clone();
+        dictionary.set("Bleh", false);
+        let mut writer = sigis_pdf::writer::IncrementalWriter::new(file);
+        writer.put(
+            signature.sig_object,
+            sigis_pdf::lopdf::Object::Dictionary(dictionary),
+        );
+        *bytes = writer.write().unwrap();
+    });
+    let message = text(&out);
+    assert_eq!(out.code, 1, "{message}");
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+#[test]
+fn ades_api_projection_keeps_required_tsa_qualification() {
+    // Pinned CLI drops the failed timestamp from its API projection and exits
+    // zero. Retain the stronger native mandatory-TSA refusal explicitly.
+    let out = invoke_with_pdf_reference(
+        9,
+        &["--pretty-print", "--require-qualified"],
+        |_| {},
+        Some(0),
+    );
+    let message = text(&out);
+    assert_eq!(out.code, 1, "{message}");
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+#[test]
+fn ades_api_projection_rejects_forged_timestamp() {
+    use sigis_cms::signed_data::find_unique_cms_attribute;
+    use sigis_pki_core::asn1::oids;
+
+    // Pinned CLI likewise discards this invalid timestamp and accepts the
+    // current MAIN API status. Never reproduce that timestamp waiver here.
+    let out = invoke_with_pdf_reference(
+        0,
+        &["--pretty-print", "--no-revocation-check"],
+        |bytes| {
+            let file = sigis_pdf::PdfFile::parse(bytes).unwrap();
+            let signature = file.embedded_signatures().unwrap().remove(0);
+            let cms = sigis_cms::SignedData::from_der(&signature.contents).unwrap();
+            let token = find_unique_cms_attribute(
+                cms.signer_infos[0].unsigned_attr_list(),
+                oids::AA_SIGNATURE_TIME_STAMP_TOKEN,
+            )
+            .unwrap();
+            let offset = signature
+                .contents
+                .windows(token.len())
+                .position(|window| window == token)
+                .unwrap();
+            let mut contents = signature.contents.clone();
+            // Flip only the final signature bit of the genuine token. Preserve
+            // its DER, declared imprint, time and the parent's signed attributes.
+            contents[offset + token.len() - 1] ^= 1;
+            assert_eq!(signature.byte_range.len(), 4);
+            let start = usize::try_from(signature.byte_range[1]).unwrap();
+            let end = usize::try_from(signature.byte_range[2]).unwrap();
+            assert_eq!(bytes[start], b'<');
+            assert_eq!(bytes[end - 1], b'>');
+            let hex = contents
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
+            assert!(hex.len() <= end - start - 2);
+            bytes[start + 1..end - 1].fill(b'0');
+            bytes[start + 1..start + 1 + hex.len()].copy_from_slice(hex.as_bytes());
+        },
+        Some(0),
+    );
+    let message = text(&out);
+    assert_eq!(out.code, 1, "{message}");
+    assert!(
+        message.contains("The signature is cryptographically sound."),
+        "{message}"
+    );
+    assert!(
+        message.contains("The timestamp token is cryptographically unsound."),
+        "{message}"
+    );
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+/// Isolate the lower API-status mismatch from CLI rendering and EUTL loading.
+/// This uses explicit anchors for the actual CA and token signer; the full
+/// original above separately retains authenticated EUTL and qualification.
+#[test]
+fn expired_leaf_lta_api_status_direct_reproducer() {
+    use sigis_cms::signed_data::{extract_certificate_info, find_unique_cms_attribute};
+    use sigis_pades::ades::{
+        basic::QualificationSpec,
+        lta::{lta_validation_with_ades_options, LtaOptions},
+        AdesValidationOptions,
+    };
+    use sigis_pki_certvalidator::{
+        policy::{CertRevTrustPolicy, NO_REVOCATION},
+        ValidationContext,
+    };
+    use sigis_pki_core::{asn1::oids, cert::Cert, key_usage::KeyUsageConstraints};
+
+    let directory = sigis_testdata::path(&["lanes", "r3-c", "qualified-ades", "case-10"]);
+    let file =
+        sigis_pdf::PdfFile::parse(&fs::read(directory.join("to-validate.pdf")).unwrap()).unwrap();
+    let signature = file.embedded_signatures().unwrap().remove(0);
+    let cms = sigis_cms::SignedData::from_der(
+        sigis_pades::cms_from_contents(&signature.contents).unwrap(),
+    )
+    .unwrap();
+    let token = find_unique_cms_attribute(
+        cms.signer_infos[0].unsigned_attr_list(),
+        oids::AA_SIGNATURE_TIME_STAMP_TOKEN,
+    )
+    .unwrap();
+    let tsa = extract_certificate_info(&sigis_cms::SignedData::from_der(token).unwrap())
+        .unwrap()
+        .signer_cert;
+    let ca = Cert::from_pem_or_der(&fs::read(directory.join("root.cert.pem")).unwrap()).unwrap();
+    let context = ValidationContext::builder()
+        .trust_root(ca)
+        .trust_root(tsa)
+        .moment(Moment::parse_rfc3339("2025-03-01T22:00:00Z").unwrap())
+        .point_in_time_validation(true)
+        .revinfo_policy(CertRevTrustPolicy::new(NO_REVOCATION))
+        .build()
+        .unwrap();
+    let mut options = AdesValidationOptions::default();
+    options.exact_key_usage_settings = Some(KeyUsageConstraints::default());
+    let result = lta_validation_with_ades_options(
+        &file,
+        &signature,
+        &context,
+        &QualificationSpec::default(),
+        &LtaOptions::default(),
+        &options,
+    )
+    .unwrap();
+    let status = result.api_status.as_ref().unwrap();
+    assert!(status.signature.intact && status.signature.valid);
+    let timestamp = status.timestamp_validity.as_ref().unwrap();
+    assert!(timestamp.trusted());
+    // A diagnostic companion, never a product fallback or replacement status:
+    // the existing CMS API can run full MAIN validation at the authenticated
+    // TST bound while keeping TSA validation at the original reference. This
+    // does not itself authorize clearing the original operation's typed error.
+    let mut timing = *context.timing();
+    timing.validation_time = timestamp.timestamp;
+    timing.best_signature_time = timestamp.timestamp;
+    let historical_context = context.with_timing(timing);
+    let mut cms_options = sigis_cms::CmsValidationOptions::default();
+    cms_options.exact_key_usage_settings = Some(KeyUsageConstraints::default());
+    cms_options.validation_order = sigis_cms::CmsValidationOrder::SignerFirst;
+    cms_options.ts_validation_context = Some(&context);
+    let historical = sigis_cms::validate_cms_signature_with(
+        &signature.contents,
+        sigis_cms::SignedContent::Data(&signature.signed_data(&file).unwrap()),
+        &historical_context,
+        &cms_options,
+    )
+    .unwrap();
+    assert!(historical.bottom_line(), "{historical:?}");
+    assert_eq!(
+        historical.signature.validation_time,
+        Some(timestamp.timestamp)
+    );
+    assert_eq!(
+        historical
+            .timestamp_validity
+            .as_ref()
+            .unwrap()
+            .signature
+            .validation_time,
+        Some(context.moment())
+    );
+    assert_eq!(
+        context.moment(),
+        Moment::parse_rfc3339("2025-03-01T22:00:00Z").unwrap()
+    );
+    println!("HISTORICAL_MAIN_CONTROL actual_full_main=VALID original_lta_error_unchanged=true");
+    assert!(
+        status.bottom_line(),
+        "sub={:?}; MAIN={:?}; typed_error={:?}; best={:?}; diagnostic={:?}",
+        result.ades_subindic,
+        status.signature.trust_problem_indic,
+        status.signature.trust_problem,
+        result.best_signature_time,
+        result.failure_msg
+    );
 }
