@@ -18,7 +18,7 @@ use sigis_eutl::{
 use sigis_pades::ades::{
     basic::{qualification_analysis, QualificationSpec},
     lta::{lta_validation_with_ades_options, LtaOptions, LtaValidationResult},
-    AdesPassed, AdesSubIndic, AdesValidationOptions,
+    AdesIndeterminate, AdesPassed, AdesSubIndic, AdesValidationOptions,
 };
 use sigis_pdf::{reader::ReaderOptions, PdfFile, SignatureKind};
 use sigis_pki_certvalidator::{
@@ -954,8 +954,8 @@ fn render(
     if pretty {
         output.push_str(&format!("Field {index}: {field}\n"));
         if let Some(status) = &result.api_status {
-            // Reuse actual CMS details, while the sole bottom line below is
-            // determined by the complete archival validation outcome.
+            // The pinned CLI renders the actual API status, including its
+            // bottom line, separately from the archival sub-indication.
             for (heading, body) in status.pretty_print_sections() {
                 output.push_str(&format!(
                     "{heading}\n{}\n{body}\n\n",
@@ -1203,7 +1203,27 @@ pub(crate) fn run(
                 &ades_options,
             )
             .map_err(|e| e.to_string())?;
-            let valid = result.ades_subindic == AdesSubIndic::Passed(AdesPassed::OK)
+            // The pinned CLI projects a PDF API status. Our API payload is
+            // CMS-only: PDF coverage, modification and seed-value refusals
+            // remain in the AdES indication, so they must not disappear here.
+            // Only missing archival proof can coexist with a trusted current
+            // API status. Keep NO_POE and its diagnostic visible; never alter
+            // trust, retry validation or manufacture historical evidence.
+            let complete_pdf_constraints = match result.ades_subindic {
+                AdesSubIndic::Passed(AdesPassed::OK) => true,
+                AdesSubIndic::Indeterminate(AdesIndeterminate::NO_POE) => {
+                    // LTA may return NO_POE before its final seed-value check.
+                    // A CMS-only payload cannot certify that check completed:
+                    // retain the prior refusal for seed-constrained signatures.
+                    // Read the signed field, never a later replacement state.
+                    let field = file
+                        .get_object_at(signature.field_object, Some(signature.signed_revision))
+                        .map_err(|e| e.to_string())?;
+                    !field.as_dict().map_err(|e| e.to_string())?.has(b"SV")
+                }
+                _ => false,
+            };
+            let valid = complete_pdf_constraints
                 && result
                     .api_status
                     .as_ref()
