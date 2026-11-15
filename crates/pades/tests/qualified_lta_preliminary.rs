@@ -440,7 +440,43 @@ fn expired_leaf_lta_api_status_direct_reproducer() {
     .unwrap();
     let status = result.api_status.as_ref().unwrap();
     assert!(status.signature.intact && status.signature.valid);
-    assert!(status.timestamp_validity.as_ref().unwrap().trusted());
+    let timestamp = status.timestamp_validity.as_ref().unwrap();
+    assert!(timestamp.trusted());
+    // S's public-API diagnostic is a positive control, not a fallback used by
+    // the LTA caller: MAIN is fully checked at the authenticated timestamp,
+    // while TSA validation and the original context retain the 2025 reference.
+    let mut timing = *context.timing();
+    timing.validation_time = timestamp.timestamp;
+    timing.best_signature_time = timestamp.timestamp;
+    let historical_context = context.with_timing(timing);
+    let cms_options = sigis_cms::CmsValidationOptions {
+        exact_key_usage_settings: Some(KeyUsageConstraints::default()),
+        validation_order: sigis_cms::CmsValidationOrder::SignerFirst,
+        ts_validation_context: Some(&context),
+        ..Default::default()
+    };
+    let historical = sigis_cms::validate_cms_signature_with(
+        &signature.contents,
+        sigis_cms::SignedContent::Data(&signature.signed_data(&file).unwrap()),
+        &historical_context,
+        &cms_options,
+    )
+    .unwrap();
+    assert!(historical.bottom_line(), "{historical:?}");
+    assert_eq!(
+        historical.signature.validation_time,
+        Some(timestamp.timestamp)
+    );
+    assert_eq!(
+        historical
+            .timestamp_validity
+            .as_ref()
+            .unwrap()
+            .signature
+            .validation_time,
+        Some(context.moment())
+    );
+    assert_eq!(context.moment(), at("2025-03-01T22:00:00Z"));
     assert!(
         status.bottom_line(),
         "sub={:?}; MAIN={:?}; typed_error={:?}; best={:?}; diagnostic={:?}",
