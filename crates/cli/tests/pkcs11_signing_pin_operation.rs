@@ -421,3 +421,21 @@ fn callback_error_refuses_static_fallback_and_same_session_recovers() {
         callback_error_then_recovery,
     );
 }
+
+fn missing_callback(_root: &Path) {
+    // USER login alone cannot authorize this AlwaysAuthenticate private key.
+    // Defaults must not silently install a callback or reuse that USER PIN.
+    let signer = signer(None);
+    let error = signer
+        .sign_raw(b"No signing authority supplied", DigestAlgorithm::Sha256)
+        .unwrap_err();
+    assert_no_secret(&error);
+}
+
+#[test]
+fn default_signer_does_not_reuse_user_login_for_context_authentication() {
+    run(
+        "default_signer_does_not_reuse_user_login_for_context_authentication",
+        missing_callback,
+    );
+}
