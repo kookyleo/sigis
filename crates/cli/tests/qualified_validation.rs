@@ -319,45 +319,12 @@ fn ades_api_projection_keeps_required_tsa_qualification() {
 
 #[test]
 fn ades_api_projection_rejects_forged_timestamp() {
-    use sigis_cms::signed_data::find_unique_cms_attribute;
-    use sigis_pki_core::asn1::oids;
-
     // Pinned CLI likewise discards this invalid timestamp and accepts the
     // current MAIN API status. Never reproduce that timestamp waiver here.
     let out = invoke_with_pdf_reference(
         0,
         &["--pretty-print", "--no-revocation-check"],
-        |bytes| {
-            let file = sigis_pdf::PdfFile::parse(bytes).unwrap();
-            let signature = file.embedded_signatures().unwrap().remove(0);
-            let cms = sigis_cms::SignedData::from_der(&signature.contents).unwrap();
-            let token = find_unique_cms_attribute(
-                cms.signer_infos[0].unsigned_attr_list(),
-                oids::AA_SIGNATURE_TIME_STAMP_TOKEN,
-            )
-            .unwrap();
-            let offset = signature
-                .contents
-                .windows(token.len())
-                .position(|window| window == token)
-                .unwrap();
-            let mut contents = signature.contents.clone();
-            // Flip only the final signature bit of the genuine token. Preserve
-            // its DER, declared imprint, time and the parent's signed attributes.
-            contents[offset + token.len() - 1] ^= 1;
-            assert_eq!(signature.byte_range.len(), 4);
-            let start = usize::try_from(signature.byte_range[1]).unwrap();
-            let end = usize::try_from(signature.byte_range[2]).unwrap();
-            assert_eq!(bytes[start], b'<');
-            assert_eq!(bytes[end - 1], b'>');
-            let hex = contents
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect::<String>();
-            assert!(hex.len() <= end - start - 2);
-            bytes[start + 1..end - 1].fill(b'0');
-            bytes[start + 1..start + 1 + hex.len()].copy_from_slice(hex.as_bytes());
-        },
+        |bytes| forge_signature_timestamp(bytes),
         Some(0),
     );
     let message = text(&out);
@@ -372,6 +339,92 @@ fn ades_api_projection_rejects_forged_timestamp() {
     );
     assert!(message.contains("judged INVALID"), "{message}");
     assert!(!message.contains("judged VALID"), "{message}");
+}
+
+const EXPIRED_NO_REVINFO_ARGS: [&str; 4] = [
+    "--pretty-print",
+    "--validation-time",
+    "2025-03-01T22:00:00Z",
+    "--no-revocation-check",
+];
+
+#[test]
+fn expired_profile_rejects_changed_signed_content() {
+    let output = invoke_with_pdf(10, &EXPIRED_NO_REVINFO_ARGS, |bytes| {
+        assert!(bytes.starts_with(b"%PDF-1."));
+        bytes[7] = if bytes[7] == b'7' { b'6' } else { b'7' };
+    });
+    let message = text(&output);
+    assert_eq!(output.code, 1, "{message}");
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+#[test]
+fn expired_profile_rejects_forged_timestamp() {
+    let output = invoke_with_pdf(10, &EXPIRED_NO_REVINFO_ARGS, |bytes| {
+        forge_signature_timestamp(bytes)
+    });
+    let message = text(&output);
+    assert_eq!(output.code, 1, "{message}");
+    assert!(
+        message.contains("The signature is cryptographically sound."),
+        "{message}"
+    );
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+#[test]
+fn expired_profile_cannot_use_a_future_timestamp() {
+    let output = invoke(
+        10,
+        &[
+            "--pretty-print",
+            "--validation-time",
+            "2010-01-01T00:00:00Z",
+            "--no-revocation-check",
+        ],
+    );
+    let message = text(&output);
+    assert_eq!(output.code, 1, "{message}");
+    assert!(message.contains("judged INVALID"), "{message}");
+    assert!(!message.contains("judged VALID"), "{message}");
+}
+
+fn forge_signature_timestamp(bytes: &mut [u8]) {
+    use sigis_cms::signed_data::find_unique_cms_attribute;
+    use sigis_pki_core::asn1::oids;
+
+    let file = sigis_pdf::PdfFile::parse(bytes).unwrap();
+    let signature = file.embedded_signatures().unwrap().remove(0);
+    let cms = sigis_cms::SignedData::from_der(&signature.contents).unwrap();
+    let token = find_unique_cms_attribute(
+        cms.signer_infos[0].unsigned_attr_list(),
+        oids::AA_SIGNATURE_TIME_STAMP_TOKEN,
+    )
+    .unwrap();
+    let offset = signature
+        .contents
+        .windows(token.len())
+        .position(|window| window == token)
+        .unwrap();
+    let mut contents = signature.contents.clone();
+    // Flip only the final signature bit of the genuine token. Preserve
+    // its DER, declared imprint, time and the parent's signed attributes.
+    contents[offset + token.len() - 1] ^= 1;
+    assert_eq!(signature.byte_range.len(), 4);
+    let start = usize::try_from(signature.byte_range[1]).unwrap();
+    let end = usize::try_from(signature.byte_range[2]).unwrap();
+    assert_eq!(bytes[start], b'<');
+    assert_eq!(bytes[end - 1], b'>');
+    let hex = contents
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    assert!(hex.len() <= end - start - 2);
+    bytes[start + 1..end - 1].fill(b'0');
+    bytes[start + 1..start + 1 + hex.len()].copy_from_slice(hex.as_bytes());
 }
 
 /// Isolate the lower API-status mismatch from CLI rendering and EUTL loading.
