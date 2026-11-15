@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "8c04d3b79a67a49cde7fbb0271f8832334810f0c",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/p-user-pin-byte-comparisons/workspace.log",
+  "accepted_source_commit": "cac0d26e7febaca3999ba523eee67c1a288bc643",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/v-containment-slot-count/workspace.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2514,5 +2514,5 @@
       "reason": "The actual CLI preserves the fully checked historical trusted/qualified API conclusion while retaining raw full-LTA NO_POE and control-time failure. Authenticated signature/certificate POEs and complete same-path MAIN validation under the original caller policy are required; current TSA, PDF, seed, key-usage, algorithm and qualification refusals remain. Fresh unchanged original and same-byte peers pass; full workspace/clippy/fmt gate passes. No generic failed-status promotion or full-LTA success credit."
     }
   ],
-  "source_verification_note": "USER-PIN test-support cleanup only, on accepted main ec052ce1: canonical-path/exact-byte preservation and actual DER CRL request assertions replace file/transport fingerprint records. Default focused USER target8PASS/0FAIL/0IGNORE; existing runtime signing callbackNone and all current Root/preflight/Env helpers preserved. First selector-free whole run2431pass/5fail/31ignored: five missing-SoftHSM fixture setups, retained separately and not counted green. With existing ordinary SDK/module/tool/oracle/overlay paths, the five targeted DSA cases pass and the unchanged-source whole workspace2436PASS/0FAIL/31inheritedignored across256reports; workspace all-target clippy-Dwarnings and fmt pass. No proof directory/source/CLI hash selector, assertion waiver, new production/API/dependency/lock change or original credit. Counts1431/1421/10/0 unchanged."
+  "source_verification_note": "Zero-ID V containment coverage increment on accepted main eb293d9c: V03777d19 production, fixtures, original and metadata regressions already match accepted source. Only1821d494+037format were curated as7664d311/cac0d26e, adding6test counter lines. Focused containment4PASS/0FAIL/0IGNORE includes checked_slots==48; same target4PASS in complete current workspace2436PASS/0FAIL/31inheritedignored across256reports. Workspace all-target clippy-Dwarnings and fmt pass with ordinary existing SDK/oracle paths, no proof selectors. No producer/API/dependency/fixture/lock change or duplicate original/differential credit; current48slots are not a relabelled run of old b784/1ea source-only candidates. V47/47/0/0 and global1431/1421/10/0 unchanged."
 }
