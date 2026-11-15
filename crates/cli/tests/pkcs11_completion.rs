@@ -364,16 +364,10 @@ raw_cases!("setup-file";
     test_cli_addsig_pkcs11_with_setup_raw_ecdsa_mldsa,
 );
 
-#[test]
-#[ignore = "Original requires SafeNet hardware and a separate context-specific signing PIN; no configured device is available"]
-fn test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt() {
-    panic!("No configured SafeNet device: the original signing-PIN fixture is unavailable");
-}
-
-#[test]
-#[ignore = "Original requires SafeNet hardware and its separate environment signing PIN; no configured device is available"]
-fn test_cli_addsig_pkcs11_with_setup_and_env_signing_pin() {
-    panic!(
-        "No configured SafeNet device: the original environment signing-PIN fixture is unavailable"
-    );
-}
+// The exact SafeNet-only originals
+// pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt
+// and pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin
+// have substantive bodies for all five root-cert labels in
+// tests/pkcs11_signing_originals.rs and common/pkcs11_signing_originals/mod.rs.
+// Their explicit hardware availability exclusions remain; no duplicate wrappers
+// or software-provider pass is credited here.
