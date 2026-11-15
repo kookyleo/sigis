@@ -668,6 +668,167 @@ fn stale_or_insufficient(msg: String, stale: Option<Moment>) -> ValidationError 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use der::{asn1::OctetString, Encode};
+    use sigis_pki_core::asn1::tlv::{encode, Tlv};
+
+    // These edited responses exercise metadata parsing only: their original
+    // signatures no longer authenticate the edited ResponseData. Authenticated
+    // historical verdicts are covered separately by the signed-PDF regression.
+    fn ocsp_metadata(times: &[&[u8]], produced_at: &[u8]) -> Vec<OcspContainer> {
+        let fixture = sigis_testdata::read(&[
+            "pyhanko-certvalidator",
+            "ades",
+            "time-slide",
+            "alice-2020-11-29.ors",
+        ]);
+        let mut outer = x509_ocsp::OcspResponse::from_der(&fixture).expect("OCSP fixture");
+        let response_bytes = outer.response_bytes.as_mut().expect("response bytes");
+        let basic = decode_lenient::<BasicOcspResponse>(response_bytes.response.as_bytes())
+            .expect("basic response");
+        let single_der = basic.tbs_response_data.responses[0]
+            .to_der()
+            .expect("single response");
+        let single = Tlv::parse_exact(&single_der)
+            .expect("single TLV")
+            .children()
+            .expect("single fields");
+        let responses = times
+            .iter()
+            .flat_map(|time| {
+                let mut fields = single
+                    .iter()
+                    .map(|field| field.raw.to_vec())
+                    .collect::<Vec<_>>();
+                fields[2] = encode(0x18, time);
+                encode(0x30, &fields.concat())
+            })
+            .collect::<Vec<_>>();
+        let tbs = encode(
+            0x30,
+            &[
+                basic
+                    .tbs_response_data
+                    .responder_id
+                    .to_der()
+                    .expect("responder ID"),
+                encode(0x18, produced_at),
+                encode(0x30, &responses),
+            ]
+            .concat(),
+        );
+        let basic_der = basic.to_der().expect("basic DER");
+        let mut fields = Tlv::parse_exact(&basic_der)
+            .expect("basic TLV")
+            .children()
+            .expect("basic fields")
+            .iter()
+            .map(|field| field.raw.to_vec())
+            .collect::<Vec<_>>();
+        fields[0] = tbs;
+        response_bytes.response =
+            OctetString::new(encode(0x30, &fields.concat())).expect("basic response octets");
+        OcspContainer::load(&outer.to_der().expect("OCSP DER")).expect("metadata response")
+    }
+
+    #[test]
+    fn historical_ocsp_issuance_preserves_fractional_boundary() {
+        let control = Moment::from_ymd_hms(2026, 11, 15, 4, 48, 36).expect("control time");
+        for (time, eligible) in [
+            (&b"20261115044835.999999Z"[..], true),
+            (&b"20261115044836Z"[..], true),
+            (&b"20261115044836.000000Z"[..], true),
+            (&b"20261115044836.000000000000Z"[..], true),
+            (&b"20261115044836.000001Z"[..], false),
+            (&b"20261115044836.000000000000000001Z"[..], false),
+            (&b"20261115044836.125430Z"[..], false),
+            (&b"20261115044836.999999Z"[..], false),
+        ] {
+            let response = ocsp_metadata(&[time], b"20261115044837Z").remove(0);
+            assert_eq!(response.issued_by(control), eligible, "{time:?}");
+            assert!(response.issued_by(control.plus(std::time::Duration::from_secs(1))));
+            // Public whole-second accessors retain their existing semantics.
+            assert_eq!(
+                response.this_update(),
+                Some(if time.starts_with(b"20261115044835") {
+                    control.minus(std::time::Duration::from_secs(1))
+                } else {
+                    control
+                })
+            );
+            let next = response.single().expect("single").next_update;
+            assert_eq!(
+                response.next_update(),
+                next.map(|t| Moment::from(t.0.to_date_time()))
+            );
+        }
+    }
+
+    #[test]
+    fn historical_ocsp_issuance_uses_single_response_index() {
+        let control = Moment::from_ymd_hms(2026, 11, 15, 4, 48, 36).expect("control time");
+        let responses = ocsp_metadata(
+            &[b"20261115044835.999999Z", b"20261115044836.125430Z"],
+            b"20261115044837Z",
+        );
+        assert_eq!(responses.len(), 2);
+        assert!(responses[0].issued_by(control));
+        assert!(!responses[1].issued_by(control));
+        assert!(responses[1].issued_by(control.plus(std::time::Duration::from_secs(1))));
+
+        // The optional version field must not shift the SingleResponse lookup.
+        let mut versioned = responses[1].clone();
+        let original = Tlv::parse_exact(&versioned.tbs).expect("ResponseData");
+        versioned.tbs = encode(
+            0x30,
+            &[encode(0xa0, &[0x02, 0x01, 0x00]), original.value.to_vec()].concat(),
+        )
+        .into();
+        assert!(!versioned.issued_by(control));
+        assert!(versioned.issued_by(control.plus(std::time::Duration::from_secs(1))));
+    }
+
+    #[test]
+    fn historical_ocsp_issuance_fails_closed_without_original_time() {
+        let control = Moment::from_ymd_hms(2026, 11, 15, 4, 48, 36).expect("control time");
+        let response = ocsp_metadata(&[b"20261115044836Z"], b"20261115044836Z").remove(0);
+        for tbs in [
+            Vec::new(),
+            vec![0x30, 0x00],
+            vec![0x30, 0x03, 0x18, 0x02, b'Z'],
+            encode(
+                0x30,
+                &[
+                    encode(0xa2, &[0x04, 0x00]),
+                    encode(0x18, b"20261115044836Z"),
+                    encode(
+                        0x30,
+                        &encode(
+                            0x30,
+                            &[
+                                encode(0x30, &[]),
+                                encode(0x80, &[]),
+                                encode(0x18, b"20261315044836.1Z"),
+                            ]
+                            .concat(),
+                        ),
+                    ),
+                ]
+                .concat(),
+            ),
+        ] {
+            let mut malformed = response.clone();
+            malformed.tbs = tbs.into();
+            assert!(!malformed.issued_by(control));
+        }
+        let mut missing = response;
+        missing.index = 1;
+        assert!(!missing.issued_by(control));
+        // The lenient decoder strips an empty fraction, but strict historical
+        // eligibility still rejects the invalid original time.
+        let empty_fraction = ocsp_metadata(&[b"20261115044836.Z"], b"20261115044836Z").remove(0);
+        assert!(!empty_fraction.issued_by(control));
+        assert!(!empty_fraction.issued_by(control.plus(std::time::Duration::from_secs(1))));
+    }
 
     #[test]
     fn strips_fractional_generalized_time() {
