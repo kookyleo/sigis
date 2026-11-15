@@ -22,7 +22,7 @@ sigis-pades-sign = { workspace = true }
 sigis-pki-core = { workspace = true }
 sigis-pdf = { workspace = true }
 sigis-pki-fetch = { workspace = true }
-rpassword = "=7.4.0"
+rpassword = "=7.5.0"
 openssl = "=0.10.81"
 
 der = { workspace = true }
