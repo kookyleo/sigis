@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "baseline": "ownership.json",
-  "accepted_source_commit": "5b24e8173ce4d261005677cba963e57c1fc8237f",
-  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/cli-historical-integration/workspace.log",
+  "accepted_source_commit": "715d8c29e24b180b5cf1dc8f733560e4a8afc70b",
+  "gate_evidence": "/home/l/.codex/artifacts/sigis/round3-launch/signing-pin-callback-integration/workspace.log",
   "overrides": [
     {
       "id": "pyhanko/test_cms.py::test_overspecify_cms_digest_algo",
@@ -2491,15 +2491,15 @@
     },
     {
       "id": "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt",
-      "status": "pending",
-      "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt",
-      "reason": "Pending: the dedicated per-sign signing-PIN runtime/provider callback is still absent, the native original body remains an ignored panic stub, and actual SafeNet hardware is not configured. Static reauthentication and the USER-PIN capability do not complete this original."
+      "status": "skipped",
+      "rust_test": "pkcs11_signing_originals::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt_{rsa,ecdsa,ed25519,ed448,mldsa}",
+      "reason": "Explicit SafeNet hardware exclusion: complete native original bodies replace the old ignored panic stubs, and dedicated signing-purpose prompt/static environment reauthentication is implemented on the existing session/key. Real AlwaysAuthenticate software and credential-role controls pass, but they are not SafeNet execution. Fresh unchanged pinned originals with an actual SoftHSM module skip all five labels because the original requires SafeNet; actual SafeNet configuration/provider is unavailable. Current-main full workspace gate2435passed/0failed/31nativeignored, clippy/fmt pass. No hardware pass or universal algorithm/provider equivalence is claimed."
     },
     {
       "id": "pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
-      "status": "pending",
-      "rust_test": "pkcs11_completion::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin",
-      "reason": "Pending: static configured/environment reauthentication now works through the actual CLI and real RSA AlwaysAuthenticate software controls, but the complete SafeNet original native body remains an ignored panic stub and actual hardware is unavailable. Supplemental signing/credential/trust controls do not count as this original or as a new hardware skip."
+      "status": "skipped",
+      "rust_test": "pkcs11_signing_originals::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin_{rsa,ecdsa,ed25519,ed448,mldsa}",
+      "reason": "Explicit SafeNet hardware exclusion: complete native original bodies replace the old ignored panic stubs, and dedicated signing-purpose prompt/static environment reauthentication is implemented on the existing session/key. Real AlwaysAuthenticate software and credential-role controls pass, but they are not SafeNet execution. Fresh unchanged pinned originals with an actual SoftHSM module skip all five labels because the original requires SafeNet; actual SafeNet configuration/provider is unavailable. Current-main full workspace gate2435passed/0failed/31nativeignored, clippy/fmt pass. No hardware pass or universal algorithm/provider equivalence is claimed."
     },
     {
       "id": "pyhanko-cli/test_cli_decode_limits.py::test_validate",
@@ -2514,5 +2514,5 @@
       "reason": "The actual CLI preserves the fully checked historical trusted/qualified API conclusion while retaining raw full-LTA NO_POE and control-time failure. Authenticated signature/certificate POEs and complete same-path MAIN validation under the original caller policy are required; current TSA, PDF, seed, key-usage, algorithm and qualification refusals remain. Fresh unchanged original and same-byte peers pass; full workspace/clippy/fmt gate passes. No generic failed-status promotion or full-LTA success credit."
     }
   ],
-  "source_verification_note": "Current-main historical CLI batch: workspace 2414 passed, 0 failed, 23 inherited ignored across 252 test/doc reports; all-target clippy-Dwarnings and fmt pass. Root fresh unchanged pinned originals3PASS; author current-base focus24PASS and same-byte peers pass. Two unique C originals restored, C252/248/2/2; overall1431/1421/8/2. V47 complete and S five exclusions unchanged. Raw NO_POE/control-time failure remains visible; no fabricated POE, Basic fallback, generic expired recovery, shared API or dependency change."
+  "source_verification_note": "Final current-main callback batch: workspace2435passed/0failed/31nativeignored across255test/doc reports; workspace all-target clippy-Dwarnings and fmt exit0. Root focused27pass/0fail/10hardwareignored and fresh same-byte trust/empty-root/tamper peers pass. Fresh unchanged pinned SafeNet originals2functions x5labels give10genuine platform skips; native hardware bodies compile but remain unexecuted. Exactly2C pending statuses become explicit hardware exclusions, not passes: C252/248/4/0, overall1431/1421/10/0. P1SafeNet, C2raw-ECDSA and S5language/model exclusions remain. No pending originals, new dependency, frontend/config change, credential cache or USER/PDF authority fallback."
 }

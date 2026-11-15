@@ -2,16 +2,16 @@
 
 ## Current accepted inventory
 
-After the historical CLI integration on source `5b24e817`, the [central ledger](../../docs/lanes/round3/acceptance.json)
-and [status](../../docs/status.md) record CLI **252 total / 248 passed / 2 skipped /
-2 pending**, and overall **1431 / 1421 / 8 / 2**. V's restored original adds no CLI
+After the final signing-PIN integration on source `715d8c29`, the [central ledger](../../docs/lanes/round3/acceptance.json)
+and [status](../../docs/status.md) record CLI **252 total / 248 passed / 4 skipped /
+0 pending**, and overall **1431 / 1421 / 10 / 0**. V's restored original adds no CLI
 credit. The 34-original C batch and four subsequent provider originals remain
 accepted once; parameters, helper controls and oracle calls add no functions.
 
 | Original ID | Status | Operational owner / reason |
 | --- | --- | --- |
-| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt | Pending | P: incomplete SafeNet context-specific signing-PIN original |
-| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin | Pending | P: incomplete SafeNet context-specific signing-PIN original |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_signing_pin_prompt | Skipped | Complete native body and signing-purpose capability; actual SafeNet hardware unavailable |
+| pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_pkcs11_with_setup_and_env_signing_pin | Skipped | Complete native body and signing-purpose capability; actual SafeNet hardware unavailable |
 | pyhanko-cli/test_cli_decode_limits.py::test_validate | Passed | Both validate/adesverify parameters retained; current-main full gate and original differential pass |
 | pyhanko-cli/validation/test_cli_qualified_validation.py::test_validate_eutl_ades_point_in_time_no_revinfo | Passed | Historical trusted/qualified API conclusion retained alongside raw NO_POE; full gate and original differential pass |
 | pyhanko-cli/test_cli_signing_pkcs11.py::test_cli_addsig_raw_ecdsa | Skipped | Genuine unchanged-upstream fixture exclusion: missing combined ECDSA_SHA256 mechanism |
@@ -23,11 +23,12 @@ either original into a pass. The two historical-validation originals now pass co
 differentials. The raw archival NO_POE/control-time failure remains explicit;
 acceptance does not claim full-LTA success or generic expired-status recovery.
 
-The accepted static configured/environment signing-PIN producer and five
-AlwaysAuthenticate controls are supplemental coverage. They do not complete
-either SafeNet CLI original or establish the missing hardware behavior. The S5
-native-boundary supplement likewise does not promote S's five exclusions. No
-original status changed in `8b393619`.
+The dedicated per-sign callback and configured/environment credentials now have
+real software-provider coverage; both complete SafeNet bodies replace the old
+panic stubs. They remain explicit hardware exclusions, not executed originals.
+Fresh unchanged Python also skips all five labels for each SafeNet original on
+SoftHSM. No SafeNet algorithm/provider behavior is inferred. S's five exclusions
+and P's separate hardware exclusion remain unchanged.
 
 L alone runs the combined current-main workspace, clippy and formatting gate.
 Lanes supply focused affected tests and applicable pinned pyHanko differentials.
@@ -196,3 +197,13 @@ clippy and fmt. Root reran the unchanged pinned originals:3 parameter rows pass.
 The author current-base focus passed24 tests including same-byte peers. Exactly
 two C originals changed to Passed; CLI252/248/2/2 and overall1431/1421/8/2.
 Earlier tables under the historical batch heading retain their original snapshot.
+
+The final signing-purpose callback integration on source `715d8c29` passed
+**2435 tests / 0 failed / 31 native ignored**, across 255 reports; workspace
+all-target clippy and fmt returned 0. Root focus 27 passed / 0 failed / 10 hardware parameters ignored
+includes real same-output trust, empty-root and tamper controls. The two unique
+SafeNet originals are now explicit hardware exclusions, matching fresh unchanged
+reference platform skips; they are not passes. CLI252/248/4/0 and overall
+1431/1421/10/0. The existing public runtime gains an optional signing-purpose
+capability default `None`; external exhaustive literals must add the field or use
+Default. No terminal fallback or new dependency is introduced.
